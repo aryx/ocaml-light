@@ -25,7 +25,8 @@ OBJS=pervasives.cmo list.cmo char.cmo string.cmo bytes.cmo array.cmo sys.cmo \
   printexc.cmo \
   option.cmo result.cmo either.cmo \
   uchar.cmo int.cmo bool.cmo float.cmo \
-  stdcompat.cmo fun.cmo
+  stdcompat.cmo fun.cmo \
+  int32.cmo int64.cmo
 
 all: stdlib.cma std_exit.cmo camlheader
 
