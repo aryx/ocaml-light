@@ -100,14 +100,14 @@ struct custom_operations * final_custom_operations(final_fun fn)
 }
 
 extern struct custom_operations int32_ops;
-#if SIZEOF_LONG == 8 || SIZEOF_LONG_LONG == 8
+#ifdef ARCH_INT64_TYPE
 extern struct custom_operations int64_ops;
 #endif
 
 void init_custom_operations(void)
 {
   register_custom_operations(&int32_ops);
-#if SIZEOF_LONG == 8 || SIZEOF_LONG_LONG == 8
+#ifdef ARCH_INT64_TYPE
   register_custom_operations(&int64_ops);
 #endif
 }
