@@ -15,6 +15,7 @@
 /* The generic hashing primitive */
 
 #include "mlvalues.h"
+#include "custom.h"
 #include "memory.h"
 #include "str.h"
 
@@ -109,7 +110,6 @@ static void hash_aux(value obj)
       }
       break;
     case Abstract_tag:
-    case Final_tag:
       /* We don't know anything about the contents of the block.
          Better do nothing. */
       break;
@@ -119,6 +119,13 @@ static void hash_aux(value obj)
     case Object_tag:
       hash_univ_count--;
       Combine(Oid_val(obj));
+      break;
+    case Custom_tag:
+      /* If no hashing function provided, do nothing */
+      if (Custom_ops_val(obj)->hash != NULL) {
+        hash_univ_count--;
+        Combine(Custom_ops_val(obj)->hash(obj));
+      }
       break;
     default:
       hash_univ_count--;

@@ -51,6 +51,7 @@ val select :
 (*** Pipes and redirections *)
 
 val pipe : unit -> Unix.file_descr * Unix.file_descr
+val open_process_in: string -> in_channel
 val open_process_out: string -> out_channel
 val open_process: string -> in_channel * out_channel
 

@@ -8129,7 +8129,11 @@ typedef signed char schar;
 
 
 <<function [[Final_fun]]>>=
+#if 0
 #define Final_fun(val) (((final_fun *) (val)) [0]) /* Also an l-value. */
+#endif
+#define Data_custom_val(v) ((void *) &Field(v, 1))
+struct custom_operations;       /* defined in [custom.h] */
 @
 
 
@@ -8163,6 +8167,9 @@ typedef unsigned long mark_t;
 
 typedef int int32;            /* Not portable, but checked by autoconf. */
 typedef unsigned int uint32;  /* Seems like a reasonable assumption anyway. */
+
+typedef long int64;             /* FIXME */
+typedef unsigned long uint64;   /* FIXME */
 
 <<function [[Is_long]]>>
 <<function [[Is_block]]>>
@@ -8285,7 +8292,6 @@ void Store_double_val (value,double);
 <<function [[Store_double_field]]>>
 
 <<constant [[Final_tag]]>>
-typedef void (*final_fun) (value);
 <<function [[Final_fun]]>>
 
 
@@ -9252,13 +9258,23 @@ value alloc (mlsize_t, tag_t);
 value alloc_small (mlsize_t, tag_t);
 value alloc_tuple (mlsize_t);
 value alloc_string (mlsize_t);
-value alloc_final (mlsize_t, final_fun, mlsize_t, mlsize_t);
 value copy_string (char *);
 value copy_string_array (char **);
 value copy_double (double);
 value alloc_array (value (*funct) (char *), char ** array);
-int convert_flag_list (value, int *);
 
+value alloc_custom(struct custom_operations * ops,
+                   unsigned long size, /*size in bytes*/
+                   mlsize_t mem, /*resources consumed*/
+                   mlsize_t max  /*max resources*/);
+
+typedef void (*final_fun)(value);
+value alloc_final (mlsize_t /*size in words*/,
+                   final_fun, /*finalization function*/
+                   mlsize_t, /*resources consumed*/
+                   mlsize_t  /*max resources*/);
+
+int convert_flag_list (value, int *);
 
 #endif /* _alloc_ */
 @
@@ -9303,6 +9319,7 @@ value alloc_string (mlsize_t len)
 @
 
 <<function [[alloc_final]]>>=
+#if 0
 value alloc_final (mlsize_t len, final_fun fun, mlsize_t mem, mlsize_t max)
 {
   value result = alloc_shr (len, Final_tag);
@@ -9311,6 +9328,33 @@ value alloc_final (mlsize_t len, final_fun fun, mlsize_t mem, mlsize_t max)
   adjust_gc_speed (mem, max);
   result = check_urgent_gc (result);
   return result;
+}
+#endif
+value alloc_custom(struct custom_operations * ops,
+                   unsigned long size,
+                   mlsize_t mem,
+                   mlsize_t max)
+{
+  mlsize_t wosize;
+  value result;
+
+  wosize = 1 + (size + sizeof(value) - 1) / sizeof(value);
+  if (ops->finalize == NULL && wosize <= Max_young_wosize) {
+    result = alloc_small(wosize, Custom_tag);
+    Custom_ops_val(result) = ops;
+  } else {
+    result = alloc_shr(wosize, Custom_tag);
+    Custom_ops_val(result) = ops;
+    adjust_gc_speed(mem, max);
+    result = check_urgent_gc(result);
+  }
+  return result;
+}
+
+value alloc_final (mlsize_t len, final_fun fun, mlsize_t mem, mlsize_t max)
+{
+  return alloc_custom(final_custom_operations(fun),
+                      len * sizeof(value), mem, max);
 }
 @
 
@@ -9391,6 +9435,7 @@ int convert_flag_list(value list, int *flags)
 #endif
 
 #include "alloc.h"
+#include "custom.h"
 #include "major_gc.h"
 #include "memory.h"
 #include "mlvalues.h"
@@ -10563,8 +10608,9 @@ static void sweep_slice (long int work)
       gc_sweep_hp += Bhsize_hd (hd);
       switch (Color_hd (hd)){
       case White:
-        if (Tag_hd (hd) == Final_tag){
-          Final_fun (Val_hp (hp)) (Val_hp (hp));
+        if (Tag_hd (hd) == Custom_tag){
+          void (*final_fun)(value) = Custom_ops_val(Val_hp(hp));
+          if (final_fun != NULL) final_fun(Val_hp(hp));
         }
         gc_sweep_hp = fl_merge_block (Bp_hp (hp));
         break;
@@ -10743,6 +10789,7 @@ void init_major_heap (asize_t heap_size)
 #endif
 
 #include "compact.h"
+#include "custom.h"
 #include "fail.h"
 #include "freelist.h"
 #include "gc.h"
@@ -11537,6 +11584,7 @@ value hash_univ_param(value count, value limit, value obj) /* ML */
 /* The generic hashing primitive */
 
 #include "mlvalues.h"
+#include "custom.h"
 #include "memory.h"
 #include "str.h"
 
@@ -11610,7 +11658,6 @@ static void hash_aux(value obj)
       }
       break;
     case Abstract_tag:
-    case Final_tag:
       /* We don't know anything about the contents of the block.
          Better do nothing. */
       break;
@@ -11620,6 +11667,13 @@ static void hash_aux(value obj)
     case Object_tag:
       hash_univ_count--;
       Combine(Oid_val(obj));
+      break;
+    case Custom_tag:
+      /* If no hashing function provided, do nothing */
+      if (Custom_ops_val(obj)->hash != NULL) {
+        hash_univ_count--;
+        Combine(Custom_ops_val(obj)->hash(obj));
+      }
       break;
     default:
       hash_univ_count--;
@@ -12047,13 +12101,14 @@ static long compare_val(value v1, value v2)
     return 0;
   }
   case Abstract_tag:
-  case Final_tag:
     invalid_argument("equal: abstract value");
   case Closure_tag:
   case Infix_tag:
     invalid_argument("equal: functional value");
   case Object_tag:
     return (Oid_val(v1) - Oid_val(v2));
+  case Custom_tag:
+    return Custom_ops_val(v1)->compare(v1, v2);
   default: {
     mlsize_t sz1 = Wosize_val(v1);
     mlsize_t sz2 = Wosize_val(v2);
@@ -12138,6 +12193,7 @@ value greaterequal(value v1, value v2)       /* ML */
 
 #include "config.h"
 
+#include "custom.h"
 #include "fail.h"
 #include "memory.h"
 #include "misc.h"
@@ -12821,7 +12877,6 @@ static void extern_rec(value v)
       break;
     }
     case Abstract_tag:
-    case Final_tag:
       extern_invalid_argument("output_value: abstract value");
       break;
     case Infix_tag:
@@ -12831,6 +12886,16 @@ static void extern_rec(value v)
     case Object_tag:
       extern_invalid_argument("output_value: object value");
       break;
+    case Custom_tag: {
+      unsigned long sz_32, sz_64;
+      char * ident = Custom_ops_val(v)->identifier;
+      Write(CODE_CUSTOM);
+      writeblock(ident, strlen(ident) + 1);
+      Custom_ops_val(v)->serialize(v, &sz_32, &sz_64);
+      size_32 += 2 + ((sz_32 + 3) >> 2);  /* header + ops + data */
+      size_64 += 2 + ((sz_64 + 7) >> 3);
+      break;
+    }
     default: {
       mlsize_t i;
       if (tag < 16 && sz < 8) {
@@ -12969,6 +13034,7 @@ value output_value_to_buffer(value buf, value ofs, value len, value v, value fla
 #endif
 
 #include "alloc.h"
+#include "custom.h"
 #include "fail.h"
 #include "gc.h"
 #include "intext.h"
@@ -13055,6 +13121,97 @@ static char * extern_limit;
 <<function [[output_value_to_string]]>>
 
 <<function [[output_value_to_buffer]]>>
+
+/* Functions for writing user-defined marshallers */
+
+void serialize_int_1(int i)
+{
+  if (extern_ptr + 1 > extern_limit) resize_extern_block(1);
+  extern_ptr[0] = i;
+  extern_ptr += 1;
+}
+
+void serialize_int_2(int i)
+{
+  if (extern_ptr + 2 > extern_limit) resize_extern_block(2);
+  extern_ptr[0] = i >> 8;
+  extern_ptr[1] = i;
+  extern_ptr += 2;
+}
+
+void serialize_int_4(int32 i)
+{
+  if (extern_ptr + 4 > extern_limit) resize_extern_block(4);
+  extern_ptr[0] = i >> 24;
+  extern_ptr[1] = i >> 16;
+  extern_ptr[2] = i >> 8;
+  extern_ptr[3] = i;
+  extern_ptr += 4;
+}
+
+void serialize_int_8(int64 i)
+{
+  serialize_block_8(&i, 1);
+}
+
+void serialize_float_4(float f)
+{
+  serialize_block_4(&f, 1);
+}
+
+void serialize_float_8(double f)
+{
+  serialize_block_8(&f, 1);
+}
+
+void serialize_block_1(void * data, long len)
+{
+  if (extern_ptr + len > extern_limit) resize_extern_block(len);
+  bcopy(data, extern_ptr, len);
+  extern_ptr += len;
+}
+
+void serialize_block_2(void * data, long len)
+{
+  unsigned char * p, * q;
+  if (extern_ptr + 2 * len > extern_limit) resize_extern_block(2 * len);
+#ifndef ARCH_BIG_ENDIAN
+  for (p = data, q = extern_ptr; len > 0; len--, p += 2, q += 2)
+    Reverse_16(q, p);
+  extern_ptr = q;
+#else
+  bcopy(data, extern_ptr, len * 2);
+  extern_ptr += len * 2;
+#endif
+}
+
+void serialize_block_4(void * data, long len)
+{
+  unsigned char * p, * q;
+  if (extern_ptr + 4 * len > extern_limit) resize_extern_block(4 * len);
+#ifndef ARCH_BIG_ENDIAN
+  for (p = data, q = extern_ptr; len > 0; len--, p += 4, q += 4)
+    Reverse_32(q, p);
+  extern_ptr = q;
+#else
+  bcopy(data, extern_ptr, len * 4);
+  extern_ptr += len * 4;
+#endif
+}
+
+void serialize_block_8(void * data, long len)
+{
+  unsigned char * p, * q;
+  if (extern_ptr + 8 * len > extern_limit) resize_extern_block(8 * len);
+#ifndef ARCH_BIG_ENDIAN
+  for (p = data, q = extern_ptr; len > 0; len--, p += 8, q += 8)
+    Reverse_64(q, p);
+  extern_ptr = q;
+#else
+  bcopy(data, extern_ptr, len * 8);
+  extern_ptr += len * 8;
+#endif
+}
 
 @
 
@@ -13361,7 +13518,7 @@ void fixup_endianness(code_t code, asize_t len)
   code_t p;
   len /= sizeof(opcode_t);
   for (p = code; p < code + len; p++) {
-    Reverse_int32(p);
+    Reverse_32(p, p);
   }
 }
 @
@@ -13677,6 +13834,7 @@ int is_instruction(opcode_t instr1, opcode_t instr2)
 <<constant [[CODE_DOUBLE_ARRAY32_LITTLE]]>>
 <<constant [[CODE_CODEPOINTER]]>>
 <<constant [[CODE_INFIXPOINTER]]>>
+#define CODE_CUSTOM 0x12
 
 #ifdef ARCH_BIG_ENDIAN
 <<constant [[CODE_DOUBLE_NATIVE]]>>
@@ -13706,6 +13864,34 @@ void output_val (struct channel * chan, value v, value flags);
 value input_val (struct channel * chan);
 value input_val_from_string (value str, long ofs);
 
+/* Functions for writing user-defined marshallers */
+
+extern void serialize_int_1(int i);
+extern void serialize_int_2(int i);
+extern void serialize_int_4(int32 i);
+extern void serialize_int_8(int64 i);
+extern void serialize_float_4(float f);
+extern void serialize_float_8(double f);
+extern void serialize_block_1(void * data, long len);
+extern void serialize_block_2(void * data, long len);
+extern void serialize_block_4(void * data, long len);
+extern void serialize_block_8(void * data, long len);
+
+extern int deserialize_uint_1(void);
+extern int deserialize_sint_1(void);
+extern int deserialize_uint_2(void);
+extern int deserialize_sint_2(void);
+extern uint32 deserialize_uint_4(void);
+extern int32 deserialize_sint_4(void);
+extern uint64 deserialize_uint_8(void);
+extern int64 deserialize_sint_8(void);
+extern float deserialize_float_4(void);
+extern double deserialize_float_8(void);
+extern void deserialize_block_1(void * data, long len);
+extern void deserialize_block_2(void * data, long len);
+extern void deserialize_block_4(void * data, long len);
+extern void deserialize_block_8(void * data, long len);
+
 /* Auxiliary stuff for sending code pointers */
 unsigned char * code_checksum (void);
 
@@ -13716,7 +13902,6 @@ unsigned char * code_checksum (void);
 #else
 extern char * code_area_start, * code_area_end;
 #endif
-
 
 #endif
 
@@ -13975,6 +14160,7 @@ unsigned char * code_checksum(void)
 #endif
 
 #include "alloc.h"
+#include "custom.h"
 #include "fail.h"
 #include "gc.h"
 #include "intext.h"
@@ -14021,6 +14207,7 @@ static void intern_rec(value *dest)
   asize_t ofs;
   header_t header;
   char cksum[16];
+  struct custom_operations * ops;
 
  tailcall:
   code = read8u();
@@ -14115,7 +14302,7 @@ static void intern_rec(value *dest)
         *intern_dest = Make_header(Double_wosize, Double_tag, intern_color);
         intern_dest += 1 + Double_wosize;
         readblock((char *) v, 8);
-        if (code != CODE_DOUBLE_NATIVE) Reverse_double(v);
+        if (code != CODE_DOUBLE_NATIVE) Reverse_64(v, v);
         break;
       case CODE_DOUBLE_ARRAY8_LITTLE:
       case CODE_DOUBLE_ARRAY8_BIG:
@@ -14135,7 +14322,8 @@ static void intern_rec(value *dest)
         if (code != CODE_DOUBLE_ARRAY8_NATIVE && 
             code != CODE_DOUBLE_ARRAY32_NATIVE) {
           mlsize_t i;
-          for (i = 0; i < len; i++) Reverse_double((value)((double *)v + i));
+          for (i = 0; i < len; i++) Reverse_64((value)((double *)v + i),
+                                               (value)((double *)v + i));
         }
 #else
         intern_cleanup();
@@ -14159,6 +14347,20 @@ static void intern_rec(value *dest)
         ofs = read32u();
         intern_rec(&clos);
         v = clos + ofs;
+        break;
+      case CODE_CUSTOM:
+        ops = find_custom_operations((char *) intern_src);
+        if (ops == NULL) {
+          intern_cleanup();
+          failwith("input_value: unknown custom block identifier");
+        }
+        while (*intern_src++ != 0) /*nothing*/;  /*skip identifier*/
+        size = ops->deserialize((void *) (intern_dest + 2));
+        size = 1 + (size + sizeof(value) - 1) / sizeof(value);
+        v = Val_hp(intern_dest);
+        *intern_dest = Make_header(size, Custom_tag, intern_color);
+        Custom_ops_val(v) = ops;
+        intern_dest += 1 + size;
         break;
       default:
         intern_cleanup();
@@ -14196,6 +14398,112 @@ static void intern_rec(value *dest)
 <<function [[code_checksum]]([[(byterun/intern.c)]])>>
 
 #endif
+
+/* Functions for writing user-defined marshallers */
+
+int deserialize_uint_1(void)
+{
+  return read8u();
+}
+
+int deserialize_sint_1(void)
+{
+  return read8s();
+}
+
+int deserialize_uint_2(void)
+{
+  return read16u();
+}
+
+int deserialize_sint_2(void)
+{
+  return read16s();
+}
+
+uint32 deserialize_uint_4(void)
+{
+  return read32u();
+}
+
+int32 deserialize_sint_4(void)
+{
+  return read32s();
+}
+
+uint64 deserialize_uint_8(void)
+{
+  uint64 i;
+  deserialize_block_8(&i, 1);
+  return i;
+}
+
+int64 deserialize_sint_8(void)
+{
+  int64 i;
+  deserialize_block_8(&i, 1);
+  return i;
+}
+
+float deserialize_float_4(void)
+{
+  float f;
+  deserialize_block_4(&f, 1);
+  return f;
+}
+
+double deserialize_float_8(void)
+{
+  double f;
+  deserialize_block_8(&f, 1);
+  return f;
+}
+
+void deserialize_block_1(void * data, long len)
+{
+  bcopy(intern_src, data, len);
+  intern_src += len;
+}
+
+void deserialize_block_2(void * data, long len)
+{
+  unsigned char * p, * q;
+#ifndef ARCH_BIG_ENDIAN
+  for (p = intern_src, q = data; len > 0; len--, p += 2, q += 2)
+    Reverse_16(q, p);
+  intern_src = p;
+#else
+  bcopy(intern_src, data, len * 2);
+  intern_src += len * 2;
+#endif
+}
+
+void deserialize_block_4(void * data, long len)
+{
+  unsigned char * p, * q;
+#ifndef ARCH_BIG_ENDIAN
+  for (p = intern_src, q = data; len > 0; len--, p += 4, q += 4)
+    Reverse_32(q, p);
+  intern_src = p;
+#else
+  bcopy(intern_src, data, len * 4);
+  intern_src += len * 4;
+#endif
+}
+
+void deserialize_block_8(void * data, long len)
+{
+  unsigned char * p, * q;
+#ifndef ARCH_BIG_ENDIAN
+  for (p = intern_src, q = data; len > 0; len--, p += 8, q += 8)
+    Reverse_64(q, p);
+  intern_src = p;
+#else
+  bcopy(intern_src, data, len * 8);
+  intern_src += len * 8;
+#endif
+}
+
 @
 
 
@@ -14858,7 +15166,10 @@ struct channel {
 <<function [[Channel]]>>=
 /* Extract a struct channel * from the heap object representing it */
 
+#if 0
 #define Channel(v) ((struct channel *) Field(v, 1))
+#endif
+#define Channel(v) (*((struct channel **) (Data_custom_val(v))))
 @
 
 
@@ -15296,10 +15607,20 @@ static void finalize_channel(value vchan)
 @
 
 <<function [[alloc_channel]]>>=
+static struct custom_operations channel_operations = {
+  "_chan",
+  finalize_channel,
+  custom_compare_default,
+  custom_hash_default,
+  custom_serialize_default,
+  custom_deserialize_default
+};
+
 static value alloc_channel(struct channel *chan)
 {
-  value res = alloc_final(2, finalize_channel, 1, 32);
-  Field(res, 1) = (value) chan;
+  value res = alloc_custom(&channel_operations, sizeof(struct channel *),
+                           1, 32);
+  Channel(res) = chan;
   return res;
 }
 @
@@ -15474,6 +15795,7 @@ value caml_input_scan_line(value vchannel)       /* ML */
 #endif
 
 #include "alloc.h"
+#include "custom.h"
 #include "fail.h"
 #include "io.h"
 #include "memory.h"
@@ -17017,6 +17339,7 @@ void fatal_uncaught_exception(value exn)
 
 
 <<function [[Reverse_int32]]>>=
+#if 0
 #define Reverse_int32(w) {                                                    \
   char * _p;                                                                  \
   int _a;                                                                     \
@@ -17028,9 +17351,23 @@ void fatal_uncaught_exception(value exn)
   _p[1] = _p[2];                                                              \
   _p[2] = _a;                                                                 \
 }
+#endif
+#define Reverse_32(dst,src) {                                               \
+  char * _p, * _q;                                                          \
+  char _a, _b;                                                              \
+  _p = (char *) (src);                                                      \
+  _q = (char *) (dst);                                                      \
+  _a = _p[0];                                                               \
+  _b = _p[1];                                                               \
+  _q[0] = _p[3];                                                            \
+  _q[1] = _p[2];                                                            \
+  _q[3] = _a;                                                               \
+  _q[2] = _b;                                                               \
+}
 @
 
 <<function [[Reverse_int64]]>>=
+#if 0
 #define Reverse_int64(d) {                                                    \
   char * _p;                                                                  \
   int _a;                                                                     \
@@ -17048,10 +17385,40 @@ void fatal_uncaught_exception(value exn)
   _p[3] = _p[4];                                                              \
   _p[4] = _a;                                                                 \
 }
+#endif
+#define Reverse_64(dst,src) {                                               \
+  char * _p, * _q;                                                          \
+  char _a, _b;                                                              \
+  _p = (char *) (src);                                                      \
+  _q = (char *) (dst);                                                      \
+  _a = _p[0];                                                               \
+  _b = _p[1];                                                               \
+  _q[0] = _p[7];                                                            \
+  _q[1] = _p[6];                                                            \
+  _q[7] = _a;                                                               \
+  _q[6] = _b;                                                               \
+  _a = _p[2];                                                               \
+  _b = _p[3];                                                               \
+  _q[2] = _p[5];                                                            \
+  _q[3] = _p[4];                                                            \
+  _q[5] = _a;                                                               \
+  _q[4] = _b;                                                               \
+}
 @
 
 <<constant [[Reverse_double]]>>=
+#if 0
 #define Reverse_double Reverse_int64
+#endif
+#define Reverse_16(dst,src) {                                               \
+  char * _p, * _q;                                                          \
+  char _a;                                                                  \
+  _p = (char *) (src);                                                      \
+  _q = (char *) (dst);                                                      \
+  _a = _p[0];                                                               \
+  _q[0] = _p[1];                                                            \
+  _q[1] = _a;                                                               \
+}
 @
 
 
@@ -17060,7 +17427,12 @@ void fatal_uncaught_exception(value exn)
 <<byterun/reverse.h>>=
 <<copyright header C xavier>>
 
-/* Swap byte-order in 32-bit integers and in words */
+/* claude: upstream (7175ab04, 2000-02-10) generalizes these to 2-arg
+ * dst/src macros and adds a 16-bit variant; old 1-arg bodies kept below
+ * under #if 0 rather than deleted, since the syncweb markers wrapping
+ * them must not be renamed/moved (see docs/literate) */
+
+/* Swap byte-order in 16, 32, and 64-bit integers or floats */
 
 #ifndef _reverse_
 #define _reverse_

@@ -22,6 +22,7 @@
 #endif
 
 #include "alloc.h"
+#include "custom.h"
 #include "fail.h"
 #include "gc.h"
 #include "intext.h"
@@ -360,7 +361,6 @@ static void extern_rec(value v)
       break;
     }
     case Abstract_tag:
-    case Final_tag:
       extern_invalid_argument("output_value: abstract value");
       break;
     case Infix_tag:
@@ -370,6 +370,16 @@ static void extern_rec(value v)
     case Object_tag:
       extern_invalid_argument("output_value: object value");
       break;
+    case Custom_tag: {
+      unsigned long sz_32, sz_64;
+      char * ident = Custom_ops_val(v)->identifier;
+      Write(CODE_CUSTOM);
+      writeblock(ident, strlen(ident) + 1);
+      Custom_ops_val(v)->serialize(v, &sz_32, &sz_64);
+      size_32 += 2 + ((sz_32 + 3) >> 2);  /* header + ops + data */
+      size_64 += 2 + ((sz_64 + 7) >> 3);
+      break;
+    }
     default: {
       mlsize_t i;
       if (tag < 16 && sz < 8) {
@@ -503,5 +513,96 @@ value output_value_to_buffer(value buf, value ofs, value len, value v, value fla
   return Val_long(len_res);
 }
 /*e: function [[output_value_to_buffer]] */
+
+/* Functions for writing user-defined marshallers */
+
+void serialize_int_1(int i)
+{
+  if (extern_ptr + 1 > extern_limit) resize_extern_block(1);
+  extern_ptr[0] = i;
+  extern_ptr += 1;
+}
+
+void serialize_int_2(int i)
+{
+  if (extern_ptr + 2 > extern_limit) resize_extern_block(2);
+  extern_ptr[0] = i >> 8;
+  extern_ptr[1] = i;
+  extern_ptr += 2;
+}
+
+void serialize_int_4(int32 i)
+{
+  if (extern_ptr + 4 > extern_limit) resize_extern_block(4);
+  extern_ptr[0] = i >> 24;
+  extern_ptr[1] = i >> 16;
+  extern_ptr[2] = i >> 8;
+  extern_ptr[3] = i;
+  extern_ptr += 4;
+}
+
+void serialize_int_8(int64 i)
+{
+  serialize_block_8(&i, 1);
+}
+
+void serialize_float_4(float f)
+{
+  serialize_block_4(&f, 1);
+}
+
+void serialize_float_8(double f)
+{
+  serialize_block_8(&f, 1);
+}
+
+void serialize_block_1(void * data, long len)
+{
+  if (extern_ptr + len > extern_limit) resize_extern_block(len);
+  bcopy(data, extern_ptr, len);
+  extern_ptr += len;
+}
+
+void serialize_block_2(void * data, long len)
+{
+  unsigned char * p, * q;
+  if (extern_ptr + 2 * len > extern_limit) resize_extern_block(2 * len);
+#ifndef ARCH_BIG_ENDIAN
+  for (p = data, q = extern_ptr; len > 0; len--, p += 2, q += 2)
+    Reverse_16(q, p);
+  extern_ptr = q;
+#else
+  bcopy(data, extern_ptr, len * 2);
+  extern_ptr += len * 2;
+#endif
+}
+
+void serialize_block_4(void * data, long len)
+{
+  unsigned char * p, * q;
+  if (extern_ptr + 4 * len > extern_limit) resize_extern_block(4 * len);
+#ifndef ARCH_BIG_ENDIAN
+  for (p = data, q = extern_ptr; len > 0; len--, p += 4, q += 4)
+    Reverse_32(q, p);
+  extern_ptr = q;
+#else
+  bcopy(data, extern_ptr, len * 4);
+  extern_ptr += len * 4;
+#endif
+}
+
+void serialize_block_8(void * data, long len)
+{
+  unsigned char * p, * q;
+  if (extern_ptr + 8 * len > extern_limit) resize_extern_block(8 * len);
+#ifndef ARCH_BIG_ENDIAN
+  for (p = data, q = extern_ptr; len > 0; len--, p += 8, q += 8)
+    Reverse_64(q, p);
+  extern_ptr = q;
+#else
+  bcopy(data, extern_ptr, len * 8);
+  extern_ptr += len * 8;
+#endif
+}
 
 /*e: byterun/extern.c */

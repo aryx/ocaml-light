@@ -1046,6 +1046,7 @@ enum instructions {
         eight bytes on 64 bit architectures.
   long: A C long integer.
   int32: Four bytes on all architectures.
+  int64: Eight bytes on all architectures.
 
   val: The ML representation of something.  A long or a block or a pointer
        outside the heap.  If it is a block, it is the (encoded) address
@@ -1304,10 +1305,18 @@ typedef unsigned long color_t; // bit 8-9
 
 
 <<constant [[Final_tag]]>>=
+#if 0
 /* Finalized things.  Just like abstract things, but the GC will call the
    [Final_fun] before deallocation.
 */
 #define Final_tag 255
+#endif
+/* Custom blocks.  They contain a pointer to a "method suite"
+   of functions (for finalization, comparison, hashing, etc)
+   followed by raw data.  The contents of custom blocks is not traced by
+   the GC; therefore, they must not contain any [value].
+   See [custom.h] for operations on method suites. */
+#define Custom_tag 255
 @
 
 

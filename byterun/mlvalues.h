@@ -25,6 +25,7 @@
         eight bytes on 64 bit architectures.
   long: A C long integer.
   int32: Four bytes on all architectures.
+  int64: Eight bytes on all architectures.
 
   val: The ML representation of something.  A long or a block or a pointer
        outside the heap.  If it is a block, it is the (encoded) address
@@ -72,6 +73,9 @@ typedef unsigned long mark_t;
 
 typedef int int32;            /* Not portable, but checked by autoconf. */
 typedef unsigned int uint32;  /* Seems like a reasonable assumption anyway. */
+
+typedef long int64;             /* FIXME */
+typedef unsigned long uint64;   /* FIXME */
 
 /*s: function [[Is_long]] */
 /* Longs vs blocks. */
@@ -384,14 +388,25 @@ void Store_double_val (value,double);
 /*e: function [[Store_double_field]] */
 
 /*s: constant [[Final_tag]] */
+#if 0
 /* Finalized things.  Just like abstract things, but the GC will call the
    [Final_fun] before deallocation.
 */
 #define Final_tag 255
+#endif
+/* Custom blocks.  They contain a pointer to a "method suite"
+   of functions (for finalization, comparison, hashing, etc)
+   followed by raw data.  The contents of custom blocks is not traced by
+   the GC; therefore, they must not contain any [value].
+   See [custom.h] for operations on method suites. */
+#define Custom_tag 255
 /*e: constant [[Final_tag]] */
-typedef void (*final_fun) (value);
 /*s: function [[Final_fun]] */
+#if 0
 #define Final_fun(val) (((final_fun *) (val)) [0]) /* Also an l-value. */
+#endif
+#define Data_custom_val(v) ((void *) &Field(v, 1))
+struct custom_operations;       /* defined in [custom.h] */
 /*e: function [[Final_fun]] */
 
 

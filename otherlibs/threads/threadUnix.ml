@@ -76,6 +76,11 @@ let pipe() =
   Unix.set_nonblock in_fd;
   fd_pair
 
+let open_process_in cmd =
+  let ic = Unix.open_process_in cmd in
+  Unix.set_nonblock(Unix.descr_of_in_channel ic);
+  oc
+
 let open_process_out cmd =
   let oc = Unix.open_process_out cmd in
   Unix.set_nonblock(Unix.descr_of_out_channel oc);
@@ -83,6 +88,7 @@ let open_process_out cmd =
 
 let open_process cmd =
   let (ic, oc as channels) = Unix.open_process cmd in
+  Unix.set_nonblock(Unix.descr_of_in_channel ic);
   Unix.set_nonblock(Unix.descr_of_out_channel oc);
   channels
 

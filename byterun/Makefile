@@ -10,7 +10,7 @@ OBJS=interp.o misc.o stacks.o fix_code.o startup.o main.o \
   fail.o signals.o printexc.o backtrace.o \
   compare.o ints.o floats.o str.o array.o io.o extern.o intern.o \
   hash.o sys.o meta.o parsing.o gc_ctrl.o terminfo.o md5.o obj.o \
-  lexing.o callback.o debugger.o weak.o compact.o
+  lexing.o callback.o debugger.o weak.o compact.o custom.o
 
 DOBJS=$(OBJS:.o=.d.o) instrtrace.d.o
 
@@ -32,7 +32,7 @@ install:
 	cp libcamlrun.a $(LIBDIR)/libcamlrun.a
 	cd $(LIBDIR); $(RANLIB) libcamlrun.a
 	if test -d $(LIBDIR)/caml; then : ; else mkdir $(LIBDIR)/caml; fi
-	cp mlvalues.h alloc.h misc.h callback.h $(LIBDIR)/caml
+	cp mlvalues.h alloc.h misc.h callback.h custom.h $(LIBDIR)/caml
 	sed -e '/#include ".*\/m.h/r ../config/m.h' \
             -e '/#include ".*\/s.h/r ../config/s.h' \
             -e '/#include "/d' config.h > $(LIBDIR)/caml/config.h
