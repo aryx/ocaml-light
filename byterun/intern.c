@@ -221,7 +221,7 @@ static void intern_rec(value *dest)
         *intern_dest = Make_header(Double_wosize, Double_tag, intern_color);
         intern_dest += 1 + Double_wosize;
         readblock((char *) v, 8);
-        if (code != CODE_DOUBLE_NATIVE) Reverse_double(v);
+        if (code != CODE_DOUBLE_NATIVE) Reverse_64(v, v);
         break;
       case CODE_DOUBLE_ARRAY8_LITTLE:
       case CODE_DOUBLE_ARRAY8_BIG:
@@ -241,7 +241,8 @@ static void intern_rec(value *dest)
         if (code != CODE_DOUBLE_ARRAY8_NATIVE && 
             code != CODE_DOUBLE_ARRAY32_NATIVE) {
           mlsize_t i;
-          for (i = 0; i < len; i++) Reverse_double((value)((double *)v + i));
+          for (i = 0; i < len; i++) Reverse_64((value)((double *)v + i),
+                                               (value)((double *)v + i));
         }
 #else
         intern_cleanup();
