@@ -236,3 +236,7 @@ val init : int -> (int -> 'a) -> 'a list
    Raise [Invalid_argument] if [len < 0].
    @since 4.06.0
  *)
+
+val rev_map : ('a -> 'b) -> 'a list -> 'b list
+(** [rev_map f l] gives the same result as {!rev}[ (]{!map}[ f l)], but is
+   tail-recursive and more efficient. *)

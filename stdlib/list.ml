@@ -313,3 +313,10 @@ let rec init_aux i n f =
 
 let init n f =
   if n < 0 then invalid_arg "List.init" else init_aux 0 n f
+
+let rev_map f l =
+  let rec rmap_f accu = function
+    | [] -> accu
+    | a::l -> rmap_f (f a :: accu) l
+  in
+  rmap_f [] l
