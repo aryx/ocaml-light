@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "custom.h"
 #include "fail.h"
 #include "gc.h"
 #include "gc_ctrl.h"
@@ -103,6 +104,7 @@ extern void init_signals (void);
 void caml_main(char **argv)
 {
   init_ieee_floats();
+  init_custom_operations();
 #ifdef DEBUG
   verbose_init = 1;
 #endif

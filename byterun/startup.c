@@ -27,6 +27,7 @@
 
 #include "alloc.h"
 #include "backtrace.h"
+#include "custom.h"
 #include "debugger.h"
 #include "exec.h"
 #include "fail.h"
@@ -301,6 +302,7 @@ void caml_main(char **argv)
   /* Machine-dependent initialization of the floating-point hardware
      so that it behaves as much as possible as specified in IEEE */
   init_ieee_floats();
+  init_custom_operations();
 
   /* Set up a catch-all exception handler */
   if (sigsetjmp(raise_buf.buf, 1) == 0) {

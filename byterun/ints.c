@@ -252,7 +252,7 @@ static unsigned long int32_deserialize(void * dst)
   return 4;
 }
 
-static struct custom_operations int32_ops = {
+struct custom_operations int32_ops = {
   "_i",
   custom_finalize_default,
   int32_compare,
@@ -318,7 +318,7 @@ value int32_of_int(value v) /* ML */
 value int32_to_int(value v) /* ML */
 { return Val_long(Int32_val(v)); }
 
-value format_int32(value fmt, value arg)      /* ML */
+value int32_format(value fmt, value arg)      /* ML */
 {
   char format_string[32], default_format_buffer[32];
   char * buffer;
@@ -365,8 +365,8 @@ static unsigned long int64_deserialize(void * dst)
   return 8;
 }
 
-static struct custom_operations int64_ops = {
-  "_i",
+struct custom_operations int64_ops = {
+  "_j",
   custom_finalize_default,
   int64_compare,
   int64_hash,
@@ -437,7 +437,7 @@ value int64_of_int32(value v) /* ML */
 value int64_to_int32(value v) /* ML */
 { return copy_int32((int32) Int64_val(v)); }
 
-value format_int64(value fmt, value arg)      /* ML */
+value int64_format(value fmt, value arg)      /* ML */
 {
   char format_string[64], default_format_buffer[64];
   char * buffer;
@@ -468,7 +468,7 @@ value int64_of_string(value s)          /* ML */
     if (d < 0) break;
     res = base * res + d;
   }
-  if (*p != 0) failwith("Int64.of_string");
+  if (*p != 0) failwith("int_of_string");
   return copy_int64(sign < 0 ? -((int64) res) : (int64) res);
 }
 
