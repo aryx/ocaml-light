@@ -36,6 +36,8 @@ let clear h =
     h.data.(i) <- Empty
   done
 
+let copy h = { max_len = h.max_len; data = Array.copy h.data }
+
 let resize hashfun tbl =
   let odata = tbl.data in
   let osize = Array.length odata in

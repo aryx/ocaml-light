@@ -29,6 +29,9 @@ val create : int -> ('a,'b) t
 val clear : ('a, 'b) t -> unit
         (* Empty a hash table. *)
 
+val copy : ('a, 'b) t -> ('a, 'b) t
+        (* Return a copy of the given hashtable. *)
+
 val add : ('a, 'b) t -> 'a -> 'b -> unit
         (* [Hashtbl.add tbl x y] adds a binding of [x] to [y] in table [tbl].
            Previous bindings for [x] are not removed, but simply
