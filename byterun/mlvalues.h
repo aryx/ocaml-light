@@ -71,12 +71,6 @@ typedef unsigned long color_t; // bit 8-9
 
 typedef unsigned long mark_t;
 
-typedef int int32;            /* Not portable, but checked by autoconf. */
-typedef unsigned int uint32;  /* Seems like a reasonable assumption anyway. */
-
-typedef long int64;             /* FIXME */
-typedef unsigned long uint64;   /* FIXME */
-
 /*s: function [[Is_long]] */
 /* Longs vs blocks. */
 #define Is_long(x)   (((x) & 1) != 0)
@@ -409,6 +403,10 @@ void Store_double_val (value,double);
 struct custom_operations;       /* defined in [custom.h] */
 /*e: function [[Final_fun]] */
 
+/* Int32.t and Int64.t are represented as custom blocks. */
+
+#define Int32_val(v) (*((int32 *) Data_custom_val(v)))
+#define Int64_val(v) (*((int64 *) Data_custom_val(v)))
 
 /* 3- Atoms are 0-tuples.  They are statically allocated once and for all. */
 
