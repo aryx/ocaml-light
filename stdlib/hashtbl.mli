@@ -32,6 +32,12 @@ val clear : ('a, 'b) t -> unit
 val copy : ('a, 'b) t -> ('a, 'b) t
         (* Return a copy of the given hashtable. *)
 
+val length : ('a, 'b) t -> int
+        (* [Hashtbl.length tbl] returns the number of bindings in [tbl].
+           Multiple bindings are counted multiply, so [Hashtbl.length]
+           gives the number of times [Hashtbl.iter] calls its first
+           argument. *)
+
 val add : ('a, 'b) t -> 'a -> 'b -> unit
         (* [Hashtbl.add tbl x y] adds a binding of [x] to [y] in table [tbl].
            Previous bindings for [x] are not removed, but simply

@@ -38,6 +38,12 @@ let clear h =
 
 let copy h = { max_len = h.max_len; data = Array.copy h.data }
 
+let length h =
+  let rec bucket_length n = function
+      Empty -> n
+    | Cons(_, _, rest) -> bucket_length (n + 1) rest in
+  Array.fold_left (fun acc b -> acc + bucket_length 0 b) 0 h.data
+
 let resize hashfun tbl =
   let odata = tbl.data in
   let osize = Array.length odata in
