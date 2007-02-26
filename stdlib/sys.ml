@@ -21,6 +21,7 @@ let max_array_length = (1 lsl (word_size - 10)) - 1;;
 let max_string_length = word_size / 8 * max_array_length - 1;;
 
 external file_exists: string -> bool = "sys_file_exists"
+external is_directory : string -> bool = "sys_is_directory"
 external remove: string -> unit = "sys_remove"
 external rename : string -> string -> unit = "sys_rename"
 external getenv: string -> string = "sys_getenv"

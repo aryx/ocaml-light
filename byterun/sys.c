@@ -222,6 +222,17 @@ value sys_file_exists(value name)     /* ML */
 }
 /*e: function [[sys_file_exists]] */
 
+value sys_is_directory(value name)    /* ML */
+{
+  struct stat st;
+  if (stat(String_val(name), &st) == -1) sys_error(name);
+#ifdef S_ISDIR
+  return Val_bool(S_ISDIR(st.st_mode));
+#else
+  return Val_bool(st.st_mode & S_IFDIR);
+#endif
+}
+
 /*s: function [[sys_remove]] */
 value sys_remove(value name)          /* ML */
 {
