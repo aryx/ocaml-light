@@ -223,3 +223,10 @@ val find_map : ('a -> 'b option) -> 'a list -> 'b option
    if none exist.
    @since 4.10.0
  *)
+
+val mapi : (int -> 'a -> 'b) -> 'a list -> 'b list
+(** Same as {!map}, but the function is applied to the index of
+   the element as first argument (counting from 0), and the element
+   itself as second argument.
+   @since 3.13.0
+ *)

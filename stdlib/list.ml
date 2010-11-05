@@ -300,3 +300,9 @@ let rec find_map f = function
       match f x with
       | Some _ as result -> result
       | None -> find_map f l
+
+let rec mapi i f = function
+    [] -> []
+  | a::l -> let r = f i a in r :: mapi (i + 1) f l
+
+let mapi f l = mapi 0 f l
