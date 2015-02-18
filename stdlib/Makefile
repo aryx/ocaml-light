@@ -14,7 +14,7 @@ OBJS=pervasives.cmo list.cmo char.cmo string.cmo array.cmo sys.cmo \
   lexing.cmo parsing.cmo \
   set.cmo map.cmo stack.cmo queue.cmo stream.cmo \
   printf.cmo format.cmo arg.cmo printexc.cmo gc.cmo \
-  digest.cmo random.cmo oo.cmo genlex.cmo callback.cmo weak.cmo \
+  digest.cmo random.cmo genlex.cmo callback.cmo weak.cmo \
   lazy.cmo
 
 all: stdlib.cma std_exit.cmo camlheader
@@ -52,10 +52,6 @@ pervasives.cmo: pervasives.ml
 
 pervasives.cmx: pervasives.ml
 	$(CAMLOPT) $(OPTCOMPFLAGS) -nopervasives -c pervasives.ml
-
-# oo.cmi must be compiled with -nopervasives for applets
-oo.cmi: oo.mli
-	$(CAMLC) $(COMPFLAGS) -nopervasives -c oo.mli
 
 .SUFFIXES: .mli .ml .cmi .cmo .cmx
 

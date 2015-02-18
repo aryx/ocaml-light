@@ -33,8 +33,6 @@ let mkmod d =
   { pmod_desc = d; pmod_loc = symbol_loc() }
 let mkstr d =
   { pstr_desc = d; pstr_loc = symbol_loc() }
-let mkfield d =
-  { pfield_desc = d; pfield_loc = symbol_loc() }
 
 let mkoperator name pos =
   { pexp_desc = Pexp_ident(Lident name); pexp_loc = rhs_loc pos }
@@ -126,14 +124,10 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token BARRBRACKET
 %token BEGIN
 %token <char> CHAR
-%token CLASS
-%token CLOSED
 %token COLON
 %token COLONCOLON
 %token COLONEQUAL
-%token COLONGREATER
 %token COMMA
-%token CONSTRAINT
 %token DO
 %token DONE
 %token DOT
@@ -152,7 +146,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token FUNCTION
 %token FUNCTOR
 %token GREATER
-%token GREATERRBRACE
 %token GREATERRBRACKET
 %token IF
 %token IN
@@ -162,11 +155,9 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token <string> INFIXOP2
 %token <string> INFIXOP3
 %token <string> INFIXOP4
-%token INHERIT
 %token <int> INT
 %token LAZY
 %token LBRACE
-%token LBRACELESS
 %token LBRACKET
 %token LBRACKETBAR
 %token LBRACKETLESS
@@ -176,18 +167,14 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token <string> LIDENT
 %token LPAREN
 %token MATCH
-%token METHOD
 %token MINUSGREATER
 %token MODULE
 %token MUTABLE
-%token NEW
 %token OF
 %token OPEN
 %token OR
 %token PARSER
 %token <string> PREFIXOP
-%token PRIVATE
-%token PROTECTED
 %token QUESTION
 %token QUOTE
 %token RBRACE
@@ -210,7 +197,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token <string> UIDENT
 %token UNDERSCORE
 %token VAL
-%token VIRTUAL
 %token WHEN
 %token WHILE
 %token WITH
@@ -239,7 +225,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %right prec_unary_minus                 /* - unary */
 %left  prec_appl                        /* function application */
 %right prec_constr_appl                 /* constructor application */
-%left  SHARP                            /* method call */
 %left  DOT                              /* record access, array access */
 %right PREFIXOP                         /* ! */
 
@@ -341,10 +326,6 @@ structure_item:
       { mkstr(Pstr_modtype($3, $5)) }
   | OPEN mod_longident
       { mkstr(Pstr_open $2) }
-  | CLASS class_list END
-      { mkstr(Pstr_class (List.rev $2)) }
-  | CLASS class_list error
-      { unclosed "class" 1 "end" 3 }
 ;
 module_binding:
     EQUAL module_expr
@@ -398,8 +379,6 @@ signature_item:
       { mksig(Psig_open $2) }
   | INCLUDE module_type
       { mksig(Psig_include $2) }
-  | CLASS class_type_list END
-      { mksig(Psig_class (List.rev $2)) }
 ;
 
 module_declaration:
@@ -491,8 +470,6 @@ expr:
   | simple_expr DOT LBRACKET seq_expr RBRACKET LESSMINUS expr
       { mkexp(Pexp_apply(mkexp(Pexp_ident(array_function "String" "set")),
                          [$1; $4; $7])) }
-  | label LESSMINUS expr
-      { mkexp(Pexp_setinstvar($1, $3)) }
   | ASSERT simple_expr %prec prec_appl
       { mkassert $2 }
   | LAZY simple_expr %prec prec_appl
@@ -549,19 +526,6 @@ simple_expr:
       { unclosed "[" 1 "]" 4 }
   | PREFIXOP simple_expr
       { mkexp(Pexp_apply(mkoperator $1 1, [$2])) }
-  | simple_expr SHARP label
-      { mkexp(Pexp_send($1, $3)) }
-  | NEW class_longident
-      { mkexp(Pexp_new($2)) }
-  | LBRACELESS label_expr_list opt_semi GREATERRBRACE
-      { mkexp(Pexp_override(List.rev $2)) }
-  | LBRACELESS label_expr_list opt_semi error
-      { unclosed "{<" 1 ">}" 4 }
-  | LBRACELESS GREATERRBRACE
-      { mkexp(Pexp_override []) }
-  | LPAREN SHARP label RPAREN
-      { mkexp(Pexp_function [mkpat(Ppat_var "x"),
-                mkexp(Pexp_send(mkexp(Pexp_ident (Lident"x")), $3))]) }
 ;
 simple_expr_list:
     simple_expr
@@ -652,22 +616,13 @@ lbl_expr_list:
   | lbl_expr_list SEMI label_longident EQUAL expr %prec prec_list
       { ($3, $5) :: $1 }
 ;
-label_expr_list:
-    label EQUAL expr %prec prec_list
-      { [$1,$3] }
-  | label_expr_list SEMI label EQUAL expr %prec prec_list
-      { ($3, $5) :: $1 }
-;
 expr_semi_list:
     expr %prec prec_list                        { [$1] }
   | expr_semi_list SEMI expr %prec prec_list    { $3 :: $1 }
 ;
 type_constraint:
     COLON core_type                             { (Some $2, None) }
-  | COLON core_type COLONGREATER core_type      { (Some $2, Some $4) }
-  | COLONGREATER core_type                      { (None, Some $2) }
   | COLON error                                 { syntax_error() }
-  | COLONGREATER error                          { syntax_error() }
 ;
 
 /* Patterns */
@@ -736,123 +691,6 @@ primitive_declaration:
   | STRING primitive_declaration                { $1 :: $2 }
 ;
 
-/* Class definitions */
-
-class_list:
-        class_list AND class_def                { $3 :: $1 }
-      | class_def                               { [$1] }
-;
-class_def:
-        virtual_flag closed_flag
-        class_type_parameters LIDENT simple_pattern_list self self_type EQUAL
-        constraints class_fields
-          { { pcl_name = $4; pcl_param = $3; pcl_args = List.rev $5;
-              pcl_self = $6; pcl_self_ty = $7; pcl_cstr = List.rev $9;
-              pcl_field = List.rev $10;
-              pcl_kind = $1; pcl_closed = $2;
-              pcl_loc = symbol_loc () } }
-;
-class_type_parameters:
-        type_parameters                         { $1, symbol_loc () }
-;
-simple_pattern_list:
-        simple_pattern                          { [$1] }
-      | simple_pattern_list simple_pattern      { $2::$1 }
-;
-self:
-        AS LIDENT                               { Some $2 }
-      | /* empty */                             { None }
-;
-class_fields:
-        /* empty */                             { [] }
-      | class_fields INHERIT ancestor           { Pcf_inher $3 :: $1 }
-      | class_fields VAL value                  { Pcf_val $3 :: $1 }
-      | class_fields virtual_method             { Pcf_virt $2 :: $1 }
-      | class_fields method_def                 { Pcf_meth $2 :: $1 }
-;
-ancestor:
-        LPAREN core_type_comma_list RPAREN class_longident simple_expr_list
-        self
-          { $4, List.rev $2, List.rev $5, $6, symbol_loc () }
-      | LPAREN core_type RPAREN class_longident simple_expr_list self
-          { $4, [$2], List.rev $5, $6, symbol_loc () }
-      | class_longident simple_expr_list self
-          { $1, [], List.rev $2, $3, symbol_loc () }
-;
-value:
-        private_flag mutable_flag label EQUAL seq_expr
-          { $3, $1, $2, Some $5, symbol_loc () }
-      | private_flag mutable_flag label
-          { $3, $1, $2, None, symbol_loc () }
-;
-virtual_method:
-        VIRTUAL protected_flag label COLON core_type
-          { $3, $2, $5, symbol_loc () }
-
-method_def :
-        METHOD protected_flag label fun_binding
-          { $3, $2, $4, symbol_loc () }
-;
-
-/* Class type definitions */
-
-class_type_list:
-        class_type_list AND class_type          { $3 :: $1 }
-      | class_type                              { [$1] }
-;
-class_type:
-        virtual_flag closed_flag class_type_parameters LIDENT type_list
-        self_type
-        EQUAL
-        constraints class_type_fields
-          { { pcty_name = $4; pcty_param = $3; pcty_args = $5;
-              pcty_self = $6; pcty_cstr = List.rev $8;
-              pcty_field = List.rev $9;
-              pcty_kind = $1; pcty_closed = $2;
-              pcty_loc = symbol_loc () } }
-;
-type_list:
-        LPAREN core_type RPAREN type_list       { $2 :: $4 }
-      | LPAREN core_type RPAREN                 { [$2] }
-;
-self_type:
-        COLON type_parameter                    { Some $2 }
-      | /* empty */                             { None }
-;
-constraints:
-        constraints CONSTRAINT constrain        { $3 :: $1 }
-      | /* empty */                             { [] }
-;
-constrain:
-        type_parameter EQUAL core_type          { $1, $3, symbol_loc () }
-;
-class_type_fields:
-        /* empty */                             { [] }
-      | class_type_fields INHERIT ancestor_type { Pctf_inher $3 :: $1 }
-      | class_type_fields VAL value_type        { Pctf_val $3 :: $1 }
-      | class_type_fields virtual_method        { Pctf_virt $2 :: $1 }
-      | class_type_fields method_type           { Pctf_meth $2 :: $1 }
-;
-ancestor_type:
-        LPAREN core_type_comma_list RPAREN class_longident
-          { $4, List.rev $2, symbol_loc () }
-      | LPAREN core_type RPAREN class_longident
-          { $4, [$2], symbol_loc () }
-      | class_longident
-          { $1, [], symbol_loc () }
-;
-value_type :
-        private_flag mutable_flag label COLON core_type
-          { $3, $1, $2, Some $5, symbol_loc () }
-      | private_flag mutable_flag label
-          { $3, $1, $2, None, symbol_loc () }
-;
-method_type :
-        METHOD protected_flag label COLON core_type
-          { $3, $2, $5, symbol_loc () }
-      | METHOD protected_flag label
-          { $3, $2, mktyp(Ptyp_any), symbol_loc () }
-;
 
 /* Type declarations */
 
@@ -936,6 +774,11 @@ with_constraint:
       { ($2, Pwith_module $4) }
 ;
 
+
+constraints:
+       /* empty */                             { [] }
+;
+
 /* Core types */
 
 core_type:
@@ -963,17 +806,6 @@ simple_core_type:
       { mktyp(Ptyp_constr($4, List.rev $2)) }
   | LPAREN core_type RPAREN
       { $2 }
-  | LESS meth_list GREATER
-      { mktyp(Ptyp_object $2) }
-  | LESS GREATER
-      { mktyp(Ptyp_object []) }
-  | SHARP class_longident
-      { mktyp(Ptyp_class($2, [])) }
-  | simple_core_type SHARP class_longident %prec prec_constr_appl
-      { mktyp(Ptyp_class($3, [$1])) }
-  | LPAREN core_type_comma_list RPAREN SHARP class_longident
-      %prec prec_constr_appl
-      { mktyp(Ptyp_class($5, List.rev $2)) }
 ;
 core_type_tuple:
     simple_core_type STAR simple_core_type      { [$3; $1] }
@@ -986,17 +818,6 @@ core_type_comma_list:
 core_type_list:
     simple_core_type                            { [$1] }
   | core_type_list STAR simple_core_type        { $3 :: $1 }
-;
-meth_list:
-    field SEMI meth_list                        { $1 :: $3 }
-  | field opt_semi                              { [$1] }
-  | DOTDOT                                      { [mkfield Pfield_var] }
-;
-field:
-    label COLON core_type                       { mkfield(Pfield($1, $3)) }
-;
-label:
-    LIDENT                                      { $1 }
 ;
 
 /* Constants */
@@ -1081,10 +902,6 @@ mty_longident:
     ident                                       { Lident $1 }
   | mod_ext_longident DOT ident                 { Ldot($1, $3) }
 ;
-class_longident:
-    LIDENT                                      { Lident $1 }
-  | mod_longident DOT LIDENT                    { Ldot($1, $3) }
-;
 
 /* Toplevel directives */
 
@@ -1105,25 +922,9 @@ direction_flag:
     TO                                          { Upto }
   | DOWNTO                                      { Downto }
 ;
-private_flag:
-    /* empty */                                 { Public }
-  | PRIVATE                                     { Private }
-;
-protected_flag:
-    /* empty */                                 { Public }
-  | PROTECTED                                   { Private }
-;
 mutable_flag:
     /* empty */                                 { Immutable }
   | MUTABLE                                     { Mutable }
-;
-virtual_flag:
-    /* empty */                                 { Concrete }
-  | VIRTUAL                                     { Virtual }
-;
-closed_flag:
-    /* empty */                                 { Open }
-  | CLOSED                                      { Closed }
 ;
 opt_bar:
     /* empty */                                 { () }
