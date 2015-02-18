@@ -36,9 +36,6 @@ let keyword_table =
     "as", AS;
     "assert", ASSERT;
     "begin", BEGIN;
-    "class", CLASS;
-    "closed", CLOSED;
-    "constraint", CONSTRAINT;
     "do", DO;
     "done", DONE;
     "downto", DOWNTO;
@@ -54,20 +51,15 @@ let keyword_table =
     "if", IF;
     "in", IN;
     "include", INCLUDE;
-    "inherit", INHERIT;
     "lazy", LAZY;
     "let", LET;
     "match", MATCH;
-    "method", METHOD;
     "module", MODULE;
     "mutable", MUTABLE;
-    "new", NEW;
     "of", OF;
     "open", OPEN;
     "or", OR;
     "parser", PARSER;
-    "private", PRIVATE;
-    "protected", PROTECTED;
     "rec", REC;
     "sig", SIG;
     "struct", STRUCT;
@@ -77,7 +69,6 @@ let keyword_table =
     "try", TRY;
     "type", TYPE;
     "val", VAL;
-    "virtual", VIRTUAL;
     "when", WHEN;
     "while", WHILE;
     "with", WITH;
@@ -222,7 +213,6 @@ rule token = parse
   | ":"  { COLON }
   | "::" { COLONCOLON }
   | ":=" { COLONEQUAL }
-  | ":>" { COLONGREATER }
   | ";"  { SEMI }
   | ";;" { SEMISEMI }
   | "<"  { LESS }
@@ -233,14 +223,12 @@ rule token = parse
   | "[<" { LBRACKETLESS }
   | "]"  { RBRACKET }
   | "{"  { LBRACE }
-  | "{<" { LBRACELESS }
   | "|"  { BAR }
   | "||" { BARBAR }
   | "|]" { BARRBRACKET }
   | ">"  { GREATER }
   | ">]" { GREATERRBRACKET }
   | "}"  { RBRACE }
-  | ">}" { GREATERRBRACE }
 
   | "!=" { INFIXOP0 "!=" }
   | "-"  { SUBTRACTIVE "-" }
