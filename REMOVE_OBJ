@@ -158,65 +158,6 @@ index f06844e..8dfdad2 100644
 
 * bytecomp/
 
-diff --git a/bytecomp/bytegen.ml b/bytecomp/bytegen.ml
-index cce6e6c..2d84dae 100644
---- a/bytecomp/bytegen.ml
-+++ b/bytecomp/bytegen.ml
-@@ -169,6 +169,21 @@ let rec comp_expr env exp sz cont =
-             (Kpush :: comp_expr env func (sz + 3 + nargs)
-                       (Kapply nargs :: cont1))
-         end
-+  | Lsend(met, obj, args) ->
-+      let nargs = List.length args + 1 in
-+      if is_tailcall cont then
-+        comp_args env (met::obj::args) sz
-+          (Kgetmethod :: Kappterm(nargs, sz + nargs) :: discard_dead_code cont)
-+      else
-+        if nargs < 4 then
-+          comp_args env (met::obj::args) sz
-+            (Kgetmethod :: Kapply nargs :: cont)
-+        else begin
-+          let (lbl, cont1) = label_code cont in
-+          Kpush_retaddr lbl ::
-+          comp_args env (met::obj::args) (sz + 3)
-+            (Kgetmethod :: Kapply nargs :: cont1)
-+        end
-   | Lfunction(params, body) ->
-       let lbl = new_label() in
-       let fv = IdentSet.elements(free_variables exp) in
-
- (* Emission of one instruction *)
-@@ -234,6 +234,7 @@ let emit_instr = function
-   | Kintcomp Cgt -> out opGTINT      | Kintcomp Cge -> out opGEINT
-   | Koffsetint n -> out opOFFSETINT; out_int n
-   | Koffsetref n -> out opOFFSETREF; out_int n
-+  | Kgetmethod -> out opGETMETHOD
-   | Kstop -> out opSTOP
- 
- (* Emission of a list of instructions. Include some peephole optimization. *)
-diff --git a/bytecomp/instruct.ml b/bytecomp/instruct.ml
-index 0aad1d0..8c3539a 100644
---- a/bytecomp/instruct.ml
-+++ b/bytecomp/instruct.ml
-@@ -60,6 +60,7 @@ type instruction =
-   | Kintcomp of comparison
-   | Koffsetint of int
-   | Koffsetref of int
-+  | Kgetmethod
-   | Kstop
- 
- let immed_min = -0x40000000
-diff --git a/bytecomp/instruct.mli b/bytecomp/instruct.mli
-index 1c122eb..2f1043d 100644
---- a/bytecomp/instruct.mli
-+++ b/bytecomp/instruct.mli
-@@ -62,6 +62,7 @@ type instruction =
-   | Kintcomp of comparison
-   | Koffsetint of int
-   | Koffsetref of int
-+  | Kgetmethod
-   | Kstop
- 
  val immed_min: int
 diff --git a/bytecomp/lambda.ml b/bytecomp/lambda.ml
 index 56c3192..1c119ab 100644
@@ -233,21 +174,6 @@ index 56c3192..1c119ab 100644
  
  type lambda =
      Lvar of Ident.t
-@@ -88,6 +90,7 @@ type lambda =
-   | Lwhile of lambda * lambda
-   | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
-   | Lassign of Ident.t * lambda
-+  | Lsend of lambda * lambda * lambda list
- 
- and lambda_switch =
-   { sw_numconsts: int;
-@@ -159,6 +162,8 @@ let free_variables l =
-       freevars e1; freevars e2; freevars e3; fv := IdentSet.remove v !fv
-   | Lassign(id, e) ->
-       fv := IdentSet.add id !fv; freevars e
-+  | Lsend (met, obj, args) ->
-+      List.iter freevars (met::obj::args)
-   in freevars l; !fv
  
  (* Check if an action has a "when" guard *)
 diff --git a/bytecomp/lambda.mli b/bytecomp/lambda.mli
@@ -265,14 +191,6 @@ index b12ed97..6ea5baf 100644
  
  type lambda =
      Lvar of Ident.t
-@@ -88,6 +90,7 @@ type lambda =
-   | Lwhile of lambda * lambda
-   | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
-   | Lassign of Ident.t * lambda
-+  | Lsend of lambda * lambda * lambda list
- 
- and lambda_switch =
-   { sw_numconsts: int;                  (* Number of integer cases *)
 diff --git a/bytecomp/matching.ml b/bytecomp/matching.ml
 index c521790..7123e41 100644
 --- a/bytecomp/matching.ml
@@ -286,58 +204,6 @@ index c521790..7123e41 100644
            (Lprim(access, [arg]), str) :: make_args(pos + 1)
          end in
        {cases = []; args = make_args 0}
-diff --git a/bytecomp/printinstr.ml b/bytecomp/printinstr.ml
-index cb4e48a..eac2b5f 100644
---- a/bytecomp/printinstr.ml
-+++ b/bytecomp/printinstr.ml
-@@ -93,6 +93,7 @@ let instruction = function
-   | Kintcomp Cge -> print_string "\tgeint"
-   | Koffsetint n -> print_string "\toffsetint "; print_int n
-   | Koffsetref n -> print_string "\toffsetref "; print_int n
-+  | Kgetmethod -> print_string "\tgetmethod"
-   | Kstop -> print_string "\tstop"
- 
- let rec instruction_list = function
-diff --git a/bytecomp/printlambda.ml b/bytecomp/printlambda.ml
-index d90d8f2..dabc6e3 100644
---- a/bytecomp/printlambda.ml
-+++ b/bytecomp/printlambda.ml
-@@ -237,6 +237,14 @@ let rec lambda = function
-       Ident.print id; print_space();
-       lambda expr; print_string ")";
-       close_box()
-+  | Lsend (met, obj, largs) ->
-+      open_hovbox 2;
-+      print_string "(send"; print_space();
-+      lambda obj; print_space();
-+      lambda met;
-+      List.iter (fun l -> print_space(); lambda l) largs;
-+      print_string ")";
-+      close_box()
- 
- and sequence = function
-     Lsequence(l1, l2) ->
-diff --git a/bytecomp/simplif.ml b/bytecomp/simplif.ml
-index 8671e3a..177f19b 100644
---- a/bytecomp/simplif.ml
-+++ b/bytecomp/simplif.ml
-@@ -72,6 +72,9 @@ let rec eliminate_ref id = function
-            dir, eliminate_ref id e3)
-   | Lassign(v, e) ->
-       Lassign(v, eliminate_ref id e)
-+  | Lsend(m, o, el) ->
-+      Lsend(eliminate_ref id m, eliminate_ref id o,
-+            List.map (eliminate_ref id) el)
- 
- (* Simplification of lets *)
- 
-@@ -126,6 +129,7 @@ let simplify_lambda lam =
-       (* Lalias-bound variables are never assigned, so don't increase
-          v's refcount *)
-       count l
-+  | Lsend(m, o, ll) -> List.iter count (m::o::ll)
-   in
-   count lam;
    (* Second pass: remove Lalias bindings of unused variables,
 @@ -159,6 +163,11 @@ let simplify_lambda lam =
        | 1 -> Hashtbl.add subst v (simplif l1); simplif l2
@@ -355,13 +221,8 @@ index 8671e3a..177f19b 100644
    | Lfor(v, l1, l2, dir, l3) ->
        Lfor(v, simplif l1, simplif l2, dir, simplif l3)
    | Lassign(v, l) -> Lassign(v, simplif l)
-+  | Lsend(m, o, ll) -> Lsend(simplif m, simplif o, List.map simplif ll)
    in
    simplif lam
--
--    
--    
-
 diff --git a/bytecomp/translcore.ml b/bytecomp/translcore.ml
 index d89ec8f..07ad56c 100644
 --- a/bytecomp/translcore.ml

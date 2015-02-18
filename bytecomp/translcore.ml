@@ -355,11 +355,7 @@ let rec transl_exp e =
   | Texp_apply(funct, args) ->
       let lam =
         match transl_exp funct with
-          Lsend(lmet, lobj, largs) ->
-            Lsend(lmet, lobj, largs @ transl_list args)
-        | Levent(Lsend(lmet, lobj, largs), _) ->
-            Lsend(lmet, lobj, largs @ transl_list args)
-        | lexp ->
+         lexp ->
             Lapply(lexp, transl_list args) in
       event_after e lam
   | Texp_match({exp_desc = Texp_tuple argl} as arg, pat_expr_list) ->

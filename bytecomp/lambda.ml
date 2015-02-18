@@ -91,7 +91,6 @@ type lambda =
   | Lwhile of lambda * lambda
   | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
   | Lassign of Ident.t * lambda
-  | Lsend of lambda * lambda * lambda list
   | Levent of lambda * lambda_event
 
 and lambda_switch =
@@ -175,8 +174,6 @@ let free_variables l =
       freevars e1; freevars e2; freevars e3; fv := IdentSet.remove v !fv
   | Lassign(id, e) ->
       fv := IdentSet.add id !fv; freevars e
-  | Lsend (met, obj, args) ->
-      List.iter freevars (met::obj::args)
   | Levent (lam, evt) ->
       freevars lam
   in freevars l; !fv

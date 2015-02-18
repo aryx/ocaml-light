@@ -72,9 +72,6 @@ let rec eliminate_ref id = function
            dir, eliminate_ref id e3)
   | Lassign(v, e) ->
       Lassign(v, eliminate_ref id e)
-  | Lsend(m, o, el) ->
-      Lsend(eliminate_ref id m, eliminate_ref id o,
-            List.map (eliminate_ref id) el)
   | Levent(l, ev) ->
       Levent(eliminate_ref id l, ev)
 
@@ -131,7 +128,6 @@ let simplify_lambda lam =
       (* Lalias-bound variables are never assigned, so don't increase
          v's refcount *)
       count l
-  | Lsend(m, o, ll) -> List.iter count (m::o::ll)
   | Levent(l, ev) -> count l
   in
   count lam;
@@ -191,7 +187,6 @@ let simplify_lambda lam =
   | Lfor(v, l1, l2, dir, l3) ->
       Lfor(v, simplif l1, simplif l2, dir, simplif l3)
   | Lassign(v, l) -> Lassign(v, simplif l)
-  | Lsend(m, o, ll) -> Lsend(simplif m, simplif o, List.map simplif ll)
   | Levent(l, ev) -> Levent(simplif l, ev)
   in
   simplif lam
