@@ -13,149 +13,6 @@ index e4e957a..6a12118 100644
 +PARSING=parsing/label.cmo parsing/location.cmo parsing/longident.cmo \
    parsing/pstream.cmo parsing/parser.cmo parsing/lexer.cmo parsing/parse.cmo
 
-* asmcomp/
-
-diff --git a/asmcomp/clambda.ml b/asmcomp/clambda.ml
-index ae5cf62..d640aeb 100644
---- a/asmcomp/clambda.ml
-+++ b/asmcomp/clambda.ml
-@@ -39,6 +39,7 @@ type ulambda =
-   | Uwhile of ulambda * ulambda
-   | Ufor of Ident.t * ulambda * ulambda * direction_flag * ulambda
-   | Uassign of Ident.t * ulambda
-+  | Usend of ulambda * ulambda * ulambda list
- 
- and ulambda_switch =
-   { us_index_consts: int array;
-diff --git a/asmcomp/clambda.mli b/asmcomp/clambda.mli
-index ae5cf62..d640aeb 100644
---- a/asmcomp/clambda.mli
-+++ b/asmcomp/clambda.mli
-@@ -39,6 +39,7 @@ type ulambda =
-   | Uwhile of ulambda * ulambda
-   | Ufor of Ident.t * ulambda * ulambda * direction_flag * ulambda
-   | Uassign of Ident.t * ulambda
-+  | Usend of ulambda * ulambda * ulambda list
- 
- and ulambda_switch =
-   { us_index_consts: int array;
-diff --git a/asmcomp/closure.ml b/asmcomp/closure.ml
-index f06844e..8dfdad2 100644
---- a/asmcomp/closure.ml
-+++ b/asmcomp/closure.ml
-@@ -59,6 +59,7 @@ let occurs_var var u =
-     | Uwhile(cond, body) -> occurs cond or occurs body
-     | Ufor(id, lo, hi, dir, body) -> occurs lo or occurs hi or occurs body
-     | Uassign(id, u) -> id = var or occurs u
-+    | Usend(met, obj, args) -> List.exists occurs (met::obj::args)
-   and occurs_array a =
-     try
-       for i = 0 to Array.length a - 1 do
-@@ -127,6 +128,10 @@ let rec close fenv cenv = function
-       | (ufunct, _) ->
-           (Ugeneric_apply(ufunct, close_list fenv cenv args), Value_unknown)
-       end
-+  | Lsend(met, obj, args) ->
-+      let (umet, _) = close fenv cenv met in
-+      let (uobj, _) = close fenv cenv obj in
-+      (Usend(umet, uobj, close_list fenv cenv args), Value_unknown)
-   | Llet(str, id, lam, body) ->
-       let (ulam, alam) = close_named fenv cenv id lam in
-       let (ubody, abody) = close (Tbl.add id alam fenv) cenv body in
-@@ -276,6 +276,16 @@ let string_length exp =
-               Cop(Cloadchunk Byte_unsigned,
-                   [Cop(Cadda, [str; Cvar tmp_var])])])))
- 
-+(* Message sending *)
-+
-+let lookup_label obj lab =
-+  bind "lab" lab (fun lab ->
-+    let table = Cop (Cload typ_addr, [obj]) in
-+    let buck_index = Cop(Clsr, [lab; Cconst_int 16]) in
-+    let bucket = Cop (Cload typ_addr, [Cop (Cadda, [table; buck_index])]) in
-+    let item_index = Cop (Cand, [lab; Cconst_int (255 * size_addr)]) in
-+    Cop (Cload typ_addr, [Cop (Cadda, [bucket; item_index])]))
-+
- (* To compile "let rec" over values *)
- 
- let fundecls_size fundecls =
-@@ -397,9 +407,20 @@ let rec transl = function
-       Cop(Capply typ_addr,
-           Cconst_symbol(apply_function arity) ::
-           List.map transl (args @ [clos]))
-+  | Usend(met, obj, []) ->
-+      bind "obj" (transl obj) (fun obj ->
-+      bind "met" (lookup_label obj (transl met)) (fun clos ->
-+        Cop(Capply typ_addr, [get_field clos 0; obj; clos])))
-+  | Usend(met, obj, args) ->
-+      let arity = List.length args + 1 in
-+      bind "obj" (transl obj) (fun obj ->
-+      bind "met" (lookup_label obj (transl met)) (fun clos ->
-+        Cop(Capply typ_addr,
-+            Cconst_symbol(apply_function arity) ::
-+	    obj :: (List.map transl args) @ [clos])))
-   | Ulet(id, exp, body) ->
-       if is_unboxed_float exp then begin
--        let unboxed_id = Ident.new (Ident.name id) in
-+        let unboxed_id = Ident.create (Ident.name id) in
-         let (tr_body, need_boxed, is_assigned) =
-           subst_boxed_float id unboxed_id (transl body) in
-         if need_boxed & is_assigned then
-@@ -817,6 +838,52 @@ let rec transl_all_functions already_translated cont =
-   with Queue.Empty ->
-     cont
- 
-+(* Translate a toplevel structure definition *)
-+
-+let rec transl_structure glob = function
-+    Uprim(Pmakeblock(tag, mut), args) ->
-+      (* Scan the args, storing those that are not identifiers and
-+         returning a hashtable id -> position in block
-+         for those that are idents. *)
-+      let map = Hashtbl.create 17 in
-+      let rec make_stores pos = function
-+        [] -> Ctuple []
-+      | Uvar v :: rem ->
-+          Hashtbl.add map v pos;
-+          make_stores (pos+1) rem
-+      | ulam :: rem ->
-+          Csequence(Cop(Cstore,
-+                        [field_address (Cconst_symbol glob) pos; transl ulam]),
-+                    make_stores (pos+1) rem) in
-+      let c = make_stores 0 args in
-+      (c, map, List.length args)
-+  | Usequence(e1, e2) ->
-+      let (c2, map, size) = transl_structure glob e2 in
-+      (Csequence(remove_unit(transl e1), c2), map, size)
-+  | Ulet(id, arg, body) ->
-+      let (cbody, map, size) = transl_structure glob body in
-+      (Clet(id, transl arg, add_store glob id map cbody), map, size)
-+  | Uletrec(bindings, body) ->
-+      let (cbody, map, size) = transl_structure glob body in
-+      (transl_letrec bindings (add_stores glob bindings map cbody), map, size)
-+  | Uprim(Psetglobal id, [arg]) ->
-+      transl_structure glob arg
-+  | _ ->
-+      fatal_error "Cmmgen.transl_structure"
-+
-+and add_store glob id map code =
-+  let rec store = function
-+    [] -> code
-+  | pos :: rem ->
-+      Csequence(Cop(Cstore, [field_address (Cconst_symbol glob) pos; Cvar id]),
-+                store rem) in
-+  store (Hashtbl.find_all map id)
-+
-+and add_stores glob bindings map code =
-+  match bindings with
-+    [] -> code
-+  | (id, def) :: rem -> add_stores glob rem map (add_store glob id map code) 
-+
- (* Emit structured constants *)
- 
- let rec emit_constant symb cst cont =
-
-
 * bytecomp/
 
  val immed_min: int
@@ -308,12 +165,7 @@ index d89ec8f..07ad56c 100644
          (id, lam) in
        Lletrec(List.map transl_case pat_expr_list, body)
  
-+and transl_setinstvar self var expr =
-+  Lprim(Parraysetu (if maybe_pointer expr then Paddrarray else Pintarray),
-+                    [self; transl_path var; transl_exp expr])
-+
- (* Compile an exception definition *)
- 
+
  let transl_exception id decl =
 @@ -436,3 +467,6 @@ let report_error = function
    | Illegal_letrec_expr ->
@@ -641,10 +493,6 @@ index b2e41f5..6f137d5 100644
  
  (* Constructor descriptions *)
  
-@@ -63,6 +73,18 @@ and record_representation =
-     Record_regular                      (* All fields are boxed / tagged *)
-   | Record_float                        (* All fields are floats *)
-
 ** toplevel/
 
 diff --git a/toplevel/printval.ml b/toplevel/printval.ml
@@ -2549,12 +2397,6 @@ index 0afa11e..03a3b4f 100644
 +  | {desc = Tconstr(p, _, _)} -> Path.same p Predef.path_float
    | _ -> false
  
- let label_descrs ty_res lbls =
--  let all_labels = Array.new (List.length lbls) dummy_label in
-+  let all_labels = Array.create (List.length lbls) dummy_label in
-   let repres =
-     if List.for_all (fun (name, flag, ty) -> is_float ty) lbls
-     then Record_float
 diff --git a/typing/env.ml b/typing/env.ml
 index 0b9f173..c42b417 100644
 --- a/typing/env.ml
@@ -3091,33 +2933,6 @@ index 691fc04..6cfea5b 100644
 @@ -79,45 +83,47 @@ type variance = Co | Contra | Strict
  
  let nondep_supertype env mid mty =
- 
--  let rec nondep_mty var mty =
-+  let rec nondep_mty va mty =
-     match mty with
-       Tmty_ident p ->
-         if Path.isfree mid p then begin
-           match Env.find_modtype p env with
-             Tmodtype_abstract -> raise Not_found
--          | Tmodtype_manifest mty -> nondep_mty var mty      
-+          | Tmodtype_manifest mty -> nondep_mty va mty      
-         end else mty
-     | Tmty_signature sg ->
--        Tmty_signature(nondep_sig var sg)
-+        Tmty_signature(nondep_sig va sg)
-     | Tmty_functor(param, arg, res) ->
-         let var_inv =
--          match var with Co -> Contra | Contra -> Co | Strict -> Strict in
--        Tmty_functor(param, nondep_mty var_inv arg, nondep_mty var res)
-+          match va with Co -> Contra | Contra -> Co | Strict -> Strict in
-+        Tmty_functor(param, nondep_mty var_inv arg, nondep_mty va res)
- 
--  and nondep_sig var = function
-+  and nondep_sig va = function
-     [] -> []
-   | item :: rem ->
--      let rem' = nondep_sig var rem in
-+      let rem' = nondep_sig va rem in
        match item with
          Tsig_value(id, d) ->
            Tsig_value(id, {val_type = Ctype.nondep_type env mid d.val_type;
@@ -3134,34 +2949,6 @@ index 691fc04..6cfea5b 100644
        | Tsig_modtype(id, d) ->
            begin try
              Tsig_modtype(id, nondep_modtype_decl d) :: rem'
-           with Not_found ->
--            match var with
-+            match va with
-               Co -> Tsig_modtype(id, Tmodtype_abstract) :: rem'
-             | _  -> raise Not_found
-           end
- 
--  and nondep_type_decl var d =
-+  and nondep_type_decl va d =
-     {type_params = d.type_params;
-      type_arity = d.type_arity;
-      type_kind =
-@@ -134,7 +140,7 @@ let nondep_supertype env mid mty =
-                (fun (c, mut, t) -> (c, mut, Ctype.nondep_type env mid t))
-                lbls)
-        with Not_found ->
--         match var with Co -> Type_abstract | _ -> raise Not_found
-+         match va with Co -> Type_abstract | _ -> raise Not_found
-        end;
-      type_manifest =
-        begin try
-@@ -142,7 +148,7 @@ let nondep_supertype env mid mty =
-            None -> None
-          | Some ty -> Some(Ctype.nondep_type env mid ty)
-        with Not_found ->
--         match var with Co -> None | _ -> raise Not_found
-+         match va with Co -> None | _ -> raise Not_found
-        end}
  
    and nondep_modtype_decl = function
 diff --git a/typing/parmatch.ml b/typing/parmatch.ml
@@ -3174,31 +2961,9 @@ index 8da5734..742ea89 100644
  open Typedtree
  
  
--let ident_int = Ident.new "int"
--and ident_char = Ident.new "char"
--and ident_string = Ident.new "string"
--and ident_float = Ident.new "float"
--and ident_bool = Ident.new "bool"
--and ident_unit = Ident.new "unit"
--and ident_exn = Ident.new "exn"
--and ident_array = Ident.new "array"
--and ident_list = Ident.new "list"
--and ident_format = Ident.new "format"
 +let newgenty desc =
 +  {desc = desc; level = -1 (* generic_level *)}
 +
-+let ident_int = Ident.create "int"
-+and ident_char = Ident.create "char"
-+and ident_string = Ident.create "string"
-+and ident_float = Ident.create "float"
-+and ident_bool = Ident.create "bool"
-+and ident_unit = Ident.create "unit"
-+and ident_exn = Ident.create "exn"
-+and ident_array = Ident.create "array"
-+and ident_list = Ident.create "list"
-+and ident_format = Ident.create "format"
-+and ident_mutable = Ident.create "(mutable)"
-+and ident_immutable = Ident.create "(immutable)"
  
  let path_int = Pident ident_int
  and path_char = Pident ident_char
@@ -3230,24 +2995,6 @@ index 8da5734..742ea89 100644
 +and type_mutable = newgenty (Tconstr(path_mutable, [], ref []))
 +and type_immutable = newgenty (Tconstr(path_immutable, [], ref []))
  
--let ident_match_failure = Ident.new "Match_failure"
--and ident_out_of_memory = Ident.new "Out_of_memory"
--and ident_invalid_argument = Ident.new "Invalid_argument"
--and ident_failure = Ident.new "Failure"
--and ident_not_found = Ident.new "Not_found"
--and ident_sys_error = Ident.new "Sys_error"
--and ident_end_of_file = Ident.new "End_of_file"
--and ident_division_by_zero = Ident.new "Division_by_zero"
-+let ident_match_failure = Ident.create "Match_failure"
-+and ident_out_of_memory = Ident.create "Out_of_memory"
-+and ident_invalid_argument = Ident.create "Invalid_argument"
-+and ident_failure = Ident.create "Failure"
-+and ident_not_found = Ident.create "Not_found"
-+and ident_sys_error = Ident.create "Sys_error"
-+and ident_end_of_file = Ident.create "End_of_file"
-+and ident_division_by_zero = Ident.create "Division_by_zero"
- 
- let path_match_failure = Pident ident_match_failure
  
 @@ -64,7 +73,7 @@ let build_initial_env add_type add_exception empty_env =
    let newvar() =
@@ -4846,3 +4593,148 @@ index 14505b6..c1dd2d0 100644
 +  | Type_mismatch of Typedtree.type_expr * Typedtree.type_expr
  
  exception Error of Location.t * error
+
+
+* asmcomp/
+
+diff --git a/asmcomp/clambda.ml b/asmcomp/clambda.ml
+index ae5cf62..d640aeb 100644
+--- a/asmcomp/clambda.ml
++++ b/asmcomp/clambda.ml
+@@ -39,6 +39,7 @@ type ulambda =
+   | Uwhile of ulambda * ulambda
+   | Ufor of Ident.t * ulambda * ulambda * direction_flag * ulambda
+   | Uassign of Ident.t * ulambda
++  | Usend of ulambda * ulambda * ulambda list
+ 
+ and ulambda_switch =
+   { us_index_consts: int array;
+diff --git a/asmcomp/clambda.mli b/asmcomp/clambda.mli
+index ae5cf62..d640aeb 100644
+--- a/asmcomp/clambda.mli
++++ b/asmcomp/clambda.mli
+@@ -39,6 +39,7 @@ type ulambda =
+   | Uwhile of ulambda * ulambda
+   | Ufor of Ident.t * ulambda * ulambda * direction_flag * ulambda
+   | Uassign of Ident.t * ulambda
++  | Usend of ulambda * ulambda * ulambda list
+ 
+ and ulambda_switch =
+   { us_index_consts: int array;
+diff --git a/asmcomp/closure.ml b/asmcomp/closure.ml
+index f06844e..8dfdad2 100644
+--- a/asmcomp/closure.ml
++++ b/asmcomp/closure.ml
+@@ -59,6 +59,7 @@ let occurs_var var u =
+     | Uwhile(cond, body) -> occurs cond or occurs body
+     | Ufor(id, lo, hi, dir, body) -> occurs lo or occurs hi or occurs body
+     | Uassign(id, u) -> id = var or occurs u
++    | Usend(met, obj, args) -> List.exists occurs (met::obj::args)
+   and occurs_array a =
+     try
+       for i = 0 to Array.length a - 1 do
+@@ -127,6 +128,10 @@ let rec close fenv cenv = function
+       | (ufunct, _) ->
+           (Ugeneric_apply(ufunct, close_list fenv cenv args), Value_unknown)
+       end
++  | Lsend(met, obj, args) ->
++      let (umet, _) = close fenv cenv met in
++      let (uobj, _) = close fenv cenv obj in
++      (Usend(umet, uobj, close_list fenv cenv args), Value_unknown)
+   | Llet(str, id, lam, body) ->
+       let (ulam, alam) = close_named fenv cenv id lam in
+       let (ubody, abody) = close (Tbl.add id alam fenv) cenv body in
+@@ -276,6 +276,16 @@ let string_length exp =
+               Cop(Cloadchunk Byte_unsigned,
+                   [Cop(Cadda, [str; Cvar tmp_var])])])))
+ 
++(* Message sending *)
++
++let lookup_label obj lab =
++  bind "lab" lab (fun lab ->
++    let table = Cop (Cload typ_addr, [obj]) in
++    let buck_index = Cop(Clsr, [lab; Cconst_int 16]) in
++    let bucket = Cop (Cload typ_addr, [Cop (Cadda, [table; buck_index])]) in
++    let item_index = Cop (Cand, [lab; Cconst_int (255 * size_addr)]) in
++    Cop (Cload typ_addr, [Cop (Cadda, [bucket; item_index])]))
++
+ (* To compile "let rec" over values *)
+ 
+ let fundecls_size fundecls =
+@@ -397,9 +407,20 @@ let rec transl = function
+       Cop(Capply typ_addr,
+           Cconst_symbol(apply_function arity) ::
+           List.map transl (args @ [clos]))
++  | Usend(met, obj, []) ->
++      bind "obj" (transl obj) (fun obj ->
++      bind "met" (lookup_label obj (transl met)) (fun clos ->
++        Cop(Capply typ_addr, [get_field clos 0; obj; clos])))
++  | Usend(met, obj, args) ->
++      let arity = List.length args + 1 in
++      bind "obj" (transl obj) (fun obj ->
++      bind "met" (lookup_label obj (transl met)) (fun clos ->
++        Cop(Capply typ_addr,
++            Cconst_symbol(apply_function arity) ::
++	    obj :: (List.map transl args) @ [clos])))
+   | Ulet(id, exp, body) ->
+       if is_unboxed_float exp then begin
+-        let unboxed_id = Ident.new (Ident.name id) in
++        let unboxed_id = Ident.create (Ident.name id) in
+         let (tr_body, need_boxed, is_assigned) =
+           subst_boxed_float id unboxed_id (transl body) in
+         if need_boxed & is_assigned then
+@@ -817,6 +838,52 @@ let rec transl_all_functions already_translated cont =
+   with Queue.Empty ->
+     cont
+ 
++(* Translate a toplevel structure definition *)
++
++let rec transl_structure glob = function
++    Uprim(Pmakeblock(tag, mut), args) ->
++      (* Scan the args, storing those that are not identifiers and
++         returning a hashtable id -> position in block
++         for those that are idents. *)
++      let map = Hashtbl.create 17 in
++      let rec make_stores pos = function
++        [] -> Ctuple []
++      | Uvar v :: rem ->
++          Hashtbl.add map v pos;
++          make_stores (pos+1) rem
++      | ulam :: rem ->
++          Csequence(Cop(Cstore,
++                        [field_address (Cconst_symbol glob) pos; transl ulam]),
++                    make_stores (pos+1) rem) in
++      let c = make_stores 0 args in
++      (c, map, List.length args)
++  | Usequence(e1, e2) ->
++      let (c2, map, size) = transl_structure glob e2 in
++      (Csequence(remove_unit(transl e1), c2), map, size)
++  | Ulet(id, arg, body) ->
++      let (cbody, map, size) = transl_structure glob body in
++      (Clet(id, transl arg, add_store glob id map cbody), map, size)
++  | Uletrec(bindings, body) ->
++      let (cbody, map, size) = transl_structure glob body in
++      (transl_letrec bindings (add_stores glob bindings map cbody), map, size)
++  | Uprim(Psetglobal id, [arg]) ->
++      transl_structure glob arg
++  | _ ->
++      fatal_error "Cmmgen.transl_structure"
++
++and add_store glob id map code =
++  let rec store = function
++    [] -> code
++  | pos :: rem ->
++      Csequence(Cop(Cstore, [field_address (Cconst_symbol glob) pos; Cvar id]),
++                store rem) in
++  store (Hashtbl.find_all map id)
++
++and add_stores glob bindings map code =
++  match bindings with
++    [] -> code
++  | (id, def) :: rem -> add_stores glob rem map (add_store glob id map code) 
++
+ (* Emit structured constants *)
+ 
+ let rec emit_constant symb cst cont =
+
+
