@@ -42,29 +42,12 @@
 
 extern int errno;
 
-#ifdef HAS_STRERROR
-
 extern char * strerror(int);
 
 char * error_message(void)
 {
   return strerror(errno);
 }
-
-#else
-
-extern int sys_nerr;
-extern char * sys_errlist [];
-
-char * error_message(void)
-{
-  if (errno < 0 || errno >= sys_nerr)
-    return "unknown error";
-  else
-    return sys_errlist[errno];
-}
-
-#endif /* HAS_STRERROR */
 
 void sys_error(value arg)
 {
