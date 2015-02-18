@@ -220,8 +220,6 @@ and signature s = function
   | Tsig_modtype(id, d) :: sg ->
       Tsig_modtype(id, modtype_declaration s d) ::
       signature (remove_modtype id s) sg
-  | Tsig_class(id, d) :: sg ->
-      Tsig_class(id, class_type s d) :: signature s sg
 
 and modtype_declaration s = function
     Tmodtype_abstract -> Tmodtype_abstract

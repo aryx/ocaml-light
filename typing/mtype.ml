@@ -70,8 +70,6 @@ and strengthen_sig env sg p =
       Tsig_modtype(id, newdecl) ::
       strengthen_sig (Env.add_modtype id decl env) rem p
       (* Need to add the module type in case it is manifest *)
-  | (Tsig_class(id, decl) as sigelt) :: rem ->
-      sigelt :: strengthen_sig env rem p
 
 (* In nondep_supertype, env is only used for the type it assigns to id.
    Hence there is no need to keep env up-to-date by adding the bindings
@@ -116,8 +114,6 @@ let nondep_supertype env mid mty =
               Co -> Tsig_modtype(id, Tmodtype_abstract) :: rem'
             | _  -> raise Not_found
           end
-      | Tsig_class(id, d) ->
-          Tsig_class(id, Ctype.nondep_class_type env mid d) :: rem'
 
   and nondep_modtype_decl = function
       Tmodtype_abstract -> Tmodtype_abstract

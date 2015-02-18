@@ -101,9 +101,6 @@ let rec print_items env = function
   | Tsig_modtype(id, decl)::rem ->
       Printtyp.modtype_declaration id decl;
       print_space (); print_items env rem
-  | Tsig_class(id, decl)::tydecl1::tydecl2::rem ->
-      Printtyp.class_type id decl;
-      print_space (); print_items env rem
   | _ ->
       ()
 

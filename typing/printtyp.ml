@@ -520,9 +520,6 @@ and signature_body spc = function
             print_space(); modtype mty; close_box(); rem
         | Tsig_modtype(id, decl)  ->
             modtype_declaration id decl; rem
-        | Tsig_class(id, decl) ->
-            class_type id decl;
-            match rem with tydecl1 :: tydecl2 :: rem -> rem | _ -> []
       in signature_body true cont
 
 and modtype_declaration id decl =

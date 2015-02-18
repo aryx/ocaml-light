@@ -95,7 +95,6 @@ let item_ident_name = function
   | Tsig_exception(id, _) -> (id, Field_exception(Ident.name id))
   | Tsig_module(id, _) -> (id, Field_module(Ident.name id))
   | Tsig_modtype(id, _) -> (id, Field_modtype(Ident.name id))
-  | Tsig_class(id, _) -> (id, Field_classtype(Ident.name id))
 
 (* Simplify a structure coercion *)
 
@@ -177,7 +176,8 @@ and signatures env subst sig1 sig2 =
           | Tsig_value(_,_)
           | Tsig_exception(_,_)
           | Tsig_module(_,_)
-          | Tsig_class(_, _) -> pos+1 in
+           -> pos+1 
+        in
         build_component_table nextpos
                               (Tbl.add name (id, item, pos) tbl) rem in
   let comps1 =
@@ -205,7 +205,7 @@ and signatures env subst sig1 sig2 =
                 Subst.add_module id2 (Pident id1) subst
             | Tsig_modtype _ ->
                 Subst.add_modtype id2 (Tmty_ident (Pident id1)) subst
-            | Tsig_value _ | Tsig_exception _ | Tsig_class _ ->
+            | Tsig_value _ | Tsig_exception _  ->
                 subst
           in
           pair_components new_subst
@@ -239,9 +239,6 @@ and signature_components env subst = function
   | (Tsig_modtype(id1, info1), Tsig_modtype(id2, info2), pos) :: rem ->
       modtype_infos env subst id1 info1 info2;
       signature_components env subst rem
-  | (Tsig_class(id1, decl1), Tsig_class(id2, decl2), pos) :: rem ->
-      class_types env subst id1 decl1 decl2;
-      (pos, Tcoerce_none) :: signature_components env subst rem
   | _ ->
       fatal_error "Includemod.signature_components"
 
