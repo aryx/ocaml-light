@@ -871,9 +871,6 @@ index 6f5fae6..fa3030e 100644
    if c1 = c2 then mkpat(Ppat_constant(Const_char c1)) else
    mkpat(Ppat_or(mkpat(Ppat_constant(Const_char c1)),
                  mkrangepat (Char.chr(Char.code c1 + 1)) c2))
-+
- %}
- 
  /* Tokens */
 @@ -86,10 +89,14 @@ let rec mkrangepat c1 c2 =
  %token BARRBRACKET
@@ -1317,8 +1314,6 @@ index 6f5fae6..fa3030e 100644
    | SUBTRACTIVE INT                             { Const_int(- $2) }
    | SUBTRACTIVE FLOAT                           { Const_float("-" ^ $2) }
  ;
--
- /* Identifiers and long identifiers */
  
  ident:
 @@ -785,6 +1043,11 @@ mod_ext_longident:
