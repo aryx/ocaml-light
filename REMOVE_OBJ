@@ -12,20 +12,6 @@ index e4e957a..6a12118 100644
 -PARSING=parsing/location.cmo parsing/longident.cmo \
 +PARSING=parsing/label.cmo parsing/location.cmo parsing/longident.cmo \
    parsing/pstream.cmo parsing/parser.cmo parsing/lexer.cmo parsing/parse.cmo
- 
- TYPING=typing/ident.cmo typing/path.cmo \
-   typing/primitive.cmo typing/typedtree.cmo \
--  typing/subst.cmo typing/printtyp.cmo \
--  typing/predef.cmo typing/datarepr.cmo typing/env.cmo \
--  typing/ctype.cmo typing/mtype.cmo \
--  typing/includecore.cmo typing/includemod.cmo typing/parmatch.cmo \
-+  typing/subst.cmo typing/predef.cmo \
-+  typing/datarepr.cmo typing/env.cmo \
-+  typing/ctype.cmo typing/printtyp.cmo \
-+  typing/mtype.cmo typing/includecore.cmo \
-+  typing/includemod.cmo typing/parmatch.cmo \
-   typing/typetexp.cmo typing/typecore.cmo \
- 
 
 * asmcomp/
 
@@ -983,9 +969,6 @@ index e019abf..4fdfb54 100644
        print_string " :"; print_space(); Printtyp.modtype mty; close_box()
    | Tsig_modtype(id, decl) ->
        Printtyp.modtype_declaration id decl
-+  | Tsig_class(id, decl) ->
-+      hidden := 2;
-+      Printtyp.class_type id decl
  
  (* Print an exception produced by an evaluation *)
  
@@ -2817,12 +2800,6 @@ index 0b9f173..c42b417 100644
          prefix_idents root pos
                        (Subst.add_modtype id (Tmty_ident p) sub) rem in
        (p::pl, final_sub)
-+  | Tsig_class(id, decl) :: rem ->
-+      let p = Pdot(root, Ident.name id, pos) in
-+      let (pl, final_sub) =
-+        prefix_idents root (pos + 1) sub rem
-+      in
-+      (p::pl, final_sub)
  
  (* Compute structure descriptions *)
  
@@ -2852,11 +2829,6 @@ index 0b9f173..c42b417 100644
                Tbl.add (Ident.name id) (decl', nopos) c.comp_modtypes;
 -            env := store_modtype id path decl' !env)
 +            env := store_modtype id path decl' !env
-+	| Tsig_class(id, decl) ->
-+	    let decl' = Subst.class_type sub decl in
-+            c.comp_classes <-
-+              Tbl.add (Ident.name id) (decl', !pos) c.comp_classes;
-+	    incr pos)
          sg pl;
  	Structure_comps c
    | Tmty_functor(param, ty_arg, ty_res) ->
@@ -2974,7 +2946,6 @@ index 0b9f173..c42b417 100644
    | Tsig_exception(id, decl) -> add_exception id decl env
    | Tsig_module(id, mty) -> add_module id mty env
    | Tsig_modtype(id, decl) -> add_modtype id decl env
-+  | Tsig_class(id, decl) -> add_class id decl env
  
  let add_signature sg env =
    List.fold_left add_signature_component env sg
@@ -2984,9 +2955,6 @@ index 0b9f173..c42b417 100644
            store_modtype (Ident.hide id) p
 -                        (Subst.modtype_declaration sub decl) env)
 +                        (Subst.modtype_declaration sub decl) env
-+      | Tsig_class(id, decl) ->
-+      	  store_class (Ident.hide id) p
-+                      (Subst.class_type sub decl) env)
      env sg pl
  
  (* Open a signature from a file *)
@@ -3166,7 +3134,6 @@ index e78b1d3..a5835f9 100644
    | Tsig_exception(id, _) -> (id, Field_exception(Ident.name id))
    | Tsig_module(id, _) -> (id, Field_module(Ident.name id))
    | Tsig_modtype(id, _) -> (id, Field_modtype(Ident.name id))
-+  | Tsig_class(id, _) -> (id, Field_classtype(Ident.name id))
  
  (* Simplify a structure coercion *)
  
@@ -3185,7 +3152,7 @@ index e78b1d3..a5835f9 100644
 +          | Tsig_value(_,_)
 +          | Tsig_exception(_,_)
 +          | Tsig_module(_,_)
-+	  | Tsig_class(_, _) -> pos+1 in
+  in
          build_component_table nextpos
                                (Tbl.add name (id, item, pos) tbl) rem in
    let comps1 =
@@ -3206,9 +3173,6 @@ index e78b1d3..a5835f9 100644
    | (Tsig_modtype(id1, info1), Tsig_modtype(id2, info2), pos) :: rem ->
        modtype_infos env id1 info1 info2;
        signature_components env rem
-+  | (Tsig_class(id1, decl1), Tsig_class(id2, decl2), pos) :: rem ->
-+      class_type env id1 decl1 decl2;
-+      (pos, Tcoerce_none) :: signature_components env rem
    | _ ->
        fatal_error "Includemod.signature_components"
  
@@ -3260,8 +3224,6 @@ index 691fc04..6cfea5b 100644
        Tsig_modtype(id, newdecl) ::
        strengthen_sig (Env.add_modtype id decl env) rem p
        (* Need to add the module type in case it is manifest *)
-+  | (Tsig_class(id, decl) as sigelt) :: rem ->
-+      sigelt :: strengthen_sig env rem p
  
  (* In nondep_supertype, env is only used for the type it assigns to id.
     Hence there is no need to keep env up-to-date by adding the bindings
@@ -3317,8 +3279,6 @@ index 691fc04..6cfea5b 100644
                Co -> Tsig_modtype(id, Tmodtype_abstract) :: rem'
              | _  -> raise Not_found
            end
-+      | Tsig_class(id, d) ->
-+          Tsig_class(id, Ctype.nondep_class_type env mid d) :: rem'
  
 -  and nondep_type_decl var d =
 +  and nondep_type_decl va d =
@@ -3992,9 +3952,6 @@ index caf233c..8879a67 100644
        print_space(); modtype mty; close_box()
    | Tsig_modtype(id, decl) ->
        modtype_declaration id decl
-+  | Tsig_class(id, decl) ->
-+      hidden := 2;
-+      class_type id decl
  
  and modtype_declaration id decl =
    open_hovbox 2; print_string "module type "; ident id;
@@ -4181,7 +4138,6 @@ index 5f14a94..2a73ea9 100644
    | Tsig_exception(id, d) -> Tsig_exception(id, exception_declaration s d)
    | Tsig_module(id, mty) -> Tsig_module(id, modtype s mty)
    | Tsig_modtype(id, d) -> Tsig_modtype(id, modtype_declaration s d)
-+  | Tsig_class(id, d) -> Tsig_class(id, class_type s d)
  
  and modtype_declaration s = function
      Tmodtype_abstract -> Tmodtype_abstract

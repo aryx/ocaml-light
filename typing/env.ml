@@ -390,12 +390,6 @@ let rec prefix_idents root pos sub = function
         prefix_idents root pos
                       (Subst.add_modtype id (Tmty_ident p) sub) rem in
       (p::pl, final_sub)
-  | Tsig_class(id, decl) :: rem ->
-      let p = Pdot(root, Ident.name id, pos) in
-      let (pl, final_sub) =
-        prefix_idents root (pos + 1) sub rem
-      in
-      (p::pl, final_sub)
 
 (* Compute structure descriptions *)
 
@@ -451,11 +445,7 @@ let rec components_of_module env sub path mty =
             c.comp_modtypes <-
               Tbl.add (Ident.name id) (decl', nopos) c.comp_modtypes;
             env := store_modtype id path decl' !env
-        | Tsig_class(id, decl) ->
-            let decl' = Subst.class_type sub decl in
-            c.comp_classes <-
-              Tbl.add (Ident.name id) (decl', !pos) c.comp_classes;
-            incr pos)
+        )
         sg pl;
         Structure_comps c
   | Tmty_functor(param, ty_arg, ty_res) ->
@@ -623,7 +613,6 @@ let add_item comp env =
   | Tsig_exception(id, decl) -> add_exception id decl env
   | Tsig_module(id, mty) -> add_module id mty env
   | Tsig_modtype(id, decl) -> add_modtype id decl env
-  | Tsig_class(id, decl) -> add_class id decl env
 
 let rec add_signature sg env =
   match sg with
@@ -654,9 +643,7 @@ let open_signature root sg env =
         | Tsig_modtype(id, decl) ->
             store_modtype (Ident.hide id) p
                           (Subst.modtype_declaration sub decl) env
-        | Tsig_class(id, decl) ->
-            store_class (Ident.hide id) p
-                        (Subst.class_type sub decl) env)
+      )
       env sg pl in
   { values = newenv.values;
     constrs = newenv.constrs;

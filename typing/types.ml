@@ -134,7 +134,6 @@ and signature_item =
   | Tsig_exception of Ident.t * exception_declaration
   | Tsig_module of Ident.t * module_type
   | Tsig_modtype of Ident.t * modtype_declaration
-  | Tsig_class of Ident.t * class_type
 
 and modtype_declaration =
     Tmodtype_abstract

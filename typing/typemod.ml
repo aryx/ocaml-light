@@ -219,7 +219,6 @@ let rec closed_modtype = function
 and closed_signature_item = function
     Tsig_value(id, desc) -> Ctype.closed_schema desc.val_type
   | Tsig_module(id, mty) -> closed_modtype mty
-  | Tsig_class(id, classty) -> closed_class classty
   | _ -> true
 
 let check_nongen_scheme env = function
