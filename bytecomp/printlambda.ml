@@ -250,14 +250,6 @@ let rec lambda = function
       Ident.print id; print_space();
       lambda expr; print_string ")";
       close_box()
-  | Lsend (met, obj, largs) ->
-      open_box 2;
-      print_string "(send"; print_space();
-      lambda obj; print_space();
-      lambda met;
-      List.iter (fun l -> print_space(); lambda l) largs;
-      print_string ")";
-      close_box()
   | Levent(lam, ev) ->
       open_box 2;
       begin match ev.lev_kind with

@@ -91,7 +91,6 @@ type lambda =
   | Lwhile of lambda * lambda
   | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
   | Lassign of Ident.t * lambda
-  | Lsend of lambda * lambda * lambda list
   | Levent of lambda * lambda_event
 
 and lambda_switch =
