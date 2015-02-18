@@ -1,0 +1,49 @@
+# The lexer generator
+
+CAMLC = ::boot:ocamlrun ::boot:ocamlc -I ::boot:
+COMPFLAGS =
+LINKFLAGS =
+CAMLYACC = ::boot:ocamlyacc
+YACCFLAGS =
+CAMLLEX = ::boot:ocamlrun ::boot:ocamllex
+CAMLDEP = ::boot:ocamlrun ::tools:ocamldep
+DEPFLAGS =
+
+OBJS = parser.cmo lexer.cmo lexgen.cmo compact.cmo output.cmo main.cmo
+
+all Ä ocamllex
+
+ocamllex Ä {OBJS}
+    {CAMLC} {LINKFLAGS} -o ocamllex {OBJS}
+
+clean ÄÄ
+    delete -i ocamllex
+    delete -i Å.cm[io] || set status 0
+
+parser.mli Ä parser.ml
+    echo -n
+
+parser.ml Ä parser.mly
+    {CAMLYACC} {YACCFLAGS} parser.mly
+
+clean ÄÄ
+    delete -i parser.ml parser.mli
+
+beforedepend ÄÄ parser.ml parser.mli
+
+lexer.ml Ä lexer.mll
+    {CAMLLEX} lexer.mll
+
+clean ÄÄ
+    delete -i lexer.ml
+
+beforedepend ÄÄ lexer.ml
+
+.cmo Ä .ml
+    {CAMLC} -c {COMPFLAGS} {default}.ml
+
+.cmi Ä .mli
+    {CAMLC} -c {COMPFLAGS} {default}.mli
+
+depend Ä beforedepend
+    {CAMLDEP} Å.mli Å.ml > Makefile.Mac.depend

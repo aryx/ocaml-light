@@ -1,0 +1,51 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                           Objective Caml                            *)
+(*                                                                     *)
+(*      Damien Doligez and Francois Rouaix, INRIA Rocquencourt         *)
+(*   Ported to Caml Special Light by John Malecki and Xavier Leroy     *)
+(*                                                                     *)
+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Automatique.  Distributed only by permission.                      *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: profiling.ml,v 1.3 1996/11/16 15:49:37 vouillon Exp $ *)
+
+(* Run-time library for profiled programs *)
+
+type profiling_counters = (string * (string * int array)) list
+
+let counters = ref ([] : profiling_counters)
+
+exception Bad_profile
+
+let dump_counters () =
+  begin try 
+    let ic = open_in_bin "ocamlprof.dump" in
+    let prevl = (input_value ic : profiling_counters) in
+    close_in ic;
+    List.iter2
+      (fun (curname, (curmodes,curcount)) (prevname, (prevmodes,prevcount)) ->
+        if curname <> prevname
+        or curmodes <> prevmodes
+        or Array.length curcount <> Array.length prevcount
+        then raise Bad_profile)
+      !counters prevl;
+    List.iter2
+      (fun (curname, (_,curcount)) (prevname, (_,prevcount)) ->
+        for i = 0 to Array.length curcount - 1 do
+          curcount.(i) <- curcount.(i) + prevcount.(i)
+        done)
+      !counters prevl
+  with _ -> ()
+  end;
+  begin try
+    let oc = open_out_bin "ocamlprof.dump" in
+    output_value oc !counters;
+    close_out oc
+  with _ -> ()
+  end
+
+let _ = at_exit dump_counters
+

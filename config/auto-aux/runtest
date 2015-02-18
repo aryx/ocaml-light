@@ -1,0 +1,3 @@
+#!/bin/sh
+$cc -o tst $* $cclibs || exit 100
+exec ./tst

@@ -1,0 +1,23 @@
+#!/bin/sh
+
+compargs="profiling.cmo"
+profargs=""
+
+while : ; do
+  case "$1" in
+    "")
+      break;;
+    -p)
+      profargs="$profargs -m $2"; shift;;
+    -I|-o|-ccopt|-cclib)
+      compargs="$compargs $1 $2"; shift;;
+    -pp)
+      echo 1>&2 "ocamlcp: profiling is incompatible with the -pp option"
+      exit 2;;
+    *)
+      compargs="$compargs $1";;
+  esac
+  shift
+done
+
+exec ocamlc -pp "ocamlprof -instrument $profargs" $compargs

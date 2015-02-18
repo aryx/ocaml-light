@@ -1,0 +1,39 @@
+# Makefile for the dynamic link library
+
+CAMLC = :::boot:ocamlrun :::boot:ocamlc
+INCLUDES = -I :::utils: -I :::typing: -I :::bytecomp:
+COMPFLAGS = -I :::stdlib: {INCLUDES}
+
+OBJS = dynlink.cmo
+COMPILEROBJS = misc.cmo config.cmo tbl.cmo clflags.cmo ident.cmo ¶
+  btype.cmo predef.cmo runtimedef.cmo symtable.cmo opcodes.cmo
+
+all Ä dynlink.cma extract_crc
+
+allopt Ä
+
+dynlink.cma Ä {OBJS}
+    {CAMLC} {COMPFLAGS} -a -o dynlink.cma {COMPILEROBJS} {OBJS}
+
+extract_crc Ä dynlink.cma extract_crc.cmo
+    {CAMLC} {COMPFLAGS} -o extract_crc dynlink.cma extract_crc.cmo
+
+install Ä
+    duplicate -y dynlink.cmi dynlink.cma extract_crc "{LIBDIR}"
+
+installopt Ä
+
+partialclean Ä
+    delete -i extract_crc
+    delete -i Å.cm[aio] || set status 0
+
+clean Ä partialclean
+
+.cmi Ä .mli
+    {CAMLC} -c {COMPFLAGS} {default}.mli
+
+.cmo Ä .ml
+    {CAMLC} -c {COMPFLAGS} {default}.ml
+
+depend Ä
+    :::boot:ocamlrun :::tools:ocamldep Å.mli Å.ml > Makefile.Mac.depend

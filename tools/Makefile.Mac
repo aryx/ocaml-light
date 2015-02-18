@@ -1,0 +1,107 @@
+CAMLRUN = ::boot:ocamlrun
+CAMLC = {CAMLRUN} ::boot:ocamlc -I ::boot:
+CAMLLEX = {CAMLRUN} ::boot:ocamllex
+INCLUDES = -I ::utils: -I ::parsing: -I ::typing: -I ::bytecomp: -I ::asmcomp:
+COMPFLAGS = {INCLUDES}
+LINKFLAGS = {INCLUDES}
+
+all Ä ocamldep
+
+# The dependency generator
+
+CAMLDEP = ocamldep.cmo
+
+ocamldep Ä {CAMLDEP}
+    {CAMLC} {LINKFLAGS} -o ocamldep misc.cmo {CAMLDEP}
+
+clean ÄÄ
+    delete -i ocamldep
+
+ocamldep.ml Ä ocamldep.mll
+    {CAMLLEX} ocamldep.mll
+
+clean ÄÄ
+    delete -i ocamldep.ml
+
+install ÄÄ
+    duplicate -y ocamldep "{BINDIR}ocamldep"
+
+beforedepend ÄÄ ocamldep
+
+# The profiler  (not available on the Mac for the moment)
+#
+#CSLPROF = ocamlprof.cmo
+#CSLPROF_IMPORTS = misc.cmo config.cmo clflags.cmo terminfo.cmo ¶
+#  linenum.cmo location.cmo longident.cmo pstream.cmo ¶
+#  syntaxerr.cmo parser.cmo lexer.cmo parse.cmo
+#
+#ocamlprof Ä {CSLPROF} profiling.cmo
+#   {CAMLC} {LINKFLAGS} -o ocamlprof {CSLPROF_IMPORTS} {CSLPROF}
+#
+#install ÄÄ
+#   duplicate -y ocamlprof "{BINDIR}ocamlprof"
+#   duplicate -y ocamlcp "{BINDIR}ocamlcp"
+#   duplicate -y profiling.cmi profiling.cmo "{LIBDIR}"
+#
+#clean ÄÄ
+#   delete -i ocamlprof
+
+# To make custom toplevels
+
+install ÄÄ
+    duplicate -y ocamlmktop "{BINDIR}ocamlmktop"
+    duplicate -y ocamlc-custom "{BINDIR}ocamlc-custom"
+
+# The bytecode disassembler
+
+DUMPOBJ = opnames.cmo dumpobj.cmo
+
+DumpCamlObj Ä {DUMPOBJ}
+    {CAMLC} {LINKFLAGS} -o DumpCamlObj misc.cmo tbl.cmo config.cmo ident.cmo ¶
+            opcodes.cmo {DUMPOBJ}
+
+clean ÄÄ
+    delete -i DumpCamlObj
+
+opnames.ml Ä ::byterun:instruct.h
+    streamedit -e '/¶/¶*/ delete' ¶
+           -e '/enum (Å)¨0 {/ replace // "let names_of_" ¨0 "= [|"' ¶
+           -e '/};°/ replace // "|]"' ¶
+           -e '/([A-Z][A-Z_0-9a-z]*)¨0/ replace // "¶"" ¨0 "¶"" -c °' ¶
+           -e '/,/ replace // ";" -c °' ¶
+           ::byterun:instruct.h > opnames.ml
+
+clean ÄÄ
+    delete -i opnames.ml
+
+beforedepend ÄÄ opnames.ml
+
+# Dump .cmx files
+
+dumpapprox Ä dumpapprox.cmo
+    {CAMLC} {LINKFLAGS} -o dumpapprox config.cmo dumpapprox.cmo
+
+clean ÄÄ
+    delete -i dumpapprox
+
+# Print imported interfaces for .cmo files
+
+objinfo Ä objinfo.cmo
+    {CAMLC} {LINKFLAGS} -o objinfo config.cmo objinfo.cmo
+
+clean ÄÄ
+    delete -i objinfo
+
+# Common stuff
+
+.cmo Ä .ml
+    {CAMLC} -c {COMPFLAGS} {default}.ml
+
+.cmi Ä .mli
+    {CAMLC} -c {COMPFLAGS} {default}.mli
+
+clean ÄÄ
+    delete -i Å.cm[io] || set status 0
+
+depend Ä beforedepend
+    {CAMLRUN} :ocamldep {INCLUDES} Å.mli Å.ml > Makefile.Mac.depend

@@ -1,0 +1,20 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                           Objective Caml                            *)
+(*                                                                     *)
+(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
+(*                                                                     *)
+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Automatique.  Distributed only by permission.                      *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: bytegen.mli,v 1.5 1997/02/19 16:08:03 xleroy Exp $ *)
+
+(* Generation of bytecode from lambda terms *)
+
+open Lambda
+open Instruct
+
+val compile_implementation: string -> lambda -> instruction list
+val compile_phrase: lambda -> instruction list * instruction list
