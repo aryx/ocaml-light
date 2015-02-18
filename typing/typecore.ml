@@ -219,7 +219,6 @@ let rec is_nonexpansive exp =
         lbl_exp_list
   | Texp_field(exp, lbl) -> is_nonexpansive exp
   | Texp_array [] -> true
-  | Texp_new _ -> true
   | _ -> false
 
 (* Typing of printf formats *)
@@ -287,7 +286,8 @@ let rec type_exp env sexp =
                 let (path_self, _) =
                   Env.lookup_value (Longident.Lident "*self*") env
                 in
-                Texp_instvar (path_self, path)
+                (* Texp_instvar (path_self, path) *)
+                failwith "TODO: self?"
             | _ ->
                 Texp_ident(path, desc)
             end;

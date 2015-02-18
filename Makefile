@@ -40,8 +40,8 @@ TYPING=typing/ident.cmo typing/path.cmo \
   typing/typemod.cmo
 
 COMP=bytecomp/lambda.cmo bytecomp/printlambda.cmo \
-  bytecomp/translobj.cmo bytecomp/matching.cmo bytecomp/translcore.cmo \
-  bytecomp/translclass.cmo bytecomp/translmod.cmo \
+  bytecomp/matching.cmo bytecomp/translcore.cmo \
+  bytecomp/translmod.cmo \
   bytecomp/simplif.cmo bytecomp/runtimedef.cmo
 
 BYTECOMP=bytecomp/meta.cmo bytecomp/instruct.cmo bytecomp/bytegen.cmo \

@@ -21,7 +21,6 @@ open Path
 open Types
 open Typedtree
 open Lambda
-open Translobj
 
 type error =
     Illegal_letrec_pat
@@ -470,28 +469,6 @@ let rec transl_exp e =
       event_before cond
         (Lifthenelse(transl_exp cond, event_before body (transl_exp body),
                      Lstaticfail))
-  | Texp_send(expr, met) ->
-      let met_id =
-        match met with
-          Tmeth_name nm -> meth nm
-        | Tmeth_val id  -> id
-      in
-      event_after e (Lsend(Lvar met_id, transl_exp expr, []))
-  | Texp_new cl ->
-      Lprim(Pfield 0, [transl_path cl])
-  | Texp_instvar(path_self, path) ->
-      Lprim(Parrayrefu Paddrarray , [transl_path path_self; transl_path path])
-  | Texp_setinstvar(path_self, path, expr) ->
-      transl_setinstvar (transl_path path_self) path expr
-  | Texp_override(path_self, modifs) ->
-      let cpy = Ident.create "copy" in
-      Llet(Strict, cpy, Lapply(oo_prim "copy", [transl_path path_self]),
-      List.fold_right
-        (fun (path, expr) rem ->
-           Lsequence(transl_setinstvar (Lvar cpy) path expr,
-                     rem))
-        modifs
-        (Lvar cpy))
   | _ ->
       fatal_error "Translcore.transl"
 

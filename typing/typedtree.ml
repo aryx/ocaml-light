@@ -60,31 +60,6 @@ and expression_desc =
   | Texp_for of
       Ident.t * expression * expression * direction_flag * expression
   | Texp_when of expression * expression
-  | Texp_send of expression * meth
-  | Texp_new of Path.t
-  | Texp_instvar of Path.t * Path.t
-  | Texp_setinstvar of Path.t * Path.t * expression
-  | Texp_override of Path.t * (Path.t * expression) list
-
-and meth =
-    Tmeth_name of string
-  | Tmeth_val of Ident.t
-
-(* Value expressions for classes *)
-
-type class_field =
-    Cf_inher of
-      Path.t * expression list * (string * Ident.t) list *
-      (string * Ident.t) list * string list
-  | Cf_val of string * Ident.t * private_flag * expression option
-  | Cf_meth of string * expression
-
-type class_def =
-  { cl_args: pattern list;
-    cl_field: class_field list;
-    cl_pub_meths: string list;
-    cl_meths: Ident.t Meths.t;
-    cl_loc: Location.t }
 
 (* Value expressions for the module language *)
 
@@ -112,7 +87,6 @@ and structure_item =
   | Tstr_module of Ident.t * module_expr
   | Tstr_modtype of Ident.t * module_type
   | Tstr_open of Path.t
-  | Tstr_class of (Ident.t * class_def) list
 
 and module_coercion =
     Tcoerce_none
