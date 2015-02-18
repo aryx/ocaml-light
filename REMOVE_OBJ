@@ -25,9 +25,6 @@ index e4e957a..6a12118 100644
 +  typing/mtype.cmo typing/includecore.cmo \
 +  typing/includemod.cmo typing/parmatch.cmo \
    typing/typetexp.cmo typing/typecore.cmo \
--  typing/typedecl.cmo typing/typemod.cmo
-+  typing/typedecl.cmo typing/typeclass.cmo \
-+  typing/typemod.cmo
  
  COMP=bytecomp/lambda.cmo bytecomp/printlambda.cmo \
 -  bytecomp/matching.cmo bytecomp/translcore.cmo bytecomp/translmod.cmo \
@@ -752,19 +749,6 @@ index e15022d..1341153 100644
          (Tcoerce_none, crc)
        end in
      Emitcode.to_file oc modulename crc
-diff --git a/driver/errors.ml b/driver/errors.ml
-index 28d1846..add586a 100644
---- a/driver/errors.ml
-+++ b/driver/errors.ml
-@@ -49,6 +49,8 @@ let report_error exn =
-       Bytelibrarian.report_error code
-   | Sys_error msg ->
-       print_string "I/O error: "; print_string msg
-+  | Typeclass.Error(loc, err) ->
-+      Location.print loc; Typeclass.report_error err
-   | x ->
-       close_box(); raise x
-   end;
 diff --git a/driver/optcompile.ml b/driver/optcompile.ml
 index f055b53..ef54574 100644
 --- a/driver/optcompile.ml
@@ -778,20 +762,6 @@ index f055b53..ef54574 100644
          (Tcoerce_none, crc)
        end in
      Compilenv.reset modulename crc;
-diff --git a/driver/opterrors.ml b/driver/opterrors.ml
-index 23d15ae..bfddf14 100644
---- a/driver/opterrors.ml
-+++ b/driver/opterrors.ml
-@@ -51,6 +51,8 @@ let report_error exn =
-       Asmlibrarian.report_error code
-   | Sys_error msg ->
-       print_string "I/O error: "; print_string msg
-+  | Typeclass.Error(loc, err) ->
-+      Location.print loc; Typeclass.report_error err
-   | x ->
-       close_box(); raise x
-   end;
-
 
 * parsing/
 
@@ -826,9 +796,9 @@ index 0000000..dd9fd30
 +(*  Automatique.  Distributed only by permission.                      *)
 +(*                                                                     *)
 +(***********************************************************************)
+...
 
 
-** AST bis
 
 diff --git a/parsing/parsetree.mli b/parsing/parsetree.mli
 index bcfdb9f..ea8356a 100644
@@ -840,8 +810,6 @@ index bcfdb9f..ea8356a 100644
    | Ptyp_tuple of core_type list
 -  | Ptyp_constr of Longident.t * core_type list
 +  | Ptyp_constr of Longident.t * core_type list * string option
-+  | Ptyp_object of core_field_type list * string option
-+  | Ptyp_class of Longident.t * core_type list * string option
 +
 +and core_field_type =
 +  { pfield_desc: core_field_desc;
@@ -860,138 +828,233 @@ index bcfdb9f..ea8356a 100644
 -  | Pexp_constraint of expression * core_type
 +  | Pexp_constraint of expression * core_type option * core_type option
    | Pexp_when of expression * expression
-+  | Pexp_send of expression * Label.t
-+  | Pexp_new of Longident.t
-+  | Pexp_setinstvar of Label.t * expression
-+  | Pexp_override of (Label.t * expression) list
- 
  (* Value descriptions *)
  
 @@ -90,6 +104,46 @@ and type_kind =
  
- type exception_declaration = core_type list
+
+** Typed AST
+
+diff --git a/typing/typedtree.mli b/typing/typedtree.mli
+index 01592ff..fe0e72a 100644
+--- a/typing/typedtree.mli
++++ b/typing/typedtree.mli
+@@ -13,21 +13,31 @@
  
-+(* Type expressions for the class language *)
+ (* Type expressions for the core language *)
+ 
+ type type_expr =
+-    Tvar of type_variable
++  { mutable desc: type_desc; 
++    mutable level: int }
 +
-+type class_type_field =
-+    Pctf_inher of (Longident.t * core_type list * Location.t)
-+  | Pctf_val of
-+      (Label.t * private_flag * mutable_flag * core_type option * Location.t)
-+  | Pctf_virt of (Label.t * core_type * Location.t)
-+  | Pctf_meth of (Label.t * core_type * Location.t)
++and type_desc =
++    Tvar
+   | Tarrow of type_expr * type_expr
+   | Ttuple of type_expr list
+-  | Tconstr of Path.t * type_expr list
+-
+-and type_variable =
+-    { mutable tvar_level: int;
+-      mutable tvar_link: type_expr option }
++  | Tconstr of Path.t * type_expr list * (Path.t * type_expr) list ref
++  | Tobject of type_expr * (Path.t * type_expr list) option ref
++  | Tfield of Label.t * type_expr * type_expr
++  | Tnil
++  | Tlink of type_expr
+ 
+ (* Value descriptions *)
+ 
+ type value_description =
+   { val_type: type_expr;                       (* Type of the val *)
+-    val_prim: Primitive.description option }   (* Is this a primitive? *)
++    val_kind: value_kind }
++
++and value_kind =
++    Val_reg				(* Regular value *)
++  | Val_prim of Primitive.description	(* Primitive *)
++  | Val_ivar of mutable_flag		(* Instance variable (mutable ?) *)
++  | Val_anc of (Label.t * Ident.t) list (* Ancestor *)
+ 
+ (* Constructor descriptions *)
+ 
+@@ -62,6 +73,18 @@ and record_representation =
+     Record_regular                      (* All fields are boxed / tagged *)
+   | Record_float                        (* All fields are floats *)
+ 
++(* Type expressions for classes *)
++
++module Vars : Map.S with type key = Label.t
 +
 +type class_type =
-+  { pcty_name: string;
-+    pcty_param: string list;
-+    pcty_args: core_type list;
-+    pcty_self: string option;
-+    pcty_cstr: (string * core_type * Location.t) list;
-+    pcty_field: class_type_field list;
-+    pcty_kind: virtual_flag;
-+    pcty_closed: closed_flag;
-+    pcty_loc: Location.t }
++  { cty_params: type_expr list;
++    cty_args: type_expr list;
++    cty_vars: (mutable_flag * type_expr) Vars.t;
++    cty_self: type_expr;
++    cty_concr: Label.t list;
++    mutable cty_new: type_expr option }
 +
-+type class_field =
-+    Pcf_inher of (Longident.t * core_type list * expression list *
-+      	       	  string option * Location.t)
-+  | Pcf_val of
-+      (Label.t * private_flag * mutable_flag * expression option * Location.t)
-+  | Pcf_virt of (Label.t * core_type * Location.t)
-+  | Pcf_meth of (Label.t * expression * Location.t)
-+
-+type class_def =
-+  { pcl_name: string;
-+    pcl_param: string list;
-+    pcl_args: pattern list;
-+    pcl_self: string option;
-+    pcl_self_ty: string option;
-+    pcl_cstr: (string * core_type * Location.t) list;
-+    pcl_field: class_field list;
-+    pcl_kind: virtual_flag;
-+    pcl_closed: closed_flag;
-+    pcl_loc: Location.t }
-+
- (* Type expressions for the module language *)
+ (* Value expressions for the core language *)
  
- type module_type =
-@@ -116,6 +170,7 @@ and signature_item_desc =
-   | Psig_modtype of string * modtype_declaration
-   | Psig_open of Longident.t
-   | Psig_include of module_type
-+  | Psig_class of class_type list
+ type pattern =
+@@ -104,6 +127,11 @@ and expression_desc =
+   | Texp_for of
+       Ident.t * expression * expression * direction_flag * expression
+   | Texp_when of expression * expression
++  | Texp_send of expression * Label.t
++  | Texp_new of Path.t
++  | Texp_instvar of Path.t * Path.t
++  | Texp_setinstvar of Path.t * Path.t * expression
++  | Texp_override of Path.t * (Path.t * expression) list
+ 
+ (* Type definitions *)
+ 
+@@ -135,11 +163,26 @@ and signature_item =
+   | Tsig_exception of Ident.t * exception_declaration
+   | Tsig_module of Ident.t * module_type
+   | Tsig_modtype of Ident.t * modtype_declaration
++  | Tsig_class of Ident.t * class_type
  
  and modtype_declaration =
-     Pmodtype_abstract
-@@ -153,6 +208,7 @@ and structure_item_desc =
-   | Pstr_module of string * module_expr
-   | Pstr_modtype of string * module_type
-   | Pstr_open of Longident.t
-+  | Pstr_class of class_def list
+     Tmodtype_abstract
+   | Tmodtype_manifest of module_type
  
- (* Toplevel phrases *)
++(* Value expressions for classes *)
++
++type class_field =
++    Cf_inher of
++      Path.t * expression list * (Label.t * Ident.t) list *
++      (Label.t * Ident.t) list
++  | Cf_val of Label.t * Ident.t * private_flag * expression option
++  | Cf_meth of Label.t * expression
++
++type class_def =
++  { cl_args: pattern list;
++    cl_field: class_field list;
++    cl_loc: Location.t }
++
+ (* Value expressions for the module language *)
+ 
+ type module_expr =
+@@ -165,6 +208,7 @@ and structure_item =
+   | Tstr_module of Ident.t * module_expr
+   | Tstr_modtype of Ident.t * module_type
+   | Tstr_open of Path.t
++  | Tstr_class of (Ident.t * class_def) list
+ 
+ and module_coercion =
+     Tcoerce_none
 
 
-** tools/
 
-
-diff --git a/tools/cslprof.ml b/tools/cslprof.ml
-index df5a283..98dffd3 100644
---- a/tools/cslprof.ml
-@@ -203,13 +203,24 @@ and rewrite_exp sexp =
-     if !instr_loops then insert_profile sbody.pexp_loc;
-     rewrite_exp sbody
+diff --git a/typing/typedtree.ml b/typing/typedtree.ml
+index b2e41f5..6f137d5 100644
+--- a/typing/typedtree.ml
++++ b/typing/typedtree.ml
+@@ -19,20 +19,30 @@ open Asttypes
+ (* Type expressions for the core language *)
  
--  | Pexp_constraint(sarg, _) ->
-+  | Pexp_constraint(sarg, _, _) ->
-     rewrite_exp sarg
+ type type_expr =
+-    Tvar of type_variable
++  { mutable desc: type_desc; 
++    mutable level: int }
++
++and type_desc =
++    Tvar
+   | Tarrow of type_expr * type_expr
+   | Ttuple of type_expr list
+-  | Tconstr of Path.t * type_expr list
+-
+-and type_variable =
+-    { mutable tvar_level: int;
+-      mutable tvar_link: type_expr option }
++  | Tconstr of Path.t * type_expr list * (Path.t * type_expr) list ref
++  | Tobject of type_expr * (Path.t * type_expr list) option ref
++  | Tfield of Label.t * type_expr * type_expr
++  | Tnil
++  | Tlink of type_expr
  
-   | Pexp_when(scond, sbody) ->
-     rewrite_exp scond;
-     rewrite_exp sbody
--      
-+
-+  | Pexp_send (sobj, _) ->
-+    rewrite_exp sobj
-+
-+  | Pexp_new _ -> ()
-+
-+  | Pexp_setinstvar (_, sarg) ->
-+    rewrite_exp sarg
-+
-+  | Pexp_override l ->
-+      List.iter (fun (_, sexp) -> rewrite_exp sexp) l
-+
- and rewrite_ifbody sifbody =
-   if !instr_if then begin
-     insert_open sifbody.pexp_loc;
-@@ -243,6 +254,18 @@ and rewrite_funmatching l =
- and rewrite_trymatching l =
-   rewrite_annotate_exp_list (List.map snd l)
+ (* Value descriptions *)
  
-+(* Rewrite a class definition *)
+ type value_description =
+   { val_type: type_expr;                       (* Type of the val *)
+-    val_prim: Primitive.description option }   (* Is this a primitive? *)
++    val_kind: value_kind }
 +
-+let rewrite_class_field =
-+  function
-+    Pcf_inher (_, _, l, _, _) -> List.iter rewrite_exp l
-+  | Pcf_val (_, _, _, Some exp, _) -> rewrite_exp exp
-+  | Pcf_val (_, _, _, None, _) | Pcf_virt _ -> ()
-+  | Pcf_meth (_, exp, _) -> rewrite_exp exp
-+
-+let rewrite_class cl =
-+  List.iter rewrite_class_field cl.pcl_field
-+
- (* Rewrite a module expression or structure expression *)
++and value_kind =
++    Val_reg				(* Regular value *)
++  | Val_prim of Primitive.description	(* Primitive *)
++  | Val_ivar of mutable_flag		(* Instance variable (mutable ?) *)
++  | Val_anc of (Label.t * Ident.t) list (* Ancestor *)
  
- let rec rewrite_mod smod =
-@@ -258,6 +281,7 @@ and rewrite_str_item item =
-     Pstr_eval exp -> rewrite_exp exp
-   | Pstr_value(_, exps) -> List.iter (function (_,exp) -> rewrite_exp exp) exps
-   | Pstr_module(name, smod) -> rewrite_mod smod
-+  | Pstr_class classes -> List.iter rewrite_class classes
-   | _ -> ()
+ (* Constructor descriptions *)
  
- (* Rewrite a .ml file *)
-
+@@ -63,6 +73,18 @@ and record_representation =
+     Record_regular                      (* All fields are boxed / tagged *)
+   | Record_float                        (* All fields are floats *)
+ 
++(* Type expressions for classes *)
++
++module Vars = Map.Make(Label)
++
++type class_type =
++  { cty_params: type_expr list;
++    cty_args: type_expr list;
++    cty_vars: (Asttypes.mutable_flag * type_expr) Vars.t;
++    cty_self: type_expr;
++    cty_concr: Label.t list;
++    mutable cty_new: type_expr option }
++
+ (* Value expressions for the core language *)
+ 
+ type pattern =
+@@ -105,6 +127,11 @@ and expression_desc =
+   | Texp_for of
+       Ident.t * expression * expression * direction_flag * expression
+   | Texp_when of expression * expression
++  | Texp_send of expression * Label.t
++  | Texp_new of Path.t
++  | Texp_instvar of Path.t * Path.t
++  | Texp_setinstvar of Path.t * Path.t * expression
++  | Texp_override of Path.t * (Path.t * expression) list
+ 
+ (* Type definitions *)
+ 
+@@ -136,11 +163,26 @@ and signature_item =
+   | Tsig_exception of Ident.t * exception_declaration
+   | Tsig_module of Ident.t * module_type
+   | Tsig_modtype of Ident.t * modtype_declaration
++  | Tsig_class of Ident.t * class_type
+ 
+ and modtype_declaration =
+     Tmodtype_abstract
+   | Tmodtype_manifest of module_type
+ 
++(* Value expressions for classes *)
++
++type class_field =
++    Cf_inher of
++      Path.t * expression list * (Label.t * Ident.t) list *
++      (Label.t * Ident.t) list
++  | Cf_val of Label.t * Ident.t * private_flag * expression option
++  | Cf_meth of Label.t * expression
++
++type class_def =
++  { cl_args: pattern list;
++    cl_field: class_field list;
++    cl_loc: Location.t }
++
+ (* Value expressions for the module language *)
+ 
+ type module_expr =
+@@ -166,6 +208,7 @@ and structure_item =
+   | Tstr_module of Ident.t * module_expr
+   | Tstr_modtype of Ident.t * module_type
+   | Tstr_open of Path.t
++  | Tstr_class of (Ident.t * class_def) list
+ 
+ and module_coercion =
+     Tcoerce_none
 
 ** toplevel/
 
@@ -4393,22 +4456,7 @@ index 9bb374a..98cbe27 100644
  val signature: t -> signature -> signature
  val modtype_declaration: t -> modtype_declaration -> modtype_declaration
 -
-diff --git a/typing/typeclass.ml b/typing/typeclass.ml
-new file mode 100644
-index 0000000..f0cb0e2
---- /dev/null
-+++ b/typing/typeclass.ml
-@@ -0,0 +1,10 @@
-+(***********************************************************************)
-+(*                                                                     *)
-+(*                         Caml Special Light                          *)
-+(*                                                                     *)
-+(*         Jerome Vouillon, projet Cristal, INRIA Rocquencourt         *)
-+(*                                                                     *)
-+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-+(*  Automatique.  Distributed only by permission.                      *)
-+(*                                                                     *)
-+(***********************************************************************)
+
 diff --git a/typing/typecore.ml b/typing/typecore.ml
 index 89937df..ea77828 100644
 --- a/typing/typecore.ml
@@ -4428,14 +4476,6 @@ index 89937df..ea77828 100644
  
  exception Error of Location.t * error
  
-@@ -59,7 +67,7 @@ let pattern_variables = ref ([]: (Ident.t * type_expr) list)
- let enter_variable loc name ty =
-   if List.exists (fun (id, ty) -> Ident.name id = name) !pattern_variables
-   then raise(Error(loc, Multiply_bound_variable));
--  let id = Ident.new name in
-+  let id = Ident.create name in
-   pattern_variables := (id, ty) :: !pattern_variables;
-   id
  
 @@ -89,7 +97,7 @@ let rec type_pat env sp =
        let pl = List.map (type_pat env) spl in
@@ -4581,107 +4621,6 @@ index 89937df..ea77828 100644
        { exp_desc = Texp_when(cond, body);
          exp_loc = sexp.pexp_loc;
          exp_type = body.exp_type }
--      
-+  | Pexp_send (e, met) ->
-+      let object = type_exp env e in
-+      begin try
-+        let typ = filter_method env met object.exp_type in
-+        let exp =
-+      	  match object.exp_desc with
-+	    Texp_ident(path, {val_kind = Val_anc methods}) ->
-+      	      let (path, desc) =
-+                Env.lookup_value (Longident.Lident "*self*") env
-+              in
-+              let method_id = List.assoc met methods in
-+	      let method_type = newvar () in
-+	      let (obj_ty, res_ty) = filter_arrow env method_type in
-+	      unify env obj_ty desc.val_type;
-+	      unify env res_ty typ;
-+	      Texp_apply({exp_desc = Texp_ident(Path.Pident method_id,
-+      	       	       	       	                {val_type = method_type;
-+      	       	       	       	                 val_kind = Val_reg});
-+      	       	          exp_loc = sexp.pexp_loc;
-+      	       	          exp_type = method_type},
-+                         [{exp_desc = Texp_ident(path, desc);
-+      	       	       	   exp_loc = object.exp_loc;
-+      	       	       	   exp_type = desc.val_type}])
-+          | _ ->
-+	      Texp_send(object, met)
-+        in
-+          { exp_desc = exp; exp_loc = sexp.pexp_loc; exp_type = typ}
-+      with Unify ->
-+      	raise(Error(e.pexp_loc,	Undefined_method_err met))
-+      end
-+  | Pexp_new cl ->
-+      let (cl_path, cl_typ) =
-+        try Env.lookup_class cl env with Not_found ->
-+          raise(Error(sexp.pexp_loc, Unbound_class cl))
-+      in
-+      	begin match cl_typ.cty_new with
-+	  None ->
-+	    raise(Error(sexp.pexp_loc, Virtual_class cl))
-+        | Some ty ->
-+            { exp_desc = Texp_new cl_path;
-+      	      exp_loc = sexp.pexp_loc;
-+	      exp_type = instance ty }
-+        end
-+  | Pexp_setinstvar (lab, snewval) ->
-+      let name = lab.Label.lab_name in
-+      begin try
-+        let (path, desc) = Env.lookup_value (Longident.Lident name) env in
-+        match desc.val_kind with
-+	  Val_ivar Mutable ->
-+	    let newval = type_expect env snewval desc.val_type in
-+      	    let (path_self, _) =
-+              Env.lookup_value (Longident.Lident "*self*") env
-+            in
-+            { exp_desc = Texp_setinstvar(path_self, path, newval);
-+              exp_loc = sexp.pexp_loc;
-+              exp_type = Predef.type_unit }
-+	| Val_ivar _ ->
-+      	    raise(Error(sexp.pexp_loc, Instance_variable_not_mutable name))
-+	| _ ->
-+            raise(Error(sexp.pexp_loc, Unbound_instance_variable name))
-+      with
-+	Not_found ->
-+          raise(Error(sexp.pexp_loc, Unbound_instance_variable name))
-+      end        
-+  | Pexp_override lst ->
-+      List.fold_right
-+      	(fun (lab, _) l ->
-+	   if List.exists (Label. (=) lab) l then
-+	     raise(Error(sexp.pexp_loc,
-+      	       	       	 Value_multiply_overridden lab.Label.lab_name));
-+      	   lab::l)
-+	lst
-+	[];
-+      let (path_self, {val_type = self_ty}) =
-+      	try
-+          Env.lookup_value (Longident.Lident "*self*") env
-+	with Not_found ->
-+	  raise(Error(sexp.pexp_loc, Outside_class))
-+      in
-+      let type_override (lab, snewval) =
-+        let name = lab.Label.lab_name in
-+        begin try
-+          let (path, desc) = Env.lookup_value (Longident.Lident name) env in
-+          match desc.val_kind with
-+	    Val_ivar _ ->
-+              (path, type_expect env snewval desc.val_type)
-+	  | _ ->
-+              raise(Error(sexp.pexp_loc, Unbound_instance_variable name))
-+        with
-+	  Not_found ->
-+            raise(Error(sexp.pexp_loc, Unbound_instance_variable name))
-+        end
-+      in
-+      let modifs = List.map type_override lst in
-+      { exp_desc = Texp_override(path_self, modifs);
-+      	exp_loc = sexp.pexp_loc;
-+	exp_type = self_ty }
-+
-+      (* let obj = Oo.copy self in obj.x <- e; obj *)
-+
  (* Typing of an expression with an expected type.
     Some constructs are treated specially to provide better error messages. *)
  
@@ -5027,223 +4966,7 @@ index 8ce3edb..1a01015 100644
  
  exception Error of Location.t * error
  
-diff --git a/typing/typedtree.ml b/typing/typedtree.ml
-index b2e41f5..6f137d5 100644
---- a/typing/typedtree.ml
-+++ b/typing/typedtree.ml
-@@ -19,20 +19,30 @@ open Asttypes
- (* Type expressions for the core language *)
- 
- type type_expr =
--    Tvar of type_variable
-+  { mutable desc: type_desc; 
-+    mutable level: int }
-+
-+and type_desc =
-+    Tvar
-   | Tarrow of type_expr * type_expr
-   | Ttuple of type_expr list
--  | Tconstr of Path.t * type_expr list
--
--and type_variable =
--    { mutable tvar_level: int;
--      mutable tvar_link: type_expr option }
-+  | Tconstr of Path.t * type_expr list * (Path.t * type_expr) list ref
-+  | Tobject of type_expr * (Path.t * type_expr list) option ref
-+  | Tfield of Label.t * type_expr * type_expr
-+  | Tnil
-+  | Tlink of type_expr
- 
- (* Value descriptions *)
- 
- type value_description =
-   { val_type: type_expr;                       (* Type of the val *)
--    val_prim: Primitive.description option }   (* Is this a primitive? *)
-+    val_kind: value_kind }
-+
-+and value_kind =
-+    Val_reg				(* Regular value *)
-+  | Val_prim of Primitive.description	(* Primitive *)
-+  | Val_ivar of mutable_flag		(* Instance variable (mutable ?) *)
-+  | Val_anc of (Label.t * Ident.t) list (* Ancestor *)
- 
- (* Constructor descriptions *)
- 
-@@ -63,6 +73,18 @@ and record_representation =
-     Record_regular                      (* All fields are boxed / tagged *)
-   | Record_float                        (* All fields are floats *)
- 
-+(* Type expressions for classes *)
-+
-+module Vars = Map.Make(Label)
-+
-+type class_type =
-+  { cty_params: type_expr list;
-+    cty_args: type_expr list;
-+    cty_vars: (Asttypes.mutable_flag * type_expr) Vars.t;
-+    cty_self: type_expr;
-+    cty_concr: Label.t list;
-+    mutable cty_new: type_expr option }
-+
- (* Value expressions for the core language *)
- 
- type pattern =
-@@ -105,6 +127,11 @@ and expression_desc =
-   | Texp_for of
-       Ident.t * expression * expression * direction_flag * expression
-   | Texp_when of expression * expression
-+  | Texp_send of expression * Label.t
-+  | Texp_new of Path.t
-+  | Texp_instvar of Path.t * Path.t
-+  | Texp_setinstvar of Path.t * Path.t * expression
-+  | Texp_override of Path.t * (Path.t * expression) list
- 
- (* Type definitions *)
- 
-@@ -136,11 +163,26 @@ and signature_item =
-   | Tsig_exception of Ident.t * exception_declaration
-   | Tsig_module of Ident.t * module_type
-   | Tsig_modtype of Ident.t * modtype_declaration
-+  | Tsig_class of Ident.t * class_type
- 
- and modtype_declaration =
-     Tmodtype_abstract
-   | Tmodtype_manifest of module_type
- 
-+(* Value expressions for classes *)
-+
-+type class_field =
-+    Cf_inher of
-+      Path.t * expression list * (Label.t * Ident.t) list *
-+      (Label.t * Ident.t) list
-+  | Cf_val of Label.t * Ident.t * private_flag * expression option
-+  | Cf_meth of Label.t * expression
-+
-+type class_def =
-+  { cl_args: pattern list;
-+    cl_field: class_field list;
-+    cl_loc: Location.t }
-+
- (* Value expressions for the module language *)
- 
- type module_expr =
-@@ -166,6 +208,7 @@ and structure_item =
-   | Tstr_module of Ident.t * module_expr
-   | Tstr_modtype of Ident.t * module_type
-   | Tstr_open of Path.t
-+  | Tstr_class of (Ident.t * class_def) list
- 
- and module_coercion =
-     Tcoerce_none
-diff --git a/typing/typedtree.mli b/typing/typedtree.mli
-index 01592ff..fe0e72a 100644
---- a/typing/typedtree.mli
-+++ b/typing/typedtree.mli
-@@ -13,21 +13,31 @@
- 
- (* Type expressions for the core language *)
- 
- type type_expr =
--    Tvar of type_variable
-+  { mutable desc: type_desc; 
-+    mutable level: int }
-+
-+and type_desc =
-+    Tvar
-   | Tarrow of type_expr * type_expr
-   | Ttuple of type_expr list
--  | Tconstr of Path.t * type_expr list
--
--and type_variable =
--    { mutable tvar_level: int;
--      mutable tvar_link: type_expr option }
-+  | Tconstr of Path.t * type_expr list * (Path.t * type_expr) list ref
-+  | Tobject of type_expr * (Path.t * type_expr list) option ref
-+  | Tfield of Label.t * type_expr * type_expr
-+  | Tnil
-+  | Tlink of type_expr
- 
- (* Value descriptions *)
- 
- type value_description =
-   { val_type: type_expr;                       (* Type of the val *)
--    val_prim: Primitive.description option }   (* Is this a primitive? *)
-+    val_kind: value_kind }
-+
-+and value_kind =
-+    Val_reg				(* Regular value *)
-+  | Val_prim of Primitive.description	(* Primitive *)
-+  | Val_ivar of mutable_flag		(* Instance variable (mutable ?) *)
-+  | Val_anc of (Label.t * Ident.t) list (* Ancestor *)
- 
- (* Constructor descriptions *)
- 
-@@ -62,6 +73,18 @@ and record_representation =
-     Record_regular                      (* All fields are boxed / tagged *)
-   | Record_float                        (* All fields are floats *)
- 
-+(* Type expressions for classes *)
-+
-+module Vars : Map.S with type key = Label.t
-+
-+type class_type =
-+  { cty_params: type_expr list;
-+    cty_args: type_expr list;
-+    cty_vars: (mutable_flag * type_expr) Vars.t;
-+    cty_self: type_expr;
-+    cty_concr: Label.t list;
-+    mutable cty_new: type_expr option }
-+
- (* Value expressions for the core language *)
- 
- type pattern =
-@@ -104,6 +127,11 @@ and expression_desc =
-   | Texp_for of
-       Ident.t * expression * expression * direction_flag * expression
-   | Texp_when of expression * expression
-+  | Texp_send of expression * Label.t
-+  | Texp_new of Path.t
-+  | Texp_instvar of Path.t * Path.t
-+  | Texp_setinstvar of Path.t * Path.t * expression
-+  | Texp_override of Path.t * (Path.t * expression) list
- 
- (* Type definitions *)
- 
-@@ -135,11 +163,26 @@ and signature_item =
-   | Tsig_exception of Ident.t * exception_declaration
-   | Tsig_module of Ident.t * module_type
-   | Tsig_modtype of Ident.t * modtype_declaration
-+  | Tsig_class of Ident.t * class_type
- 
- and modtype_declaration =
-     Tmodtype_abstract
-   | Tmodtype_manifest of module_type
- 
-+(* Value expressions for classes *)
-+
-+type class_field =
-+    Cf_inher of
-+      Path.t * expression list * (Label.t * Ident.t) list *
-+      (Label.t * Ident.t) list
-+  | Cf_val of Label.t * Ident.t * private_flag * expression option
-+  | Cf_meth of Label.t * expression
-+
-+type class_def =
-+  { cl_args: pattern list;
-+    cl_field: class_field list;
-+    cl_loc: Location.t }
-+
- (* Value expressions for the module language *)
- 
- type module_expr =
-@@ -165,6 +208,7 @@ and structure_item =
-   | Tstr_module of Ident.t * module_expr
-   | Tstr_modtype of Ident.t * module_type
-   | Tstr_open of Path.t
-+  | Tstr_class of (Ident.t * class_def) list
- 
- and module_coercion =
-     Tcoerce_none
+
 diff --git a/typing/typemod.ml b/typing/typemod.ml
 index 6f963a0..bd76c03 100644
 --- a/typing/typemod.ml
