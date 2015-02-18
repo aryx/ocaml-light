@@ -26,14 +26,6 @@ index e4e957a..6a12118 100644
 +  typing/includemod.cmo typing/parmatch.cmo \
    typing/typetexp.cmo typing/typecore.cmo \
  
- COMP=bytecomp/lambda.cmo bytecomp/printlambda.cmo \
--  bytecomp/matching.cmo bytecomp/translcore.cmo bytecomp/translmod.cmo \
-+  bytecomp/translobj.cmo bytecomp/matching.cmo bytecomp/translcore.cmo \
-+  bytecomp/translclass.cmo bytecomp/translmod.cmo \
-   bytecomp/simplif.cmo bytecomp/runtimedef.cmo
- 
-
-
 
 * asmcomp/
 
@@ -383,37 +375,12 @@ index 8671e3a..177f19b 100644
 -
 -    
 -    
-diff --git a/bytecomp/symtable.ml b/bytecomp/symtable.ml
-index ef7d0fe..431fd42 100644
-diff --git a/bytecomp/translclass.ml b/bytecomp/translclass.ml
-new file mode 100644
-index 0000000..4b76396
---- /dev/null
-+++ b/bytecomp/translclass.ml
-@@ -0,0 +1,11 @@
-+(***********************************************************************)
-+(*                                                                     *)
-+(*                         Caml Special Light                          *)
-+(*                                                                     *)
-+(*         Jerome Vouillon, projet Cristal, INRIA Rocquencourt         *)
-+(*                                                                     *)
-+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-+(*  Automatique.  Distributed only by permission.                      *)
-+(*                                                                     *)
-+(***********************************************************************)
-+
-...
 
 diff --git a/bytecomp/translcore.ml b/bytecomp/translcore.ml
 index d89ec8f..07ad56c 100644
 --- a/bytecomp/translcore.ml
 +++ b/bytecomp/translcore.ml
 @@ -20,11 +20,12 @@ open Primitive
- open Path
- open Typedtree
- open Lambda
--
-+open Translobj
  
  type error =
      Illegal_letrec_pat
@@ -487,23 +454,6 @@ index d89ec8f..07ad56c 100644
        Lfor(param, transl_exp low, transl_exp high, dir, transl_exp body)
    | Texp_when(cond, body) ->
        Lifthenelse(transl_exp cond, transl_exp body, Lstaticfail)
-+  | Texp_send(expr, met) ->
-+      Lsend(Lvar (meth met), transl_exp expr, [])
-+  | Texp_new cl ->
-+      Lprim(Pfield 0, [transl_path cl])
-+  | Texp_instvar(path_self, path) ->
-+      Lprim(Parrayrefu Paddrarray , [transl_path path_self; transl_path path])
-+  | Texp_setinstvar(path_self, path, expr) ->
-+      transl_setinstvar (transl_path path_self) path expr
-+  | Texp_override(path_self, modifs) ->
-+      let cpy = Ident.create "copy" in
-+      Llet(Strict, cpy, Lapply(oo_prim "copy", [transl_path path_self]),
-+      List.fold_right
-+      	(fun (path, expr) rem ->
-+	   Lsequence(transl_setinstvar (Lvar cpy) path expr,
-+	             rem))
-+	modifs
-+	(Lvar cpy))
    | _ ->
        fatal_error "Translcore.transl"
  
@@ -547,9 +497,6 @@ index fbaa50a..20ffd18 100644
  
  exception Error of Location.t * error
  
- val report_error: error -> unit
--
--
 diff --git a/bytecomp/translmod.ml b/bytecomp/translmod.ml
 index 7c20a71..d90e664 100644
 --- a/bytecomp/translmod.ml
@@ -558,11 +505,6 @@ index 7c20a71..d90e664 100644
  open Asttypes
  open Typedtree
  open Lambda
-+open Translobj
- open Translcore
--
-+open Translclass
- 
  (* Compile a coercion *)
  
 @@ -119,10 +120,10 @@ and transl_structure fields cc = function
@@ -584,12 +526,6 @@ index 7c20a71..d90e664 100644
        transl_structure fields cc rem
    | Tstr_open path :: rem ->
        transl_structure fields cc rem
-+  | Tstr_class cl_list :: rem ->
-+      List.fold_right
-+      	(fun (id, cl) re ->
-+	   Llet(Strict, id, transl_class cl, re))
-+	cl_list
-+	(transl_structure ((List.map fst cl_list) @ fields) cc rem)
  
  (* Compile an implementation *)
  
@@ -618,25 +554,6 @@ index 7c20a71..d90e664 100644
        end;
        transl_store rem
    | Tstr_type(decls) :: rem ->
-@@ -181,6 +189,12 @@ let transl_store_structure glob map prims str =
-       transl_store rem
-   | Tstr_open path :: rem ->
-       transl_store rem
-+  | Tstr_class cl_list :: rem ->
-+      List.fold_right
-+      	(fun (id, cl) re ->
-+	   Llet(Strict, id, transl_class cl, re))
-+	cl_list
-+	(store_idents glob map (List.map fst cl_list) (transl_store rem))
- 
-   and store_ident glob map id cont =
-     try
-@@ -215,6 +229,8 @@ let rec defined_idents = function
-   | Tstr_module(id, modl) :: rem -> id :: defined_idents rem
-   | Tstr_modtype(id, decl) :: rem -> defined_idents rem
-   | Tstr_open path :: rem -> defined_idents rem
-+  | Tstr_class cl_list :: rem ->
-+      List.map fst cl_list @ defined_idents rem
  
  (* Transform a coercion and the list of value identifiers built above
     into a table id -> (pos, coercion), with [pos] being the position
@@ -652,47 +569,16 @@ index 7c20a71..d90e664 100644
 -  (size, transl_store_structure module_id map prims str)
 +  (size, transl_label_init (transl_store_structure module_id map prims str))
  
- (* Compile a sequence of expressions *)
- 
- let rec make_sequence fn = function
-     [] -> lambda_unit
-   | [x] -> fn x
--  | x::rem -> Lsequence(fn x, make_sequence fn rem)
-+  | x::rem ->
-+      Lsequence(fn x, make_sequence fn rem)
- 
  (* Compile a toplevel phrase *)
  
 @@ -291,6 +309,12 @@ let transl_toplevel_item = function
        lambda_unit
    | Tstr_open path ->
        lambda_unit
-+  | Tstr_class cl_list ->
-+      List.iter (fun (id, cl) -> Ident.make_global id) cl_list;
-+      make_sequence
-+        (fun (id, cl) -> Lprim(Psetglobal id, [transl_class cl]))
-+	cl_list
- 
  let transl_toplevel_definition str =
 -  make_sequence transl_toplevel_item str
 +  reset_labels ();
 +  transl_label_init (make_sequence transl_toplevel_item str)
-diff --git a/bytecomp/translobj.ml b/bytecomp/translobj.ml
-new file mode 100644
-index 0000000..6827303
---- /dev/null
-+++ b/bytecomp/translobj.ml
-@@ -0,0 +1,11 @@
-+(***********************************************************************)
-+(*                                                                     *)
-+(*                         Caml Special Light                          *)
-+(*                                                                     *)
-+(*         Jerome Vouillon, projet Cristal, INRIA Rocquencourt         *)
-+(*                                                                     *)
-+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-+(*  Automatique.  Distributed only by permission.                      *)
-+(*                                                                     *)
-+(***********************************************************************)
 
 * byterun/
 
@@ -767,19 +653,6 @@ index f055b53..ef54574 100644
 
 ** ast
 
---- a/parsing/asttypes.mli
-+++ b/parsing/asttypes.mli
-@@ -23,6 +23,10 @@ type rec_flag = Nonrecursive | Recursive
- 
- type direction_flag = Upto | Downto
- 
-+type private_flag = Private | Public
-+
- type mutable_flag = Immutable | Mutable
- 
-+type virtual_flag = Virtual | Concrete
- 
-+type closed_flag = Open | Closed
 diff --git a/parsing/label.ml b/parsing/label.ml
 new file mode 100644
 index 0000000..dd9fd30
@@ -878,74 +751,6 @@ index 01592ff..fe0e72a 100644
  
  (* Constructor descriptions *)
  
-@@ -62,6 +73,18 @@ and record_representation =
-     Record_regular                      (* All fields are boxed / tagged *)
-   | Record_float                        (* All fields are floats *)
- 
-+(* Type expressions for classes *)
-+
-+module Vars : Map.S with type key = Label.t
-+
-+type class_type =
-+  { cty_params: type_expr list;
-+    cty_args: type_expr list;
-+    cty_vars: (mutable_flag * type_expr) Vars.t;
-+    cty_self: type_expr;
-+    cty_concr: Label.t list;
-+    mutable cty_new: type_expr option }
-+
- (* Value expressions for the core language *)
- 
- type pattern =
-@@ -104,6 +127,11 @@ and expression_desc =
-   | Texp_for of
-       Ident.t * expression * expression * direction_flag * expression
-   | Texp_when of expression * expression
-+  | Texp_send of expression * Label.t
-+  | Texp_new of Path.t
-+  | Texp_instvar of Path.t * Path.t
-+  | Texp_setinstvar of Path.t * Path.t * expression
-+  | Texp_override of Path.t * (Path.t * expression) list
- 
- (* Type definitions *)
- 
-@@ -135,11 +163,26 @@ and signature_item =
-   | Tsig_exception of Ident.t * exception_declaration
-   | Tsig_module of Ident.t * module_type
-   | Tsig_modtype of Ident.t * modtype_declaration
-+  | Tsig_class of Ident.t * class_type
- 
- and modtype_declaration =
-     Tmodtype_abstract
-   | Tmodtype_manifest of module_type
- 
-+(* Value expressions for classes *)
-+
-+type class_field =
-+    Cf_inher of
-+      Path.t * expression list * (Label.t * Ident.t) list *
-+      (Label.t * Ident.t) list
-+  | Cf_val of Label.t * Ident.t * private_flag * expression option
-+  | Cf_meth of Label.t * expression
-+
-+type class_def =
-+  { cl_args: pattern list;
-+    cl_field: class_field list;
-+    cl_loc: Location.t }
-+
- (* Value expressions for the module language *)
- 
- type module_expr =
-@@ -165,6 +208,7 @@ and structure_item =
-   | Tstr_module of Ident.t * module_expr
-   | Tstr_modtype of Ident.t * module_type
-   | Tstr_open of Path.t
-+  | Tstr_class of (Ident.t * class_def) list
- 
- and module_coercion =
-     Tcoerce_none
-
-
 
 diff --git a/typing/typedtree.ml b/typing/typedtree.ml
 index b2e41f5..6f137d5 100644
@@ -992,69 +797,6 @@ index b2e41f5..6f137d5 100644
 @@ -63,6 +73,18 @@ and record_representation =
      Record_regular                      (* All fields are boxed / tagged *)
    | Record_float                        (* All fields are floats *)
- 
-+(* Type expressions for classes *)
-+
-+module Vars = Map.Make(Label)
-+
-+type class_type =
-+  { cty_params: type_expr list;
-+    cty_args: type_expr list;
-+    cty_vars: (Asttypes.mutable_flag * type_expr) Vars.t;
-+    cty_self: type_expr;
-+    cty_concr: Label.t list;
-+    mutable cty_new: type_expr option }
-+
- (* Value expressions for the core language *)
- 
- type pattern =
-@@ -105,6 +127,11 @@ and expression_desc =
-   | Texp_for of
-       Ident.t * expression * expression * direction_flag * expression
-   | Texp_when of expression * expression
-+  | Texp_send of expression * Label.t
-+  | Texp_new of Path.t
-+  | Texp_instvar of Path.t * Path.t
-+  | Texp_setinstvar of Path.t * Path.t * expression
-+  | Texp_override of Path.t * (Path.t * expression) list
- 
- (* Type definitions *)
- 
-@@ -136,11 +163,26 @@ and signature_item =
-   | Tsig_exception of Ident.t * exception_declaration
-   | Tsig_module of Ident.t * module_type
-   | Tsig_modtype of Ident.t * modtype_declaration
-+  | Tsig_class of Ident.t * class_type
- 
- and modtype_declaration =
-     Tmodtype_abstract
-   | Tmodtype_manifest of module_type
- 
-+(* Value expressions for classes *)
-+
-+type class_field =
-+    Cf_inher of
-+      Path.t * expression list * (Label.t * Ident.t) list *
-+      (Label.t * Ident.t) list
-+  | Cf_val of Label.t * Ident.t * private_flag * expression option
-+  | Cf_meth of Label.t * expression
-+
-+type class_def =
-+  { cl_args: pattern list;
-+    cl_field: class_field list;
-+    cl_loc: Location.t }
-+
- (* Value expressions for the module language *)
- 
- type module_expr =
-@@ -166,6 +208,7 @@ and structure_item =
-   | Tstr_module of Ident.t * module_expr
-   | Tstr_modtype of Ident.t * module_type
-   | Tstr_open of Path.t
-+  | Tstr_class of (Ident.t * class_def) list
- 
- and module_coercion =
-     Tcoerce_none
 
 ** toplevel/
 
@@ -4979,19 +4721,6 @@ index 6f963a0..bd76c03 100644
  
  exception Error of Location.t * error
  
-@@ -142,6 +143,14 @@ and transl_signature env sg =
-       let newenv = Env.add_signature sg env in
-       let rem = transl_signature newenv srem in
-       sg @ rem
-+  | {psig_desc = Psig_class cl} :: srem ->
-+      let (classes, newenv) = Typeclass.transl_class_types env cl in
-+      let rem = transl_signature newenv srem in
-+      List.flatten
-+        (map_end
-+           (fun (i, d, i', d', i'', d'') ->
-+              [Tsig_class(i, d); Tsig_type(i', d'); Tsig_type(i'', d'')])
-+           classes [rem])
- 
  and transl_modtype_info env sinfo =
    match sinfo with
 @@ -188,12 +197,14 @@ let check_unique_names sg =
@@ -5016,25 +4745,6 @@ index 6f963a0..bd76c03 100644
                if not (Ctype.closed_schema exp.exp_type) then
                  raise(Error(exp.exp_loc, Non_generalizable exp.exp_type)))
              pat_exp_list
-+      | Tstr_class cl ->
-+          List.iter
-+	    (fun (id, imp) ->
-+	       let desc = Env.find_class (Pident id) env in
-+	       if not
-+	         (List.for_all Ctype.closed_schema desc.cty_params
-+	             &
-+	          List.for_all Ctype.closed_schema desc.cty_args
-+	             &
-+	          Vars.fold (fun _ (_, ty) -> (or) (Ctype.closed_schema ty))
-+                    desc.cty_vars
-+      	       	    true)
-+	       then
-+	         raise(Error(imp.cl_loc,
-+      	       	       Non_generalizable_class (id, desc))))
-+	    cl
-       | _ -> ())  (* Sub-structures have been checked before *)
--  str
-+    str
  
  (* Type a module value expression *)
  
@@ -5053,19 +4763,6 @@ index 6f963a0..bd76c03 100644
        let (path, mty) = type_module_path env loc lid in
        let sg = extract_sig_open env loc mty in
        type_struct (Env.open_signature path sg env) srem
-+  | {pstr_desc = Pstr_class cl; pstr_loc = loc} :: srem ->
-+      let (classes, new_env) = Typeclass.transl_classes env cl in
-+      let (str_rem, sig_rem, final_env) = type_struct new_env srem in
-+      (Tstr_class (List.map (fun (i, _, _, _, _, _, c) -> (i, c)) classes)
-+       :: Tstr_type (List.map (fun (_, _, i, d, _, _, _) -> (i, d)) classes)
-+       :: Tstr_type (List.map (fun (_, _, _, _, i, d, _) -> (i, d)) classes)
-+       :: str_rem,
-+       List.flatten
-+         (map_end
-+      	    (fun (i, d, i', d', i'', d'', _) ->
-+               [Tsig_class(i, d); Tsig_type(i', d'); Tsig_type(i'', d'')])
-+            classes [sig_rem]),
-+       final_env)
  
  (* Error report *)
  

@@ -915,49 +915,6 @@ let rec filter_arrow env t =
   | _ ->
       raise (Unify [])
 
-(* Used by [filter_method]. *)
-let rec filter_method_field env name priv ty =
-  let ty = repr ty in
-  match ty.desc with
-    Tvar ->
-      let ty1 = newvar () and ty2 = newvar () in
-      let ty' = newty (Tfield (name,
-                               begin match priv with
-                                 Private -> Fvar (ref None)
-                               | Public  -> Fpresent
-                               end,
-                               ty1, ty2))
-      in
-      update_level env ty.level ty';
-      ty.desc <- Tlink ty';
-      ty1
-  | Tfield(n, kind, ty1, ty2) ->
-      let kind = field_kind_repr kind in
-      if (n = name) && (kind <> Fabsent) then begin
-        if priv = Public then
-          unify_kind kind Fpresent;
-        ty1
-      end else
-        filter_method_field env name priv ty2
-  | _ when priv = Private ->
-      newvar ()
-  | _ ->
-      raise (Unify [])
-
-(* Unify [ty] and [< name : 'a; .. >]. Return ['a]. *)
-let rec filter_method env name priv ty =
-  let ty = expand_head env ty in
-  match ty.desc with
-    Tvar ->
-      let ty1 = newvar () in
-      let ty' = newobj ty1 in
-      update_level env ty.level ty';
-      ty.desc <- Tlink ty';
-      filter_method_field env name priv ty1
-  | Tobject(f, _) ->
-      filter_method_field env name priv f
-  | _ ->
-      raise (Unify [])
 
 
                         (***********************************)

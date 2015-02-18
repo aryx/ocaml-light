@@ -229,14 +229,6 @@ let check_nongen_scheme env = function
           if not (Ctype.closed_schema exp.exp_type) then
             raise(Error(exp.exp_loc, Non_generalizable exp.exp_type)))
         pat_exp_list
-  | Tstr_class cl ->
-      List.iter
-        (fun (id, imp) ->
-           let desc = Env.find_class (Pident id) env in
-           if not (closed_class desc) then
-             raise(Error(imp.cl_loc,
-                   Non_generalizable_class (id, desc))))
-        cl
   | Tstr_module(id, md) ->
       if not (closed_modtype md.mod_type) then
         raise(Error(md.mod_loc, Non_generalizable_module md.mod_type))

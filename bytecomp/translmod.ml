@@ -19,9 +19,30 @@ open Asttypes
 open Types
 open Typedtree
 open Lambda
-open Translobj
 open Translcore
-open Translclass
+
+let reset_labels () =
+ (*  used_methods := [] *)
+  ()
+
+let transl_label_init expr =
+(*
+  if !used_methods = [] then
+    expr
+  else
+    let init = Ident.create "new_method" in
+    let expr' =
+      Llet(StrictOpt, init, oo_prim "new_method",
+      List.fold_right
+        (fun (lab, id) expr ->
+           Llet(StrictOpt, id, Lapply(Lvar init, [string lab]), expr))
+        !used_methods
+        expr)
+    in
+    reset_labels ();
+    expr'
+*)
+  expr
 
 (* Compile a coercion *)
 
@@ -139,17 +160,6 @@ and transl_structure fields cc = function
       transl_structure fields cc rem
   | Tstr_open path :: rem ->
       transl_structure fields cc rem
-  | Tstr_class cl_list :: rem ->
-      List.fold_right
-        (fun (id, cl) re ->
-           Llet(Strict, id, class_stub, re))
-        cl_list
-        (List.fold_right
-           (fun (id, cl) re ->
-              Lsequence(transl_class id cl, re))
-           cl_list
-         (transl_structure
-            ((List.rev (List.map fst cl_list)) @ fields) cc rem))
 
 (* Compile an implementation *)
 
@@ -195,16 +205,6 @@ let transl_store_structure glob map prims str =
       transl_store rem
   | Tstr_open path :: rem ->
       transl_store rem
-  | Tstr_class cl_list :: rem ->
-      List.fold_right
-        (fun (id, cl) re ->
-           Llet(Strict, id, class_stub, re))
-        cl_list
-        (List.fold_right
-           (fun (id, cl) re ->
-              Lsequence(transl_class id cl, re))
-           cl_list
-           (store_idents glob map (List.map fst cl_list) (transl_store rem)))
 
   and store_ident glob map id cont =
     try
@@ -239,8 +239,6 @@ let rec defined_idents = function
   | Tstr_module(id, modl) :: rem -> id :: defined_idents rem
   | Tstr_modtype(id, decl) :: rem -> defined_idents rem
   | Tstr_open path :: rem -> defined_idents rem
-  | Tstr_class cl_list :: rem ->
-      List.map fst cl_list @ defined_idents rem
 
 (* Transform a coercion and the list of value identifiers built above
    into a table id -> (pos, coercion), with [pos] being the position
@@ -319,19 +317,6 @@ let transl_toplevel_item = function
       lambda_unit
   | Tstr_open path ->
       lambda_unit
-  | Tstr_class cl_list ->
-      let lam =
-        List.fold_right
-          (fun (id, cl) re ->
-             Llet(Strict, id, class_stub, re))
-          cl_list
-          (make_sequence
-             (fun (id, cl) ->
-                Lsequence(Lprim(Psetglobal id, [Lvar id]), transl_class id cl))
-             cl_list)
-      in
-      List.iter (fun (id, cl) -> Ident.make_global id) cl_list;
-      lam
 
 let transl_toplevel_definition str =
   reset_labels ();
