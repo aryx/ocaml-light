@@ -210,16 +210,6 @@ and rewrite_exp sexp =
     rewrite_exp scond;
     rewrite_exp sbody
 
-  | Pexp_send (sobj, _) ->
-    rewrite_exp sobj
-
-  | Pexp_new _ -> ()
-
-  | Pexp_setinstvar (_, sarg) ->
-    rewrite_exp sarg
-
-  | Pexp_override l ->
-      List.iter (fun (_, sexp) -> rewrite_exp sexp) l
 
 and rewrite_ifbody sifbody =
   if !instr_if then begin
@@ -259,20 +249,6 @@ and rewrite_trymatching l =
 
 (* Rewrite a class definition *)
 
-let rewrite_class_field =
-  function
-    Pcf_inher (_, _, l, _, _) -> List.iter rewrite_exp l
-  | Pcf_val (_, _, _, Some sexp, _) -> rewrite_exp sexp
-  | Pcf_val (_, _, _, None, _) | Pcf_virt _ -> ()
-  | Pcf_meth (_, _, ({pexp_desc = Pexp_function _} as sexp), _) ->
-      rewrite_exp sexp
-  | Pcf_meth (_, _, sexp, _) ->
-      if !instr_fun then
-        insert_profile sexp.pexp_loc;
-      rewrite_exp sexp
-
-let rewrite_class cl =
-  List.iter rewrite_class_field cl.pcl_field
 
 (* Rewrite a module expression or structure expression *)
 
@@ -289,7 +265,6 @@ and rewrite_str_item item =
     Pstr_eval exp -> rewrite_exp exp
   | Pstr_value(_, exps) -> List.iter (function (_,exp) -> rewrite_exp exp) exps
   | Pstr_module(name, smod) -> rewrite_mod smod
-  | Pstr_class classes -> List.iter rewrite_class classes
   | _ -> ()
 
 (* Rewrite a .ml file *)

@@ -124,34 +124,7 @@ let rec transl_type env policy styp =
              raise (Error(sty.ptyp_loc, Type_mismatch trace)))
         (List.combine stl args) params;
       cstr
-  | Ptyp_object fields ->
-      newobj (transl_fields env policy fields)
-  | Ptyp_class(lid, stl) ->
-      if policy = Fixed then
-        raise(Error(styp.ptyp_loc, Unbound_row_variable lid));
-      let lid2 =
-        match lid with
-          Longident.Lident s     -> Longident.Lident ("#" ^ s)
-        | Longident.Ldot(r, s)   -> Longident.Ldot (r, "#" ^ s)
-        | Longident.Lapply(_, _) -> fatal_error "Typetexp.transl_type"
-      in
-      let (path, decl) =
-        try
-          Env.lookup_type lid2 env
-        with Not_found ->
-          raise(Error(styp.ptyp_loc, Unbound_class lid)) in
-      if List.length stl <> decl.type_arity then
-        raise(Error(styp.ptyp_loc, Type_arity_mismatch(lid, decl.type_arity,
-                                                           List.length stl)));
-      let args = List.map (transl_type env policy) stl in
-      let ty = Ctype.expand_head env (newty (Tconstr(path, args, ref Mnil))) in
-      let params = Ctype.instance_list decl.type_params in
-      List.iter2
-        (fun (sty, ty') ty ->
-           try unify env ty ty' with Unify trace ->
-             raise (Error(sty.ptyp_loc, Type_mismatch trace)))
-        (List.combine stl args) params;
-      ty
+
   | Ptyp_alias(st, alias) ->
       begin try
         Tbl.find alias !type_variables;

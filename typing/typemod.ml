@@ -153,14 +153,6 @@ and transl_signature env sg =
       let newenv = Env.add_signature sg env in
       let rem = transl_signature newenv srem in
       sg @ rem
-  | {psig_desc = Psig_class cl} :: srem ->
-      let (classes, newenv) = Typeclass.transl_class_types env cl in
-      let rem = transl_signature newenv srem in
-      List.flatten
-        (map_end
-           (fun (i, d, i', d', i'', d'') ->
-              [Tsig_class(i, d); Tsig_type(i', d'); Tsig_type(i'', d'')])
-           classes [rem])
 
 and transl_modtype_info env sinfo =
   match sinfo with
@@ -208,11 +200,6 @@ let check_unique_names sg =
     | Pstr_modtype(name, decl) ->
         check "module type" item.pstr_loc modtype_names name
     | Pstr_open lid -> ()
-    | Pstr_class decl ->
-        List.iter
-          (fun {pcl_name = name} ->
-             check "type" item.pstr_loc type_names name)
-          decl
   in
     List.iter check_item sg
 
@@ -385,19 +372,6 @@ and type_struct env sstr =
       let (path, mty) = type_module_path env loc lid in
       let sg = extract_sig_open env loc mty in
       type_struct (Env.open_signature path sg env) srem
-  | {pstr_desc = Pstr_class cl; pstr_loc = loc} :: srem ->
-      let (classes, new_env) = Typeclass.transl_classes env cl in
-      let (str_rem, sig_rem, final_env) = type_struct new_env srem in
-      (Tstr_class (List.map (fun (i, _, _, _, _, _, c) -> (i, c)) classes)
-       :: Tstr_type (List.map (fun (_, _, i, d, _, _, _) -> (i, d)) classes)
-       :: Tstr_type (List.map (fun (_, _, _, _, i, d, _) -> (i, d)) classes)
-       :: str_rem,
-       List.flatten
-         (map_end
-            (fun (i, d, i', d', i'', d'', _) ->
-               [Tsig_class(i, d); Tsig_type(i', d'); Tsig_type(i'', d'')])
-            classes [sig_rem]),
-       final_env)
 
 (* Error report *)
 
