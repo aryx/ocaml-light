@@ -24,6 +24,8 @@ x11_include_dir=''
 x11_lib_dir=''
 posix_threads=no
 
+gcc_warnings="-Wall"
+
 # Parse command-line arguments
 
 while : ; do
@@ -147,6 +149,8 @@ case "$bytecc,$host" in
     bytecccompopts="-fno-defer-pop -Wall"
     # -taso puts code in lower 4GB
     bytecclinkopts="-Xlinker -taso";;
+  gcc,*-*-darwin*)
+    bytecccompopts="$gcc_warnings";;
   gcc*)
     bytecccompopts="-fno-defer-pop -Wall";;
   cc,mips-*-irix6*)
@@ -387,11 +391,6 @@ else
 fi
 
 # For the sys module
-
-if sh ./hasgot strerror; then
-  echo "strerror() found."
-  echo "#define HAS_STRERROR" >> s.h
-fi
 
 # For the terminfo module
 
