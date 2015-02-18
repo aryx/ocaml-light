@@ -1,0 +1,8 @@
+*.cm*
+/boot/camlheader
+/boot/libcamlrun.a
+/boot/ocamlrun
+/boot/ocamlyacc
+/config/Makefile
+/config/m.h
+/config/s.h
