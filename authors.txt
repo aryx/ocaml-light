@@ -1,0 +1,4 @@
+The software has been designed and produced by Xavier Leroy, Jerome
+Vouillon, and Damien Doligez, research workers for the Institut
+National de Recherche en Informatique et en Automatique (INRIA) -
+Domaine de Voluceau - Rocquencourt - 78153 Le Chesnay Cedex - France.
