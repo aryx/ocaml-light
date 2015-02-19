@@ -5,8 +5,8 @@
 
 include config/Makefile
 
-#CAMLC=boot/ocamlrun boot/ocamlc -I boot
-CAMLC=/home/pad/.opam/4.01.0/bin/ocamlc -bin-annot -I boot
+CAMLC=boot/ocamlrun boot/ocamlc -I boot
+#CAMLC=/home/pad/.opam/4.01.0/bin/ocamlc -bin-annot -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -I stdlib
 COMPFLAGS=$(INCLUDES)
 LINKFLAGS=
