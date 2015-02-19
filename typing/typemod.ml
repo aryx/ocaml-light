@@ -98,11 +98,6 @@ let rec transl_modtype env smty =
       end
   | Pmty_signature ssg ->
       Tmty_signature(transl_signature env ssg)
-  | Pmty_functor(param, sarg, sres) ->
-      let arg = transl_modtype env sarg in
-      let (id, newenv) = Env.enter_module param arg env in
-      let res = transl_modtype newenv sres in
-      Tmty_functor(id, arg, res)
   | Pmty_with(sbody, constraints) ->
       let body = transl_modtype env sbody in
       let init_sg = extract_sig env sbody.pmty_loc body in
@@ -245,43 +240,6 @@ let rec type_module env smod =
         mod_type = Tmty_signature sg;
         mod_env = env;
         mod_loc = smod.pmod_loc }
-  | Pmod_functor(name, smty, sbody) ->
-      let mty = transl_modtype env smty in
-      let (id, newenv) = Env.enter_module name mty env in
-      let body = type_module newenv sbody in
-      { mod_desc = Tmod_functor(id, mty, body);
-        mod_type = Tmty_functor(id, mty, body.mod_type);
-        mod_env = env;
-        mod_loc = smod.pmod_loc }
-  | Pmod_apply(sfunct, sarg) ->
-      let funct = type_module env sfunct in
-      let arg = type_module env sarg in
-      begin match Mtype.scrape env funct.mod_type with
-        Tmty_functor(param, mty_param, mty_res) as mty_functor ->
-          let coercion =
-            try
-              Includemod.modtypes env arg.mod_type mty_param
-            with Includemod.Error msg ->
-              raise(Error(sarg.pmod_loc, Not_included msg)) in
-          let mty_appl =
-            try
-              let path = path_of_module arg in
-              Subst.modtype (Subst.add_module param path Subst.identity)
-                            mty_res
-            with Not_a_path ->
-              try
-                Mtype.nondep_supertype
-                  (Env.add_module param arg.mod_type env) param mty_res
-              with Not_found ->
-                raise(Error(smod.pmod_loc,
-                            Cannot_eliminate_dependency mty_functor)) in
-          { mod_desc = Tmod_apply(funct, arg, coercion);
-            mod_type = mty_appl;
-            mod_env = env;
-            mod_loc = smod.pmod_loc }
-      | _ ->
-          raise(Error(sfunct.pmod_loc, Cannot_apply funct.mod_type))
-      end        
   | Pmod_constraint(sarg, smty) ->
       let arg = type_module env sarg in
       let mty = transl_modtype env smty in

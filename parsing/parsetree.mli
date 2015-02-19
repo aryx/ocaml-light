@@ -110,7 +110,6 @@ type module_type =
 and module_type_desc =
     Pmty_ident of Longident.t
   | Pmty_signature of signature
-  | Pmty_functor of string * module_type * module_type
   | Pmty_with of module_type * (Longident.t * with_constraint) list
 
 and signature = signature_item list
@@ -145,8 +144,6 @@ type module_expr =
 and module_expr_desc =
     Pmod_ident of Longident.t
   | Pmod_structure of structure
-  | Pmod_functor of string * module_type * module_expr
-  | Pmod_apply of module_expr * module_expr
   | Pmod_constraint of module_expr * module_type
 
 and structure = structure_item list

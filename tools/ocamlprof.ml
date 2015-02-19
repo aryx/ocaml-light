@@ -256,8 +256,6 @@ let rec rewrite_mod smod =
   match smod.pmod_desc with
     Pmod_ident lid -> ()
   | Pmod_structure sstr -> List.iter rewrite_str_item sstr
-  | Pmod_functor(param, smty, sbody) -> rewrite_mod sbody
-  | Pmod_apply(smod1, smod2) -> rewrite_mod smod1; rewrite_mod smod2
   | Pmod_constraint(smod, smty) -> rewrite_mod smod
 
 and rewrite_str_item item =
