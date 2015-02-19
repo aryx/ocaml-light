@@ -55,24 +55,6 @@ clean::
 install::
 	cp ocamlmktop $(BINDIR)/ocamlmktop
 
-# The preprocessor for asm generators
-
-CVT_EMIT=cvt_emit.cmo
-
-cvt_emit: $(CVT_EMIT)
-	$(CAMLC) $(LINKFLAGS) -o cvt_emit $(CVT_EMIT)
-
-clean::
-	rm -f cvt_emit
-
-cvt_emit.ml: cvt_emit.mll
-	$(CAMLLEX) cvt_emit.mll
-
-clean::
-	rm -f cvt_emit.ml
-
-beforedepend:: cvt_emit.ml
-
 # The bytecode disassembler
 
 DUMPOBJ=opnames.cmo dumpobj.cmo

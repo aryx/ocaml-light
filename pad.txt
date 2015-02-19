@@ -84,6 +84,7 @@ Then I did many modifications, mostly removing stuff:
  - removed support for include, with type signatures
  - TODO go back to simpler typechecker with no Link, Nil and stuff
    introduced for the need of objects
+ - I moved the debugger/ and toplevel/ under tools/
 
 
 
