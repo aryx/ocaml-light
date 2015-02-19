@@ -98,6 +98,10 @@ backport a few fixes (see section below)
  - b8238a8b61696e454e5fc391dec9d71555b909e9
   PR#5662 : typo in md5.c when clearing sensitive data in context
 
+*** TODO warnings to backports
+
+Warning 26: unused variable t.
+
 *** TODO backports
 
 c4fb76de04783aea39a97b9279ea7adf5fdacfa8
@@ -112,6 +116,8 @@ Faute d'orthographe sur un ident dans intern_from_string.
 *** TODO include tests/ from csl/ and ocaml examples from caml light
 (that have been updated to ocaml 3.08 by leroy on their distrib/contrib/
 I think)
+
+
 
 * Compile
 
