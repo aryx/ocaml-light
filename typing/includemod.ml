@@ -78,7 +78,6 @@ type field_desc =
   | Field_exception of string
   | Field_module of string
   | Field_modtype of string
-  | Field_classtype of string
 
 let item_ident_name = function
     Tsig_value(id, _) -> (id, Field_value(Ident.name id))
