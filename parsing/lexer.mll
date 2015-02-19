@@ -49,7 +49,6 @@ let keyword_table =
     "function", FUNCTION;
     "if", IF;
     "in", IN;
-    "include", INCLUDE;
     "lazy", LAZY;
     "let", LET;
     "match", MATCH;
