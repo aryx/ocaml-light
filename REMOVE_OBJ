@@ -373,8 +373,6 @@ index 01592ff..fe0e72a 100644
 -    { mutable tvar_level: int;
 -      mutable tvar_link: type_expr option }
 +  | Tconstr of Path.t * type_expr list * (Path.t * type_expr) list ref
-+  | Tobject of type_expr * (Path.t * type_expr list) option ref
-+  | Tfield of Label.t * type_expr * type_expr
 +  | Tnil
 +  | Tlink of type_expr
  
@@ -494,9 +492,7 @@ index 0048ec5..b6c02b4 100644
            | Constr_not_found ->         (* raised by find_constr *)
                print_string "<unknown constructor>"
            end
-+      | Tobject (_, _) ->
-+      	  print_string "<obj>"
-+      | Tfield(_, _, _) | Tnil | Tlink _ ->
++      | Tnil | Tlink _ ->
 +      	  fatal_error "Printval.print_value"
  
    and print_val_list prio depth obj ty_list =
@@ -647,7 +643,6 @@ index 4870cd0..549e2db 100644
 +let newvar ()          = { desc = Tvar; level = !current_level }
 +let new_global_var ()  = new_global_ty Tvar
 +let new_gen_var ()     = newgenty Tvar
-+let newobj fields      = newty (Tobject (fields, ref None))
  
  let rec repr = function
 -    Tvar({tvar_link = Some ty} as v) ->
@@ -670,57 +665,7 @@ index 4870cd0..549e2db 100644
 +
 +(* --- *)
 +
-+let flatten_fields ty =
-+  let rec flatten l ty =
-+    let ty = repr ty in
-+    match ty.desc with
-+      Tfield(s, ty1, ty2) ->
-+        flatten ((s, ty1)::l) ty2
-+    | Tvar | Tnil ->
-+        (l, ty)
-+    | _ ->
-+      fatal_error "Ctype.flatten_fields"
-+  in
-+    let (l, r) = flatten [] ty in
-+      (List.rev l, r)
 +
-+let build_fields =
-+  List.fold_right
-+    (fun (s, ty1) ty2 ->
-+       {desc = Tfield(s, ty1, ty2);
-+        level = ty2.level})
-+
-+let associate_fields fields1 fields2 =
-+  let rec associate p s s' =
-+    function
-+      (l, []) ->
-+        (List.rev p, (List.rev s) @ l, List.rev s')
-+    | ([], l') ->
-+        (List.rev p, List.rev s, (List.rev s') @ l')
-+    | (((n, t)::r as l), ((n', t')::r' as l')) ->
-+        if Label. (=) n n' then
-+          associate ((t, t')::p) s s' (r, r')
-+        else if Label. (<) n  n' then
-+          associate p ((n, t)::s) s' (r, l')
-+        else
-+          associate p s ((n', t')::s') (l, r')
-+  in let sort = Sort.list (fun (n, _) (n', _) -> Label. (<) n n') in
-+  associate [] [] [] (sort fields1, sort fields2)
-+
-+(* Check whether an object is open *)
-+
-+let rec opened ty =
-+  match (repr ty).desc with
-+    Tfield(_, _, t) -> opened t
-+  | Tvar            -> true
-+  | Tnil            -> false
-+  | _               -> fatal_error "Ctype.opened"
-+
-+let opened_object ty =
-+  match (repr ty).desc with
-+    Tobject (ty', _)  -> opened ty'
-+  | Tconstr (_, _, _) -> false
-+  | _                 -> fatal_error "Ctype.opened_object"
  
  (* Type generalization *)
  
@@ -744,10 +689,6 @@ index 4870cd0..549e2db 100644
 +    | Tarrow(t1, t2)     -> generalize t1; generalize t2
 +    | Ttuple tl          -> List.iter generalize tl
 +    | Tconstr(_, tl, ab) -> ab := []; List.iter generalize tl
-+    | Tobject(f, {contents = Some (_, p)})
-+                         -> generalize f; List.iter generalize p
-+    | Tobject(f, _)      -> generalize f
-+    | Tfield(_, t1, t2)  -> generalize t1; generalize t2
 +    | Tnil               -> ()
 +    | Tlink _            -> fatal_error "Ctype.generalize"
 +  end
@@ -772,8 +713,6 @@ index 4870cd0..549e2db 100644
 +    | Tarrow(t1, t2)    ->  make_nongen t1; make_nongen t2
 +    | Ttuple tl         -> List.iter make_nongen tl
 +    | Tconstr(p, tl, _) -> List.iter make_nongen tl
-+    | Tobject (f, _)    -> make_nongen f
-+    | Tfield(_, t1, t2) -> make_nongen t1; make_nongen t2
 +    | Tnil              -> ()
 +    | Tlink _           -> fatal_error "Ctype.make_nongen"
 +  end
@@ -792,10 +731,6 @@ index 4870cd0..549e2db 100644
 +      | Tarrow(t1, t2)     -> remove t1; remove t2
 +      | Ttuple tl          -> List.iter remove tl
 +      | Tconstr(_, tl, ab) -> ab := []; List.iter remove tl
-+      | Tobject(f, {contents = Some (_, p)})
-+                           -> remove f; List.iter remove p
-+      | Tobject(f, _)      -> remove f
-+      | Tfield(_, t1, t2)  -> remove t1; remove t2
 +      | Tnil               -> ()
 +      | Tlink _            -> fatal_error "Ctype.remove_abbrev"
 +      end
@@ -858,26 +793,6 @@ index 4870cd0..549e2db 100644
 +  | Tconstr (p, tl, _) ->
 +      newty (Tconstr (p, List.map (copy_rec abbrev visited) tl,
 +                      ref abbrev))
-+  | Tobject (t1, {contents = name}) ->
-+      let ty' () =
-+        let name' =
-+          match name with
-+            None ->
-+              None
-+          | Some (p, tl) ->
-+              Some (p, List.map (copy_rec abbrev visited) tl)
-+        in
-+          newty (Tobject (copy_rec abbrev visited t1, ref name'))
-+      in
-+      if opened_object ty then
-         try
--          List.assq t !inst_subst
-+          List.assq ty !inst_subst
-         with Not_found ->
--          let t' = newvar() in
--          inst_subst := (t, t') :: !inst_subst;
--          t'
--      end else t
 -  | Tarrow(t1, t2) ->
 -      Tarrow(copy t1, copy t2)
 -  | Ttuple tl ->
@@ -948,8 +863,6 @@ index 4870cd0..549e2db 100644
 +    | Tarrow(t1,t2)      -> update_level level t1; update_level level t2
 +    | Ttuple(ty_list)    -> List.iter (update_level level) ty_list
 +    | Tconstr(_, tl, _)  -> List.iter (update_level level) tl
-+    | Tobject (f, _)     -> update_level level f
-+    | Tfield(_, t1, t2)  -> update_level level t1; update_level level t2
 +    | Tnil               -> ()
 +    | Tlink _            -> fatal_error "Ctype.update_level"
 +  end
@@ -1081,9 +994,7 @@ index 4870cd0..549e2db 100644
 -      | (_, _) ->
 +          ()
 +        end
-+    | Tobject (_, _) ->
-+        ()
-+    | Tfield (_, _, _) | Tnil ->
++    | Tnil ->
 +        fatal_error "Ctype.occur"
 +  in
 +    occur_rec ty
@@ -1163,16 +1074,6 @@ index 4870cd0..549e2db 100644
 +        ()
 +    | (Tconstr (p1, tl1, _), Tconstr (p2, tl2, _)) (*when Path.same p1 p2*) ->
 +        unify_list env tl1 tl2
-+    | (Tobject (fi1, nm1), Tobject (fi2, nm2)) ->
-+        let old_nm = !nm2 in
-+        begin match old_nm with
-+          Some (_, va::_) when (repr va).desc = Tvar -> ()
-+        | _                                          -> nm2 := !nm1
-+        end;
-+        begin try unify_fields env fi1 fi2 with exn ->
-+          nm2 := old_nm;
-+          raise exn
-+        end
 +    | (_, _) ->
 +        raise Unify
 +  with exn ->
@@ -1274,8 +1175,6 @@ index 4870cd0..549e2db 100644
 +      update_level ty.level ty';
 +      ty.desc <- Tlink ty';
 +      filter_method_field name ty1
-+  | Tobject(f, _) ->
-+      filter_method_field name f
 +  | Tconstr(p, tl, abbrev) ->
        begin try
 -        filter_arrow env (expand_abbrev env p tl)
@@ -1319,13 +1218,6 @@ index 4870cd0..549e2db 100644
 +        visited := ty::!visited;
 +        List.iter occur_rec tl
 +      end
-+  | Tobject(f, _) ->
-+      if not (List.memq ty !visited) then begin
-+        visited := ty::!visited;
-+        occur_rec f
-+      end
-+  | Tfield(_, t1, t2) ->
-+      occur_rec t1; occur_rec t2
 +  | Tnil ->
        ()
 -  | Tconstr(p, tl) ->
@@ -1401,10 +1293,6 @@ index 4870cd0..549e2db 100644
 -          end
 -      | (_, _) ->
 +        end
-+    | (Tobject(f1, _), Tobject(f2, _)) ->
-+        t1.desc <- Tlink t2;
-+        moregen_fields env f1 f2;
-+        t1.desc <- d1
 +    | (Tconstr(p1, tl1, abbrev1), _) ->
 +        begin try
 +          moregen env (expand_abbrev env p1 tl1 abbrev1 t1.level) t2
@@ -1518,12 +1406,6 @@ index 4870cd0..549e2db 100644
 +              false
 +          end
 +        end
-+    | (Tobject (f1, _), Tobject (f2, _)) ->
-+        List.exists (function (t1', t2') -> t1 == t1' & t2 == t2') !type_pairs
-+        or begin
-+          type_pairs := (t1, t2) :: !type_pairs;
-+          eqtype_fields f1 f2
-         end
 -    | (Tconstr(p1, tl1), _) ->
 +    | (Tconstr(p1, tl1, abbrev1), _) ->
          begin try
@@ -1616,22 +1498,6 @@ index 4870cd0..549e2db 100644
        end else
 -        Tconstr(p, List.map (nondep_type env id) tl)
 +        (t, false)
-+  | Tobject (t1, _) ->
-+      if opened t1 then
-+        (t, false)
-+      else if List.memq t !visited then
-+        (t, false)
-+      else begin
-+        let old_visited = !visited in
-+        visited := t :: old_visited;
-+        let (t1', _) = build_subtype env vars t1 in
-+        visited := old_visited;
-+        (new_global_ty (Tobject (t1', ref None)), true)
-+      end
-+  | Tfield(s, t1, t2) ->
-+      let (t1', _) = build_subtype env vars t1 in
-+      let (t2', _) = build_subtype env vars t2 in
-+      (new_global_ty (Tfield(s, t1', t2')), true)
 +  | Tnil ->
 +      let v = new_global_var () in
 +      (v, true)
@@ -1668,24 +1534,6 @@ index 4870cd0..549e2db 100644
 +        else (t, false)
 +      end else
 +        (t, false)
-+  | Tobject (t1, _) ->
-+      if opened t1 then
-+        (t, false)
-+      else if List.memq t !visited then
-+        (t, false)
-+      else begin
-+        let old_visited = !visited in
-+        visited := t :: old_visited;
-+        let (t1', c) = build_supertype env vars t1 in
-+        visited := old_visited;
-+        if c then (new_global_ty (Tobject (t1', ref None)), true)
-+        else (t, false)
-+      end
-+  | Tfield(s, t1, t2) ->
-+      let (t1', c1) = build_supertype env vars t1 in
-+      let (t2', c2) = build_supertype env vars t2 in
-+      if c1 or c2 then (new_global_ty (Tfield(s, t1', t2')), true)
-+      else (t, false)
 +  | Tnil ->
 +      (t, false)
 +
@@ -1720,15 +1568,6 @@ index 4870cd0..549e2db 100644
 +          subtype_rec env vars t1 (expand_abbrev env p2 tl2 abbrev2 t2.level)
 +        else
 +          unify env t1 t2
-+    | (Tobject (f1, _), Tobject (f2, _)) ->
-+        if not (known_subtype t1 t2) then begin
-+          if opened f1 & opened f2 then
-+            unify env t1 t2
-+          else begin
-+            subtypes := (t1, t2) :: !subtypes;
-+            subtype_fields env vars f1 f2
-+          end
-+        end
 +    | (Tconstr(p1, tl1, abbrev1), _) ->
 +        if generic_abbrev env p1 then
 +          subtype_rec env vars (expand_abbrev env p1 tl1 abbrev1 t1.level) t2
@@ -1803,15 +1642,6 @@ index 4870cd0..549e2db 100644
 +            end
 +          else
 +            Tconstr(p, List.map (nondep_type_rec env id) tl, ref [])
-+      | Tobject (t1, name) ->
-+          Tobject (nondep_type_rec env id t1,
-+                 ref (match !name with
-+                        None -> None
-+                      | Some (p, tl) ->
-+                          if Path.isfree id p then None
-+                          else Some (p, List.map (nondep_type_rec env id) tl)))
-+       | Tfield(label, t1, t2) ->
-+           Tfield(label, nondep_type_rec env id t1, nondep_type_rec env id t2)
 +       | Tnil ->
 +           Tnil
 +       | Tlink _ ->
@@ -1886,8 +1716,6 @@ index 4870cd0..549e2db 100644
 +          ty'.desc <- Tlink ty'';
 +          ty''
 +      end
-+  | Tfield(label, t1, t2) ->
-+      newty (Tfield(label, prune_rec false cstr t1, prune_rec false cstr t2))
 +  | Tnil ->
 +      newty Tnil
 +  | Tlink _             ->
@@ -1914,48 +1742,6 @@ index 4870cd0..549e2db 100644
 +
 +(* --- *)
 +
-+let rec row_variable ty =
-+  let ty = repr ty in
-+  match ty.desc with
-+    Tfield (_, _, ty) -> row_variable ty
-+  | Tvar              -> ty
-+  | Tnil              -> raise Not_found
-+  | _                 -> fatal_error "Ctype.row_variable"
-+
-+let close_object ty =
-+  let rec close ty =
-+    let ty = repr ty in
-+    match ty.desc with
-+      Tvar              ->
-+        ty.desc <- Tlink {desc = Tnil; level = ty.level}
-+    | Tfield(_, _, ty') -> close ty'
-+    | Tnil              -> ()
-+    | _                 -> fatal_error "Ctype.close_object (1)"
-+  in
-+  match (repr ty).desc with
-+    Tobject (ty, _)   -> close ty
-+  | Tconstr (_, _, _) -> ()             (* Already closed *)
-+  | _                 -> fatal_error "Ctype.close_object (2)"
-+
-+
-+let set_object_name ty params id =
-+  match (repr ty).desc with
-+    Tobject (fi, nm) ->
-+      begin try
-+        nm := Some (Path.Pident id, (row_variable fi)::params)
-+      with Not_found ->
-+        ()
-+      end
-+  | Tconstr (_, _, _) ->
-+      ()
-+  | _ ->
-+      fatal_error "Ctype.set_object_name"
-+
-+let remove_object_name ty =
-+  match (repr ty).desc with
-+    Tobject (_, nm)   -> nm := None
-+  | Tconstr (_, _, _) -> ()
-+  | _                 -> fatal_error "Ctype.remove_object_name"
 +
 +let rec expand_root env ty =
 +  let ty = repr ty in
@@ -2015,16 +1801,6 @@ index 4870cd0..549e2db 100644
 +          end;
 +          []
 +      end
-+  | Tobject (ty', _) ->
-+      if not (List.memq ty visited) then begin
-+        correct_abbrev_rec env path params constrs (ty::visited) ty';
-+        ()
-+      end;
-+      []
-+  | Tfield(_, ty1, ty2) ->
-+      correct_abbrev_rec env path params constrs visited ty1;
-+      correct_abbrev_rec env path params constrs visited ty2;
-+      []
 +  | Tnil ->
 +      []
 +  | Tlink _ -> fatal_error "Ctype.correct_abbrev_rec"
@@ -2128,11 +1904,8 @@ index 038271d..87f9d81 100644
  val new_global_var: unit -> type_expr
          (* Return a fresh variable, bound at toplevel
             (as type variables ['a] in type constraints). *)
-+val newobj: type_expr -> type_expr
  val repr: type_expr -> type_expr
          (* Return the canonical representative of a type. *)
-+val flatten_fields : type_expr -> (Label.t * type_expr) list * type_expr
-+      	(* Transform a field type into a list of pairs label-type *)
  val generalize: type_expr -> unit
          (* Generalize in-place the given type *)
  val make_nongen: type_expr -> unit

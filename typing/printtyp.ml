@@ -169,8 +169,8 @@ let rec typexp sch prio0 ty =
       print_string " as ";
       print_string "'";
       print_string (name_of_type ty);
-      if not (opened_object ty) then
-        remove_name_of_type ty;
+      (* if not (opened_object ty) then *)
+      remove_name_of_type ty;
       if prio0 >= 1 then print_string ")";
       close_box()
     end

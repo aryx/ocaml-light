@@ -125,92 +125,6 @@ let none = newty (Ttuple [])                (* Clearly ill-formed type *)
 (* Re-export repr *)
 let repr = repr
 
-                  (**********************************************)
-                  (*  Miscellaneous operations on object types  *)
-                  (**********************************************)
-
-
-(**** Object field manipulation. ****)
-
-let flatten_fields ty =
-  let rec flatten l ty =
-    let ty = repr ty in
-    match ty.desc with
-    | _ ->
-        (l, ty)
-  in
-    let (l, r) = flatten [] ty in
-      (List.rev l, r)
-
-let associate_fields fields1 fields2 =
-  let rec associate p s s' =
-    function
-      (l, []) ->
-        (List.rev p, (List.rev s) @ l, List.rev s')
-    | ([], l') ->
-        (List.rev p, List.rev s, (List.rev s') @ l')
-    | ((n, k, t)::r, (n', k', t')::r') when n = n' ->
-        associate ((k, t, k', t')::p) s s' (r, r')
-    | ((n, k, t)::r, ((n', k', t')::_ as l')) when n < n' ->
-        associate p ((n, k, t)::s) s' (r, l')
-    | (((n, k, t)::r as l), (n', k', t')::r') (* when n > n' *) ->
-        associate p s ((n', k', t')::s') (l, r')
-  in let sort = Sort.list (fun (n, _, _) (n', _, _) -> n < n') in
-  associate [] [] [] (sort fields1, sort fields2)
-
-(**** Check whether an object is open ****)
-
-(* +++ Il faudra penser a eventuellement expanser l'abreviation *)
-let rec opened_object ty =
-  match (repr ty).desc with
-    Tvar               -> true
-  | _                  -> false
-
-(**** Close an object ****)
-
-let close_object ty =
-  let rec close ty =
-    let ty = repr ty in
-    match ty.desc with
-      Tvar                 -> ty.desc <- Tlink {desc = Tnil; level = ty.level}
-    | Tnil                 -> ()
-    | _                    -> fatal_error "Ctype.close_object (1)"
-  in
-  match (repr ty).desc with
-    Tconstr (_, _, _) -> ()             (* Already closed *)
-  | _                 -> fatal_error "Ctype.close_object (2)"
-
-
-(**** Object name manipulation ****)
-(* +++ Bientot obsolete *)
-
-let rec row_variable ty =
-  let ty = repr ty in
-  match ty.desc with
-    Tvar                 -> ty
-  | Tnil                 -> raise Not_found
-  | _                    -> fatal_error "Ctype.row_variable"
-
-let set_object_name ty params id =
-  match (repr ty).desc with
-    Tconstr (_, _, _) ->
-      ()
-  | _ ->
-      fatal_error "Ctype.set_object_name"
-
-let remove_object_name ty =
-  match (repr ty).desc with
-    Tconstr (_, _, _) -> ()
-  | _                 -> fatal_error "Ctype.remove_object_name"
-
-(**** Hiding of private methods ****)
-
-let hide_private_methods ty =
-  let ty = repr ty in
-  match ty.desc with
-  | _ ->
-      ()
-
 
                          (*****************************)
                          (*  Type level manipulation  *)
@@ -970,16 +884,6 @@ let equal env rename tyl1 tyl2 =
     List.length tl1 = List.length tl2
                    &&
     List.for_all2 eqtype tl1 tl2
-
-  and eqtype_fields ty1 ty2 =           (* Optimization *)
-    let (fields1, rest1) = flatten_fields ty1
-    and (fields2, rest2) = flatten_fields ty2 in
-    let (pairs, miss1, miss2) = associate_fields fields1 fields2 in
-    eqtype rest1 rest2
-      &&
-    (miss1 = []) && (miss2 = [])
-      &&
-    List.for_all (function (k1, t1, k2, t2) -> eqtype t1 t2) pairs
 
   in
     eqtype_list tyl1 tyl2
