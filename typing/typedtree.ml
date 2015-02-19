@@ -72,8 +72,6 @@ type module_expr =
 and module_expr_desc =
     Tmod_ident of Path.t
   | Tmod_structure of structure
-  | Tmod_functor of Ident.t * module_type * module_expr
-  | Tmod_apply of module_expr * module_expr * module_coercion
   | Tmod_constraint of module_expr * module_type * module_coercion
 
 and structure = structure_item list
@@ -91,7 +89,6 @@ and structure_item =
 and module_coercion =
     Tcoerce_none
   | Tcoerce_structure of (int * module_coercion) list
-  | Tcoerce_functor of module_coercion * module_coercion
   | Tcoerce_primitive of Primitive.description
 
 (* Auxiliary functions over the a.s.t. *)

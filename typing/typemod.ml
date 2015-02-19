@@ -162,8 +162,6 @@ exception Not_a_path
 let rec path_of_module mexp =
   match mexp.mod_desc with
     Tmod_ident p -> p
-  | Tmod_apply(funct, arg, coercion) ->
-      Papply(path_of_module funct, path_of_module arg)
   | _ -> raise Not_a_path
 
 (* Check that all type and module identifiers in a structure have
