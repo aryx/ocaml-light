@@ -130,12 +130,6 @@ and transl_signature env sg =
       let sg = extract_sig_open env loc mty in
       let newenv = Env.open_signature path sg env in
       transl_signature newenv srem
-  | {psig_desc = Psig_include smty} :: srem ->
-      let mty = transl_modtype env smty in
-      let sg = extract_sig env smty.pmty_loc mty in
-      let newenv = Env.add_signature sg env in
-      let rem = transl_signature newenv srem in
-      sg @ rem
 
 and transl_modtype_info env sinfo =
   match sinfo with

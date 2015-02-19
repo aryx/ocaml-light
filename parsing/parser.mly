@@ -148,7 +148,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token GREATERRBRACKET
 %token IF
 %token IN
-%token INCLUDE
 %token <string> INFIXOP0
 %token <string> INFIXOP1
 %token <string> INFIXOP2
@@ -362,8 +361,6 @@ signature_item:
       { mksig(Psig_modtype($3, Pmodtype_manifest $5)) }
   | OPEN mod_longident
       { mksig(Psig_open $2) }
-  | INCLUDE module_type
-      { mksig(Psig_include $2) }
 ;
 
 module_declaration:

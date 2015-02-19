@@ -117,7 +117,6 @@ and signature_item_desc =
   | Psig_module of string * module_type
   | Psig_modtype of string * modtype_declaration
   | Psig_open of Longident.t
-  | Psig_include of module_type
 
 and modtype_declaration =
     Pmodtype_abstract
