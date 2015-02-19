@@ -332,8 +332,6 @@ let rec transl_exp e =
   match e.exp_desc with
     Texp_ident(path, {val_kind = Val_prim p}) ->
       transl_primitive p
-  | Texp_ident(path, {val_kind = Val_anc _}) ->
-      raise(Error(e.exp_loc, Free_super_var))
   | Texp_ident(path, desc) ->
       transl_path path
   | Texp_constant cst ->
