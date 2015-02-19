@@ -31,8 +31,6 @@ let rec strengthen env mty p =
   match scrape env mty with
     Tmty_signature sg ->
       Tmty_signature(strengthen_sig env sg p)
-  | Tmty_functor(param, arg, res) ->
-      Tmty_functor(param, arg, strengthen env res (Papply(p, Pident param)))
   | mty ->
       mty
 
@@ -87,10 +85,6 @@ let nondep_supertype env mid mty =
         else mty
     | Tmty_signature sg ->
         Tmty_signature(nondep_sig va sg)
-    | Tmty_functor(param, arg, res) ->
-        let var_inv =
-          match va with Co -> Contra | Contra -> Co | Strict -> Strict in
-        Tmty_functor(param, nondep_mty var_inv arg, nondep_mty va res)
 
   and nondep_sig va = function
     [] -> []

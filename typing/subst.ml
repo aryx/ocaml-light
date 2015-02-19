@@ -166,8 +166,6 @@ let rec modtype s = function
       end
   | Tmty_signature sg ->
       Tmty_signature(signature s sg)
-  | Tmty_functor(id, arg, res) ->
-      Tmty_functor(id, modtype s arg, modtype (remove_module id s) res)
 
 and signature s = function
     [] -> []
