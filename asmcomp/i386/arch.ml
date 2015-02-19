@@ -56,13 +56,6 @@ let offset_addressing addr delta =
   | Iscaled(scale, n) -> Iscaled(scale, n + delta)
   | Iindexed2scaled(scale, n) -> Iindexed2scaled(scale, n + delta)
 
-let num_args_addressing = function
-    Ibased(s, n) -> 0
-  | Iindexed n -> 1
-  | Iindexed2 n -> 2
-  | Iscaled(scale, n) -> 1
-  | Iindexed2scaled(scale, n) -> 2
-
 (* Printing operations and addressing modes *)
 
 open Format

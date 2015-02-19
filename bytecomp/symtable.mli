@@ -30,7 +30,6 @@ val output_primitive_table: out_channel -> unit
 val init_toplevel: unit -> unit
 val update_global_table: unit -> unit
 val get_global_value: Ident.t -> Obj.t
-val assign_global_value: Ident.t -> Obj.t -> unit
 val get_global_position: Ident.t -> int
 
 type global_map

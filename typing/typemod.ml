@@ -37,11 +37,6 @@ exception Error of Location.t * error
 
 (* Extract a signature from a module type *)
 
-let extract_sig env loc mty =
-  match Mtype.scrape env mty with
-    Tmty_signature sg -> sg
-  | _ -> raise(Error(loc, Signature_expected))
-
 let extract_sig_open env loc mty =
   match Mtype.scrape env mty with
     Tmty_signature sg -> sg
@@ -54,34 +49,6 @@ let type_module_path env loc lid =
     Env.lookup_module lid env
   with Not_found ->
     raise(Error(loc, Unbound_module lid))
-
-(* Merge one "with" constraint in a signature *)
-
-let merge_constraint initial_env loc sg lid constr =
-  let rec merge env sg namelist =
-    match (sg, namelist, constr) with
-      ([], _, _) ->
-        raise(Error(loc, With_no_component lid))
-    | (Tsig_type(id, decl) :: rem, [s], Pwith_type sdecl)
-      when Ident.name id = s ->
-        let newdecl = Typedecl.transl_with_constraint initial_env sdecl in
-        Includemod.type_declarations env id newdecl decl;
-        Tsig_type(id, newdecl) :: rem
-    | (Tsig_module(id, mty) :: rem, [s], Pwith_module lid)
-      when Ident.name id = s ->
-        let (path, mty') = type_module_path initial_env loc lid in
-        let newmty = Mtype.strengthen env mty' path in
-        Includemod.modtypes env newmty mty;
-        Tsig_module(id, newmty) :: rem
-    | (Tsig_module(id, mty) :: rem, s :: namelist, _) when Ident.name id = s ->
-        let newsg = merge env (extract_sig env loc mty) namelist in
-        Tsig_module(id, Tmty_signature newsg) :: rem
-    | (item :: rem, _, _) ->
-        item :: merge (Env.add_item item env) rem namelist in
-  try
-    merge initial_env sg (Longident.flatten lid)
-  with Includemod.Error explanation ->
-    raise(Error(loc, With_mismatch(lid, explanation)))
 
 (* Check and translate a module type expression *)
 
@@ -137,15 +104,6 @@ and transl_modtype_info env sinfo =
       Tmodtype_abstract
   | Pmodtype_manifest smty ->
       Tmodtype_manifest(transl_modtype env smty)
-
-(* Try to convert a module expression to a module path. *)
-
-exception Not_a_path
-
-let rec path_of_module mexp =
-  match mexp.mod_desc with
-    Tmod_ident p -> p
-  | _ -> raise Not_a_path
 
 (* Check that all type and module identifiers in a structure have
    distinct names (so that access by named paths is unambiguous). *)

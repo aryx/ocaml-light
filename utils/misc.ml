@@ -98,6 +98,7 @@ let copy_file_chunk ic oc len =
 let rec log2 n =
   if n <= 1 then 0 else 1 + log2(n asr 1)
 
+(* @Scheck: dead by nice to have *)
 let align n a =
   if n >= 0 then (n + a - 1) land (-a) else n land (-a)
 

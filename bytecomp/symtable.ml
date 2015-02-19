@@ -222,12 +222,11 @@ let init_toplevel () =
 
 (* Find the value of a global identifier *)
 
+(* @Scheck: used by the debugger *)
 let get_global_position id = slot_for_getglobal id
 
 let get_global_value id =
   (Meta.global_data()).(slot_for_getglobal id)
-let assign_global_value id v =
-  (Meta.global_data()).(slot_for_getglobal id) <- v
 
 (* Save and restore the current state *)
 
@@ -237,6 +236,7 @@ let current_state () = !global_table
 
 let restore_state st = global_table := st
 
+(* @Scheck: used by dynlink *)
 let hide_additions st =
   if st.num_cnt > !global_table.num_cnt then
     fatal_error "Symtable.hide_additions";

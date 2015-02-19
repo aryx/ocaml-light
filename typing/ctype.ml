@@ -114,9 +114,7 @@ let new_global_ty desc = { desc = desc; level = !global_level }
 
 let newvar ()          = { desc = Tvar; level = !current_level }
 let newmarkedvar () = { desc = Tvar; level = pivot_level - !current_level }
-let newgenvar          = newgenvar
 let new_global_var ()  = new_global_ty Tvar
-let newmarkedgenvar    = newmarkedgenvar
 
 let none = newty (Ttuple [])                (* Clearly ill-formed type *)
 
@@ -294,16 +292,6 @@ let instance_parameterized_type sch_args sch =
   cleanup_types ();
   List.iter unmark_type ty_args; unmark_type ty;
   (ty_args, ty)
-
-let instance_parameterized_type_2 sch_args sch_lst sch =
-  let ty_args = List.map copy sch_args in
-  let ty_lst = List.map copy sch_lst in
-  let ty = copy sch in
-  cleanup_types ();
-  List.iter unmark_type ty_args; List.iter unmark_type ty_lst;
-  unmark_type ty;  
-  (ty_args, ty_lst, ty)
-
 
 (**** Instantiation with parameter substitution ****)
 
@@ -1205,16 +1193,3 @@ let closed_schema ty =
     unmark_type ty;
     false
 
-(*
-    Check that all variables of type [ty] are generic. If this is not
-    the case, the non-generic variable is returned. The type is never
-    generalized.
-*)
-let closed_schema_verbose ty =
-  try
-    closed_schema_rec false ty;
-    unmark_type ty;
-    None
-  with Failed status ->
-    unmark_type ty;
-    Some status

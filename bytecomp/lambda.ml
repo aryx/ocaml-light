@@ -120,16 +120,6 @@ let name_lambda arg fn =
     Lvar id -> fn id
   | _ -> let id = Ident.create "let" in Llet(Strict, id, arg, fn id)
 
-let name_lambda_list args fn =
-  let rec name_list names = function
-    [] -> fn (List.rev names)
-  | (Lvar id as arg) :: rem ->
-      name_list (arg :: names) rem
-  | arg :: rem ->
-      let id = Ident.create "let" in
-      Llet(Strict, id, arg, name_list (Lvar id :: names) rem) in
-  name_list [] args
-
 module IdentSet = Set
 
 let free_variables l =

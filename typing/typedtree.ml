@@ -109,9 +109,6 @@ let rec bound_idents pat =
       List.iter (fun (lbl, pat) -> bound_idents pat) lbl_pat_list
   | Tpat_or(p1, p2) -> bound_idents p1; bound_idents p2
 
-let pat_bound_idents pat =
-  idents := []; bound_idents pat; let res = !idents in idents := []; res
-
 let rev_let_bound_idents pat_expr_list =
   idents := [];
   List.iter (fun (pat, expr) -> bound_idents pat) pat_expr_list;

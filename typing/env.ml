@@ -173,6 +173,7 @@ let find_modtype_expansion path env =
     Tmodtype_abstract     -> raise Not_found
   | Tmodtype_manifest mty -> mty
 
+(* @Scheck: used by the debugger *)
 let find_module path env =
   match path with
     Pident id ->
@@ -491,7 +492,6 @@ let enter store_fun name data env =
   let id = Ident.create name in (id, store_fun id (Pident id) data env)
 
 let enter_value = enter store_value
-and enter_type = enter store_type
 and enter_exception = enter store_exception
 and enter_module = enter store_module
 and enter_modtype = enter store_modtype
