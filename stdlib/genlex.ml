@@ -58,7 +58,10 @@ let make_lexer keywords =
       try Hashtbl.find kwd_table s
       with Not_found -> raise(Stream.Error("Illegal character " ^ s)) in
 
-  let rec next_token = parser
+  let rec next_token x = 
+    failwith "Genlex.next_token:TODO, parser extension"
+(*
+ parser
     [< '  ' '|'\010'|'\013'|'\009'|'\026'|'\012'; s >] ->
       next_token s
   | [< '  'A'..'Z'|'a'..'z'|'\192'..'\255' as c; s>] ->
@@ -166,5 +169,5 @@ let make_lexer keywords =
     [< '  ')' >] -> ()
   | [< '  '*'; s >] -> maybe_end_comment s
   | [< ' c; s >] -> comment s
-
+*)
   in fun input -> Stream.from (fun count -> next_token input)
