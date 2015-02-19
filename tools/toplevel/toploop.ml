@@ -32,8 +32,6 @@ type directive_fun =
 
 let parse_toplevel_phrase = ref Parse.toplevel_phrase
 let parse_use_file = ref Parse.use_file
-let print_location = Location.print
-let print_warning = Location.print_warning
 let input_name = Location.input_name
 
 (* Load in-core and execute a lambda term *)

@@ -64,24 +64,6 @@ let find_degree reg =
     end
   end
 
-(* Remove a register from the interference graph *)
-
-let remove_reg reg =
-  reg.degree <- 0;   (* 0 means r is no longer part of the graph *)
-  let cl = Proc.register_class reg in
-  List.iter
-    (fun r ->
-      if Proc.register_class r = cl & r.degree > 0 then begin
-        let olddeg = r.degree in
-        r.degree <- olddeg - 1;
-        if olddeg = Proc.num_available_registers.(cl) then begin
-          (* r was constrained and becomes unconstrained *)
-          constrained := (*Reg.*)Set.remove r !constrained;
-          unconstrained := (*Reg.*)Set.add r !unconstrained
-        end
-      end)
-    reg.interf
-
 (* Remove all registers one by one, unconstrained if possible, otherwise
    constrained with lowest spill cost. Return the list of registers removed
    in reverse order.

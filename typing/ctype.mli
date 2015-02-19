@@ -62,9 +62,6 @@ val instance_label: label_description -> type_expr * type_expr
         (* Same, for a label *)
 val instance_parameterized_type:
         type_expr list -> type_expr -> type_expr list * type_expr
-val instance_parameterized_type_2:
-        type_expr list -> type_expr list -> type_expr ->
-        type_expr list * type_expr list * type_expr
 val apply:
         Env.t -> type_expr list -> type_expr -> type_expr list -> type_expr
         (* [apply [p1...pN] t [a1...aN]] match the arguments [ai] to
@@ -113,9 +110,6 @@ val cyclic_abbrev: Env.t -> Ident.t -> type_expr -> bool
 
 type closed_schema_result = Var of type_expr | Row_var of type_expr
 val closed_schema: type_expr -> bool
-val closed_schema_verbose: type_expr -> closed_schema_result option
-        (* Check whether the given type scheme contains no non-generic
-           type variables *)
 
 val unalias: type_expr -> type_expr
 val unroll_abbrev: Ident.t -> type_expr list -> type_expr -> type_expr

@@ -23,6 +23,7 @@ let emit_char c = output_char !output_channel c
 
 let emit_nativeint n = output_string !output_channel (Nativeint.to_string n)
 
+(* @Scheck: used by mips backend *)
 let emit_printf fmt =
   Printf.fprintf !output_channel fmt
 

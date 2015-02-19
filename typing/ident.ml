@@ -32,6 +32,7 @@ let unique_name i = i.name ^ "_" ^ string_of_int i.stamp
 
 let persistent i = (i.stamp = 0)
 
+(* @Scheck: dead but should be used? TODO? *)
 let equal i1 i2 = i1.name = i2.name
 
 let same i1 i2 = i1 = i2
@@ -154,6 +155,7 @@ and iter_node fn k =
   fn k.ident k.data;
   match k.previous with None -> () | Some prev_k -> iter_node fn prev_k
 
+(* @Scheck: dumper *)
 let print_tbl print_elt tbl =
   open_box 2;
   print_string "[[";
