@@ -1410,38 +1410,6 @@ index 4870cd0..549e2db 100644
 -let rec free_type_ident env ids ty =
 -  match repr ty with
 -    Tvar _ -> false
-+and build_supertype env vars t =
-+  if List.memq t vars then (t, false) else
-+  match t.desc with
-+    Tlink t' ->
-+      build_supertype env vars t'
-+  | Tvar ->
-+      (t, false)
-   | Tarrow(t1, t2) ->
--      free_type_ident env ids t1 or free_type_ident env ids t2
-+      let (t1', c1) = build_subtype env vars t1 in
-+      let (t2', c2) = build_supertype env vars t2 in
-+      if c1 or c2 then (new_global_ty (Tarrow(t1', t2')), true)
-+      else (t, false)
-+  | Ttuple tlist ->
-+      let (tlist', clist) =
-+        List.split (List.map (build_supertype env vars) tlist)
-+      in
-+      if List.exists (function c -> c) clist then
-+        (new_global_ty (Ttuple tlist'), true)
-+      else
-+        (t, false)
-+  | Tconstr(p, tl, abbrev) ->
-+      if generic_abbrev env p then begin
-+        let t' = expand_abbrev env p tl abbrev t.level in
-+        let (t'', c) = build_supertype env vars t' in
-+        if c then (t'', c)
-+        else (t, false)
-+      end else
-+        (t, false)
-+  | Tnil ->
-+      (t, false)
-+
 +let enlarge_type env vars ty =
 +  visited := [];
 +  let (ty', _) = build_subtype env vars ty in
@@ -1803,9 +1771,6 @@ index 038271d..87f9d81 100644
          (* Unify the two types given. Raise [Unify] if not possible. *)
  val filter_arrow: Env.t -> type_expr -> type_expr * type_expr
          (* A special case of unification (with 'a -> 'b). *)
-+val filter_method:
-+  Env.t -> Label.t -> Typedtree.type_expr -> Typedtree.type_expr
-+      	(* A special case of unification (with {m : 'a; 'b}). *)
  val moregeneral: Env.t -> type_expr -> type_expr -> bool
          (* Check if the first type scheme is more general than the second. *)
  val equal: Env.t -> type_expr list -> type_expr ->
@@ -1813,7 +1778,6 @@ index 038271d..87f9d81 100644
          (* [equal env [x1...xn] tau [y1...yn] sigma]
             checks whether the parameterized types
             [/\x1.../\xn.tau] and [/\y1.../\yn.sigma] are equivalent. *)
-+val opened_object: type_expr -> bool
 +val enlarge_type: Env.t -> type_expr list -> type_expr -> type_expr
 +      	(* Make a type larger *)
 +val subtype : Env.t -> type_expr list -> type_expr -> type_expr -> unit
@@ -2611,14 +2575,7 @@ index 89937df..ea77828 100644
    | Label_missing
    | Label_not_mutable of Longident.t
    | Bad_format of string
-+  | Undefined_method_err of Label.t
-+  | Unbound_class of Longident.t
-+  | Virtual_class of Longident.t
-+  | Unbound_instance_variable of string
-+  | Instance_variable_not_mutable of string
 +  | Not_subtype of type_expr * type_expr
-+  | Outside_class
-+  | Value_multiply_overridden of string
  
  exception Error of Location.t * error
  
@@ -2814,36 +2771,6 @@ index 89937df..ea77828 100644
    if is_nonexpansive exp then generalize exp.exp_type;
    exp
  
-+(* Typing of methods *)
-+
-+let type_method env self self_name sexp =
-+  let (obj, env) =
-+    Env.enter_value "*self*" {val_type = self; val_kind = Val_reg} env
-+  in
-+  let pattern =
-+    { pat_desc = Tpat_var obj;
-+      pat_loc = Location.none;
-+      pat_type = self }
-+  in
-+  let (pattern, env) =
-+    match self_name with
-+      None      ->
-+        (pattern, env)
-+    | Some name ->
-+        let (self_name, env) =
-+          Env.enter_value name {val_type = self; val_kind = Val_reg} env
-+        in
-+        ({ pat_desc = Tpat_alias (pattern, self_name);
-+	   pat_loc = Location.none;
-+	   pat_type = self },
-+	 env)
-+  in
-+  let exp = type_exp env sexp in
-+  ({ exp_desc = Texp_function [(pattern, exp)];
-+     exp_loc = sexp.pexp_loc;
-+     exp_type = newty (Tarrow(pattern.pat_type, exp.exp_type)) },
-+   exp.exp_type)
-+
  (* Error report *)
  
  open Format
@@ -2887,20 +2814,6 @@ index 89937df..ea77828 100644
        print_string " is not mutable"
    | Bad_format s ->
        print_string "Bad format `"; print_string s; print_string "'"
-+  | Undefined_method_err me ->
-+      print_string "This expression has no method ";
-+      print_string me.Label.lab_name
-+  | Unbound_class cl ->
-+      print_string "Unbound class "; longident cl
-+  | Virtual_class cl ->
-+      print_string "One cannot create instances of the virtual class ";
-+      longident cl
-+  | Unbound_instance_variable v ->
-+      print_string "Unbound instance variable ";
-+      print_string v
-+  | Instance_variable_not_mutable v ->
-+      print_string " The instance variable "; print_string v;
-+      print_string " is not mutable"
 +  | Not_subtype(ty, ty') ->
 +      reset ();
 +      mark_loops ty; mark_loops ty';
@@ -2909,11 +2822,6 @@ index 89937df..ea77828 100644
 +      print_string "is not a subtype of"; print_space ();
 +      type_expr ty';
 +      close_box()
-+  | Outside_class ->
-+      print_string "Object duplication outside a class definition."
-+  | Value_multiply_overridden v ->
-+      print_string "The instance variable "; print_string v;
-+      print_string " is overridden several times"
 diff --git a/typing/typecore.mli b/typing/typecore.mli
 index 54d31ad..d527ae4 100644
 --- a/typing/typecore.mli
@@ -2928,9 +2836,6 @@ index 54d31ad..d527ae4 100644
 -        Env.t -> Parsetree.expression -> Typedtree.expression
 -        
 +        Env.t -> Parsetree.expression -> expression
-+val type_method:
-+        Env.t -> Typedtree.type_expr -> string option ->
-+        Parsetree.expression -> expression * type_expr
 +val type_pattern_list:
 +        Env.t -> Parsetree.pattern list -> Typedtree.pattern list * Env.t
 +val type_expect:
@@ -2946,14 +2851,7 @@ index 54d31ad..d527ae4 100644
    | Label_missing
    | Label_not_mutable of Longident.t
    | Bad_format of string
-+  | Undefined_method_err of Label.t
-+  | Unbound_class of Longident.t
-+  | Virtual_class of Longident.t
-+  | Unbound_instance_variable of string
-+  | Instance_variable_not_mutable of string
 +  | Not_subtype of type_expr * type_expr
-+  | Outside_class
-+  | Value_multiply_overridden of string
  
  exception Error of Location.t * error
  
@@ -3201,9 +3099,6 @@ index 08e99a7..ec83c77 100644
    | Unbound_type_constructor of Longident.t
    | Type_arity_mismatch of Longident.t * int * int
 +  | Bound_type_variable of string
-+  | Recursive_type
-+  | Unbound_class of Longident.t
-+  | Unbound_row_variable of Longident.t
 +  | Type_mismatch of type_expr * type_expr
  
  exception Error of Location.t * error
@@ -3302,12 +3197,6 @@ index 08e99a7..ec83c77 100644
        close_box()
 +  | Bound_type_variable name ->
 +      print_string "Already bound type parameter "; print_string name
-+  | Recursive_type ->
-+      print_string "This type is recursive"
-+  | Unbound_class lid ->
-+      print_string "Unbound class "; longident lid
-+  | Unbound_row_variable lid ->
-+      print_string "Unbound row variable in #"; longident lid
 +  | Type_mismatch (ty, ty') ->
 +      Printtyp.reset ();
 +      Printtyp.mark_loops ty; Printtyp.mark_loops ty';
@@ -3334,9 +3223,6 @@ index 14505b6..c1dd2d0 100644
    | Unbound_type_constructor of Longident.t
    | Type_arity_mismatch of Longident.t * int * int
 +  | Bound_type_variable of string
-+  | Recursive_type
-+  | Unbound_class of Longident.t
-+  | Unbound_row_variable of Longident.t
 +  | Type_mismatch of Typedtree.type_expr * Typedtree.type_expr
  
  exception Error of Location.t * error
