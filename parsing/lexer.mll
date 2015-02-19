@@ -108,18 +108,10 @@ let get_stored_string () =
 
 let char_for_backslash =
   match Sys.os_type with
-  | "Unix" | "Win32" ->
+  | "Unix" ->
       begin function
       | 'n' -> '\010'
       | 'r' -> '\013'
-      | 'b' -> '\008'
-      | 't' -> '\009'
-      | c   -> c
-      end
-  | "MacOS" ->
-      begin function
-      | 'n' -> '\013'
-      | 'r' -> '\010'
       | 'b' -> '\008'
       | 't' -> '\009'
       | c   -> c
