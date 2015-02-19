@@ -538,60 +538,60 @@ driver/optmain.cmo: asmcomp/asmlibrarian.cmi asmcomp/asmlink.cmi \
 driver/optmain.cmx: asmcomp/asmlibrarian.cmx asmcomp/asmlink.cmx \
     utils/clflags.cmx utils/config.cmx driver/optcompile.cmx \
     driver/opterrors.cmx asmcomp/printmach.cmx 
-toplevel/genprintval.cmi: typing/env.cmi typing/path.cmi typing/types.cmi 
-toplevel/printval.cmi: typing/env.cmi typing/path.cmi typing/types.cmi 
-toplevel/topdirs.cmi: parsing/longident.cmi 
-toplevel/toploop.cmi: typing/env.cmi parsing/location.cmi \
+tools/toplevel/genprintval.cmi: typing/env.cmi typing/path.cmi typing/types.cmi 
+tools/toplevel/printval.cmi: typing/env.cmi typing/path.cmi typing/types.cmi 
+tools/toplevel/topdirs.cmi: parsing/longident.cmi 
+tools/toplevel/toploop.cmi: typing/env.cmi parsing/location.cmi \
     parsing/longident.cmi parsing/parsetree.cmi 
-toplevel/trace.cmi: typing/env.cmi parsing/longident.cmi typing/path.cmi \
+tools/toplevel/trace.cmi: typing/env.cmi parsing/longident.cmi typing/path.cmi \
     typing/types.cmi 
-toplevel/expunge.cmo: utils/config.cmi typing/ident.cmi utils/misc.cmi \
+tools/toplevel/expunge.cmo: utils/config.cmi typing/ident.cmi utils/misc.cmi \
     bytecomp/runtimedef.cmi bytecomp/symtable.cmi 
-toplevel/expunge.cmx: utils/config.cmx typing/ident.cmx utils/misc.cmx \
+tools/toplevel/expunge.cmx: utils/config.cmx typing/ident.cmx utils/misc.cmx \
     bytecomp/runtimedef.cmx bytecomp/symtable.cmx 
-toplevel/genprintval.cmo: typing/ctype.cmi typing/env.cmi typing/ident.cmi \
+tools/toplevel/genprintval.cmo: typing/ctype.cmi typing/env.cmi typing/ident.cmi \
     parsing/longident.cmi utils/misc.cmi typing/path.cmi typing/predef.cmi \
-    typing/printtyp.cmi typing/types.cmi toplevel/genprintval.cmi 
-toplevel/genprintval.cmx: typing/ctype.cmx typing/env.cmx typing/ident.cmx \
+    typing/printtyp.cmi typing/types.cmi tools/toplevel/genprintval.cmi 
+tools/toplevel/genprintval.cmx: typing/ctype.cmx typing/env.cmx typing/ident.cmx \
     parsing/longident.cmx utils/misc.cmx typing/path.cmx typing/predef.cmx \
-    typing/printtyp.cmx typing/types.cmx toplevel/genprintval.cmi 
-toplevel/printval.cmo: toplevel/genprintval.cmi toplevel/printval.cmi 
-toplevel/printval.cmx: toplevel/genprintval.cmx toplevel/printval.cmi 
-toplevel/topdirs.cmo: bytecomp/bytelink.cmi utils/config.cmi typing/ctype.cmi \
+    typing/printtyp.cmx typing/types.cmx tools/toplevel/genprintval.cmi 
+tools/toplevel/printval.cmo: tools/toplevel/genprintval.cmi tools/toplevel/printval.cmi 
+tools/toplevel/printval.cmx: tools/toplevel/genprintval.cmx tools/toplevel/printval.cmi 
+tools/toplevel/topdirs.cmo: bytecomp/bytelink.cmi utils/config.cmi typing/ctype.cmi \
     bytecomp/emitcode.cmi typing/env.cmi typing/ident.cmi \
     parsing/longident.cmi bytecomp/meta.cmi utils/misc.cmi \
     bytecomp/opcodes.cmo typing/path.cmi typing/predef.cmi \
-    typing/printtyp.cmi toplevel/printval.cmi bytecomp/symtable.cmi \
-    toplevel/toploop.cmi toplevel/trace.cmi typing/types.cmi \
-    toplevel/topdirs.cmi 
-toplevel/topdirs.cmx: bytecomp/bytelink.cmx utils/config.cmx typing/ctype.cmx \
+    typing/printtyp.cmi tools/toplevel/printval.cmi bytecomp/symtable.cmi \
+    tools/toplevel/toploop.cmi tools/toplevel/trace.cmi typing/types.cmi \
+    tools/toplevel/topdirs.cmi 
+tools/toplevel/topdirs.cmx: bytecomp/bytelink.cmx utils/config.cmx typing/ctype.cmx \
     bytecomp/emitcode.cmx typing/env.cmx typing/ident.cmx \
     parsing/longident.cmx bytecomp/meta.cmx utils/misc.cmx \
     bytecomp/opcodes.cmx typing/path.cmx typing/predef.cmx \
-    typing/printtyp.cmx toplevel/printval.cmx bytecomp/symtable.cmx \
-    toplevel/toploop.cmx toplevel/trace.cmx typing/types.cmx \
-    toplevel/topdirs.cmi 
-toplevel/toploop.cmo: bytecomp/bytegen.cmi utils/clflags.cmo \
+    typing/printtyp.cmx tools/toplevel/printval.cmx bytecomp/symtable.cmx \
+    tools/toplevel/toploop.cmx tools/toplevel/trace.cmx typing/types.cmx \
+    tools/toplevel/topdirs.cmi 
+tools/toplevel/toploop.cmo: bytecomp/bytegen.cmi utils/clflags.cmo \
     driver/compile.cmi utils/config.cmi bytecomp/emitcode.cmi typing/env.cmi \
     driver/errors.cmi parsing/location.cmi parsing/longident.cmi \
     bytecomp/meta.cmi utils/misc.cmi parsing/parse.cmi parsing/parsetree.cmi \
     typing/primitive.cmi bytecomp/printinstr.cmi bytecomp/printlambda.cmi \
-    typing/printtyp.cmi toplevel/printval.cmi bytecomp/simplif.cmi \
+    typing/printtyp.cmi tools/toplevel/printval.cmi bytecomp/simplif.cmi \
     bytecomp/symtable.cmi bytecomp/translmod.cmi typing/typedtree.cmi \
-    typing/typemod.cmi typing/types.cmi toplevel/toploop.cmi 
-toplevel/toploop.cmx: bytecomp/bytegen.cmx utils/clflags.cmx \
+    typing/typemod.cmi typing/types.cmi tools/toplevel/toploop.cmi 
+tools/toplevel/toploop.cmx: bytecomp/bytegen.cmx utils/clflags.cmx \
     driver/compile.cmx utils/config.cmx bytecomp/emitcode.cmx typing/env.cmx \
     driver/errors.cmx parsing/location.cmx parsing/longident.cmx \
     bytecomp/meta.cmx utils/misc.cmx parsing/parse.cmx parsing/parsetree.cmi \
     typing/primitive.cmx bytecomp/printinstr.cmx bytecomp/printlambda.cmx \
-    typing/printtyp.cmx toplevel/printval.cmx bytecomp/simplif.cmx \
+    typing/printtyp.cmx tools/toplevel/printval.cmx bytecomp/simplif.cmx \
     bytecomp/symtable.cmx bytecomp/translmod.cmx typing/typedtree.cmx \
-    typing/typemod.cmx typing/types.cmx toplevel/toploop.cmi 
-toplevel/topmain.cmo: utils/clflags.cmo toplevel/toploop.cmi 
-toplevel/topmain.cmx: utils/clflags.cmx toplevel/toploop.cmx 
-toplevel/trace.cmo: typing/ctype.cmi parsing/longident.cmi utils/misc.cmi \
-    typing/path.cmi typing/printtyp.cmi toplevel/printval.cmi \
-    toplevel/toploop.cmi typing/types.cmi toplevel/trace.cmi 
-toplevel/trace.cmx: typing/ctype.cmx parsing/longident.cmx utils/misc.cmx \
-    typing/path.cmx typing/printtyp.cmx toplevel/printval.cmx \
-    toplevel/toploop.cmx typing/types.cmx toplevel/trace.cmi 
+    typing/typemod.cmx typing/types.cmx tools/toplevel/toploop.cmi 
+tools/toplevel/topmain.cmo: utils/clflags.cmo tools/toplevel/toploop.cmi 
+tools/toplevel/topmain.cmx: utils/clflags.cmx tools/toplevel/toploop.cmx 
+tools/toplevel/trace.cmo: typing/ctype.cmi parsing/longident.cmi utils/misc.cmi \
+    typing/path.cmi typing/printtyp.cmi tools/toplevel/printval.cmi \
+    tools/toplevel/toploop.cmi typing/types.cmi tools/toplevel/trace.cmi 
+tools/toplevel/trace.cmx: typing/ctype.cmx parsing/longident.cmx utils/misc.cmx \
+    typing/path.cmx typing/printtyp.cmx tools/toplevel/printval.cmx \
+    tools/toplevel/toploop.cmx typing/types.cmx tools/toplevel/trace.cmi 

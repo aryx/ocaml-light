@@ -45,3 +45,10 @@ boot/Saved
 /tools/ocamlprof
 /utils/config.ml
 /yacc/ocamlyacc
+/tools/debugger/lexer.ml
+/tools/debugger/ocamldebug
+/tools/debugger/parser.ml
+/tools/debugger/parser.mli
+/tools/misc/ocamldep
+/tools/misc/ocamldep.ml
+/tools/misc/ocamlprof
