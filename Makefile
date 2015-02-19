@@ -1,8 +1,12 @@
 # The main Makefile
+##############################################################################
+# Configuration
+##############################################################################
 
 include config/Makefile
 
-CAMLC=boot/ocamlrun boot/ocamlc -I boot
+#CAMLC=boot/ocamlrun boot/ocamlc -I boot
+CAMLC=/home/pad/.opam/4.01.0/bin/ocamlc -bin-annot -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -I stdlib
 COMPFLAGS=$(INCLUDES)
 LINKFLAGS=
@@ -14,6 +18,10 @@ DEPFLAGS=$(INCLUDES)
 CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
+
+##############################################################################
+# The files and directories
+##############################################################################
 
 INCLUDES=-I utils -I parsing -I typing -I bytecomp -I asmcomp -I driver -I tools/toplevel
 
@@ -62,7 +70,6 @@ ASMCOMP=asmcomp/arch.cmo asmcomp/cmm.cmo asmcomp/printcmm.cmo \
   asmcomp/asmlink.cmo asmcomp/asmlibrarian.cmo
 
 DRIVER=driver/errors.cmo driver/compile.cmo driver/main.cmo
-
 OPTDRIVER=driver/opterrors.cmo driver/optcompile.cmo driver/optmain.cmo
 
 TOPLEVEL=driver/errors.cmo driver/compile.cmo \
@@ -91,6 +98,10 @@ PERVASIVES=arg array callback char digest filename format gc hashtbl \
   set sort stack string stream sys genlex topdirs toploop weak lazy \
   marshal
 
+##############################################################################
+# Main rule
+##############################################################################
+
 # Recompile the system using the bootstrap compiler
 all: runtime ocamlc ocamllex ocamlyacc ocamltools library ocaml \
   otherlibraries $(DEBUGGER)
@@ -100,6 +111,32 @@ all: runtime ocamlc ocamllex ocamlyacc ocamltools library ocaml \
 
 # Compile everything the first time
 world: coldstart all
+
+# Compile the native-code compiler
+opt: runtimeopt ocamlopt libraryopt otherlibrariesopt
+
+clean:: partialclean
+
+##############################################################################
+# Coldstart
+##############################################################################
+
+LIBFILES=stdlib.cma std_exit.cmo *.cmi camlheader
+
+# Start up the system from the distribution compiler
+coldstart:
+	cd byterun; $(MAKE) all
+	cp byterun/ocamlrun boot/ocamlrun
+	cd yacc; $(MAKE) all
+	cp yacc/ocamlyacc boot/ocamlyacc
+	cd stdlib; $(MAKE) COMPILER=../boot/ocamlc all
+	cd stdlib; cp $(LIBFILES) ../boot
+	if test -f boot/libcamlrun.a; then :; else \
+          ln -s ../byterun/libcamlrun.a boot/libcamlrun.a; fi
+
+##############################################################################
+# Bootstrapping
+##############################################################################
 
 # Complete bootstrapping cycle
 bootstrap:
@@ -122,18 +159,6 @@ bootstrap:
 # Check if fixpoint reached
 	$(MAKE) compare
 
-LIBFILES=stdlib.cma std_exit.cmo *.cmi camlheader
-
-# Start up the system from the distribution compiler
-coldstart:
-	cd byterun; $(MAKE) all
-	cp byterun/ocamlrun boot/ocamlrun
-	cd yacc; $(MAKE) all
-	cp yacc/ocamlyacc boot/ocamlyacc
-	cd stdlib; $(MAKE) COMPILER=../boot/ocamlc all
-	cd stdlib; cp $(LIBFILES) ../boot
-	if test -f boot/libcamlrun.a; then :; else \
-          ln -s ../byterun/libcamlrun.a boot/libcamlrun.a; fi
 
 # Save the current bootstrap compiler
 MAXSAVED=boot/Saved/Saved.prev/Saved.prev/Saved.prev/Saved.prev/Saved.prev
@@ -177,10 +202,11 @@ compare:
 cleanboot:
 	rm -rf boot/Saved/Saved.prev/*
 
-# Compile the native-code compiler
-opt: runtimeopt ocamlopt libraryopt otherlibrariesopt
 
+##############################################################################
 # Installation
+##############################################################################
+
 install:
 	if test -d $(BINDIR); then : ; else $(MKDIR) $(BINDIR); fi
 	if test -d $(LIBDIR); then : ; else $(MKDIR) $(LIBDIR); fi
@@ -210,7 +236,10 @@ installopt:
 	if test -f ocamlc.opt; then cp ocamlc.opt $(BINDIR)/ocamlc.opt; else :; fi
 	if test -f ocamlopt.opt; then cp ocamlopt.opt $(BINDIR)/ocamlopt.opt; else :; fi
 
-clean:: partialclean
+
+##############################################################################
+# The binaries
+##############################################################################
 
 # The compiler
 
@@ -238,7 +267,28 @@ ocaml: $(TOPOBJS) expunge
 partialclean::
 	rm -f ocaml
 
+# The bytecode compiler compiled with the native-code compiler
+
+ocamlc.opt: $(COMPOBJS:.cmo=.cmx)
+	cd asmrun; $(MAKE) meta.o
+	$(CAMLOPT) $(LINKFLAGS) -o ocamlc.opt $(COMPOBJS:.cmo=.cmx) asmrun/meta.o
+
+partialclean::
+	rm -f ocamlc.opt
+
+# The native-code compiler compiled with itself
+
+ocamlopt.opt: $(OPTOBJS:.cmo=.cmx)
+	$(CAMLOPT) $(LINKFLAGS) -o ocamlopt.opt $(OPTOBJS:.cmo=.cmx)
+
+partialclean::
+	rm -f ocamlopt.opt
+
+$(OPTOBJS:.cmo=.cmx): ocamlopt
+
+##############################################################################
 # The configuration file
+##############################################################################
 
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml
@@ -261,6 +311,10 @@ partialclean::
 	rm -f utils/config.ml
 
 beforedepend:: utils/config.ml
+
+##############################################################################
+# Generated code (lex & yacc files)
+##############################################################################
 
 # The parser
 
@@ -292,24 +346,10 @@ partialclean::
 
 beforedepend:: parsing/linenum.ml
 
-# The bytecode compiler compiled with the native-code compiler
 
-ocamlc.opt: $(COMPOBJS:.cmo=.cmx)
-	cd asmrun; $(MAKE) meta.o
-	$(CAMLOPT) $(LINKFLAGS) -o ocamlc.opt $(COMPOBJS:.cmo=.cmx) asmrun/meta.o
-
-partialclean::
-	rm -f ocamlc.opt
-
-# The native-code compiler compiled with itself
-
-ocamlopt.opt: $(OPTOBJS:.cmo=.cmx)
-	$(CAMLOPT) $(LINKFLAGS) -o ocamlopt.opt $(OPTOBJS:.cmo=.cmx)
-
-partialclean::
-	rm -f ocamlopt.opt
-
-$(OPTOBJS:.cmo=.cmx): ocamlopt
+##############################################################################
+# Generated code (other)
+##############################################################################
 
 # The numeric opcodes
 
@@ -390,13 +430,10 @@ partialclean::
 
 beforedepend:: asmcomp/emit.ml
 
-# The "expunge" utility
 
-expunge: $(EXPUNGEOBJS)
-	$(CAMLC) $(LINKFLAGS) -o expunge $(EXPUNGEOBJS)
-
-partialclean::
-	rm -f expunge
+##############################################################################
+# Runtimes
+##############################################################################
 
 # The runtime system for the bytecode compiler
 
@@ -422,7 +459,9 @@ clean::
 alldepend::
 	cd asmrun; $(MAKE) depend
 
+##############################################################################
 # The library
+##############################################################################
 
 library:
 	cd stdlib; $(MAKE) all
@@ -435,7 +474,25 @@ partialclean::
 alldepend::
 	cd stdlib; $(MAKE) depend
 
-# The lexer and parser generators
+##############################################################################
+# The extra libraries
+##############################################################################
+
+otherlibraries:
+	set -e; for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) all); done
+otherlibrariesopt:
+	set -e; for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) allopt); done
+partialclean::
+	for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) partialclean); done
+clean::
+	for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) clean); done
+alldepend::
+	for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) depend); done
+
+
+##############################################################################
+# Tools
+##############################################################################
 
 ocamllex:
 	cd lex; $(MAKE) all
@@ -458,19 +515,6 @@ partialclean::
 alldepend::
 	cd tools/misc; $(MAKE) depend
 
-# The extra libraries
-
-otherlibraries:
-	set -e; for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) all); done
-otherlibrariesopt:
-	set -e; for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) allopt); done
-partialclean::
-	for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) partialclean); done
-clean::
-	for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) clean); done
-alldepend::
-	for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) depend); done
-
 # The replay debugger
 
 ocamldebugger:
@@ -480,7 +524,18 @@ partialclean::
 alldepend::
 	cd tools/debugger; $(MAKE) depend
 
+
+# The "expunge" utility
+
+expunge: $(EXPUNGEOBJS)
+	$(CAMLC) $(LINKFLAGS) -o expunge $(EXPUNGEOBJS)
+
+partialclean::
+	rm -f expunge
+
+##############################################################################
 # Default rules
+##############################################################################
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
@@ -512,3 +567,13 @@ depend: beforedepend
 alldepend:: depend
 
 include .depend
+
+##############################################################################
+# Pad specific rules
+##############################################################################
+
+graph:
+	~/pfff/codegraph -derived_data -lang cmt -build .
+check:
+	~/pfff/scheck -with_graph_code graph_code.marshall -filter 3 .
+
