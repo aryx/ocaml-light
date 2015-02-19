@@ -585,6 +585,11 @@ include .depend
 # Pad specific rules
 ##############################################################################
 
+# go in stdlib/
+# make with recent ocamlc -bin-annot; cp *.cm[ioa] ../boot
+# go at the top
+# make; make ocamlopt; make ocaml
+# => have lots of .cmt now
 graph:
 	~/pfff/codegraph -derived_data -lang cmt -build .
 check:
