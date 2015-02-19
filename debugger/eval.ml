@@ -63,8 +63,6 @@ let rec path event = function
       if not (Debugcom.Remote_value.is_block v) then
         raise(Error(Not_initialized_yet root));
       Debugcom.Remote_value.field v pos
-  | Papply(p1, p2) ->
-      fatal_error "Eval.path: Papply"
 
 let rec expression event env = function
     E_ident lid ->

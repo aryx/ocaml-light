@@ -187,5 +187,3 @@ let rec transl_path = function
       if Ident.global id then Lprim(Pgetglobal id, []) else Lvar id
   | Pdot(p, s, pos) ->
       Lprim(Pfield pos, [transl_path p])
-  | Papply(p1, p2) ->
-      fatal_error "Lambda.transl_path"
