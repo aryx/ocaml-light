@@ -38,7 +38,6 @@ val newvar: unit -> type_expr
 val new_global_var: unit -> type_expr
         (* Return a fresh variable, bound at toplevel
            (as type variables ['a] in type constraints). *)
-val newobj: type_expr -> type_expr
 val none: type_expr
         (* A dummy type expression *)
 

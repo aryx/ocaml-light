@@ -99,33 +99,6 @@ let rec mark_loops_rec visited ty =
     | Ttuple tyl          -> List.iter (mark_loops_rec visited) tyl
     | Tconstr(_, tyl, _)  ->
         List.iter (mark_loops_rec visited) tyl
-    | Tobject (fi, nm)    ->
-        if List.memq ty !visited_objects then begin
-          if not (List.memq ty !aliased) then
-            aliased := ty :: !aliased
-        end else begin
-          if opened_object ty then
-            visited_objects := ty :: !visited_objects;
-          let name =
-            match !nm with
-              None -> None
-            | Some (n, v::l) ->
-                let v' = repr v in
-                begin match v'.desc with
-                  Tvar -> Some (n, v'::l)
-                | _    -> None
-                end
-            | _ ->
-                fatal_error "Printtyp.mark_loops_rec"
-          in
-          nm := name;
-          begin match !nm with
-            None ->
-              mark_loops_rec visited fi
-          | Some (_, l) ->
-              List.iter (mark_loops_rec visited) l
-          end
-        end
     | Tfield(_, kind, ty1, ty2) when field_kind_repr kind = Fpresent ->
         mark_loops_rec visited ty1; mark_loops_rec visited ty2
     | Tfield(_, _, _, ty2) ->
@@ -189,8 +162,6 @@ let rec typexp sch prio0 ty =
         end;
         path p;
         close_box()
-    | Tobject (fi, nm) ->
-        typobject sch ty fi nm
 (*
 | Tfield _ -> typobject sch ty ty (ref None)
 | Tnil -> typobject sch ty ty (ref None)
@@ -417,8 +388,7 @@ let class_var l (m, t) =
 
 let methods_of_type ty =
   match (repr ty).desc with
-    Tobject (m, _) -> m
-  | _              -> fatal_error "Printtyp.methods_of_type"
+   _              -> fatal_error "Printtyp.methods_of_type"
 
 let rec list_public_methods ty =
   let (fields, _) = flatten_fields ty in
