@@ -809,9 +809,6 @@ index 4870cd0..549e2db 100644
 +          ty' ()
 +      else
 +        ty' ()
-+  | Tfield (label, t1, t2) ->
-+      newty (Tfield (label, copy_rec abbrev visited t1,
-+                            copy_rec abbrev visited t2))
 +  | Tnil ->
 +      newty Tnil
 +  | Tlink _ ->
@@ -1149,39 +1146,6 @@ index 4870cd0..549e2db 100644
 +  | _ ->
 +      raise Unify
 +
-+let rec filter_method_field name ty =
-+  let ty = repr ty in
-+  match ty.desc with
-+    Tvar ->
-+      let ty1 = newvar () and ty2 = newvar () in
-+      let ty' = newty (Tfield (name, ty1, ty2)) in
-+      update_level ty.level ty';
-+      ty.desc <- Tlink ty';
-+      ty1
-+  | Tfield(n, ty1, ty2) ->
-+      if Label. (=) n name then
-+        ty1
-+      else
-+        filter_method_field name ty2
-+  | _ ->
-+      raise Unify
-+
-+let rec filter_method env name ty =
-+  let ty = repr ty in
-+  match ty.desc with
-+    Tvar ->
-+      let ty1 = newvar ()in
-+      let ty' = newobj ty1 in
-+      update_level ty.level ty';
-+      ty.desc <- Tlink ty';
-+      filter_method_field name ty1
-+  | Tconstr(p, tl, abbrev) ->
-       begin try
--        filter_arrow env (expand_abbrev env p tl)
-+        filter_method env name (expand_abbrev env p tl abbrev ty.level)
-       with Cannot_expand ->
-         raise Unify
-       end
 @@ -216,127 +590,188 @@ let rec filter_arrow env t =
  
  (* Matching between type schemes *)
@@ -1825,11 +1789,6 @@ index 4870cd0..549e2db 100644
 +let unroll_abbrev id tl ty =
 +  let ty = repr ty in
 +  match ty.desc with
-+    Tobject (fi, nm) ->
-+      ty.desc <-
-+        Tlink {desc = Tconstr (Path.Pident id, tl, ref []);
-+               level = generic_level};
-+      {desc = Tobject (fi, nm); level = ty.level}
 +  | _ ->
 +      ty
 +
@@ -1848,14 +1807,6 @@ index 4870cd0..549e2db 100644
 +          List.for_all closed_schema_rec tl
 +        end else
 +          true
-+    | Tobject(f, _) ->
-+        if not (List.memq ty !visited) then begin
-+          visited := ty::!visited;
-+          closed_schema_rec f
-+        end else
-+          true
-+    | Tfield(_, t1, t2) ->
-+        closed_schema_rec t1 & closed_schema_rec t2
 +    | Tnil ->
 +        true
 +    | Tlink _           -> fatal_error "Ctype.closed_schema"
@@ -1964,10 +1915,6 @@ index 038271d..87f9d81 100644
 +           by the [ti]. *)
 +val prune:
 +      	type_expr -> type_expr list -> type_expr * (type_expr * type_expr) list
-+val close_object: type_expr -> unit
-+val set_object_name:
-+      	type_expr -> type_expr list -> Ident.t -> unit
-+val remove_object_name: type_expr -> unit
 +val expand_root: Env.t -> type_expr -> type_expr
 +val correct_abbrev: Env.t -> Ident.t -> type_expr list -> type_expr -> unit
 +val unroll_abbrev: Ident.t -> type_expr list -> type_expr -> type_expr
@@ -2410,35 +2357,6 @@ index caf233c..8879a67 100644
 +	  aliased := ty :: !aliased
 +      end else
 +        List.iter (mark_loops_rec (ty::visited)) tyl
-+  | Tobject (fi, nm) ->
-+      if List.memq ty !visited_objects or List.memq ty visited then begin
-+      	if not (List.memq ty !aliased) then
-+	  aliased := ty :: !aliased
-+      end else begin
-+      	if opened_object ty then
-+	  visited_objects := ty :: !visited_objects;
-+        let name =
-+          match !nm with
-+            None -> None
-+          | Some (n, v::l) ->
-+	      let v' = repr v in
-+      	      begin match v'.desc with
-+	        Tvar -> Some (n, v'::l)
-+	      | _    -> None
-+	      end
-+          | _ ->
-+      	      fatal_error "Printtyp.mark_loops_rec"
-+        in
-+	nm := name;
-+	begin match !nm with
-+	  None ->
-+	    mark_loops_rec (ty::visited) fi
-+	| Some (_, l) ->
-+	    List.iter (mark_loops_rec (ty::visited)) l
-+	end
-+      end
-+  | Tfield(_, ty1, ty2)		  ->
-+      mark_loops_rec visited ty1; mark_loops_rec visited ty2
 +  | Tnil			  -> ()
 +  | Tlink _			  -> fatal_error "Printtyp.mark_loops_rec (2)"
 +
@@ -2506,8 +2424,6 @@ index caf233c..8879a67 100644
        end;
 -      path p;
        close_box()
-+  | Tobject (fi, nm) ->
-+      typobject sch prio ty fi nm
 +  | _ ->
 +      fatal_error "Printtyp.typexp"
  
@@ -2661,12 +2577,6 @@ index caf233c..8879a67 100644
 +  if sp & (List.hd !list_state) then print_break 1 (-2);
 +  list_state := List.tl !list_state
 +
-+let class_arg arg =
-+  print_space ();
-+  open_hovbox 1; print_string "(";
-+  type_sch arg;
-+  print_string ")"; close_box ()
-+
 +let constrain (v, ty) =
 +  open_hovbox 2;
 +  type_sch v;
@@ -2674,31 +2584,6 @@ index caf233c..8879a67 100644
 +  print_space();
 +  type_sch ty;
 +  close_box()
-+
-+let class_var l (m, t) =
-+  list_item ();
-+  open_hovbox 2;
-+  print_string "val ";
-+  begin match m with
-+    Immutable -> ()
-+  | Mutable -> print_string "mutable "
-+  end;
-+  print_string l.Label.lab_name;
-+  print_string " :";
-+  print_space();
-+  type_sch t;
-+  close_box()
-+
-+let metho kind (l, t) =
-+  list_item ();
-+  open_hovbox 2;
-+  print_string kind;
-+  print_string l.Label.lab_name;
-+  print_string " :";
-+  print_space();
-+  type_sch t;
-+  close_box()
-+
 +let rec and_sep_list pr =
 +  function
 +    [] ->
@@ -2710,16 +2595,6 @@ index caf233c..8879a67 100644
 +      print_break 1 (-2);
 +      print_string "and ";
 +      and_sep_list pr l
-+
-+let methods_of_type ty =
-+  match (repr ty).desc with
-+    Tobject (m, _) -> m
-+  | _              -> fatal_error "Printtyp.methods_of_type"
-+
-+let rec list_meths ty =
-+  match (repr ty).desc with
-+    Tfield(lab, ty, ty') -> (lab, ty) :: (list_meths ty')
-+  | _ 			 -> []
 +
  
 +let hidden = ref 0
@@ -2799,14 +2674,6 @@ index 5f14a94..2a73ea9 100644
 +      r
 +  | t -> t
 +
-+(* From Ctype *)
-+let rec opened ty =
-+  match (repr ty).desc with
-+    Tfield(_, _, t) -> opened t
-+  | Tvar            -> true
-+  | Tnil            -> false
-+  | _               -> fatal_error "Subst.opened"
-+
 +let generic_level = -1
 +
 +let newgenty desc =
@@ -2855,30 +2722,6 @@ index 5f14a94..2a73ea9 100644
 +      newgenty(Tconstr(type_path s p, [], ref []))
 +  | Tconstr(p, tl, _) ->
 +      newgenty(Tconstr(type_path s p, List.map (typexp visited s) tl, ref []))
-+  | Tobject (t1, name) ->
-+      let ty' () =
-+      	let name' =
-+          match !name with
-+            None -> None
-+          | Some (p, tl) ->
-+              Some (type_path s p, List.map (typexp visited s) tl)
-+	in
-+        newgenty(Tobject (typexp visited s t1, ref name'))
-+      in
-+      if opened t1 then
-+        try
-+          List.assq ty !new_val
-+        with Not_found ->
-+          if v = ref One then begin
-+            let t = newgenty Tvar in
-+    	    v := Many t;
-+            new_val := (ty, t):: !new_val
-+          end;
-+          ty' ()
-+      else
-+        ty' ()
-+  | Tfield(n, t1, t2) ->
-+      newgenty(Tfield(n, typexp visited s t1, typexp visited s t2))
 +  | Tnil ->
 +      newgenty Tnil
 +  | Tlink _ ->
@@ -3602,20 +3445,6 @@ index 08e99a7..ec83c77 100644
 +      end;
 +      cstr
 
-+
-+and transl_fields env fixed =
-+  function
-+    [] ->
-+      newty Tnil
-+  | {pfield_desc = Pfield_var} as field::_ ->
-+      if fixed then
-+        raise(Error(field.pfield_loc, Unbound_type_variable ".."));
-+      newvar ()
-+  | {pfield_desc = Pfield(s, e)}::l ->
-+      let ty1 = transl_simple_type env fixed e in
-+      let ty2 = transl_fields env fixed l in
-+	newty (Tfield (s, ty1, ty2))
- 
  let transl_type_scheme env styp =
    reset_type_variables();
 @@ -97,3 +225,19 @@ let report_error = function
