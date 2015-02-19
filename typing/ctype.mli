@@ -76,10 +76,6 @@ val instance_parameterized_type:
 val instance_parameterized_type_2:
         type_expr list -> type_expr list -> type_expr ->
         type_expr list * type_expr list * type_expr
-val instance_class:
-        class_type ->
-        type_expr list * type_expr list * (mutable_flag * type_expr) Vars.t *
-        type_expr Meths.t * type_expr
 val apply:
         Env.t -> type_expr list -> type_expr -> type_expr list -> type_expr
         (* [apply [p1...pN] t [a1...aN]] match the arguments [ai] to
@@ -122,8 +118,6 @@ val nondep_type_decl:
         Env.t -> Ident.t -> Ident.t -> bool -> type_declaration ->
         type_declaration
         (* Same for type declarations. *)
-val nondep_class_type: Env.t -> Ident.t -> class_type -> class_type
-        (* Same for class types. *)
 
 val correct_abbrev: Env.t -> Ident.t -> type_expr list -> type_expr -> unit
 val cyclic_abbrev: Env.t -> Ident.t -> type_expr -> bool

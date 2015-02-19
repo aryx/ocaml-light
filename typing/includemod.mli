@@ -32,7 +32,6 @@ type error =
   | Modtype_infos of Ident.t * modtype_declaration * modtype_declaration
   | Modtype_permutation
   | Interface_mismatch of string * string
-  | Class_types of Ident.t * class_type * class_type
 
 exception Error of error list
 

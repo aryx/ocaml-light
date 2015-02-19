@@ -673,35 +673,6 @@ let rec type_expect_fun env sexp ty_expected =
   | _ ->
       type_expect env sexp ty_expected
 
-let type_method env self self_name meths sexp ty_expected =
-  let meths = ref meths in
-  let (obj, env) =
-    Env.enter_value "*self*" {val_type = self; val_kind = Val_reg} env
-  in
-  let pattern =
-    { pat_desc = Tpat_var obj;
-      pat_loc = Location.none;
-      pat_type = self }
-  in
-  let (pattern, env) =
-    match self_name with
-      None      ->
-        (pattern, env)
-    | Some name ->
-        let (self_name, env) =
-          Env.enter_value name {val_type = self; val_kind = Val_self meths} env
-        in
-        ({ pat_desc = Tpat_alias (pattern, self_name);
-           pat_loc = Location.none;
-           pat_type = self },
-         env)
-  in
-  let exp = type_expect_fun env sexp ty_expected in
-  { exp_desc = Texp_function [(pattern, exp)];
-    exp_loc = sexp.pexp_loc;
-    exp_type = newty (Tarrow(pattern.pat_type, exp.exp_type));
-    exp_env = env },
-  !meths
 
 (* Error report *)
 

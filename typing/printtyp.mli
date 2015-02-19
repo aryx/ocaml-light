@@ -29,7 +29,6 @@ val modtype: module_type -> unit
 val signature: signature -> unit
 val signature_body: bool -> signature -> unit
 val modtype_declaration: Ident.t -> modtype_declaration -> unit
-val class_type: Ident.t -> class_type -> unit
 val type_expansion: type_expr -> type_expr -> unit
 val trace: bool -> (unit -> unit) -> (type_expr * type_expr) list -> unit
 val unification_error:

@@ -28,7 +28,6 @@ type error =
   | Modtype_infos of Ident.t * modtype_declaration * modtype_declaration
   | Modtype_permutation
   | Interface_mismatch of string * string
-  | Class_types of Ident.t * class_type * class_type
 
 exception Error of error list
 
@@ -60,14 +59,6 @@ let exception_declarations env subst id decl1 decl2 =
   if Includecore.exception_declarations env decl1 decl2
   then ()
   else raise(Error[Exception_declarations(id, decl1, decl2)])
-
-(* Inclusion between class types *)
-
-let class_types env subst id decl1 decl2 =
-  let decl2 = Subst.class_type subst decl2 in
-  if Includecore.class_types env decl1 decl2
-  then ()
-  else raise(Error[Class_types(id, decl1, decl2)])
 
 (* Expand a module type identifier when possible *)
 
@@ -348,14 +339,6 @@ let include_err = function
       print_space(); print_string "does not match the interface ";
       print_string intf_name;
       print_string ":";
-      close_box()
-  | Class_types(id, d1, d2) ->
-      open_hvbox 2;
-      print_string "Class types do not match:"; print_space();
-      Printtyp.class_type id d1; 
-      print_break 1 (-2);
-      print_string "is not included in"; print_space();
-      Printtyp.class_type id d2;
       close_box()
 
 let report_error errlist =
