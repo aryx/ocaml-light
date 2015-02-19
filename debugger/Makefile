@@ -18,7 +18,7 @@ OTHEROBJS=\
   ../utils/misc.cmo ../utils/config.cmo \
   ../utils/tbl.cmo ../utils/clflags.cmo \
   ../parsing/longident.cmo \
-  ../typing/ident.cmo ../typing/path.cmo ../typing/types.cmo \
+  ../typing/ident.cmo ../typing/path.cmo \
   ../typing/btype.cmo ../typing/primitive.cmo ../typing/typedtree.cmo \
   ../typing/subst.cmo ../typing/predef.cmo \
   ../typing/datarepr.cmo ../typing/env.cmo \
