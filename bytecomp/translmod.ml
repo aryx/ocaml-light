@@ -54,12 +54,6 @@ let rec apply_coercion restr arg =
       name_lambda arg (fun id ->
         Lprim(Pmakeblock(0, Immutable),
               List.map (apply_coercion_field id) pos_cc_list))
-  | Tcoerce_functor(cc_arg, cc_res) ->
-      let param = Ident.create "funarg" in
-      name_lambda arg (fun id ->
-        Lfunction(Curried, [param],
-          apply_coercion cc_res
-            (Lapply(Lvar id, [apply_coercion cc_arg (Lvar param)]))))
   | Tcoerce_primitive p ->
       fatal_error "Translmod.apply_coercion"
 
@@ -82,9 +76,6 @@ let rec compose_coercions c1 c2 =
         (List.map (fun (p1, c1) ->
                 let (p2, c2) = v2.(p1) in (p2, compose_coercions c1 c2))
              pc1)
-  | (Tcoerce_functor(arg1, res1), Tcoerce_functor(arg2, res2)) ->
-      Tcoerce_functor(compose_coercions arg2 arg1,
-                      compose_coercions res1 res2)
   | (_, _) ->
       fatal_error "Translmod.compose_coercions"
 
@@ -100,21 +91,6 @@ let rec transl_module cc mexp =
       apply_coercion cc (transl_path path)
   | Tmod_structure str ->
       transl_structure [] cc str
-  | Tmod_functor(param, mty, body) ->
-      begin match cc with
-        Tcoerce_none ->
-          Lfunction(Curried, [param], transl_module Tcoerce_none body)
-      | Tcoerce_functor(ccarg, ccres) ->
-          let param' = Ident.create "funarg" in
-          Lfunction(Curried, [param'],
-            Llet(Alias, param, apply_coercion ccarg (Lvar param'),
-              transl_module ccres body))
-      | _ ->
-          fatal_error "Translmod.transl_module"
-      end
-  | Tmod_apply(funct, arg, ccarg) ->
-      apply_coercion cc
-        (Lapply(transl_module Tcoerce_none funct, [transl_module ccarg arg]))
   | Tmod_constraint(arg, mty, ccarg) ->
       transl_module (compose_coercions cc ccarg) arg
 
