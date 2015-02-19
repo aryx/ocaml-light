@@ -321,34 +321,6 @@ let value_description id decl =
   end;
   close_box()
 
-(* Print a class type *)
-
-let class_arg arg =
-  print_space ();
-  open_box 1; print_string "(";
-  type_sch arg;
-  print_string ")"; close_box ()
-
-let class_var l (m, t) =
-  print_space ();
-  open_box 2;
-  print_string "val ";
-  begin match m with
-    Immutable -> ()
-  | Mutable -> print_string "mutable "
-  end;
-  print_string l;
-  print_string " :";
-  print_space();
-  type_sch t;
-  close_box()
-
-
-let methods_of_type ty =
-  match (repr ty).desc with
-   _              -> fatal_error "Printtyp.methods_of_type"
-
-
 
 (* Print a module type *)
 
