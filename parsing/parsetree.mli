@@ -29,14 +29,6 @@ and core_type_desc =
   | Ptyp_constr of Longident.t * core_type list
   | Ptyp_alias of core_type * string
 
-and core_field_type =
-  { pfield_desc: core_field_desc;
-    pfield_loc: Location.t }
-
-and core_field_desc =
-    Pfield of string * core_type
-  | Pfield_var
-
 (* Value expressions for the core language *)
 
 type pattern =
