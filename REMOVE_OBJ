@@ -1038,21 +1038,6 @@ index 4870cd0..549e2db 100644
 +  inst_subst := [];
 +  (ty_args, ty_lst, ty)
 +
-+let instance_class cl =
-+  inst_subst := [];
-+  let params0 = List.map (function p -> (repr p, ref Zero)) cl.cty_params in
-+  let params = List.map (copy_parameterized params0) cl.cty_params in
-+  let args = List.map (copy_parameterized params0) cl.cty_args in
-+  let vars =
-+    Vars.fold
-+      (fun lab (mut, ty) ->
-+         Vars.add lab (mut, copy_parameterized params0 ty))
-+      cl.cty_vars
-+      Vars.empty in
-+  let self = copy_parameterized params0 cl.cty_self in
-+  inst_subst := [];
-+  (params, args, vars, self)
-+
  (* Unification *)
  
 +let rec update_level level ty =
@@ -1941,24 +1926,6 @@ index 4870cd0..549e2db 100644
 +  inst_subst := [];
 +  ty'
 +
-+let nondep_class_type env id decl =
-+  inst_subst := [];
-+  let decl =
-+    { cty_params = List.map (nondep_type_rec env id) decl.cty_params;
-+      cty_args = List.map (nondep_type_rec env id) decl.cty_args;
-+      cty_vars =
-+        Vars.fold (fun l (m, t) -> Vars.add l (m, nondep_type_rec env id t))
-+          decl.cty_vars Vars.empty;
-+      cty_self = nondep_type_rec env id decl.cty_self;
-+      cty_concr = decl.cty_concr;
-+      cty_new =
-+        begin match decl.cty_new with
-+          None    -> None
-+        | Some ty -> Some (nondep_type_rec env id ty)
-+        end }
-+  in
-+  inst_subst := [];
-+  decl
 +
 +(* Type pruning *)
 +
@@ -2045,18 +2012,6 @@ index 4870cd0..549e2db 100644
 +  inst_subst := [];
 +  (new_ty, List.map (fun (ty, v) -> (v, ty)) cstr)
 +
-+let prune_class_type cl =
-+  inst_subst := [];
-+  let cstr = List.map (fun leaf -> (repr leaf, newvar ())) cl.cty_params in
-+  let args = List.map (prune_rec false cstr) cl.cty_args in
-+  let vars =
-+    Vars.fold
-+      (fun lab (mut, ty) -> Vars.add lab (mut, prune_rec false cstr ty))
-+      cl.cty_vars Vars.empty in
-+  let self = prune_rec true cstr cl.cty_self in
-+  let (_, cstr) = List.fold_left (prune_cstr cstr) ([], []) cstr in
-+  inst_subst := [];
-+  (List.rev cstr, args, vars, self)
 +
 +(* --- *)
 +
@@ -2295,10 +2250,6 @@ index 038271d..87f9d81 100644
          (* Same, for a constructor *)
  val instance_label: label_description -> type_expr * type_expr
          (* Same, for a label *)
-+val instance_class:
-+      	class_type ->
-+        type_expr list * type_expr list *
-+        (mutable_flag * type_expr) Vars.t * type_expr
 +val expand_abbrev :
 +        Env.t -> Path.t -> type_expr list -> (Path.t * type_expr) list ref ->
 +	int -> type_expr
@@ -2333,8 +2284,6 @@ index 038271d..87f9d81 100644
 -val free_type_ident: Env.t -> Ident.t list -> type_expr -> bool
 -        (* Test whether one of the given type identifiers occur free
 -           in the given type expression. *)
-+val nondep_class_type: Env.t -> Ident.t -> class_type -> class_type
-+        (* Same for class types. *)
 +val substitute:
 +        (Path.t * Typedtree.type_expr) list -> type_expr list ->
 +        type_expr list -> type_expr -> type_expr
@@ -2343,10 +2292,6 @@ index 038271d..87f9d81 100644
 +           by the [ti]. *)
 +val prune:
 +      	type_expr -> type_expr list -> type_expr * (type_expr * type_expr) list
-+val prune_class_type:
-+        class_type ->
-+        (type_expr * type_expr) list * type_expr list *
-+      	(mutable_flag * type_expr) Vars.t * type_expr
 +val close_object: type_expr -> unit
 +val set_object_name:
 +      	type_expr -> type_expr list -> Ident.t -> unit
@@ -2397,72 +2342,9 @@ index 0afa11e..03a3b4f 100644
 +  | {desc = Tconstr(p, _, _)} -> Path.same p Predef.path_float
    | _ -> false
  
-diff --git a/typing/env.ml b/typing/env.ml
-index 0b9f173..c42b417 100644
---- a/typing/env.ml
-+++ b/typing/env.ml
-@@ -36,7 +36,8 @@ type t = {
-   types: (Path.t * type_declaration) Ident.tbl;
-   modules: (Path.t * module_type) Ident.tbl;
-   modtypes: (Path.t * modtype_declaration) Ident.tbl;
--  components: (Path.t * module_components) Ident.tbl
-+  components: (Path.t * module_components) Ident.tbl;
-+  classes: (Path.t * class_type) Ident.tbl
- }
- 
- and module_components =
-@@ -50,7 +51,8 @@ and structure_components = {
-   mutable comp_types: (string, (type_declaration * int)) Tbl.t;
-   mutable comp_modules: (string, (module_type * int)) Tbl.t;
-   mutable comp_modtypes: (string, (modtype_declaration * int)) Tbl.t;
--  mutable comp_components: (string, (module_components * int)) Tbl.t
-+  mutable comp_components: (string, (module_components * int)) Tbl.t;
-+  mutable comp_classes: (string, (class_type * int)) Tbl.t
- }
- 
- and functor_components = {
-@@ -64,8 +66,8 @@ let empty = {
-   values = Ident.empty; constrs = Ident.empty;
-   labels = Ident.empty; types = Ident.empty;
-   modules = Ident.empty; modtypes = Ident.empty;
--  components = Ident.empty }
-+  components = Ident.empty; classes = Ident.empty }
- 
- (* Persistent structure descriptions *)
- 
- 
-@@ -170,6 +172,7 @@ let find proj1 proj2 path env =
- let find_value = find (fun env -> env.values) (fun sc -> sc.comp_values)
- and find_type = find (fun env -> env.types) (fun sc -> sc.comp_types)
- and find_modtype = find (fun env -> env.modtypes) (fun sc -> sc.comp_modtypes)
-+and find_class = find (fun env -> env.classes) (fun sc -> sc.comp_classes)
  
  (* Lookup by name *)
  
-@@ -179,7 +182,7 @@ let rec lookup_module_descr lid env =
-       begin try
-         Ident.find_name s env.components
-       with Not_found ->
--        (Pident(Ident.new_persistent s), (find_pers_struct s).ps_comps)
-+        (Pident(Ident.create_persistent s), (find_pers_struct s).ps_comps)
-       end
-   | Ldot(l, s) ->
-       let (p, descr) = lookup_module_descr l env in
-@@ -207,7 +210,7 @@ and lookup_module lid env =
-       begin try
-         Ident.find_name s env.modules
-       with Not_found ->
--        (Pident(Ident.new_persistent s), 
-+        (Pident(Ident.create_persistent s), 
-          Tmty_signature(find_pers_struct s).ps_sig)
-       end
-   | Ldot(l, s) ->
-@@ -272,6 +275,8 @@ and lookup_type =
-   lookup (fun env -> env.types) (fun sc -> sc.comp_types)
- and lookup_modtype =
-   lookup (fun env -> env.modtypes) (fun sc -> sc.comp_modtypes)
-+and lookup_class =
-+  lookup (fun env -> env.classes) (fun sc -> sc.comp_classes)
  
  (* Scrape a module type *)
  
@@ -2504,17 +2386,6 @@ index 0b9f173..c42b417 100644
                        (Subst.add_modtype id (Tmty_ident p) sub) rem in
        (p::pl, final_sub)
  
- (* Compute structure descriptions *)
- 
-@@ -340,7 +357,7 @@ let rec components_of_module env sub path mty =
-         { comp_values = Tbl.empty; comp_constrs = Tbl.empty;
-           comp_labels = Tbl.empty; comp_types = Tbl.empty;
-           comp_modules = Tbl.empty; comp_modtypes = Tbl.empty;
--          comp_components = Tbl.empty } in
-+          comp_components = Tbl.empty; comp_classes = Tbl.empty } in
-       let (pl, sub) = prefix_idents path 0 sub sg in
-       let env = ref env in
-       let pos = ref 0 in
 @@ -350,8 +367,8 @@ let rec components_of_module env sub path mty =
              let decl' = Subst.value_description sub decl in
              c.comp_values <-
@@ -2534,122 +2405,6 @@ index 0b9f173..c42b417 100644
 +            env := store_modtype id path decl' !env
          sg pl;
  	Structure_comps c
-   | Tmty_functor(param, ty_arg, ty_res) ->
-@@ -398,7 +420,7 @@ let rec components_of_module env sub path mty =
-       	  comp_values = Tbl.empty; comp_constrs = Tbl.empty;
-           comp_labels = Tbl.empty; comp_types = Tbl.empty;
-           comp_modules = Tbl.empty; comp_modtypes = Tbl.empty;
--          comp_components = Tbl.empty }
-+          comp_components = Tbl.empty; comp_classes = Tbl.empty }
- 
- (* Insertion of bindings by identifier + path *)
- 
-@@ -409,26 +431,28 @@ and store_value id path decl env =
-     types = env.types;
-     modules = env.modules;
-     modtypes = env.modtypes;
--    components = env.components }
-+    components = env.components;
-+    classes = env.classes }
- 
- and store_type id path info env =
-   { values = env.values;
-     constrs =
-       List.fold_right
-         (fun (name, descr) constrs ->
--          Ident.add (Ident.new name) descr constrs)
-+          Ident.add (Ident.create name) descr constrs)
-         (constructors_of_type path info)
-         env.constrs;
-     labels =
-       List.fold_right
-         (fun (name, descr) labels ->
--          Ident.add (Ident.new name) descr labels)
-+          Ident.add (Ident.create name) descr labels)
-         (labels_of_type path info)
-         env.labels;
-     types = Ident.add id (path, info) env.types;
-     modules = env.modules;
-     modtypes = env.modtypes;
--    components = env.components }
-+    components = env.components;
-+    classes = env.classes }
- 
- and store_exception id path decl env =
-   { values = env.values;
-@@ -437,7 +461,8 @@ and store_exception id path decl env =
-     types = env.types;
-     modules = env.modules;
-     modtypes = env.modtypes;
--    components = env.components }
-+    components = env.components;
-+    classes = env.classes }
- 
- and store_module id path mty env =
-   { values = env.values;
-@@ -448,7 +473,8 @@ and store_module id path mty env =
-     modtypes = env.modtypes;
-     components =
-       Ident.add id (path, components_of_module env Subst.identity path mty)
--                   env.components }
-+                   env.components;
-+    classes = env.classes }
- 
- and store_modtype id path info env =
-   { values = env.values;
-@@ -457,7 +483,8 @@ and store_modtype id path info env =
-     types = env.types;
-     modules = env.modules;
-     modtypes = Ident.add id (path, info) env.modtypes;
--    components = env.components }
-+    components = env.components;
-+    classes = env.classes }
- 
- and store_components id path comps env =
-   { values = env.values;
-@@ -466,9 +493,20 @@ and store_components id path comps env =
-     types = env.types;
-     modules = env.modules;
-     modtypes = env.modtypes;
--    components = Ident.add id (path, comps) env.components }
-+    components = Ident.add id (path, comps) env.components;
-+    classes = env.classes }
-+
-+and store_class id path desc env =
-+  { values = env.values;
-+    constrs = env.constrs;
-+    labels = env.labels;
-+    types = env.types;
-+    modules = env.modules;
-+    modtypes = env.modtypes;
-+    components = env.components;
-+    classes = Ident.add id (path, desc) env.classes }
- 
- (* Memoized function to compute the components of a functor application
-    in a path. *)
- let _ =
-   components_of_functor_appl :=
-@@ -505,11 +543,15 @@ and add_module id mty env =
- and add_modtype id info env =
-   store_modtype id (Pident id) info env
- 
-+and add_class id ty env =
-+  store_class id (Pident id) ty env
-+
- (* Insertion of bindings by name *)
- 
- and enter_exception = enter store_exception
- and enter_module = enter store_module
- and enter_modtype = enter store_modtype
-+and enter_class = enter store_class
- 
- (* Insertion of all components of a signature *)
- 
-@@ -525,6 +567,7 @@ let add_signature_component env comp =
-   | Tsig_exception(id, decl) -> add_exception id decl env
-   | Tsig_module(id, mty) -> add_module id mty env
-   | Tsig_modtype(id, decl) -> add_modtype id decl env
- 
  let add_signature sg env =
    List.fold_left add_signature_component env sg
 @@ -551,14 +594,17 @@ let open_signature root sg env =
@@ -2678,42 +2433,6 @@ index 0b9f173..c42b417 100644
    let oc = open_out_bin filename in
    output_string oc cmi_magic_number;
    output_value oc ps;
-diff --git a/typing/env.mli b/typing/env.mli
-index 8f4040c..9ebe0b3 100644
---- a/typing/env.mli
-+++ b/typing/env.mli
-@@ -25,6 +25,7 @@ val initial: t
- val find_value: Path.t -> t -> value_description
- val find_type: Path.t -> t -> type_declaration
- val find_modtype: Path.t -> t -> modtype_declaration
-+val find_class: Path.t -> t -> class_type
- 
- (* Lookup by long identifiers *)
- 
-@@ -34,6 +35,7 @@ val lookup_label: Longident.t -> t -> label_description
- val lookup_type: Longident.t -> t -> Path.t * type_declaration
- val lookup_module: Longident.t -> t -> Path.t * module_type
- val lookup_modtype: Longident.t -> t -> Path.t * modtype_declaration
-+val lookup_class: Longident.t -> t -> Path.t * class_type
- 
- (* Insertion by identifier *)
- 
-@@ -42,6 +44,7 @@ val add_type: Ident.t -> type_declaration -> t -> t
- val add_exception: Ident.t -> exception_declaration -> t -> t
- val add_module: Ident.t -> module_type -> t -> t
- val add_modtype: Ident.t -> modtype_declaration -> t -> t
-+val add_class: Ident.t -> class_type -> t -> t
- 
- (* Insertion of all fields of a signature. *)
- 
-@@ -60,6 +63,7 @@ val enter_type: string -> type_declaration -> t -> Ident.t * t
- val enter_exception: string -> exception_declaration -> t -> Ident.t * t
- val enter_module: string -> module_type -> t -> Ident.t * t
- val enter_modtype: string -> modtype_declaration -> t -> Ident.t * t
-+val enter_class: string -> class_type -> t -> Ident.t * t
- 
- (* Reset the cache of in-core module interfaces.
-    To be called in particular when load_path changes. *)
 diff --git a/typing/ident.ml b/typing/ident.ml
 index 759a974..0ecd1cd 100644
 diff --git a/typing/includecore.ml b/typing/includecore.ml
@@ -2755,81 +2474,6 @@ index 83c9b3f..d355a60 100644
 @@ -69,3 +72,34 @@ let type_declarations env id decl1 decl2 =
  let exception_declarations env ed1 ed2 =
    for_all2 (fun ty1 ty2 -> Ctype.equal env [] ty1 [] ty2) ed1 ed2
- 
-+(* Inclusion between class types *)
-+let vars desc =
-+  Ctype.newgenty (Tobject (
-+    Vars.fold
-+      (fun lab (mut, ty) rem ->
-+      	 let ty' = Ctype.newgenty
-+	   (Ttuple [if mut = Asttypes.Mutable then Predef.type_mutable
-+      	            else Ctype.newgenty Tvar;
-+		    ty])
-+	 in
-+      	   Ctype.newgenty (Tfield (lab, ty', rem)))
-+      desc.cty_vars (Ctype.newgenty Tnil),
-+    ref None))
-+
-+let class_type env d1 d2 =
-+  (* Same abbreviations *)
-+  let (cstr1, _, _, self1) = Ctype.prune_class_type d1 in
-+  let (cstr2, _, _, self2) = Ctype.prune_class_type d2 in
-+  Ctype.equal env (List.map fst cstr1) self1 (List.map fst cstr2) self2
-+      &
-+  (* Same concretes methods *)
-+  for_all2 Label. (=) (Sort.list Label. (=) d1.cty_concr)
-+      	       	      (Sort.list Label. (=) d2.cty_concr)
-+      &
-+  (* If virtual, stays virtual *)
-+  (d1.cty_new <> None or d2.cty_new = None)
-+      &
-+  (* Less general *)
-+  let t1 = Ctype.newgenty (Ttuple (d1.cty_self::vars d1::d1.cty_args)) in
-+  let t2 = Ctype.newgenty (Ttuple (d2.cty_self::vars d2::d2.cty_args)) in
-+  Ctype.moregeneral env t1 t2
-diff --git a/typing/includecore.mli b/typing/includecore.mli
-index c8aa337..98680a4 100644
---- a/typing/includecore.mli
-+++ b/typing/includecore.mli
-@@ -23,5 +23,5 @@ val type_declarations:
-         Env.t -> Ident.t -> type_declaration -> type_declaration -> bool
- val exception_declarations:
-         Env.t -> exception_declaration -> exception_declaration -> bool
--
--
-+val class_type:
-+      	Env.t -> class_type -> class_type -> bool
-diff --git a/typing/includemod.ml b/typing/includemod.ml
-index e78b1d3..a5835f9 100644
---- a/typing/includemod.ml
-+++ b/typing/includemod.ml
-@@ -28,6 +28,7 @@ type error =
-   | Modtype_infos of Ident.t * modtype_declaration * modtype_declaration
-   | Modtype_permutation
-   | Interface_mismatch of string * string
-+  | Class_type of Ident.t * class_type * class_type
- 
- exception Error of error list
- 
-@@ -57,6 +58,13 @@ let exception_declarations env id decl1 decl2 =
-   then ()
-   else raise(Error[Exception_declarations(id, decl1, decl2)])
- 
-+(* Inclusion between class types *)
-+
-+let class_type env id decl1 decl2 =
-+  if Includecore.class_type env decl1 decl2
-+  then ()
-+  else raise(Error[Class_type(id, decl1, decl2)])
-+
- (* Expand a module type identifier when possible *)
- 
- exception Dont_match
-@@ -77,6 +85,7 @@ type field_desc =
-   | Field_exception of string
-   | Field_module of string
-   | Field_modtype of string
-+  | Field_classtype of string
  
  let item_ident_name = function
      Tsig_value(id, _) -> (id, Field_value(Ident.name id))
@@ -2883,29 +2527,6 @@ index e78b1d3..a5835f9 100644
        print_string intf_name;
        print_string ":";
        close_box()
-+  | Class_type(id, d1, d2) ->
-+      open_hvbox 2;
-+      print_string "Class types do not match:"; print_space();
-+      Printtyp.class_type id d1; 
-+      print_break 1 (-2);
-+      print_string "is not included in"; print_space();
-+      Printtyp.class_type id d2;
-+      close_box()
- 
- let report_error errlist =
-   match errlist with
-diff --git a/typing/includemod.mli b/typing/includemod.mli
-index c582c2e..e0c739e 100644
---- a/typing/includemod.mli
-+++ b/typing/includemod.mli
-@@ -29,6 +29,7 @@ type error =
-   | Modtype_infos of Ident.t * modtype_declaration * modtype_declaration
-   | Modtype_permutation
-   | Interface_mismatch of string * string
-+  | Class_type of Ident.t * class_type * class_type
- 
- exception Error of error list
- 
 diff --git a/typing/mtype.ml b/typing/mtype.ml
 index 691fc04..6cfea5b 100644
 --- a/typing/mtype.ml
@@ -3439,101 +3060,6 @@ index caf233c..8879a67 100644
 +    Tfield(lab, ty, ty') -> (lab, ty) :: (list_meths ty')
 +  | _ 			 -> []
 +
-+let class_type id cl_ty =
-+  begin_def ();
-+  let (cstr, args, vars, self) = Ctype.prune_class_type cl_ty in
-+  end_def ();
-+  List.iter (fun (v, c) -> generalize v; generalize c) cstr;
-+  List.iter generalize args;
-+  Vars.iter (fun l (m, t) -> generalize t) vars;
-+  generalize self;
-+
-+  let self = repr self in
-+  let params = List.map fst cstr in
-+  let cstr =
-+    List.fold_right
-+      (fun ((v, ty) as c) l -> if v == ty then l else c::l) cstr []
-+  in
-+  reset ();
-+					(* Self may have a name *)
-+  visited_objects := self :: !visited_objects;
-+  begin match self.desc with
-+    Tobject (fi, _) -> mark_loops fi
-+  | _               -> fatal_error "Printtyp.class_type"
-+  end;
-+  List.iter mark_loops args;
-+  List.iter (fun (_, ty) -> mark_loops ty) cstr;
-+  Vars.iter (fun _ (_, ty) -> mark_loops ty) vars;
-+  open_hvbox 2;
-+  open_hovbox 0;
-+  print_string "class ";
-+  if cl_ty.cty_new = None then
-+    print_string "virtual ";
-+  if not (opened_object self) then
-+    print_string "closed ";
-+  type_sch
-+    {desc = Tconstr(Pident id, params, ref []); level = 0};
-+  if List.memq self !aliased then
-+    (name_of_type self; ());
-+  List.iter class_arg args;
-+  if List.memq self !aliased then begin
-+    print_string " : ";
-+    print_string "'";
-+    print_string (name_of_type self)
-+  end;
-+  print_space ();
-+  print_string "=";
-+  close_box ();
-+  start_list true;
-+  open_hvbox 0;
-+  if cstr <> [] then begin
-+    list_item ();
-+    open_hvbox 2;
-+    print_string "constraint ";
-+    and_sep_list constrain cstr;
-+    close_box()
-+  end;
-+  if vars <> Vars.empty then begin
-+    list_item ();
-+    open_hvbox 0;
-+    start_list false;
-+    Vars.iter class_var vars;
-+    end_list false;
-+    close_box ()
-+  end;
-+  let meths = list_meths (methods_of_type self) in
-+  let (meths, virt) =
-+    List.fold_right
-+      (fun ((lab, ty) as m) (ml, vl) ->
-+      	 if List.exists (fun lab' -> Label. (=) lab lab') cl_ty.cty_concr then
-+	   (m::ml, vl)
-+	 else
-+	   (ml, m::vl))
-+      meths
-+      ([], [])
-+  in
-+  if meths <> [] then begin
-+    list_item ();
-+    open_hvbox 0;
-+    start_list false;
-+    List.iter (metho "method ") meths;
-+    close_box ();
-+    end_list false
-+  end;
-+  if virt <> [] then begin
-+    list_item ();
-+    open_hvbox 0;
-+    start_list false;
-+    List.iter (metho "virtual ") virt;
-+    close_box ();
-+    end_list false
-+  end;
-+  close_box();
-+  end_list true;
-+  print_string "end";
-+  close_box()
-+
- (* Print a module type *)
  
 +let hidden = ref 0
 +
@@ -3589,11 +3115,6 @@ index 6bad01b..96cc876 100644
  val type_expr: type_expr -> unit
  val type_scheme: type_expr -> unit
  val value_description: Ident.t -> value_description -> unit
-@@ -28,3 +29,4 @@ val modtype: module_type -> unit
- val signature: signature -> unit
- val signature_item: signature_item -> unit
- val modtype_declaration: Ident.t -> modtype_declaration -> unit
-+val class_type: Ident.t -> class_type -> unit
 diff --git a/typing/subst.ml b/typing/subst.ml
 index 5f14a94..2a73ea9 100644
 --- a/typing/subst.ml
@@ -3719,26 +3240,6 @@ index 5f14a94..2a73ea9 100644
  let exception_declaration s tyl =
    List.map (type_expr s) tyl
  
-+let class_type s decl =
-+  new_val := [];
-+  let params = List.map (function p -> (repr p, ref Zero)) decl.cty_params in
-+  let decl =
-+    { cty_params = List.map (typexp params s) decl.cty_params;
-+      cty_args = List.map (typexp params s) decl.cty_args;
-+      cty_vars =
-+        Vars.fold (fun l (m, t) -> Vars.add l (m, typexp params s t))
-+          decl.cty_vars Vars.empty;
-+      cty_self = typexp params s decl.cty_self;
-+      cty_concr = decl.cty_concr;
-+      cty_new =
-+        begin match decl.cty_new with
-+      	  None    -> None
-+        | Some ty -> Some (typexp params s ty)
-+      	end }
-+  in
-+    new_val := [];
-+    decl
-+
  let rec modtype s = function
      Tmty_ident p as mty ->
        begin match p with
@@ -3749,20 +3250,6 @@ index 5f14a94..2a73ea9 100644
  
  and modtype_declaration s = function
      Tmodtype_abstract -> Tmodtype_abstract
-diff --git a/typing/subst.mli b/typing/subst.mli
-index 9bb374a..98cbe27 100644
---- a/typing/subst.mli
-+++ b/typing/subst.mli
-@@ -28,7 +28,7 @@ val value_description: t -> value_description -> value_description
- val type_declaration: t -> type_declaration -> type_declaration
- val exception_declaration:
-         t -> exception_declaration -> exception_declaration
-+val class_type: t -> class_type -> class_type
- val modtype: t -> module_type -> module_type
- val signature: t -> signature -> signature
- val modtype_declaration: t -> modtype_declaration -> modtype_declaration
--
-
 diff --git a/typing/typecore.ml b/typing/typecore.ml
 index 89937df..ea77828 100644
 --- a/typing/typecore.ml
@@ -4281,7 +3768,6 @@ index 6f963a0..bd76c03 100644
    | With_no_component of Longident.t
    | Repeated_name of string * string
    | Non_generalizable of type_expr
-+  | Non_generalizable_class of Ident.t * class_type
  
  exception Error of Location.t * error
  
@@ -4337,12 +3823,6 @@ index 6f963a0..bd76c03 100644
 -      print_string "contains type variables that cannot be generalized"
 +      print_string "contains type variables that cannot be generalized";
 +      close_box()
-+  | Non_generalizable_class (id, desc) ->
-+      open_hovbox 0;
-+      print_string "The type of this class,"; print_space();
-+      class_type id desc; print_string ","; print_space();
-+      print_string "contains type variables that cannot be generalized";
-+      close_box()
 diff --git a/typing/typemod.mli b/typing/typemod.mli
 index b917199..58abc68 100644
 --- a/typing/typemod.mli
@@ -4356,14 +3836,6 @@ index b917199..58abc68 100644
  
  type error =
      Unbound_module of Longident.t
-@@ -33,6 +33,7 @@ type error =
-   | With_no_component of Longident.t
-   | Repeated_name of string * string
-   | Non_generalizable of type_expr
-+  | Non_generalizable_class of Ident.t * class_type
- 
- exception Error of Location.t * error
- 
 diff --git a/typing/typetexp.ml b/typing/typetexp.ml
 index 08e99a7..ec83c77 100644
 --- a/typing/typetexp.ml
