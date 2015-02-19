@@ -41,8 +41,8 @@ let allocate_spilled reg =
    and constrained (degree >= number of available registers).
    Spilled registers are ignored in the process. *)
 
-let unconstrained = ref Reg.Set.empty
-let constrained = ref Reg.Set.empty
+let unconstrained = ref (*Reg.*)Set.empty
+let constrained = ref (*Reg.*)Set.empty
 
 let find_degree reg =
   if reg.spill then () else begin
@@ -51,7 +51,7 @@ let find_degree reg =
     if avail_regs = 0 then
       (* Don't bother computing the degree if there are no regs 
          in this class *)
-      unconstrained := Reg.Set.add reg !unconstrained
+      unconstrained := (*Reg.*)Set.add reg !unconstrained
     else begin
       let deg = ref 0 in
       List.iter
@@ -59,8 +59,8 @@ let find_degree reg =
         reg.interf;
       reg.degree <- !deg;
       if !deg >= avail_regs
-      then constrained := Reg.Set.add reg !constrained
-      else unconstrained := Reg.Set.add reg !unconstrained
+      then constrained := (*Reg.*)Set.add reg !constrained
+      else unconstrained := (*Reg.*)Set.add reg !unconstrained
     end
   end
 
@@ -76,8 +76,8 @@ let remove_reg reg =
         r.degree <- olddeg - 1;
         if olddeg = Proc.num_available_registers.(cl) then begin
           (* r was constrained and becomes unconstrained *)
-          constrained := Reg.Set.remove r !constrained;
-          unconstrained := Reg.Set.add r !unconstrained
+          constrained := (*Reg.*)Set.remove r !constrained;
+          unconstrained := (*Reg.*)Set.add r !unconstrained
         end
       end)
     reg.interf
@@ -89,18 +89,18 @@ let remove_reg reg =
    [r.spill_cost] estimates the number of accesses to this register. *)
 
 let rec remove_all_regs stack =
-  if not (Reg.Set.is_empty !unconstrained) then begin
+  if not ((*Reg.*)Set.is_empty !unconstrained) then begin
     (* Pick any unconstrained register *)
-    let r = Reg.Set.choose !unconstrained in
-    unconstrained := Reg.Set.remove r !unconstrained;
+    let r = (*Reg.*)Set.choose !unconstrained in
+    unconstrained := (*Reg.*)Set.remove r !unconstrained;
     remove_all_regs (r :: stack)
   end else
-  if not (Reg.Set.is_empty !constrained) then begin
+  if not ((*Reg.*)Set.is_empty !constrained) then begin
     (* Find a constrained reg with minimal cost *)
     let r = ref Reg.dummy in
     let min_degree = ref 0 and min_spill_cost = ref 1 in
       (* initially !min_spill_cost / !min_degree is +infty *)
-    Reg.Set.iter
+    (*Reg.*)Set.iter
       (fun r2 ->
         (* if r2.spill_cost / r2.degree < !min_spill_cost / !min_degree *)
         if r2.spill_cost * !min_degree < !min_spill_cost * r2.degree
@@ -108,7 +108,7 @@ let rec remove_all_regs stack =
           r := r2; min_degree := r2.degree; min_spill_cost := r2.spill_cost
         end)
       !constrained;
-    constrained := Reg.Set.remove !r !constrained;
+    constrained := (*Reg.*)Set.remove !r !constrained;
     remove_all_regs (!r :: stack)
   end else
     stack                             (* All regs have been removed *)

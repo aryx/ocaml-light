@@ -27,7 +27,7 @@ type instruction =
     next: instruction;
     arg: Reg.t array;
     res: Reg.t array;
-    live: Reg.Set.t }
+    live: Reg.t Set.t }
 
 and instruction_desc =
     Lend
@@ -71,17 +71,17 @@ let rec end_instr =
     next = end_instr;
     arg = [||];
     res = [||];
-    live = Reg.Set.empty }
+    live = (*Reg.*)Set.empty }
 
 (* Cons an instruction (live empty) *)
 
 let instr_cons d a r n =
-  { desc = d; next = n; arg = a; res = r; live = Reg.Set.empty }
+  { desc = d; next = n; arg = a; res = r; live = (*Reg.*)Set.empty }
 
 (* Cons a simple instruction (arg, res, live empty) *)
 
 let cons_instr d n =
-  { desc = d; next = n; arg = [||]; res = [||]; live = Reg.Set.empty }
+  { desc = d; next = n; arg = [||]; res = [||]; live = (*Reg.*)Set.empty }
 
 (* Build an instruction with arg, res, live taken from
    the given Mach.instruction *)

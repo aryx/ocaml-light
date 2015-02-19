@@ -59,7 +59,7 @@ type instruction =
     next: instruction;
     arg: Reg.t array;
     res: Reg.t array;
-    mutable live: Reg.Set.t }
+    mutable live: Reg.t Set.t }
 
 and instruction_desc =
     Iend
@@ -85,7 +85,7 @@ val instr_cons:
       instruction_desc -> Reg.t array -> Reg.t array -> instruction ->
         instruction
 val instr_cons_live: 
-      instruction_desc -> Reg.t array -> Reg.t array -> Reg.Set.t ->
+      instruction_desc -> Reg.t array -> Reg.t array -> Reg.t Set.t ->
         instruction -> instruction
 val instr_iter: (instruction -> unit) -> instruction -> unit
 

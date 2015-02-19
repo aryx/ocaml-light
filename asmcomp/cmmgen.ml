@@ -879,11 +879,7 @@ let transl_function lbl params body =
 
 (* Translate all function definitions *)
 
-module StringSet =
-  Set.Make(struct
-    type t = string
-    let compare = compare
-  end)
+module StringSet = Set
 
 let rec transl_all_functions already_translated cont =
   try
