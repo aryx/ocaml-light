@@ -12,7 +12,7 @@ CAMLDEP=$(TOP)/boot/ocamlrun $(TOP)/tools/ocamldep
 DEPFLAGS=$(INCLUDES)
 
 INCLUDES=\
-  -I $(TOP)/utils -I $(TOP)/parsing -I $(TOP)/typing -I $(TOP)/bytecomp -I $(TOP)/toplevel \
+  -I $(TOP)/utils -I $(TOP)/parsing -I $(TOP)/typing -I $(TOP)/bytecomp -I ../toplevel \
   -I $(TOP)/otherlibs/unix -I $(TOP)/otherlibs/dynlink
 
 OTHEROBJS=\
@@ -26,7 +26,7 @@ OTHEROBJS=\
   $(TOP)/typing/datarepr.cmo $(TOP)/typing/env.cmo \
   $(TOP)/typing/ctype.cmo $(TOP)/typing/printtyp.cmo $(TOP)/typing/mtype.cmo \
   $(TOP)/bytecomp/runtimedef.cmo $(TOP)/bytecomp/symtable.cmo \
-  $(TOP)/bytecomp/opcodes.cmo $(TOP)/toplevel/genprintval.cmo \
+  $(TOP)/bytecomp/opcodes.cmo ../toplevel/genprintval.cmo \
   $(TOP)/otherlibs/dynlink/dynlink.cmo
 
 OBJS=\

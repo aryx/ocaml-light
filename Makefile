@@ -15,7 +15,7 @@ CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
 
-INCLUDES=-I utils -I parsing -I typing -I bytecomp -I asmcomp -I driver -I toplevel
+INCLUDES=-I utils -I parsing -I typing -I bytecomp -I asmcomp -I driver -I tools/toplevel
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo
@@ -66,11 +66,11 @@ DRIVER=driver/errors.cmo driver/compile.cmo driver/main.cmo
 OPTDRIVER=driver/opterrors.cmo driver/optcompile.cmo driver/optmain.cmo
 
 TOPLEVEL=driver/errors.cmo driver/compile.cmo \
-  toplevel/genprintval.cmo \
-  toplevel/printval.cmo toplevel/toploop.cmo \
-  toplevel/trace.cmo toplevel/topdirs.cmo
+  tools/toplevel/genprintval.cmo \
+  tools/toplevel/printval.cmo tools/toplevel/toploop.cmo \
+  tools/toplevel/trace.cmo tools/toplevel/topdirs.cmo
 
-TOPLEVELMAIN=toplevel/topmain.cmo
+TOPLEVELMAIN=tools/toplevel/topmain.cmo
 
 COMPOBJS=$(UTILS) $(PARSING) $(TYPING) $(COMP) $(BYTECOMP) $(DRIVER)
 
@@ -84,7 +84,7 @@ EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
   utils/config.cmo utils/clflags.cmo \
   typing/ident.cmo typing/btype.cmo typing/predef.cmo \
   bytecomp/runtimedef.cmo bytecomp/symtable.cmo \
-  toplevel/expunge.cmo
+  tools/toplevel/expunge.cmo
 
 PERVASIVES=arg array callback char digest filename format gc hashtbl \
   lexing list map obj parsing pervasives printexc printf queue random \
@@ -193,8 +193,8 @@ install:
 	cp yacc/ocamlyacc $(BINDIR)/ocamlyacc
 	$(CAMLC) -a -o $(LIBDIR)/toplevellib.cma $(TOPLIB)
 	cp expunge $(LIBDIR)
-	cp toplevel/topmain.cmo $(LIBDIR)
-	cp toplevel/toploop.cmi toplevel/topdirs.cmi $(LIBDIR)
+	cp tools/toplevel/topmain.cmo $(LIBDIR)
+	cp tools/toplevel/toploop.cmi tools/toplevel/topdirs.cmi $(LIBDIR)
 	cd tools/misc; $(MAKE) install
 	cd docs/man; for i in *.m; do cp $$i $(MANDIR)/`basename $$i .m`.$(MANEXT); done
 	for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) install); done
@@ -500,12 +500,12 @@ partialclean::
 	rm -f bytecomp/*.cm[iox] bytecomp/*.[so] bytecomp/*~
 	rm -f asmcomp/*.cm[iox] asmcomp/*.[so] asmcomp/*~
 	rm -f driver/*.cm[iox] driver/*.[so] driver/*~
-	rm -f toplevel/*.cm[iox] toplevel/*.[so] toplevel/*~
+	rm -f tools/toplevel/*.cm[iox] tools/toplevel/*.[so] tools/toplevel/*~
 	rm -f tools/misc/*.cm[iox] tools/misc/*.[so] tools/misc/*~
 	rm -f *~
 
 depend: beforedepend
-	(for d in utils parsing typing bytecomp asmcomp driver toplevel; \
+	(for d in utils parsing typing bytecomp asmcomp driver tools/toplevel; \
          do $(CAMLDEP) $(DEPFLAGS) $$d/*.mli $$d/*.ml; \
          done) > .depend
 

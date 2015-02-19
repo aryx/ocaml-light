@@ -122,10 +122,10 @@ pattern_matching.cmx: ../../typing/ctype.cmx debugcom.cmx debugger_config.cmx \
     pattern_matching.cmi 
 primitives.cmo: ../../otherlibs/unix/unix.cmi primitives.cmi 
 primitives.cmx: ../../otherlibs/unix/unix.cmx primitives.cmi 
-printval.cmo: debugcom.cmi ../../toplevel/genprintval.cmi ../../utils/misc.cmi \
+printval.cmo: debugcom.cmi ../toplevel/genprintval.cmi ../../utils/misc.cmi \
     parser_aux.cmi ../../typing/path.cmi ../../typing/printtyp.cmi \
     ../../typing/types.cmi printval.cmi 
-printval.cmx: debugcom.cmx ../../toplevel/genprintval.cmx ../../utils/misc.cmx \
+printval.cmx: debugcom.cmx ../toplevel/genprintval.cmx ../../utils/misc.cmx \
     parser_aux.cmi ../../typing/path.cmx ../../typing/printtyp.cmx \
     ../../typing/types.cmx printval.cmi 
 program_loading.cmo: debugger_config.cmi input_handling.cmi ../../utils/misc.cmi \
