@@ -282,12 +282,6 @@ let rec type_exp env sexp =
         let (path, desc) = Env.lookup_value lid env in
         { exp_desc =
             begin match (desc.val_kind, lid) with
-              (Val_ivar _, Longident.Lident lab) ->
-                let (path_self, _) =
-                  Env.lookup_value (Longident.Lident "*self*") env
-                in
-                (* Texp_instvar (path_self, path) *)
-                failwith "TODO: self?"
             | _ ->
                 Texp_ident(path, desc)
             end;

@@ -113,8 +113,6 @@ index d89ec8f..07ad56c 100644
 -    Texp_ident(path, {val_prim = Some p}) ->
 +    Texp_ident(path, {val_kind = Val_prim p}) ->
        transl_primitive p
-+  | Texp_ident(path, {val_kind = Val_anc _}) ->
-+      raise(Error(e.exp_loc, Free_super_var))
    | Texp_ident(path, desc) ->
        transl_path path
    | Texp_constant cst ->
@@ -411,8 +409,6 @@ index 01592ff..fe0e72a 100644
 +and value_kind =
 +    Val_reg				(* Regular value *)
 +  | Val_prim of Primitive.description	(* Primitive *)
-+  | Val_ivar of mutable_flag		(* Instance variable (mutable ?) *)
-+  | Val_anc of (Label.t * Ident.t) list (* Ancestor *)
  
  (* Constructor descriptions *)
 
@@ -3255,11 +3251,6 @@ index 89937df..ea77828 100644
 -        { exp_desc = Texp_ident(path, desc);
 +        { exp_desc =
 +            begin match (desc.val_kind, lid) with
-+	      (Val_ivar _, Longident.Lident lab) ->
-+      	        let (path_self, _) =
-+                  Env.lookup_value (Longident.Lident "*self*") env
-+                in
-+                Texp_instvar (path_self, path)
 +	    | _ ->
 +	        Texp_ident(path, desc)
 +      	    end;

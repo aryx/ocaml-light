@@ -50,8 +50,6 @@ type value_description =
 and value_kind =
     Val_reg                             (* Regular value *)
   | Val_prim of Primitive.description   (* Primitive *)
-  | Val_ivar of mutable_flag            (* Instance variable (mutable ?) *)
-  | Val_anc of (string * Ident.t) list  (* Ancestor *)
 
 (* Constructor descriptions *)
 
