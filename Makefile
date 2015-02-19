@@ -199,7 +199,7 @@ install:
 	cd docs/man; for i in *.m; do cp $$i $(MANDIR)/`basename $$i .m`.$(MANEXT); done
 	for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) install); done
 	if test -f ocamlopt; then $(MAKE) installopt; else :; fi
-	if test -f debugger/ocamldebug; then (cd debugger; $(MAKE) install); else :; fi
+	if test -f tools/debugger/ocamldebug; then (cd tools/debugger; $(MAKE) install); else :; fi
 
 # Installation of the native-code compiler
 installopt:
@@ -474,11 +474,11 @@ alldepend::
 # The replay debugger
 
 ocamldebugger:
-	cd debugger; $(MAKE) all
+	cd tools/debugger; $(MAKE) all
 partialclean::
-	cd debugger; $(MAKE) clean
+	cd tools/debugger; $(MAKE) clean
 alldepend::
-	cd debugger; $(MAKE) depend
+	cd tools/debugger; $(MAKE) depend
 
 # Default rules
 
