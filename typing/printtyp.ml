@@ -99,10 +99,6 @@ let rec mark_loops_rec visited ty =
     | Ttuple tyl          -> List.iter (mark_loops_rec visited) tyl
     | Tconstr(_, tyl, _)  ->
         List.iter (mark_loops_rec visited) tyl
-    | Tfield(_, kind, ty1, ty2) when field_kind_repr kind = Fpresent ->
-        mark_loops_rec visited ty1; mark_loops_rec visited ty2
-    | Tfield(_, _, _, ty2) ->
-        mark_loops_rec visited ty2
     | Tnil                -> ()
     | Tlink _             -> fatal_error "Printtyp.mark_loops_rec (2)"
 
@@ -186,44 +182,6 @@ and typlist sch prio sep = function
   | ty::tyl ->
       typexp sch prio ty; print_string sep; print_space();
       typlist sch prio sep tyl
-
-and typobject sch ty fi nm =
-  begin match !nm with
-    None ->
-      open_box 2;
-      print_string "< ";
-      (let (fields, rest) = flatten_fields fi in
-       let present_fields =
-         List.fold_right
-           (fun (n, k, t) l ->
-              match field_kind_repr k with
-                Fpresent ->
-                  (n, t)::l
-              | _ ->
-                  l)
-           fields []
-       in
-       typfields sch rest present_fields);
-      print_string " >";
-      close_box ()
-  | Some (p, {desc = Tvar}::tyl) ->
-      open_box 0;
-      begin match tyl with
-        [] -> ()
-      | [ty1] ->
-          typexp sch 3 ty1; print_space()
-      | tyl ->
-          open_box 1; print_string "("; typlist sch 0 "," tyl;
-          print_string ")"; close_box(); print_space()
-      end;
-      if sch & ty.level <> generic_level then
-        print_string "_";
-      print_string "#";
-      path p;
-      close_box()
-  | _ ->
-        fatal_error "Printtyp.typobject"
-  end
 
 and typfields sch rest =
   function
@@ -390,9 +348,6 @@ let methods_of_type ty =
   match (repr ty).desc with
    _              -> fatal_error "Printtyp.methods_of_type"
 
-let rec list_public_methods ty =
-  let (fields, _) = flatten_fields ty in
-  List.map (function (m, _, t) -> (m, t)) fields
 
 
 (* Print a module type *)

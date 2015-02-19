@@ -334,7 +334,7 @@ module Make(Obj : Obj) = struct
               | Constr_not_found ->         (* raised by find_constr *)
                   print_string "<unknown constructor>"
               end
-          | Tfield(_, _, _, _) | Tnil | Tlink _ ->
+          | Tnil | Tlink _ ->
               fatal_error "Printval.print_value"
 
       and print_val_list prio depth obj ty_list =
