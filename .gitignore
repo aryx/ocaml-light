@@ -3,6 +3,7 @@
 *.o
 *.a
 
+boot/Saved
 
 /boot/camlheader
 /boot/libcamlrun.a
