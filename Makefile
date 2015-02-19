@@ -9,7 +9,7 @@ LINKFLAGS=
 CAMLYACC=boot/ocamlyacc
 YACCFLAGS=
 CAMLLEX=boot/ocamlrun boot/ocamllex
-CAMLDEP=boot/ocamlrun tools/ocamldep
+CAMLDEP=boot/ocamlrun tools/misc/ocamldep
 DEPFLAGS=$(INCLUDES)
 CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
@@ -195,7 +195,7 @@ install:
 	cp expunge $(LIBDIR)
 	cp toplevel/topmain.cmo $(LIBDIR)
 	cp toplevel/toploop.cmi toplevel/topdirs.cmi $(LIBDIR)
-	cd tools; $(MAKE) install
+	cd tools/misc; $(MAKE) install
 	cd docs/man; for i in *.m; do cp $$i $(MANDIR)/`basename $$i .m`.$(MANEXT); done
 	for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) install); done
 	if test -f ocamlopt; then $(MAKE) installopt; else :; fi
@@ -315,7 +315,7 @@ $(OPTOBJS:.cmo=.cmx): ocamlopt
 
 bytecomp/opcodes.ml: byterun/instruct.h
 	sed -n -e '/^enum/p' -e 's/,//g' -e '/^  /p' byterun/instruct.h | \
-        awk -f tools/make-opcodes > bytecomp/opcodes.ml
+        awk -f tools/misc/make-opcodes > bytecomp/opcodes.ml
 
 partialclean::
 	rm -f bytecomp/opcodes.ml
@@ -385,17 +385,10 @@ beforedepend:: asmcomp/scheduling.ml
 
 # Preprocess the code emitters
 
-asmcomp/emit.ml: asmcomp/$(ARCH)/emit.mlp tools/cvt_emit
-	boot/ocamlrun tools/cvt_emit < asmcomp/$(ARCH)/emit.mlp > asmcomp/emit.ml \
-        || { rm -f asmcomp/emit.ml; exit 2; }
-
 partialclean::
 	rm -f asmcomp/emit.ml
 
 beforedepend:: asmcomp/emit.ml
-
-tools/cvt_emit: tools/cvt_emit.mll
-	cd tools; $(MAKE) cvt_emit
 
 # The "expunge" utility
 
@@ -459,11 +452,11 @@ clean::
 # Tools
 
 ocamltools:
-	cd tools; $(MAKE) all
+	cd tools/misc; $(MAKE) all
 partialclean::
-	cd tools; $(MAKE) clean
+	cd tools/misc; $(MAKE) clean
 alldepend::
-	cd tools; $(MAKE) depend
+	cd tools/misc; $(MAKE) depend
 
 # The extra libraries
 
@@ -508,7 +501,7 @@ partialclean::
 	rm -f asmcomp/*.cm[iox] asmcomp/*.[so] asmcomp/*~
 	rm -f driver/*.cm[iox] driver/*.[so] driver/*~
 	rm -f toplevel/*.cm[iox] toplevel/*.[so] toplevel/*~
-	rm -f tools/*.cm[iox] tools/*.[so] tools/*~
+	rm -f tools/misc/*.cm[iox] tools/misc/*.[so] tools/misc/*~
 	rm -f *~
 
 depend: beforedepend
