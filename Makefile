@@ -425,6 +425,19 @@ beforedepend:: asmcomp/scheduling.ml
 
 # Preprocess the code emitters
 
+asmcomp/emit.ml: asmcomp/$(ARCH)/emit.mlp tools/misc/cvt_emit
+	boot/ocamlrun tools/misc/cvt_emit < asmcomp/$(ARCH)/emit.mlp > asmcomp/emit.ml \
+        || { rm -f asmcomp/emit.ml; exit 2; }
+
+partialclean::
+	rm -f asmcomp/emit.ml
+
+beforedepend:: asmcomp/emit.ml
+
+tools/misc/cvt_emit: tools/misc/cvt_emit.mll
+	cd tools/misc; $(MAKE) cvt_emit
+
+
 partialclean::
 	rm -f asmcomp/emit.ml
 
