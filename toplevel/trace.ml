@@ -59,7 +59,7 @@ let rec instrument_closure env name clos_typ =
         match name with
           Lident s -> Lident(s ^ "*")
         | Ldot(lid, s) -> Ldot(lid, s ^ "*")
-        | Lapply(l1, l2) -> fatal_error "Trace.instrument_closure" in
+      in
       let trace_res = instrument_closure env starred_name t2 in
       (fun clos_val ->
         Obj.repr(fun arg ->

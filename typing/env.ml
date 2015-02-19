@@ -209,13 +209,6 @@ let rec lookup_module_descr lid env =
           let (descr, pos) = Tbl.find s c.comp_components in
           (Pdot(p, s, pos), descr)
       end
-  | Lapply(l1, l2) ->
-      let (p1, desc1) = lookup_module_descr l1 env in
-      let (p2, mty2) = lookup_module l2 env in
-      begin match desc1 with
-      Structure_comps c ->
-          raise Not_found
-      end
 
 and lookup_module lid env =
   match lid with
@@ -233,13 +226,6 @@ and lookup_module lid env =
           let (data, pos) = Tbl.find s c.comp_modules in
           (Pdot(p, s, pos), data)
       end
-  | Lapply(l1, l2) ->
-      let (p1, desc1) = lookup_module_descr l1 env in
-      let (p2, mty2) = lookup_module l2 env in
-      begin match desc1 with
-      | Structure_comps c ->
-          raise Not_found
-      end
 
 let lookup proj1 proj2 lid env =
   match lid with
@@ -251,8 +237,6 @@ let lookup proj1 proj2 lid env =
           let (data, pos) = Tbl.find s (proj2 c) in
           (Pdot(p, s, pos), data)
       end
-  | Lapply(l1, l2) ->
-      raise Not_found
 
 let lookup_simple proj1 proj2 lid env =
   match lid with
@@ -264,8 +248,6 @@ let lookup_simple proj1 proj2 lid env =
           let (data, pos) = Tbl.find s (proj2 c) in
           data
       end
-  | Lapply(l1, l2) ->
-      raise Not_found
 
 let lookup_value =
   lookup (fun env -> env.values) (fun sc -> sc.comp_values)

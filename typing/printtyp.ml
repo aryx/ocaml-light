@@ -27,8 +27,6 @@ open Btype
 let rec longident = function
     Lident s -> print_string s
   | Ldot(p, s) -> longident p; print_string "."; print_string s
-  | Lapply(p1, p2) ->
-      longident p1; print_string "("; longident p2; print_string ")"
 
 (* Print an identifier *)
 
