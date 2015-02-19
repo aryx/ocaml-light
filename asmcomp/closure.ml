@@ -19,6 +19,8 @@ open Primitive
 open Lambda
 open Clambda
 
+module IdentSet = Set
+
 (* Auxiliaries for compiling functions *)
 
 let rec split_list n l =
@@ -222,10 +224,6 @@ let rec close fenv cenv = function
       | ((ufunct, _), uargs) ->
           (Ugeneric_apply(ufunct, uargs), Value_unknown)
       end
-  | Lsend(met, obj, args) ->
-      let (umet, _) = close fenv cenv met in
-      let (uobj, _) = close fenv cenv obj in
-      (Usend(umet, uobj, close_list fenv cenv args), Value_unknown)
   | Llet(str, id, lam, body) ->
       let (ulam, alam) = close_named fenv cenv id lam in
       let (ubody, abody) = close (Tbl.add id alam fenv) cenv body in

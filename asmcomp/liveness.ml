@@ -16,9 +16,9 @@
 
 open Mach
 
-let live_at_exit = ref Reg.Set.empty
-let live_at_break = ref Reg.Set.empty
-let live_at_raise = ref Reg.Set.empty
+let live_at_exit = ref (*Reg.*)Set.empty
+let live_at_break = ref (*Reg.*)Set.empty
+let live_at_raise = ref (*Reg.*)Set.empty
 
 let rec live i finally =
   (* finally is the set of registers live after execution of the
@@ -36,25 +36,25 @@ let rec live i finally =
       Reg.set_of_array i.arg
   | Iifthenelse(test, ifso, ifnot) ->
       let at_join = live i.next finally in
-      let at_fork = Reg.Set.union (live ifso at_join) (live ifnot at_join) in
+      let at_fork = (*Reg.*)Set.union (live ifso at_join) (live ifnot at_join) in
       i.live <- at_fork;
       Reg.add_set_array at_fork i.arg
   | Iswitch(index, cases) ->
       let at_join = live i.next finally in
-      let at_fork = ref Reg.Set.empty in
+      let at_fork = ref (*Reg.*)Set.empty in
       for i = 0 to Array.length cases - 1 do
-        at_fork := Reg.Set.union !at_fork (live cases.(i) at_join)
+        at_fork := (*Reg.*)Set.union !at_fork (live cases.(i) at_join)
       done;
       i.live <- !at_fork;
       Reg.add_set_array !at_fork i.arg
   | Iloop(body) ->
-      let at_top = ref Reg.Set.empty in
+      let at_top = ref (*Reg.*)Set.empty in
       (* Yes, there are better algorithms, but we'll just iterate till
          reaching a fixpoint. *)
       begin try
         while true do
-          let new_at_top = Reg.Set.union !at_top (live body !at_top) in
-          if Reg.Set.equal !at_top new_at_top then raise Exit;
+          let new_at_top = (*Reg.*)Set.union !at_top (live body !at_top) in
+          if (*Reg.*)Set.equal !at_top new_at_top then raise Exit;
           at_top := new_at_top
         done
       with Exit -> ()
@@ -77,7 +77,7 @@ let rec live i finally =
       let at_join = live i.next finally in
       let before_handler = live handler at_join in
       let saved_live_at_raise = !live_at_raise in
-      live_at_raise := Reg.Set.remove Proc.loc_exn_bucket before_handler;
+      live_at_raise := (*Reg.*)Set.remove Proc.loc_exn_bucket before_handler;
       let before_body = live body at_join in
       live_at_raise := saved_live_at_raise;
       i.live <- before_body;
@@ -94,17 +94,17 @@ let rec live i finally =
                nearest enclosing try ... with. Hence, everything that must
                be live at the beginning of the exception handler must also
                be live across the call. *)
-             Reg.Set.union across_after !live_at_raise
+             (*Reg.*)Set.union across_after !live_at_raise
          | _ ->
              across_after in
       i.live <- across;
       Reg.add_set_array across i.arg
 
 let fundecl f =
-  let initially_live = live f.fun_body Reg.Set.empty in
+  let initially_live = live f.fun_body (*Reg.*)Set.empty in
   (* Sanity check: only function parameters can be live at entrypoint *)
-  let wrong_live = Reg.Set.diff initially_live (Reg.set_of_array f.fun_args) in
-  if not (Reg.Set.is_empty wrong_live) then begin
+  let wrong_live = (*Reg.*)Set.diff initially_live (Reg.set_of_array f.fun_args) in
+  if not ((*Reg.*)Set.is_empty wrong_live) then begin
     Printmach.regset wrong_live; Format.print_newline();
     Misc.fatal_error "Liveness.fundecl"
   end

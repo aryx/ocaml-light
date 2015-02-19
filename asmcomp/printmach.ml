@@ -46,7 +46,7 @@ let regs v =
 
 let regset s =
   let first = ref true in
-  Reg.Set.iter
+  (*Reg.*)Set.iter
     (fun r ->
       if !first then first := false else print_space();
       reg r)
@@ -54,7 +54,7 @@ let regset s =
 
 let regsetaddr s =
   let first = ref true in
-  Reg.Set.iter
+  (*Reg.*)Set.iter
     (fun r ->
       if !first then first := false else print_space();
       reg r;

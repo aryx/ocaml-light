@@ -50,7 +50,7 @@ let build_graph fundecl =
   let add_interf_set v s =
     for i = 0 to Array.length v - 1 do
       let r1 = v.(i) in
-      Reg.Set.iter (add_interf r1) s
+      (*Reg.*)Set.iter (add_interf r1) s
     done in
 
   (* Record interferences between elements of an array *)
@@ -67,7 +67,7 @@ let build_graph fundecl =
      do not add an interference between them if the source is still live
      afterwards. *)
   let add_interf_move src dst s =
-    Reg.Set.iter (fun r -> if r.stamp <> src.stamp then add_interf dst r) s in
+    (*Reg.*)Set.iter (fun r -> if r.stamp <> src.stamp then add_interf dst r) s in
 
   (* Compute interferences *)
 

@@ -67,11 +67,7 @@ let check_consistency file_name unit crc =
 
 (* First pass: determine which units are needed *)
 
-module StringSet =
-  Set.Make(struct
-    type t = string
-    let compare = compare
-  end)
+module StringSet = Set
 
 let missing_globals = ref StringSet.empty
 
@@ -126,11 +122,7 @@ let scan_file obj_name tolink =
 
 (* Second pass: generate the startup file and link it with everything else *)
 
-module IntSet = Set.Make(
-  struct
-    type t = int
-    let compare = compare
-  end)
+module IntSet = Set
 
 let make_startup_file filename info_list =
   let oc = open_out filename in

@@ -18,11 +18,11 @@ open Mach
 
 (* Substitutions are represented by register maps *)
 
-type subst = Reg.t Reg.Map.t
+type subst = (Reg.t, Reg.t) Map.t
 
 let subst_reg r sub =
   try
-    Reg.Map.find r sub
+    (*Reg.*)Map.find r sub
   with Not_found ->
     r
 
@@ -38,11 +38,11 @@ let subst_regs rv sub =
 (* We maintain equivalence classes of registers using a standard
    union-find algorithm *)
 
-let equiv_classes = ref (Reg.Map.empty : Reg.t Reg.Map.t)
+let equiv_classes = ref ((*Reg.*)Map.empty : (Reg.t, Reg.t) Map.t)
 
 let rec repres_reg r =
   try
-    repres_reg(Reg.Map.find r !equiv_classes)
+    repres_reg((*Reg.*)Map.find r !equiv_classes)
   with Not_found ->
     r
 
@@ -57,7 +57,7 @@ let identify r1 r2 =
   let repres1 = repres_reg r1 in
   let repres2 = repres_reg r2 in
   if repres1.stamp = repres2.stamp then () else begin
-    equiv_classes := Reg.Map.add repres1 repres2 !equiv_classes
+    equiv_classes := (*Reg.*)Map.add repres1 repres2 !equiv_classes
   end
 
 (* Identify the image of a register by two substitutions.
@@ -66,15 +66,15 @@ let identify r1 r2 =
 
 let identify_sub sub1 sub2 reg =
   try
-    let r1 = Reg.Map.find reg sub1 in
+    let r1 = (*Reg.*)Map.find reg sub1 in
     try
-      let r2 = Reg.Map.find reg sub2 in
+      let r2 = (*Reg.*)Map.find reg sub2 in
       identify r1 r2
     with Not_found ->
       identify r1 reg
   with Not_found ->
     try
-      let r2 = Reg.Map.find reg sub2 in
+      let r2 = (*Reg.*)Map.find reg sub2 in
       identify r2 reg
     with Not_found ->
       ()
@@ -88,7 +88,7 @@ let merge_substs sub1 sub2 i =
   | (Some s1, None) -> sub1
   | (None, Some s2) -> sub2
   | (Some s1, Some s2) ->
-      Reg.Set.iter (identify_sub s1 s2) (Reg.add_set_array i.live i.arg);
+      (*Reg.*)Set.iter (identify_sub s1 s2) (Reg.add_set_array i.live i.arg);
       sub1
 
 (* Same, for N substitutions *)
@@ -103,7 +103,7 @@ let merge_subst_array subv instr =
             match subv.(j) with
               None -> ()
             | Some sj ->
-                Reg.Set.iter (identify_sub si sj)
+                (*Reg.*)Set.iter (identify_sub si sj)
                              (Reg.add_set_array instr.live instr.arg)
           done;
           sub
@@ -128,7 +128,7 @@ let rec rename i sub =
           let oldr = i.res.(0) in
           let newr = Reg.clone i.res.(0) in
           let (new_next, sub_next) =
-            rename i.next (Some(Reg.Map.add oldr newr s)) in
+            rename i.next (Some((*Reg.*)Map.add oldr newr s)) in
           (instr_cons i.desc i.arg [|newr|] new_next,
            sub_next)
       end
@@ -191,12 +191,12 @@ let set_repres i =
 (* Entry point *)
 
 let fundecl f =
-  equiv_classes := Reg.Map.empty;
+  equiv_classes := (*Reg.*)Map.empty;
   let new_args = Array.copy f.fun_args in
-  let (new_body, sub_body) = rename f.fun_body (Some Reg.Map.empty) in
+  let (new_body, sub_body) = rename f.fun_body (Some (*Reg.*)Map.empty) in
   repres_regs new_args;
   set_repres new_body;
-  equiv_classes := Reg.Map.empty;
+  equiv_classes := (*Reg.*)Map.empty;
   { fun_name = f.fun_name;
     fun_args = new_args;
     fun_body = new_body;

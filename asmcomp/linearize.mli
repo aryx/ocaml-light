@@ -21,7 +21,7 @@ type instruction =
     next: instruction;
     arg: Reg.t array;
     res: Reg.t array;
-    live: Reg.Set.t }
+    live: Reg.t Set.t }
 
 and instruction_desc =
     Lend

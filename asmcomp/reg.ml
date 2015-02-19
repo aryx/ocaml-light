@@ -87,14 +87,17 @@ let reinit_reg r =
 let reinit() =
   List.iter reinit_reg !reg_list
 
+(*
+TODO good enough?
 module RegOrder =
   struct
     type t = reg
     let compare r1 r2 = r1.stamp - r2.stamp
   end
-
 module Set = Set.Make(RegOrder)
 module Map = Map.Make(RegOrder)
+*)
+
 
 let add_set_array s v =
   match Array.length v with

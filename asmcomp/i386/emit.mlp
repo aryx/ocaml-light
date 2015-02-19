@@ -160,7 +160,7 @@ let frame_descriptors = ref([] : frame_descr list)
 let record_frame_label live =
   let lbl = new_label() in
   let live_offset = ref [] in
-  Reg.Set.iter
+  (*Reg.*)Set.iter
     (function
         {typ = Addr; loc = Reg r} ->
           live_offset := ((r lsl 1) + 1) :: !live_offset

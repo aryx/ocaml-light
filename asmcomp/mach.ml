@@ -59,7 +59,7 @@ type instruction =
     next: instruction;
     arg: Reg.t array;
     res: Reg.t array;
-    mutable live: Reg.Set.t }
+    mutable live: Reg.t Set.t }
 
 and instruction_desc =
     Iend
@@ -84,17 +84,17 @@ let rec dummy_instr =
     next = dummy_instr;
     arg = [||]; 
     res = [||];
-    live = Reg.Set.empty }
+    live = (*Reg.*)Set.empty }
 
 let end_instr () =
   { desc = Iend; 
     next = dummy_instr;
     arg = [||]; 
     res = [||];
-    live = Reg.Set.empty }
+    live = (*Reg.*)Set.empty }
 
 let instr_cons d a r n =
-  { desc = d; next = n; arg = a; res = r; live = Reg.Set.empty }
+  { desc = d; next = n; arg = a; res = r; live = (*Reg.*)Set.empty }
 
 let instr_cons_live d a r l n =
   { desc = d; next = n; arg = a; res = r; live = l }
