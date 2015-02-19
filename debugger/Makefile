@@ -1,31 +1,33 @@
-include ../config/Makefile
+TOP=../
 
-CAMLC=../boot/ocamlrun ../ocamlc -I ../boot
+include $(TOP)/config/Makefile
+
+CAMLC=$(TOP)/boot/ocamlrun $(TOP)/ocamlc -I $(TOP)/boot
 COMPFLAGS=$(INCLUDES)
 LINKFLAGS=-custom -linkall
-CAMLYACC=../boot/ocamlyacc
+CAMLYACC=$(TOP)/boot/ocamlyacc
 YACCFLAGS=
-CAMLLEX=../boot/ocamlrun ../boot/ocamllex
-CAMLDEP=../boot/ocamlrun ../tools/ocamldep
+CAMLLEX=$(TOP)/boot/ocamlrun $(TOP)/boot/ocamllex
+CAMLDEP=$(TOP)/boot/ocamlrun $(TOP)/tools/ocamldep
 DEPFLAGS=$(INCLUDES)
 
 INCLUDES=\
-  -I ../utils -I ../parsing -I ../typing -I ../bytecomp -I ../toplevel \
-  -I ../otherlibs/unix -I ../otherlibs/dynlink
+  -I $(TOP)/utils -I $(TOP)/parsing -I $(TOP)/typing -I $(TOP)/bytecomp -I $(TOP)/toplevel \
+  -I $(TOP)/otherlibs/unix -I $(TOP)/otherlibs/dynlink
 
 OTHEROBJS=\
-  ../otherlibs/unix/unix.cma \
-  ../utils/misc.cmo ../utils/config.cmo \
-  ../utils/tbl.cmo ../utils/clflags.cmo \
-  ../parsing/longident.cmo \
-  ../typing/ident.cmo ../typing/path.cmo \
-  ../typing/btype.cmo ../typing/primitive.cmo ../typing/typedtree.cmo \
-  ../typing/subst.cmo ../typing/predef.cmo \
-  ../typing/datarepr.cmo ../typing/env.cmo \
-  ../typing/ctype.cmo ../typing/printtyp.cmo ../typing/mtype.cmo \
-  ../bytecomp/runtimedef.cmo ../bytecomp/symtable.cmo \
-  ../bytecomp/opcodes.cmo ../toplevel/genprintval.cmo \
-  ../otherlibs/dynlink/dynlink.cmo
+  $(TOP)/otherlibs/unix/unix.cma \
+  $(TOP)/utils/misc.cmo $(TOP)/utils/config.cmo \
+  $(TOP)/utils/tbl.cmo $(TOP)/utils/clflags.cmo \
+  $(TOP)/parsing/longident.cmo \
+  $(TOP)/typing/ident.cmo $(TOP)/typing/path.cmo \
+  $(TOP)/typing/btype.cmo $(TOP)/typing/primitive.cmo $(TOP)/typing/typedtree.cmo \
+  $(TOP)/typing/subst.cmo $(TOP)/typing/predef.cmo \
+  $(TOP)/typing/datarepr.cmo $(TOP)/typing/env.cmo \
+  $(TOP)/typing/ctype.cmo $(TOP)/typing/printtyp.cmo $(TOP)/typing/mtype.cmo \
+  $(TOP)/bytecomp/runtimedef.cmo $(TOP)/bytecomp/symtable.cmo \
+  $(TOP)/bytecomp/opcodes.cmo $(TOP)/toplevel/genprintval.cmo \
+  $(TOP)/otherlibs/dynlink/dynlink.cmo
 
 OBJS=\
 	primitives.cmo \
@@ -60,7 +62,7 @@ OBJS=\
 all: ocamldebug
 
 ocamldebug: $(OBJS) $(OTHEROBJS)
-	$(CAMLC) $(LINKFLAGS) -o ocamldebug $(OTHEROBJS) $(OBJS) ../otherlibs/unix/libunix.a
+	$(CAMLC) $(LINKFLAGS) -o ocamldebug $(OTHEROBJS) $(OBJS) $(TOP)/otherlibs/unix/libunix.a
 
 install:
 	cp ocamldebug $(BINDIR)/ocamldebug

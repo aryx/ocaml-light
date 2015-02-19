@@ -1,9 +1,11 @@
-include ../config/Makefile
+TOP=..
 
-CAMLRUN=../boot/ocamlrun
-CAMLC=$(CAMLRUN) ../boot/ocamlc -I ../boot
-CAMLLEX=$(CAMLRUN) ../boot/ocamllex
-INCLUDES=-I ../utils -I ../parsing -I ../typing -I ../bytecomp -I ../asmcomp
+include $(TOP)/config/Makefile
+
+CAMLRUN=$(TOP)/boot/ocamlrun
+CAMLC=$(CAMLRUN) $(TOP)/boot/ocamlc -I $(TOP)/boot
+CAMLLEX=$(CAMLRUN) $(TOP)/boot/ocamllex
+INCLUDES=-I $(TOP)/utils -I $(TOP)/parsing -I $(TOP)/typing -I $(TOP)/bytecomp -I $(TOP)/asmcomp
 COMPFLAGS=$(INCLUDES)
 LINKFLAGS=$(INCLUDES)
 
@@ -81,14 +83,14 @@ dumpobj: $(DUMPOBJ)
 clean::
 	rm -f dumpobj
 
-opnames.ml: ../byterun/instruct.h
+opnames.ml: $(TOP)/byterun/instruct.h
 	sed -e '/\/\*/d' \
             -e '/^#/d' \
             -e 's/enum \(.*\) {/let names_of_\1 = [|/' \
             -e 's/};$$/ |]/' \
             -e 's/\([A-Z][A-Z_0-9a-z]*\)/"\1"/g' \
             -e 's/,/;/g' \
-        ../byterun/instruct.h > opnames.ml
+        $(TOP)/byterun/instruct.h > opnames.ml
 
 clean::
 	rm -f opnames.ml
