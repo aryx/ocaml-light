@@ -174,7 +174,7 @@ let rec path_of_module mexp =
 (* Check that all type and module identifiers in a structure have
    distinct names (so that access by named paths is unambiguous). *)
 
-module StringSet = Set.Make(struct type t = string let compare = compare end)
+module StringSet = Set
 
 let check_unique_names sg =
   let type_names = ref StringSet.empty

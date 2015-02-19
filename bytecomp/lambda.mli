@@ -117,7 +117,6 @@ val name_lambda: lambda -> (Ident.t -> lambda) -> lambda
 val name_lambda_list: lambda list -> (lambda list -> lambda) -> lambda
 val is_guarded: lambda -> bool
 
-module IdentSet: Set.S with type elt = Ident.t
-val free_variables: lambda -> IdentSet.t
+val free_variables: lambda -> Ident.t Set.t
 
 val transl_path: Path.t -> lambda

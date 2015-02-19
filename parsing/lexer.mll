@@ -47,7 +47,6 @@ let keyword_table =
     "for", FOR;
     "fun", FUN;
     "function", FUNCTION;
-    "functor", FUNCTOR;
     "if", IF;
     "in", IN;
     "include", INCLUDE;

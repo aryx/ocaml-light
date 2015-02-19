@@ -21,6 +21,8 @@ open Lambda
 
 exception Real_reference
 
+module IdentSet = Set
+
 let rec eliminate_ref id = function
     Lvar v as lam ->
       if Ident.same v id then raise Real_reference else lam

@@ -14,8 +14,7 @@
 {
 (* Remember the possibly free structure identifiers *)
 
-module StringSet = 
-  Set.Make(struct type t = string let compare = compare end)
+module StringSet = Set
 
 let free_structure_names = ref StringSet.empty
 

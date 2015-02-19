@@ -144,7 +144,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token FOR
 %token FUN
 %token FUNCTION
-%token FUNCTOR
 %token GREATER
 %token GREATERRBRACKET
 %token IF
@@ -282,13 +281,6 @@ module_expr:
       { mkmod(Pmod_structure($2)) }
   | STRUCT structure error
       { unclosed "struct" 1 "end" 3 }
-  | FUNCTOR LPAREN UIDENT COLON module_type RPAREN MINUSGREATER module_expr
-    %prec prec_fun
-      { mkmod(Pmod_functor($3, $5, $8)) }
-  | module_expr LPAREN module_expr RPAREN
-      { mkmod(Pmod_apply($1, $3)) }
-  | module_expr LPAREN module_expr error
-      { unclosed "(" 2 ")" 4 }
   | LPAREN module_expr COLON module_type RPAREN
       { mkmod(Pmod_constraint($2, $4)) }
   | LPAREN module_expr COLON module_type error
@@ -332,8 +324,6 @@ module_binding:
       { $2 }
   | COLON module_type EQUAL module_expr
       { mkmod(Pmod_constraint($4, $2)) }
-  | LPAREN UIDENT COLON module_type RPAREN module_binding
-      { mkmod(Pmod_functor($2, $4, $6)) }
 ;
 
 /* Module types */
@@ -345,9 +335,6 @@ module_type:
       { mkmty(Pmty_signature(List.rev $2)) }
   | SIG signature error
       { unclosed "sig" 1 "end" 3 }
-  | FUNCTOR LPAREN UIDENT COLON module_type RPAREN MINUSGREATER module_type
-    %prec prec_fun
-      { mkmty(Pmty_functor($3, $5, $8)) }
   | module_type WITH with_constraints
       { mkmty(Pmty_with($1, List.rev $3)) }
   | LPAREN module_type RPAREN
@@ -384,8 +371,6 @@ signature_item:
 module_declaration:
     COLON module_type
       { $2 }
-  | LPAREN UIDENT COLON module_type RPAREN module_declaration
-      { mkmty(Pmty_functor($2, $4, $6)) }
 ;
 
 /* Core expressions */
