@@ -130,11 +130,7 @@ let name_lambda_list args fn =
       Llet(Strict, id, arg, name_list (Lvar id :: names) rem) in
   name_list [] args
 
-module IdentSet =
-  Set.Make(struct
-    type t = Ident.t
-    let compare = compare
-  end)
+module IdentSet = Set
 
 let free_variables l =
   let fv = ref IdentSet.empty in

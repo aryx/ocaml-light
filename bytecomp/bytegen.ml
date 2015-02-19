@@ -97,6 +97,8 @@ let add_const_unit = function
 
 (**** Auxiliary for compiling "let rec" ****)
 
+module IdentSet = Set
+
 let rec size_of_lambda = function
   | Lfunction(kind, params, body) as funct ->
       1 + IdentSet.cardinal(free_variables funct)

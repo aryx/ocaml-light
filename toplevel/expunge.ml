@@ -17,11 +17,7 @@
 open Sys
 open Misc
 
-module StringSet =
-  Set.Make(struct
-    type t = string
-    let compare = compare
-  end)
+module StringSet = Set
 
 let to_keep = ref StringSet.empty
 

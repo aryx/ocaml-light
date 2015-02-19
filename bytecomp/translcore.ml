@@ -248,6 +248,8 @@ let transl_primitive p =
 
 (* To check the well-formedness of r.h.s. of "let rec" definitions *)
 
+module IdentSet = Set
+
 let check_recursive_lambda idlist lam =
   let rec check_top = function
       Lfunction(kind, params, body) as funct -> true

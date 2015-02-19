@@ -37,11 +37,7 @@ type link_action =
 
 (* First pass: determine which units are needed *)
 
-module IdentSet =
-  Set.Make(struct
-    type t = Ident.t
-    let compare = compare
-  end)
+module IdentSet = Set
 
 let missing_globals = ref IdentSet.empty
 

@@ -13,7 +13,7 @@
 
 (* To print values *)
 
-module Printer = Genprintval.Make(Obj)
+module Printer = Genprintval
 
 let max_printer_depth = ref 100
 let max_printer_steps = ref 300

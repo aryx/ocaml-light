@@ -55,11 +55,7 @@ let rec enter_types env = function
 
 (* Translate one type declaration *)
 
-module StringSet =
-  Set.Make(struct
-    type t = string
-    let compare = compare
-  end)
+module StringSet = Set
 
 (* First pass: parameters, constraints and expansion *)
 let transl_declaration env (name, sdecl) (id, decl) =

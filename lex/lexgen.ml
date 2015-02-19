@@ -105,8 +105,7 @@ type transition =
     OnChars of int
   | ToAction of int
 
-module TransSet =
-  Set.Make(struct type t = transition let compare = compare end)
+module TransSet = Set
 
 let rec nullable = function
     Empty      -> true
@@ -165,11 +164,10 @@ let split_trans_set trans_set =
     trans_set
     (no_action, [])
 
-module StateMap =
-  Map.Make(struct type t = TransSet.t let compare = TransSet.compare end)
+module StateMap = Map
 
-let state_map = ref (StateMap.empty: int StateMap.t)
-let todo = (Stack.create() : (TransSet.t * int) Stack.t)
+let state_map = ref (StateMap.empty: (transition Set.t, int) StateMap.t)
+let todo = (Stack.create() : (transition Set.t * int) Stack.t)
 let next_state_num = ref 0
 
 let reset_state_mem () =

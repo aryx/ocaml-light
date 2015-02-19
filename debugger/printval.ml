@@ -47,9 +47,12 @@ let check_depth depth obj ty =
     false
   end else true
 
-module Printer = Genprintval.Make(Debugcom.Remote_value)
+(* TODO: need a GenprintvalRemoteValue I think *)
+module Printer = Genprintval
 
 let install_printer path ty fn =
+  failwith "Debugger.Printval.install_printer"
+(*
   Printer.install_printer path ty
     (function remote_val ->
        try
@@ -57,17 +60,24 @@ let install_printer path ty fn =
        with
          Debugcom.Marshalling_error ->
            print_string "<cannot fetch remote object>")
+*)
 
 let remove_printer = Printer.remove_printer
 
 let max_printer_depth = ref 20
 let max_printer_steps = ref 300
 
-let print_exception = Printer.print_exception
+let print_exception x = 
+  (*Printer.print_exception *)
+  failwith "Debugger.Printval.print_exception"
+
 
 let print_value max_depth obj ty env =
+  failwith "Debugger.Printval.print_value"
+(*
   Printer.print_value !max_printer_steps max_depth
     check_depth env obj ty
+*)
 
 let print_named_value max_depth exp obj ty env =
   open_box 2;
