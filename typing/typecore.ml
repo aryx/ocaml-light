@@ -37,14 +37,7 @@ type error =
   | Label_missing
   | Label_not_mutable of Longident.t
   | Bad_format of string
-  | Undefined_method_err of string
-  | Unbound_class of Longident.t
-  | Virtual_class of Longident.t
-  | Unbound_instance_variable of string
-  | Instance_variable_not_mutable of string
   | Not_subtype of (type_expr * type_expr) list * (type_expr * type_expr) list
-  | Outside_class
-  | Value_multiply_overridden of string
   | Coercion_failure of type_expr * type_expr * (type_expr * type_expr) list
   | Too_many_arguments
 
@@ -729,20 +722,6 @@ let report_error = function
       print_string " is not mutable"
   | Bad_format s ->
       print_string "Bad format `"; print_string s; print_string "'"
-  | Undefined_method_err me ->
-      print_string "This expression has no method ";
-      print_string me
-  | Unbound_class cl ->
-      print_string "Unbound class "; longident cl
-  | Virtual_class cl ->
-      print_string "One cannot create instances of the virtual class ";
-      longident cl
-  | Unbound_instance_variable v ->
-      print_string "Unbound instance variable ";
-      print_string v
-  | Instance_variable_not_mutable v ->
-      print_string " The instance variable "; print_string v;
-      print_string " is not mutable"
   | Not_subtype(tr1, tr2) ->
       reset ();
       List.iter
@@ -753,11 +732,6 @@ let report_error = function
         tr2;
       trace true (fun _ -> print_string "is not a subtype of type") tr1;
       trace false (fun _ -> print_string "is not compatible with type") tr2
-  | Outside_class ->
-      print_string "Object duplication outside a class definition."
-  | Value_multiply_overridden v ->
-      print_string "The instance variable "; print_string v;
-      print_string " is overridden several times"
   | Coercion_failure (ty, ty', trace) ->
       unification_error trace
         (function () ->

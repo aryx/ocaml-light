@@ -25,9 +25,6 @@ type error =
   | Unbound_type_constructor of Longident.t
   | Type_arity_mismatch of Longident.t * int * int
   | Bound_type_variable of string
-  | Recursive_type
-  | Unbound_class of Longident.t
-  | Unbound_row_variable of Longident.t
   | Type_mismatch of (type_expr * type_expr) list
   | Alias_type_mismatch of (type_expr * type_expr) list
 
@@ -188,12 +185,6 @@ let report_error = function
       close_box()
   | Bound_type_variable name ->
       print_string "Already bound type parameter "; print_string name
-  | Recursive_type ->
-      print_string "This type is recursive"
-  | Unbound_class lid ->
-      print_string "Unbound class "; longident lid
-  | Unbound_row_variable lid ->
-      print_string "Unbound row variable in #"; longident lid
   | Type_mismatch trace ->
       Printtyp.unification_error trace
         (function () ->

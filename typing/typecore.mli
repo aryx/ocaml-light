@@ -45,14 +45,7 @@ type error =
   | Label_missing
   | Label_not_mutable of Longident.t
   | Bad_format of string
-  | Undefined_method_err of string
-  | Unbound_class of Longident.t
-  | Virtual_class of Longident.t
-  | Unbound_instance_variable of string
-  | Instance_variable_not_mutable of string
   | Not_subtype of (type_expr * type_expr) list * (type_expr * type_expr) list
-  | Outside_class
-  | Value_multiply_overridden of string
   | Coercion_failure of type_expr * type_expr * (type_expr * type_expr) list
   | Too_many_arguments
 

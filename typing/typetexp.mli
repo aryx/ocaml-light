@@ -32,9 +32,6 @@ type error =
   | Unbound_type_constructor of Longident.t
   | Type_arity_mismatch of Longident.t * int * int
   | Bound_type_variable of string
-  | Recursive_type
-  | Unbound_class of Longident.t
-  | Unbound_row_variable of Longident.t
   | Type_mismatch of (Types.type_expr * Types.type_expr) list
   | Alias_type_mismatch of (Types.type_expr * Types.type_expr) list
 
