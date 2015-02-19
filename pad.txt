@@ -80,11 +80,11 @@ Then I did many modifications, mostly removing stuff:
  - removed support for objects! reduce the code and the complexity
    of the typechecker
  - removed support for functor! I prefer defunctorized data structure
-   anyway
- - removed support for include, with type signatures
+   anyway, and removed support for include, with type signature
+ - removed support for streams
+ - I moved the debugger/ and toplevel/ under tools/
  - TODO go back to simpler typechecker with no Link, Nil and stuff
    introduced for the need of objects
- - I moved the debugger/ and toplevel/ under tools/
 
 
 
@@ -93,10 +93,8 @@ Then I backported a few things from a more recent ocaml distribution:
    configure
  - a few modifications to configure to remove HAS_STRERROR test
    and to not use -fno-defer-pop for darwin (clang)
-
-backport a few fixes (see section below) 
  - b8238a8b61696e454e5fc391dec9d71555b909e9
-  PR#5662 : typo in md5.c when clearing sensitive data in context
+   PR#5662 : typo in md5.c when clearing sensitive data in context
 
 *** TODO warnings to backports
 
@@ -118,17 +116,17 @@ Faute d'orthographe sur un ident dans intern_from_string.
 I think)
 
 
-
 * Compile
 
-./configure
-make coldstart
-make
+$ ./configure
+$ make coldstart
+$ make
 
 if you change types.mli, then the signature of the .cmo will
-change in which case you need to 'make bootstrap'!
+change in which case you need to 
+$ make bootstrap
 
-* tricks
+* Debugging ocamlc and ocamlrun themselves
 
 ** make ocamlrund
 ocamlrund -t => trace!

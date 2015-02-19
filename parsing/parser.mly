@@ -145,7 +145,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token FUN
 %token FUNCTION
 %token GREATER
-%token GREATERRBRACKET
 %token IF
 %token IN
 %token <string> INFIXOP0
@@ -158,7 +157,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token LBRACE
 %token LBRACKET
 %token LBRACKETBAR
-%token LBRACKETLESS
 %token LESS
 %token LESSMINUS
 %token LET
@@ -212,8 +210,8 @@ let unclosed opening_name opening_num closing_name closing_num =
 %left  BAR                              /* | in patterns */
 %left  COMMA                            /* , in expressions, patterns, types */
 %right prec_type_arrow                  /* -> in type expressions */
-%right OR BARBAR                        /* or */
-%right AMPERSAND AMPERAMPER             /* & */
+%right OR BARBAR                        /* || */
+%right AMPERSAND AMPERAMPER             /* && */
 %left  INFIXOP0 EQUAL LESS GREATER      /* = < > etc */
 %right INFIXOP1                         /* @ ^ etc */
 %right COLONCOLON                       /* :: */
@@ -382,16 +380,12 @@ expr:
       { mkexp(Pexp_apply($1, List.rev $2)) }
   | LET rec_flag let_bindings IN seq_expr %prec prec_let
       { mkexp(Pexp_let($2, List.rev $3, $5)) }
-  | PARSER opt_pat opt_bar parser_cases %prec prec_fun
-      { Pstream.cparser ($2, List.rev $4) }
   | FUNCTION opt_bar match_cases %prec prec_fun
       { mkexp(Pexp_function(List.rev $3)) }
   | FUN simple_pattern fun_def %prec prec_fun
       { mkexp(Pexp_function([$2, $3])) }
   | MATCH seq_expr WITH opt_bar match_cases %prec prec_match
       { mkexp(Pexp_match($2, List.rev $5)) }
-  | MATCH seq_expr WITH PARSER opt_pat opt_bar parser_cases %prec prec_match
-      { mkexp(Pexp_apply(Pstream.cparser ($5, List.rev $7), [$2])) }
   | TRY seq_expr WITH opt_bar match_cases %prec prec_try
       { mkexp(Pexp_try($2, List.rev $5)) }
   | TRY seq_expr WITH error %prec prec_try
@@ -488,12 +482,6 @@ simple_expr:
       { mkexp(Pexp_record(List.rev $2)) }
   | LBRACE lbl_expr_list opt_semi error
       { unclosed "{" 1 "}" 4 }
-  | LBRACKETLESS stream_expr opt_semi GREATERRBRACKET
-      { Pstream.cstream (List.rev $2) }
-  | LBRACKETLESS stream_expr opt_semi error
-      { unclosed "[<" 1 ">]" 4 }
-  | LBRACKETLESS GREATERRBRACKET
-      { Pstream.cstream [] }
   | LBRACKETBAR expr_semi_list opt_semi BARRBRACKET
       { mkexp(Pexp_array(List.rev $2)) }
   | LBRACKETBAR expr_semi_list opt_semi error
@@ -531,33 +519,6 @@ fun_binding:
   | simple_pattern fun_binding
       { mkexp(Pexp_function[$1,$2]) }
 ;
-parser_cases:
-    parser_case                                 { [$1] }
-  | parser_cases BAR parser_case                { $3 :: $1 }
-;
-parser_case:
-    LBRACKETLESS stream_pattern opt_semi GREATERRBRACKET opt_pat
-    MINUSGREATER seq_expr
-      { (List.rev $2, $5, $7) }
-  | LBRACKETLESS stream_pattern opt_semi error
-      { unclosed "[<" 1 ">]" 4 }
-  | LBRACKETLESS GREATERRBRACKET opt_pat MINUSGREATER seq_expr
-      { ([], $3, $5) }
-;
-stream_pattern:
-    stream_pattern_component opt_err                     { [($1, $2)] }
-  | stream_pattern SEMI stream_pattern_component opt_err { ($3, $4) :: $1 }
-;
-stream_pattern_component:
-    QUOTE pattern
-      { Pstream.Spat_term ($2, None) }
-  | QUOTE pattern WHEN expr %prec prec_list
-      { Pstream.Spat_term ($2, Some $4) }
-  | pattern EQUAL expr
-      { Pstream.Spat_nterm ($1, $3) }
-  | pattern
-      { Pstream.Spat_sterm $1 }
-;
 opt_pat:
     /* empty */                                 { None }
   | simple_pattern                              { Some $1 }
@@ -565,14 +526,6 @@ opt_pat:
 opt_err:
     /* empty */                                 { None }
   | QUESTION expr %prec prec_list               { Some $2 }
-;
-stream_expr:
-    stream_expr_component                       { [$1] }
-  | stream_expr SEMI stream_expr_component      { $3 :: $1 }
-;
-stream_expr_component:
-    QUOTE expr %prec prec_list                  { Pstream.Sexp_term $2 }
-  | expr %prec prec_list                        { Pstream.Sexp_nterm $1 }
 ;
 match_cases:
     pattern match_action                        { [$1, $2] }
