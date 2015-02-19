@@ -93,7 +93,6 @@ type exception_declaration = type_expr list
 type module_type =
     Tmty_ident of Path.t
   | Tmty_signature of signature
-  | Tmty_functor of Ident.t * module_type * module_type
 
 and signature = signature_item list
 

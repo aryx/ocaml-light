@@ -202,7 +202,6 @@ let check_unique_names sg =
 let rec closed_modtype = function
     Tmty_ident p -> true
   | Tmty_signature sg -> List.for_all closed_signature_item sg
-  | Tmty_functor(id, param, body) -> closed_modtype body
 
 and closed_signature_item = function
     Tsig_value(id, desc) -> Ctype.closed_schema desc.val_type

@@ -332,14 +332,6 @@ let rec modtype = function
       print_string "sig"; signature_body true sg; 
       print_break 1 (-2); print_string "end";
       close_box()
-  | Tmty_functor(param, ty_arg, ty_res) ->
-      open_box 2;
-      print_string "functor"; print_cut();
-      print_string "("; ident param; print_string " : ";
-      modtype ty_arg;
-      print_string ") ->"; print_space();
-      modtype ty_res;
-      close_box()
 
 and signature_body spc = function
     [] -> ()

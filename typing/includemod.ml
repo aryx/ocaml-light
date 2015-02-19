@@ -121,20 +121,10 @@ and try_modtypes env subst mty1 mty2 =
       try_modtypes env subst (expand_module_path env p1) mty2
   | (Tmty_signature sig1, Tmty_signature sig2) ->
       signatures env subst sig1 sig2
-  | (Tmty_functor(param1, arg1, res1), Tmty_functor(param2, arg2, res2)) ->
-      let cc_arg =
-        modtypes env Subst.identity (Subst.modtype subst arg2) arg1
-      in
-      let cc_res =
-        modtypes (Env.add_module param1 arg1 env)
-          (Subst.add_module param2 (Pident param1) subst) res1 res2
-      in
-      begin match (cc_arg, cc_res) with
-          (Tcoerce_none, Tcoerce_none) -> Tcoerce_none
-        | _ -> Tcoerce_functor(cc_arg, cc_res)
-      end
+(*
   | (_, _) ->
       raise Dont_match
+*)
 
 and try_modtypes2 env mty1 mty2 =
   (* mty2 is an identifier *)

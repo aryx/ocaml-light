@@ -441,12 +441,6 @@ let rec components_of_module env sub path mty =
         )
         sg pl;
         Structure_comps c
-  | Tmty_functor(param, ty_arg, ty_res) ->
-        Functor_comps {
-          fcomp_param = param;
-          fcomp_arg = Subst.modtype sub ty_arg;
-          fcomp_res = Subst.modtype sub ty_res;
-          fcomp_env = env }
   | Tmty_ident p ->
         Structure_comps {
           comp_values = Tbl.empty; comp_constrs = Tbl.empty;
