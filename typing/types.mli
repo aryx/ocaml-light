@@ -26,7 +26,6 @@ and type_desc =
   | Tarrow of type_expr * type_expr
   | Ttuple of type_expr list
   | Tconstr of Path.t * type_expr list * abbrev_memo ref
-  | Tfield of string * field_kind * type_expr * type_expr
   | Tnil
   | Tlink of type_expr
 
@@ -34,11 +33,6 @@ and abbrev_memo =
     Mnil
   | Mcons of Path.t * type_expr * abbrev_memo
   | Mlink of abbrev_memo ref
-
-and field_kind =
-    Fvar of field_kind option ref
-  | Fpresent
-  | Fabsent
 
 (* Value descriptions *)
 

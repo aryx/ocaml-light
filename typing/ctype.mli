@@ -44,9 +44,6 @@ val none: type_expr
 val repr: type_expr -> type_expr
         (* Return the canonical representative of a type. *)
 
-val flatten_fields :
-        type_expr -> (string * field_kind * type_expr) list * type_expr
-        (* Transform a field type into a list of pairs label-type *)
 val opened_object: type_expr -> bool
 val close_object: type_expr -> unit
 val set_object_name:

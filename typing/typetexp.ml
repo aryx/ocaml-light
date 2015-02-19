@@ -142,19 +142,6 @@ let rec transl_type env policy styp =
         ty
       end 
 
-and transl_fields env policy =
-  function
-    [] ->
-      newty Tnil
-  | {pfield_desc = Pfield_var} as field::_ ->
-      if policy = Fixed then
-        raise(Error(field.pfield_loc, Unbound_type_variable ".."));
-      newvar ()
-  | {pfield_desc = Pfield(s, e)}::l ->
-      let ty1 = transl_type env policy e in
-      let ty2 = transl_fields env policy l in
-        newty (Tfield (s, Fpresent, ty1, ty2))
-
 let transl_simple_type env fixed styp =
   aliases := Tbl.empty;
   let typ = transl_type env (if fixed then Fixed else Extensible) styp in
