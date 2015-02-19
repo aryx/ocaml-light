@@ -25,7 +25,6 @@ open Lambda
 type error =
     Illegal_letrec_pat
   | Illegal_letrec_expr
-  | Free_super_var
 
 exception Error of Location.t * error
 
@@ -548,6 +547,3 @@ let report_error = function
   | Illegal_letrec_expr ->
       print_string
       "This kind of expression is not allowed as right-hand side of `let rec'"
-  | Free_super_var ->
-      print_string
-        "Ancestor names can only be used to select inherited methods"

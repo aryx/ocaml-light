@@ -70,14 +70,6 @@ index d89ec8f..07ad56c 100644
 --- a/bytecomp/translcore.ml
 +++ b/bytecomp/translcore.ml
 @@ -20,11 +20,12 @@ open Primitive
- 
- type error =
-     Illegal_letrec_pat
-   | Illegal_letrec_expr
-+  | Free_super_var
- 
- exception Error of Location.t * error
- 
 @@ -139,8 +140,8 @@ let primitives_table = create_hashtable 31 [
  ]
  
@@ -150,13 +142,6 @@ index d89ec8f..07ad56c 100644
  
 
  let transl_exception id decl =
-@@ -436,3 +467,6 @@ let report_error = function
-   | Illegal_letrec_expr ->
-       print_string
-       "This kind of expression is not allowed as right-hand side of `let rec'"
-+  | Free_super_var ->
-+      print_string
-+        "Ancestor names can only be used to select inherited methods"
 diff --git a/bytecomp/translcore.mli b/bytecomp/translcore.mli
 index fbaa50a..20ffd18 100644
 --- a/bytecomp/translcore.mli
@@ -171,12 +156,6 @@ index fbaa50a..20ffd18 100644
  val transl_exp: expression -> lambda
  val transl_let:
        rec_flag -> (pattern * expression) list -> lambda -> lambda
-@@ -27,9 +30,8 @@ val transl_exception: Ident.t -> exception_declaration -> lambda
- type error =
-     Illegal_letrec_pat
-   | Illegal_letrec_expr
-+  | Free_super_var
- 
  exception Error of Location.t * error
  
 diff --git a/bytecomp/translmod.ml b/bytecomp/translmod.ml

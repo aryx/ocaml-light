@@ -31,7 +31,6 @@ val transl_exception: Ident.t -> exception_declaration -> lambda
 type error =
     Illegal_letrec_pat
   | Illegal_letrec_expr
-  | Free_super_var
 
 exception Error of Location.t * error
 
