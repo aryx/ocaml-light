@@ -414,17 +414,6 @@ let class_var l (m, t) =
   type_sch t;
   close_box()
 
-let metho public concrete lab ty =
-  print_space ();
-  open_box 2;
-  if Concr.mem lab concrete then print_string "method "
-  else print_string "virtual ";
-  if not (List.mem_assoc lab public) then print_string "protected ";
-  print_string lab;
-  print_string " :";
-  print_space ();
-  type_sch ty;
-  close_box ()
 
 let methods_of_type ty =
   match (repr ty).desc with
@@ -435,54 +424,6 @@ let rec list_public_methods ty =
   let (fields, _) = flatten_fields ty in
   List.map (function (m, _, t) -> (m, t)) fields
 
-let class_type id cl_ty =
-  let self = repr cl_ty.cty_self in
-  let params = List.map repr cl_ty.cty_params in
-  let args = cl_ty.cty_args in
-  let vars = cl_ty.cty_vars in
-
-  reset ();
-  (* Self may have a name *)
-  visited_objects := self :: !visited_objects;
-  aliased := params @ !aliased;
-  begin match self.desc with
-    Tobject (fi, _) -> mark_loops fi
-  | _               -> fatal_error "Printtyp.class_type"
-  end;
-  List.iter mark_loops params;
-  List.iter mark_loops args;
-  Vars.iter (fun _ (_, ty) -> mark_loops ty) vars;
-  Meths.iter (fun _ ty -> mark_loops ty) cl_ty.cty_meths;
-  List.iter (fun x -> name_of_type x; ()) params;
-  open_hvbox 2;
-  open_box 0;
-  print_string "class ";
-  if cl_ty.cty_new = None then
-    print_string "virtual ";
-  if not (opened_object self) then
-    print_string "closed ";
-  type_sch {desc = Tconstr(Pident id, params, ref Mnil); level = 0};
-  if List.memq self !aliased then
-    (name_of_type self; ());
-  List.iter class_arg args;
-  if List.memq self !aliased then begin
-    print_string " : ";
-    print_string "'";
-    print_string (name_of_type self)
-  end;
-  print_string " =";
-  close_box ();
-  List.iter constrain params;
-  Vars.iter class_var vars;
-  let public_methods = list_public_methods (methods_of_type self) in
-  let methods =
-    List.fold_left (fun m (lab, ty) -> Meths.add lab ty m)
-      cl_ty.cty_meths public_methods
-  in
-  Meths.iter (metho public_methods cl_ty.cty_concr) methods;
-  print_break 1 (-2);
-  print_string "end";
-  close_box()
 
 (* Print a module type *)
 

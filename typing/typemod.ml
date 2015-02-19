@@ -33,7 +33,6 @@ type error =
   | With_mismatch of Longident.t * Includemod.error list
   | Repeated_name of string * string
   | Non_generalizable of type_expr
-  | Non_generalizable_class of Ident.t * class_type
   | Non_generalizable_module of module_type
 
 exception Error of Location.t * error
@@ -204,12 +203,6 @@ let check_unique_names sg =
     List.iter check_item sg
 
 (* Check that all core type schemes in a structure are closed *)
-
-let closed_class classty =
-  List.for_all Ctype.closed_schema classty.cty_params &
-  List.for_all Ctype.closed_schema classty.cty_args &
-  Vars.fold (fun _ (_, ty) -> (or) (Ctype.closed_schema ty))
-            classty.cty_vars true
 
 let rec closed_modtype = function
     Tmty_ident p -> true
@@ -426,12 +419,6 @@ let report_error = function
       open_box 0;
       print_string "The type of this expression,"; print_space();
       type_scheme typ; print_string ","; print_space();
-      print_string "contains type variables that cannot be generalized";
-      close_box()
-  | Non_generalizable_class (id, desc) ->
-      open_box 0;
-      print_string "The type of this class,"; print_space();
-      class_type id desc; print_string ","; print_space();
       print_string "contains type variables that cannot be generalized";
       close_box()
   | Non_generalizable_module mty ->

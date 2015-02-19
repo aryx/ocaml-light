@@ -445,18 +445,6 @@ let instance_parameterized_type_2 sch_args sch_lst sch =
   unmark_type ty;  
   (ty_args, ty_lst, ty)
 
-let instance_class cl =
-  let params = List.map copy cl.cty_params in
-  let args = List.map copy cl.cty_args in
-  let vars = Vars.map (function (mut, ty) -> (mut, copy ty)) cl.cty_vars in
-  let mets = Meths.map copy cl.cty_meths in
-  let self = copy cl.cty_self in
-  cleanup_types ();
-  List.iter unmark_type params; List.iter unmark_type args;
-  Vars.iter (fun l (m, t) -> unmark_type t) vars;
-  Meths.iter (fun l t -> unmark_type t) mets;
-  unmark_type self;
-  (params, args, vars, mets, self)
 
 (**** Instantiation with parameter substitution ****)
 
@@ -1464,39 +1452,6 @@ let nondep_type_decl env mid id is_covariant decl =
         List.iter (fun (c, mut, t) -> unmark_type t) lbls
     end;
     begin match decl.type_manifest with
-      None    -> ()
-    | Some ty -> unmark_type ty
-    end;
-    decl
-  with Not_found ->
-    cleanup_types ();
-    raise Not_found
-
-(* Preserve sharing inside class types. *)
-let nondep_class_type env id decl =
-  try
-    let decl =
-      { cty_params = List.map (nondep_type_rec env id) decl.cty_params;
-        cty_args = List.map (nondep_type_rec env id) decl.cty_args;
-        cty_vars =
-          Vars.map (function (m, t) -> (m, nondep_type_rec env id t))
-            decl.cty_vars;
-        cty_meths = Meths.map (nondep_type_rec env id) decl.cty_meths;
-        cty_self = nondep_type_rec env id decl.cty_self;
-        cty_concr = decl.cty_concr;
-        cty_new =
-          begin match decl.cty_new with
-            None    -> None
-          | Some ty -> Some (nondep_type_rec env id ty)
-          end }
-    in
-    cleanup_types ();
-    List.iter unmark_type decl.cty_params;
-    List.iter unmark_type decl.cty_args;
-    Vars.iter (fun l (m, t) -> unmark_type t) decl.cty_vars;
-    Meths.iter (fun l t -> unmark_type t) decl.cty_meths;
-    unmark_type decl.cty_self;
-    begin match decl.cty_new with
       None    -> ()
     | Some ty -> unmark_type ty
     end;

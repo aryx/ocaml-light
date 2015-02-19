@@ -22,11 +22,6 @@ val type_binding:
           (Typedtree.pattern * Typedtree.expression) list * Env.t
 val type_expression:
         Env.t -> Parsetree.expression -> Typedtree.expression
-val type_method:
-        Env.t -> type_expr -> string option ->
-        (Ident.t * Types.type_expr) Meths.t ->
-        Parsetree.expression -> type_expr ->
-        Typedtree.expression * (Ident.t * Types.type_expr) Meths.t
 val type_pattern_list:
         Env.t -> Parsetree.pattern list -> Typedtree.pattern list * Env.t
 val type_expect:
