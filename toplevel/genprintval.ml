@@ -129,8 +129,6 @@ let print_qualified lookup_fun env ty_path name =
          with Not_found -> false
       then print_string name
       else (Printtyp.path p; print_string "."; print_string name)
-  | Papply(p1, p2) ->
-      Printtyp.path ty_path
 
 let print_constr =
   print_qualified

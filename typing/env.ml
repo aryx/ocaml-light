@@ -143,11 +143,6 @@ let rec find_module_descr path env =
           let (descr, pos) = Tbl.find s c.comp_components in
           descr
       end
-  | Papply(p1, p2) ->
-      begin match find_module_descr p1 env with
-      | Structure_comps c ->
-          raise Not_found
-      end
 
 let find proj1 proj2 path env =
   match path with
@@ -159,8 +154,6 @@ let find proj1 proj2 path env =
         Structure_comps c ->
           let (data, pos) = Tbl.find s (proj2 c) in data
       end
-  | Papply(p1, p2) ->
-      raise Not_found
 
 let find_value =
   find (fun env -> env.values) (fun sc -> sc.comp_values)
@@ -197,8 +190,6 @@ let find_module path env =
         Structure_comps c ->
           let (data, pos) = Tbl.find s c.comp_modules in data
       end
-  | Papply(p1, p2) ->
-      raise Not_found (* not right *)
 
 (* Lookup by name *)
 
@@ -245,7 +236,6 @@ and lookup_module lid env =
   | Lapply(l1, l2) ->
       let (p1, desc1) = lookup_module_descr l1 env in
       let (p2, mty2) = lookup_module l2 env in
-      let p = Papply(p1, p2) in
       begin match desc1 with
       | Structure_comps c ->
           raise Not_found
