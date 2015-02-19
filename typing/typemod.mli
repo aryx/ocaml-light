@@ -25,9 +25,7 @@ val check_nongen_schemes:
 type error =
     Unbound_module of Longident.t
   | Unbound_modtype of Longident.t
-  | Cannot_apply of module_type
   | Not_included of Includemod.error list
-  | Cannot_eliminate_dependency of module_type
   | Signature_expected
   | Structure_expected of module_type
   | With_no_component of Longident.t
