@@ -2469,8 +2469,6 @@ index 5f14a94..2a73ea9 100644
 --- a/typing/subst.ml
 +++ b/typing/subst.ml
 @@ -57,17 +57,108 @@ let type_path s = function
-   | Papply(p1, p2) ->
-       fatal_error "Subst.type_path"
  
 -let rec type_expr s = function
 -    Tvar{tvar_link = None} as ty -> ty

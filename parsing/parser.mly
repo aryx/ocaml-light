@@ -881,7 +881,6 @@ mod_longident:
 mod_ext_longident:
     UIDENT                                      { Lident $1 }
   | mod_ext_longident DOT UIDENT                { Ldot($1, $3) }
-  | mod_ext_longident LPAREN mod_ext_longident RPAREN { Lapply($1, $3) }
 ;
 mty_longident:
     ident                                       { Lident $1 }
