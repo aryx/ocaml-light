@@ -44,13 +44,6 @@ val none: type_expr
 val repr: type_expr -> type_expr
         (* Return the canonical representative of a type. *)
 
-val opened_object: type_expr -> bool
-val close_object: type_expr -> unit
-val set_object_name:
-        type_expr -> type_expr list -> Ident.t -> unit
-val remove_object_name: type_expr -> unit
-val hide_private_methods: type_expr -> unit
-
 val generalize: type_expr -> unit
         (* Generalize in-place the given type *)
 val make_nongen: type_expr -> unit
