@@ -303,6 +303,12 @@ external (:=): 'a ref -> 'a -> unit = "%setfield0"
 external incr: int ref -> unit = "%incr"
 external decr: int ref -> unit = "%decr"
 
+
+(* pad: for upward compatibility *)
+
+type ('a, 'b, 'c, 'd) format4 = ('a, 'b, 'c, 'c, 'c, 'd) format6
+type ('a, 'b, 'c) format = ('a, 'b, 'c, 'c) format4
+
 (* Miscellaneous *)
 
 external sys_exit : int -> 'a = "sys_exit"
