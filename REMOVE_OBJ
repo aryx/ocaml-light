@@ -1,18 +1,3 @@
-
-* files
-
-diff --git a/Makefile b/Makefile
-index e4e957a..6a12118 100644
---- a/Makefile
-+++ b/Makefile
-@@ -19,20 +19,23 @@ INCLUDES=-I utils -I parsing -I typing -I bytecomp -I asmcomp -I driver -I tople
- UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
-   utils/clflags.cmo utils/terminfo.cmo
- 
--PARSING=parsing/location.cmo parsing/longident.cmo \
-+PARSING=parsing/label.cmo parsing/location.cmo parsing/longident.cmo \
-   parsing/pstream.cmo parsing/parser.cmo parsing/lexer.cmo parsing/parse.cmo
-
 * bytecomp/
 
  val immed_min: int
@@ -351,25 +336,6 @@ index f055b53..ef54574 100644
 * parsing/
 
 ** ast
-
-diff --git a/parsing/label.ml b/parsing/label.ml
-new file mode 100644
-index 0000000..dd9fd30
---- /dev/null
-+++ b/parsing/label.ml
-@@ -0,0 +1,10 @@
-+(***********************************************************************)
-+(*                                                                     *)
-+(*                         Caml Special Light                          *)
-+(*                                                                     *)
-+(*         Jerome Vouillon, projet Cristal, INRIA Rocquencourt         *)
-+(*                                                                     *)
-+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-+(*  Automatique.  Distributed only by permission.                      *)
-+(*                                                                     *)
-+(***********************************************************************)
-...
-
 
 
 diff --git a/parsing/parsetree.mli b/parsing/parsetree.mli
@@ -2516,17 +2482,6 @@ index 83c9b3f..d355a60 100644
        end
    | (Tsig_type(id1, tydecl1), Tsig_type(id2, tydecl2), pos) :: rem ->
        type_declarations env id1 tydecl1 tydecl2;
-@@ -206,6 +217,9 @@ and signature_components env = function
-   | (Tsig_modtype(id1, info1), Tsig_modtype(id2, info2), pos) :: rem ->
-       modtype_infos env id1 info1 info2;
-       signature_components env rem
-   | _ ->
-       fatal_error "Includemod.signature_components"
- 
-@@ -305,6 +319,14 @@ let include_err = function
-       print_string intf_name;
-       print_string ":";
-       close_box()
 diff --git a/typing/mtype.ml b/typing/mtype.ml
 index 691fc04..6cfea5b 100644
 --- a/typing/mtype.ml
@@ -3945,66 +3900,7 @@ index 08e99a7..ec83c77 100644
 +      	  ()
 +      end;
 +      cstr
-+  | Ptyp_object(fields, None) ->
-+      newobj (transl_fields env fixed fields)
-+  | Ptyp_object(fields, Some alias) ->
-+      begin try
-+        Tbl.find alias !type_variables;
-+	raise(Error(styp.ptyp_loc, Bound_type_variable alias))
-+      with Not_found ->
-+        let obj = newvar () in
-+      	  type_variables := Tbl.add alias obj !type_variables;
-+	  obj.desc <- Tobject (transl_fields env fixed fields, ref None);
-+	  obj
-+      end
-+  | Ptyp_class(lid, stl, alias) ->
-+      if fixed then
-+        raise(Error(styp.ptyp_loc, Unbound_row_variable lid));
-+      let lid2 =
-+        match lid with
-+          Longident.Lident s     -> Longident.Lident ("#" ^ s)
-+	| Longident.Ldot(r, s)   -> Longident.Ldot (r, "#" ^ s)
-+	| Longident.Lapply(_, _) -> fatal_error "Typetexp.transl_simple_type"
-+      in
-+      let (path, decl) =
-+        try
-+          Env.lookup_type lid2 env
-+        with Not_found ->
-+          raise(Error(styp.ptyp_loc, Unbound_class lid)) in
-+      if List.length stl <> decl.type_arity then
-+        raise(Error(styp.ptyp_loc, Type_arity_mismatch(lid, decl.type_arity,
-+                                                           List.length stl)));
-+      let v = new_global_var () in
-+      let (ty, params) =
-+        begin match alias with
-+      	  None ->
-+	    let tl = List.map (transl_simple_type env fixed) stl in
-+	    (expand_abbrev env path tl (ref []) v.level, tl)
-+        | Some alias ->
-+      	    begin try
-+              Tbl.find alias !type_variables;
-+	      raise(Error(styp.ptyp_loc, Bound_type_variable alias))
-+            with Not_found ->
-+      	      type_variables := Tbl.add alias v !type_variables
-+	    end;
-+	    let tl = List.map (transl_simple_type env fixed) stl in
-+	    let cstr = expand_abbrev env path tl (ref []) v.level in
-+	    v.desc <- cstr.desc;
-+	    (v, tl)
-+        end
-+      in
-+      begin match decl.type_manifest with
-+      	Some _ ->
-+	  List.iter2
-+           (fun ty (sty, ty') ->
-+	      try Ctype.unify env (Ctype.instance ty) ty' with
-+		Unify ->
-+		  raise (Error(sty.ptyp_loc, Type_mismatch(ty, ty'))))
-+           decl.type_params (List.combine stl params)
-+      | _ ->
-+      	  ()
-+      end;
-+      ty
+
 +
 +and transl_fields env fixed =
 +  function
