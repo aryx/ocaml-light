@@ -92,12 +92,6 @@ let rec typexp s ty =
           Ttuple(List.map (typexp s) tl)
       | Tconstr(p, tl, abbrev) ->
           Tconstr(type_path s p, List.map (typexp s) tl, ref Mnil)
-      | Tobject (t1, name) ->
-          Tobject (typexp s t1,
-                 ref (match !name with
-                        None -> None
-                      | Some (p, tl) ->
-                          Some (type_path s p, List.map (typexp s) tl)))
       | Tfield(label, kind, t1, t2) ->
           begin match field_kind_repr kind with
             Fpresent ->

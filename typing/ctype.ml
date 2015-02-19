@@ -118,8 +118,6 @@ let newgenvar          = newgenvar
 let new_global_var ()  = new_global_ty Tvar
 let newmarkedgenvar    = newmarkedgenvar
 
-let newobj fields      = newty (Tobject (fields, ref None))
-
 let none = newty (Ttuple [])                (* Clearly ill-formed type *)
 
 (**** Representative of a type ****)
@@ -175,8 +173,7 @@ let associate_fields fields1 fields2 =
 (* +++ Il faudra penser a eventuellement expanser l'abreviation *)
 let rec opened_object ty =
   match (repr ty).desc with
-    Tobject (t, _)     -> opened_object t
-  | Tfield(_, _, _, t) -> opened_object t
+    Tfield(_, _, _, t) -> opened_object t
   | Tvar               -> true
   | _                  -> false
 
@@ -198,8 +195,7 @@ let close_object ty =
     | _                    -> fatal_error "Ctype.close_object (1)"
   in
   match (repr ty).desc with
-    Tobject (ty, _)   -> close ty
-  | Tconstr (_, _, _) -> ()             (* Already closed *)
+    Tconstr (_, _, _) -> ()             (* Already closed *)
   | _                 -> fatal_error "Ctype.close_object (2)"
 
 
@@ -216,21 +212,14 @@ let rec row_variable ty =
 
 let set_object_name ty params id =
   match (repr ty).desc with
-    Tobject (fi, nm) ->
-      begin try
-        nm := Some (Path.Pident id, (row_variable fi)::params)
-      with Not_found ->
-        ()
-      end
-  | Tconstr (_, _, _) ->
+    Tconstr (_, _, _) ->
       ()
   | _ ->
       fatal_error "Ctype.set_object_name"
 
 let remove_object_name ty =
   match (repr ty).desc with
-    Tobject (_, nm)   -> nm := None
-  | Tconstr (_, _, _) -> ()
+    Tconstr (_, _, _) -> ()
   | _                 -> fatal_error "Ctype.remove_object_name"
 
 (**** Hiding of private methods ****)
@@ -238,15 +227,6 @@ let remove_object_name ty =
 let hide_private_methods ty =
   let ty = repr ty in
   match ty.desc with
-    Tobject (f, _) ->
-      let (fl, _) = flatten_fields f in
-      List.iter
-        (function (_, k, _) ->
-           let k = field_kind_repr k in
-           match k with
-             Fvar r -> r := Some Fabsent
-           | _      -> ())
-        fl
   | _ ->
       ()
 
@@ -377,15 +357,6 @@ let rec copy ty =
                    ref (match ! !abbreviations with
                           Mcons _ -> Mlink !abbreviations
                         | abbrev  -> abbrev))
-      | Tobject (t1, {contents = name}) ->
-          let name' =
-            match name with
-              None ->
-                None
-            | Some (p, tl) ->
-                Some (p, List.map copy tl)
-          in
-          Tobject (copy t1, ref name')
       | Tfield (label, kind, t1, t2) ->
           begin match field_kind_repr kind with
             Fpresent ->
@@ -573,8 +544,6 @@ let rec expand_head env ty =
 let rec full_expand env ty =
   let ty = repr (expand_head env ty) in
   match ty.desc with
-    Tobject (fi, {contents = Some (_, v::_)}) when (repr v).desc = Tvar ->
-      { desc = Tobject (fi, ref None); level = ty.level }
   | _ ->
       ty
 
@@ -615,8 +584,6 @@ let rec non_recursive_abbrev env ty =
         with Cannot_expand ->
           iter_type_expr (non_recursive_abbrev env) ty
         end
-    | Tobject (_, _) ->
-        ()
     | _ ->
         iter_type_expr (non_recursive_abbrev env) ty
   end
@@ -640,8 +607,6 @@ let rec occur_rec env visited ty0 ty =
       with Cannot_expand ->
         raise Occur
       end
-  | Tobject (_, _) ->
-      ()
   | _ ->
       iter_type_expr (occur_rec env visited ty0) ty
 
@@ -796,19 +761,6 @@ and unify3 env t1 t1' t2 t2' =
         unify_list env tl1 tl2
     | (Tconstr (p1, tl1, _), Tconstr (p2, tl2, _)) when Path.same p1 p2 ->
         unify_list env tl1 tl2
-    | (Tobject (fi1, nm1), Tobject (fi2, _)) ->
-        unify_fields env fi1 fi2;
-        (* Type [t2'] may have been instantiated by [unify_fields] *)
-        (* XXX One should do some kind of unification... *)
-        begin match (repr t2').desc with
-          Tobject (_, {contents = Some (_, va::_)})
-                when (repr va).desc = Tvar ->
-            ()  
-        | Tobject (_, nm2) ->
-            nm2 := !nm1
-        | _ ->
-            ()
-        end
     | (Tfield _, Tfield _) ->           (* Actually unused *)
         unify_fields env t1' t2'
     | (Tfield (_, kind, _, t1''), _) ->
@@ -977,8 +929,6 @@ let moregeneral env inst_nongen pat_sch subj_sch =
           | (Tconstr (p1, tl1, _), Tconstr (p2, tl2, _))
                 when Path.same p1 p2 ->
               moregen_list env tl1 tl2
-          | (Tobject (fi1, nm1), Tobject (fi2, nm2)) ->
-              moregen_fields env fi1 fi2
           | (Tfield _, Tfield _) ->           (* Actually unused *)
               moregen_fields env t1' t2'
           | (Tfield (_, kind, _, t1''), _) ->
@@ -1086,8 +1036,6 @@ let equal env rename tyl1 tyl2 =
           | (Tconstr (p1, tl1, _), Tconstr (p2, tl2, _))
                 when Path.same p1 p2 ->
               eqtype_list tl1 tl2
-          | (Tobject (fi1, nm1), Tobject (fi2, nm2)) ->
-              eqtype_fields fi1 fi2
           | (Tfield _, Tfield _) ->       (* Actually unused *)
               eqtype_fields t1 t2
           | (Tfield (_, kind, _, t1'), _)
@@ -1157,19 +1105,6 @@ let rec build_subtype env t =
       else (t, false)
   | Tconstr(p, tl, abbrev) ->
       (t, false)
-  | Tobject (t1, _) when opened_object t1 ->
-      (t, false)
-  | Tobject (t1, _) ->
-      (begin try
-         List.assq t !subtypes
-       with Not_found ->
-         let t' = new_global_var () in
-         subtypes := (t, t')::!subtypes;
-         let (t1', _) = build_subtype env t1 in
-         t'.desc <- Tobject (t1', ref None);
-         t'
-       end,
-       true)
   | Tfield(s, _, t1, t2) (* Always present *) ->
       let (t1', _) = build_subtype env t1 in
       let (t2', _) = build_subtype env t2 in
@@ -1232,12 +1167,6 @@ let rec subtype_rec env trace t1 t2 =
         subtype_rec env trace (expand_abbrev env p1 tl1 abbrev1 t1.level) t2
     | (_, Tconstr (p2, tl2, abbrev2)) when generic_abbrev env p2 ->
         subtype_rec env trace t1 (expand_abbrev env p2 tl2 abbrev2 t2.level)
-    | (Tobject (f1, _), Tobject (f2, _))
-              when opened_object f1 & opened_object f2 ->
-        (* Same row variable implies same object. *)
-        [(trace, t1, t2)]
-    | (Tobject (f1, _), Tobject (f2, _)) ->
-        subtype_fields env trace f1 f2
     | (_, _) ->
         subtype_error env trace
   end
@@ -1376,13 +1305,6 @@ let rec nondep_type_rec env id ty =
             end
           else
             Tconstr(p, List.map (nondep_type_rec env id) tl, ref Mnil)
-      | Tobject (t1, name) ->
-          Tobject (nondep_type_rec env id t1,
-                 ref (match !name with
-                        None -> None
-                      | Some (p, tl) ->
-                          if Path.isfree id p then None
-                          else Some (p, List.map (nondep_type_rec env id) tl)))
       | Tfield(label, kind, t1, t2) ->
           begin match field_kind_repr kind with
             Fpresent ->
@@ -1477,11 +1399,6 @@ let rec closed_schema_rec row ty =
     match ty.desc with
       Tvar when level <> generic_level ->
         raise (Failed (if row then Row_var ty else Var ty))
-    | Tobject(f, {contents = Some (_, p)}) ->
-        closed_schema_rec true f;
-        List.iter (closed_schema_rec false) p
-    | Tobject(f, _) ->
-        closed_schema_rec true f
     | Tfield(_, kind, t1, t2) ->
         if field_kind_repr kind = Fpresent then
           closed_schema_rec false t1;

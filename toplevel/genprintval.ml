@@ -334,8 +334,6 @@ module Make(Obj : Obj) = struct
               | Constr_not_found ->         (* raised by find_constr *)
                   print_string "<unknown constructor>"
               end
-          | Tobject (_, _) ->
-              print_string "<obj>"
           | Tfield(_, _, _, _) | Tnil | Tlink _ ->
               fatal_error "Printval.print_value"
 
