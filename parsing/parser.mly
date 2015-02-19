@@ -335,8 +335,6 @@ module_type:
       { mkmty(Pmty_signature(List.rev $2)) }
   | SIG signature error
       { unclosed "sig" 1 "end" 3 }
-  | module_type WITH with_constraints
-      { mkmty(Pmty_with($1, List.rev $3)) }
   | LPAREN module_type RPAREN
       { $2 }
   | LPAREN module_type error
@@ -741,23 +739,6 @@ label_declaration:
 ;
 
 /* "with" constraints (additional type equations over signature components) */
-
-with_constraints:
-    with_constraint                             { [$1] }
-  | with_constraints AND with_constraint        { $3 :: $1 }
-;
-with_constraint:
-    TYPE type_parameters label_longident EQUAL core_type constraints
-      { ($3, Pwith_type {ptype_params = $2;
-                         ptype_cstrs = List.rev $6;
-                         ptype_kind = Ptype_abstract;
-                         ptype_manifest = Some $5;
-                         ptype_loc = symbol_loc()}) }
-    /* used label_longident instead of type_longident to disallow
-       functor applications in type path */
-  | MODULE mod_longident EQUAL mod_ext_longident
-      { ($2, Pwith_module $4) }
-;
 
 
 constraints:

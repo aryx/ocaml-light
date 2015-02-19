@@ -102,7 +102,7 @@ type module_type =
 and module_type_desc =
     Pmty_ident of Longident.t
   | Pmty_signature of signature
-  | Pmty_with of module_type * (Longident.t * with_constraint) list
+
 
 and signature = signature_item list
 

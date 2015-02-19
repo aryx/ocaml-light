@@ -96,15 +96,6 @@ let rec transl_modtype env smty =
       end
   | Pmty_signature ssg ->
       Tmty_signature(transl_signature env ssg)
-  | Pmty_with(sbody, constraints) ->
-      let body = transl_modtype env sbody in
-      let init_sg = extract_sig env sbody.pmty_loc body in
-      let final_sg =
-        List.fold_left
-          (fun sg (lid, sdecl) ->
-            merge_constraint env smty.pmty_loc sg lid sdecl)
-          init_sg constraints in
-      Tmty_signature final_sg
       
 and transl_signature env sg =
   Ctype.init_def(Ident.current_time());
