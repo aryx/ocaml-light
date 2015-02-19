@@ -37,7 +37,6 @@ type summary =
   | Env_exception of summary * Ident.t * exception_declaration
   | Env_module of summary * Ident.t * module_type
   | Env_modtype of summary * Ident.t * modtype_declaration
-  | Env_class of summary * Ident.t * class_type
   | Env_open of summary * Path.t
 
 type t = {
@@ -48,7 +47,6 @@ type t = {
   modules: (Path.t * module_type) Ident.tbl;
   modtypes: (Path.t * modtype_declaration) Ident.tbl;
   components: (Path.t * module_components) Ident.tbl;
-  classes: (Path.t * class_type) Ident.tbl;
   summary: summary
 }
 
@@ -64,7 +62,6 @@ and structure_components = {
   mutable comp_modules: (string, (module_type * int)) Tbl.t;
   mutable comp_modtypes: (string, (modtype_declaration * int)) Tbl.t;
   mutable comp_components: (string, (module_components * int)) Tbl.t;
-  mutable comp_classes: (string, (class_type * int)) Tbl.t
 }
 
 and functor_components = {
@@ -78,7 +75,7 @@ let empty = {
   values = Ident.empty; constrs = Ident.empty;
   labels = Ident.empty; types = Ident.empty;
   modules = Ident.empty; modtypes = Ident.empty;
-  components = Ident.empty; classes = Ident.empty;
+  components = Ident.empty; 
   summary = Env_empty }
 
 (* Persistent structure descriptions *)
@@ -187,8 +184,6 @@ and find_type =
   find (fun env -> env.types) (fun sc -> sc.comp_types)
 and find_modtype =
   find (fun env -> env.modtypes) (fun sc -> sc.comp_modtypes)
-and find_class =
-  find (fun env -> env.classes) (fun sc -> sc.comp_classes)
 
 let find_type_expansion path env =
   let decl = find_type path env in
@@ -325,8 +320,6 @@ and lookup_type =
   lookup (fun env -> env.types) (fun sc -> sc.comp_types)
 and lookup_modtype =
   lookup (fun env -> env.modtypes) (fun sc -> sc.comp_modtypes)
-and lookup_class =
-  lookup (fun env -> env.classes) (fun sc -> sc.comp_classes)
   
 (* Scrape a module type *)
 
@@ -400,7 +393,7 @@ let rec components_of_module env sub path mty =
         { comp_values = Tbl.empty; comp_constrs = Tbl.empty;
           comp_labels = Tbl.empty; comp_types = Tbl.empty;
           comp_modules = Tbl.empty; comp_modtypes = Tbl.empty;
-          comp_components = Tbl.empty; comp_classes = Tbl.empty } in
+          comp_components = Tbl.empty; } in
       let (pl, sub) = prefix_idents path 0 sub sg in
       let env = ref env in
       let pos = ref 0 in
@@ -459,7 +452,7 @@ let rec components_of_module env sub path mty =
           comp_values = Tbl.empty; comp_constrs = Tbl.empty;
           comp_labels = Tbl.empty; comp_types = Tbl.empty;
           comp_modules = Tbl.empty; comp_modtypes = Tbl.empty;
-          comp_components = Tbl.empty; comp_classes = Tbl.empty }
+          comp_components = Tbl.empty; }
 
 (* Insertion of bindings by identifier + path *)
 
@@ -471,7 +464,6 @@ and store_value id path decl env =
     modules = env.modules;
     modtypes = env.modtypes;
     components = env.components;
-    classes = env.classes;
     summary = Env_value(env.summary, id, decl) }
 
 and store_type id path info env =
@@ -492,7 +484,6 @@ and store_type id path info env =
     modules = env.modules;
     modtypes = env.modtypes;
     components = env.components;
-    classes = env.classes;
     summary = Env_type(env.summary, id, info) }
 
 and store_exception id path decl env =
@@ -503,7 +494,6 @@ and store_exception id path decl env =
     modules = env.modules;
     modtypes = env.modtypes;
     components = env.components;
-    classes = env.classes;
     summary = Env_exception(env.summary, id, decl) }
 
 and store_module id path mty env =
@@ -516,7 +506,6 @@ and store_module id path mty env =
     components =
       Ident.add id (path, components_of_module env Subst.identity path mty)
                    env.components;
-    classes = env.classes;
     summary = Env_module(env.summary, id, mty) }
 
 and store_modtype id path info env =
@@ -527,7 +516,6 @@ and store_modtype id path info env =
     modules = env.modules;
     modtypes = Ident.add id (path, info) env.modtypes;
     components = env.components;
-    classes = env.classes;
     summary = Env_modtype(env.summary, id, info) }
 
 and store_components id path comps env =
@@ -538,19 +526,8 @@ and store_components id path comps env =
     modules = env.modules;
     modtypes = env.modtypes;
     components = Ident.add id (path, comps) env.components;
-    classes = env.classes;
     summary = env.summary }
 
-and store_class id path desc env =
-  { values = env.values;
-    constrs = env.constrs;
-    labels = env.labels;
-    types = env.types;
-    modules = env.modules;
-    modtypes = env.modtypes;
-    components = env.components;
-    classes = Ident.add id (path, desc) env.classes;
-    summary = Env_class(env.summary, id, desc) }
 
 (* Memoized function to compute the components of a functor application
    in a path. *)
@@ -589,9 +566,6 @@ and add_module id mty env =
 and add_modtype id info env =
   store_modtype id (Pident id) info env
 
-and add_class id ty env =
-  store_class id (Pident id) ty env
-
 (* Insertion of bindings by name *)
 
 let enter store_fun name data env =
@@ -602,7 +576,6 @@ and enter_type = enter store_type
 and enter_exception = enter store_exception
 and enter_module = enter store_module
 and enter_modtype = enter store_modtype
-and enter_class = enter store_class
 
 (* Insertion of all components of a signature *)
 
@@ -652,7 +625,6 @@ let open_signature root sg env =
     modules = newenv.modules;
     modtypes = newenv.modtypes;
     components = newenv.components;
-    classes = newenv.classes;
     summary = Env_open(env.summary, root) }
   
 (* Open a signature from a file *)

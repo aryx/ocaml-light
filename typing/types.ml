@@ -42,11 +42,6 @@ and field_kind =
   | Fpresent
   | Fabsent
 
-(* A set of methods, with their types *)
-
-module OrderedString = struct type t = string let compare = compare end
-module Meths = Map.Make(OrderedString)
-
 (* Value descriptions *)
 
 type value_description =
@@ -57,8 +52,6 @@ and value_kind =
     Val_reg                             (* Regular value *)
   | Val_prim of Primitive.description   (* Primitive *)
   | Val_ivar of mutable_flag            (* Instance variable (mutable ?) *)
-  | Val_self of (Ident.t * type_expr) Meths.t ref
-                                        (* Self *)
   | Val_anc of (string * Ident.t) list  (* Ancestor *)
 
 (* Constructor descriptions *)
@@ -89,20 +82,6 @@ type label_description =
 and record_representation =
     Record_regular                      (* All fields are boxed / tagged *)
   | Record_float                        (* All fields are floats *)
-
-(* Type expressions for classes *)
-
-module Vars = Map.Make(OrderedString)
-module Concr = Set.Make(OrderedString)
-
-type class_type =
-  { cty_params: type_expr list;
-    cty_args: type_expr list;
-    cty_vars: (Asttypes.mutable_flag * type_expr) Vars.t;
-    cty_meths: type_expr Meths.t;
-    cty_self: type_expr;
-    cty_concr: Concr.t;
-    mutable cty_new: type_expr option }
 
 (* Type definitions *)
 
