@@ -1,10 +1,11 @@
 include ../config/Makefile
 
-#RUNTIME=../boot/ocamlrun
-#COMPILER=../ocamlc
-COMPILER=/home/pad/.opam/4.01.0/bin/ocamlc
+RUNTIME=../boot/ocamlrun
+COMPILER=../ocamlc
+#COMPILER=/home/pad/.opam/4.01.0/bin/ocamlc
 CAMLC=$(RUNTIME) $(COMPILER)
-COMPFLAGS=-g  -bin-annot
+COMPFLAGS=-g
+#  -bin-annot
 OPTCOMPILER=../ocamlopt
 CAMLOPT=$(RUNTIME) $(OPTCOMPILER)
 OPTCOMPFLAGS=
