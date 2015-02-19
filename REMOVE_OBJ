@@ -1088,34 +1088,6 @@ index 4870cd0..549e2db 100644
 +  with Invalid_argument _ ->
 +    raise Unify
 +
-+and unify_fields env ty1 ty2 =
-+  let (fields1, rest1) = flatten_fields ty1
-+  and (fields2, rest2) = flatten_fields ty2 in
-+  let (pairs, miss1, miss2) = associate_fields fields1 fields2 in
-+  let va = newvar () in
-+    begin match rest1.desc with
-+      Tvar ->
-+        let nr = build_fields miss2 va in
-+        update_level rest1.level nr;
-+        rest1.desc <- Tlink nr
-+    | Tnil ->
-+        if miss2 <> [] then raise Unify;
-+        va.desc <- Tlink {desc = Tnil; level = va.level}
-+    | _ ->
-+        fatal_error "Ctype.unify_fields (1)"
-+    end;
-+    begin match rest2.desc with
-+      Tvar ->
-+        let nr = build_fields miss1 va in
-+        update_level rest2.level nr;
-+        rest2.desc <- Tlink nr
-+    | Tnil ->
-+        if miss1 <> [] then raise Unify;
-+        va.desc <- Tlink {desc = Tnil; level = va.level}
-+    | _ ->
-+        fatal_error "Ctype.unify_fields (2)"
-+    end;
-+    List.iter (fun (t1, t2) -> unify_rec env None None t1 t2) pairs
 +
 +let unify env ty1 ty2 =
 +  unify_rec env None None ty1 ty2
@@ -1288,23 +1260,6 @@ index 4870cd0..549e2db 100644
 +  with Invalid_argument _ ->
 +    raise Unify
 +
-+and moregen_fields env ty1 ty2 =
-+  let (fields1, rest1) = flatten_fields ty1
-+  and (fields2, rest2) = flatten_fields ty2 in
-+  let (pairs, miss1, miss2) = associate_fields fields1 fields2 in
-+  if miss1 <> [] then raise Unify;
-+  begin match rest1.desc with
-+    Tvar ->
-+      if rest1.level = generic_level then raise Unify;
-+      let fi = build_fields miss2 rest2 in
-+      moregen_occur rest1 fi
-+  | Tnil ->
-+      if miss2 <> [] then raise Unify;
-+      if rest2.desc <> Tnil then raise Unify
-+  | _ ->
-+      fatal_error "moregen_fields"
-+  end;
-+  List.iter (fun (t1, t2) -> moregen env t1 t2) pairs
 +
  let moregeneral env sch1 sch2 =
    begin_def();
@@ -1395,20 +1350,6 @@ index 4870cd0..549e2db 100644
        ([], []) -> true
      | (t1::r1, t2::r2) -> eqtype t1 t2 & eqtype_list r1 r2
      | (_, _) -> false
-+  and eqtype_fields ty1 ty2 =
-+    let (fields1, rest1) = flatten_fields ty1
-+    and (fields2, rest2) = flatten_fields ty2 in
-+    List.length fields1 = List.length fields2
-+      &
-+    eqtype rest1 rest2
-+      &
-+    List.for_all
-+      (function (label, t) ->
-+         List.exists
-+           (function (label', t') ->
-+              (Label. (=) label label') & (eqtype t t'))
-+           fields2)
-+      fields1
    in
 -    eqtype ty1 ty2
 +    let eq = eqtype ty1 ty2 in
@@ -1551,27 +1492,6 @@ index 4870cd0..549e2db 100644
 +  with Invalid_argument _ ->
 +    raise Unify
 +
-+and subtype_fields env vars ty1 ty2 =
-+  let (fields1, rest1) = flatten_fields ty1 in
-+  let (fields2, rest2) = flatten_fields ty2 in
-+  let (pairs, miss1, miss2) = associate_fields fields1 fields2 in
-+  begin match rest1.desc with
-+    Tvar ->
-+      let nr = build_fields miss2 (newvar ()) in
-+      update_level rest1.level nr;
-+      rest1.desc <- Tlink nr
-+  | Tnil   -> if miss2 <> [] then raise Unify
-+  | _      -> fatal_error "Ctype.subtype_fields (1)"
-+  end;
-+  begin match rest2.desc with
-+    Tvar ->
-+      let nr = build_fields miss1 (newvar ()) in
-+      update_level rest2.level nr;
-+      rest2.desc <- Tlink nr
-+  | Tnil   -> ()
-+  | _      -> fatal_error "Ctype.subtype_fields (2)"
-+  end;
-+  List.iter (fun (t1, t2) -> subtype_rec env vars t1 t2) pairs
 +
 +let subtype env vars ty1 ty2 =
 +  subtypes := [];
@@ -2435,77 +2355,6 @@ index caf233c..8879a67 100644
  
 -let type_expr ty = typexp false 0 ty
 -and type_scheme ty = reset_var_names(); typexp true 0 ty
-+and typobject sch prio ty fi nm =
-+  try
-+    List.assq ty !names;
-+    print_string "'";
-+    print_string (name_of_type ty)
-+  with Not_found ->
-+    if List.memq ty !aliased then begin
-+      name_of_type ty;
-+      if prio >= 1 then begin open_hovbox 1; print_string "(" end
-+    end;
-+    begin match !nm with
-+      None ->
-+        open_hovbox 2;
-+        print_string "< ";
-+        (let (fields, rest) = flatten_fields fi in
-+           typfields sch rest fields);
-+        print_string " >";
-+        close_box ()
-+    | Some (p, {desc = Tvar}::tyl) ->
-+        open_hovbox 0;
-+        begin match tyl with
-+          [] -> ()
-+        | [ty1] ->
-+            typexp sch 2 ty1; print_space()
-+        | tyl ->
-+            open_hovbox 1; print_string "("; typlist sch 0 "," tyl;
-+            print_string ")"; close_box(); print_space()
-+        end;
-+	if sch & ty.level <> generic_level then
-+	  print_string "_";
-+	print_string "#";
-+        path p;
-+        close_box()
-+    | _ ->
-+      	fatal_error "Printtyp.typobject"
-+    end;
-+    if List.memq ty !aliased then begin
-+      print_string " as ";
-+      print_string "'";
-+      print_string (name_of_type ty);
-+      if not (opened_object ty) then
-+      	remove_name_of_type ty;
-+      if prio >= 1 then begin print_string ")"; close_box () end
-+    end
-+
-+and typfields sch rest =
-+  function
-+    [] ->
-+      begin match rest.desc with
-+      	Tvar -> if sch & rest.level <> generic_level then
-+      	       	  print_string "_";
-+      	       	print_string ".."
-+      | Tnil -> ()
-+      | _    -> fatal_error "typfields (1)"
-+      end
-+  | [(s, t)] ->
-+      print_string s.Label.lab_name;
-+      print_string " : ";
-+      typexp sch 0 t;
-+      begin match rest.desc with
-+      	Tvar -> print_string ";"; print_space ()
-+      | Tnil -> ()
-+      | _    -> fatal_error "typfields (2)"
-+      end;
-+      typfields sch rest []
-+  | (s, t)::l ->
-+      print_string s.Label.lab_name;
-+      print_string " : ";
-+      typexp sch 0 t;
-+      print_string ";"; print_space ();
-+      typfields sch rest l
 +
 +let type_expr ty =
 +  typexp false 0 ty
