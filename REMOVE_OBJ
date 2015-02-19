@@ -415,49 +415,7 @@ index 01592ff..fe0e72a 100644
 +  | Val_anc of (Label.t * Ident.t) list (* Ancestor *)
  
  (* Constructor descriptions *)
- 
 
-diff --git a/typing/typedtree.ml b/typing/typedtree.ml
-index b2e41f5..6f137d5 100644
---- a/typing/typedtree.ml
-+++ b/typing/typedtree.ml
-@@ -19,20 +19,30 @@ open Asttypes
- (* Type expressions for the core language *)
- 
- type type_expr =
--    Tvar of type_variable
-+  { mutable desc: type_desc; 
-+    mutable level: int }
-+
-+and type_desc =
-+    Tvar
-   | Tarrow of type_expr * type_expr
-   | Ttuple of type_expr list
--  | Tconstr of Path.t * type_expr list
--
--and type_variable =
--    { mutable tvar_level: int;
--      mutable tvar_link: type_expr option }
-+  | Tconstr of Path.t * type_expr list * (Path.t * type_expr) list ref
-+  | Tobject of type_expr * (Path.t * type_expr list) option ref
-+  | Tfield of Label.t * type_expr * type_expr
-+  | Tnil
-+  | Tlink of type_expr
- 
- (* Value descriptions *)
- 
- type value_description =
-   { val_type: type_expr;                       (* Type of the val *)
--    val_prim: Primitive.description option }   (* Is this a primitive? *)
-+    val_kind: value_kind }
-+
-+and value_kind =
-+    Val_reg				(* Regular value *)
-+  | Val_prim of Primitive.description	(* Primitive *)
-+  | Val_ivar of mutable_flag		(* Instance variable (mutable ?) *)
-+  | Val_anc of (Label.t * Ident.t) list (* Ancestor *)
- 
- (* Constructor descriptions *)
  
 ** toplevel/
 
