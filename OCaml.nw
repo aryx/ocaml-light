@@ -1587,7 +1587,7 @@ and comparison =
 @
 
 
-\subxsubsection{Structured constants}
+\subsubsection{Structured constants}
 
 <<type Lambda.structured_constant>>=
 type structured_constant =
