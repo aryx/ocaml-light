@@ -1,3 +1,4 @@
+(*s: ./bytecomp/matching.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -21,18 +22,23 @@ open Types
 open Typedtree
 open Lambda
 
+(*s: type Matching.pattern_matching *)
 (*  See Peyton-Jones, "The Implementation of functional programming
     languages", chapter 5. *)
 
 type pattern_matching =
   { mutable cases : (pattern list * lambda) list;
     args : (lambda * let_kind) list }
+(*e: type Matching.pattern_matching *)
 
+(*s: function Matching.add_line *)
 (* To group lines of patterns with identical keys *)
 
 let add_line patl_action pm =
   pm.cases <- patl_action :: pm.cases; pm
+(*e: function Matching.add_line *)
 
+(*s: function Matching.add *)
 let add make_matching_fun division key patl_action args =
   try
     let pm = List.assoc key division in
@@ -42,7 +48,9 @@ let add make_matching_fun division key patl_action args =
     let pm = make_matching_fun args in
     pm.cases <- patl_action :: pm.cases;
     (key, pm) :: division
+(*e: function Matching.add *)
 
+(*s: function Matching.name_pattern *)
 (* To find reasonable names for let-bound and lambda-bound idents *)
 
 let rec name_pattern default = function
@@ -53,12 +61,16 @@ let rec name_pattern default = function
       | _ -> name_pattern default rem
       end
   | _ -> Ident.create default
+(*e: function Matching.name_pattern *)
 
+(*s: constant Matching.any_pat *)
 (* To remove aliases and bind named components *)
 
 let any_pat =
   {pat_desc = Tpat_any; pat_loc = Location.none; pat_type = Ctype.none}
+(*e: constant Matching.any_pat *)
 
+(*s: function Matching.simplify_matching *)
 let simplify_matching m =
   match m.args with
     [] -> m
@@ -76,13 +88,17 @@ let simplify_matching m =
           end
       | cases -> cases in
     { args = m.args; cases = simplify m.cases }
+(*e: function Matching.simplify_matching *)
 
+(*s: constant Matching.make_constant_matching *)
 (* Matching against a constant *)
 
 let make_constant_matching = function
     [] -> fatal_error "Matching.make_constant_matching"
   | (arg :: argl) -> {cases = []; args = argl}
+(*e: constant Matching.make_constant_matching *)
 
+(*s: function Matching.divide_constant *)
 let divide_constant {cases = cl; args = al} =
   let rec divide = function
       ({pat_desc = Tpat_constant cst} :: patl, action) :: rem ->
@@ -91,7 +107,9 @@ let divide_constant {cases = cl; args = al} =
     | cl ->
       ([], {cases = cl; args = al})
   in divide cl
+(*e: function Matching.divide_constant *)
 
+(*s: function Matching.make_constr_matching *)
 (* Matching against a constructor *)
 
 let make_constr_matching cstr = function
@@ -106,7 +124,9 @@ let make_constr_matching cstr = function
         then argl
         else (Lprim(Pfield pos, [arg]), Alias) :: make_args (pos + 1) in
       {cases = []; args = make_args first_pos}
+(*e: function Matching.make_constr_matching *)
 
+(*s: function Matching.divide_constructor *)
 let divide_constructor {cases = cl; args = al} =
   let rec divide = function
       ({pat_desc = Tpat_construct(cstr, args)} :: patl, action) :: rem ->
@@ -117,7 +137,9 @@ let divide_constructor {cases = cl; args = al} =
     | cl ->
       ([], {cases = cl; args = al})
   in divide cl
+(*e: function Matching.divide_constructor *)
 
+(*s: function Matching.divide_var *)
 (* Matching against a variable *)
 
 let divide_var {cases = cl; args = al} =
@@ -128,7 +150,9 @@ let divide_var {cases = cl; args = al} =
     | cl ->
         (make_constant_matching al, {cases = cl; args = al})
   in divide cl
+(*e: function Matching.divide_var *)
 
+(*s: function Matching.make_tuple_matching *)
 (* Matching against a tuple pattern *)
 
 let make_tuple_matching num_comps = function
@@ -139,7 +163,9 @@ let make_tuple_matching num_comps = function
         then argl
         else (Lprim(Pfield pos, [arg]), Alias) :: make_args (pos + 1) in
       {cases = []; args = make_args 0}
+(*e: function Matching.make_tuple_matching *)
 
+(*s: function Matching.divide_tuple *)
 let divide_tuple arity {cases = cl; args = al} =
   let rec divide = function
       ({pat_desc = Tpat_tuple args} :: patl, action) :: rem ->
@@ -151,7 +177,9 @@ let divide_tuple arity {cases = cl; args = al} =
     | cl ->
         (make_tuple_matching arity al, {cases = cl; args = al})
   in divide cl
+(*e: function Matching.divide_tuple *)
 
+(*s: function Matching.make_record_matching *)
 (* Matching against a record pattern *)
 
 let make_record_matching all_labels = function
@@ -171,7 +199,9 @@ let make_record_matching all_labels = function
           (Lprim(access, [arg]), str) :: make_args(pos + 1)
         end in
       {cases = []; args = make_args 0}
+(*e: function Matching.make_record_matching *)
 
+(*s: function Matching.divide_record *)
 let divide_record all_labels {cases = cl; args = al} =
   let num_fields = Array.length all_labels in
   let record_matching_line lbl_pat_list =
@@ -189,14 +219,18 @@ let divide_record all_labels {cases = cl; args = al} =
     | cl ->
         (make_record_matching all_labels al, {cases = cl; args = al})
   in divide cl
+(*e: function Matching.divide_record *)
 
+(*s: function Matching.flatten_orpat_match *)
 (* Matching against an or pattern. *)
 
 let rec flatten_orpat_match pat =
   match pat.pat_desc with
     Tpat_or(p1, p2) -> flatten_orpat_match p1 @ flatten_orpat_match p2
   | _ -> [[pat], lambda_unit]
+(*e: function Matching.flatten_orpat_match *)
 
+(*s: constant Matching.divide_orpat *)
 let divide_orpat = function
     {cases = (orpat :: patl, act) :: casel; args = arg1 :: argl as args} ->
       ({cases = flatten_orpat_match orpat; args = [arg1]},
@@ -204,20 +238,26 @@ let divide_orpat = function
        {cases = casel; args = args})
   | _ ->
     fatal_error "Matching.divide_orpat"
+(*e: constant Matching.divide_orpat *)
 
+(*s: function Matching.combine_var *)
 (* To combine sub-matchings together *)
 
 let combine_var (lambda1, total1) (lambda2, total2) =
   if total1 then (lambda1, true)
   else if lambda2 = Lstaticfail then (lambda1, total1)
   else (Lcatch(lambda1, lambda2), total2)
+(*e: function Matching.combine_var *)
 
+(*s: function Matching.make_test_sequence *)
 let make_test_sequence tst arg const_lambda_list =
   List.fold_right
     (fun (c, act) rem ->
       Lifthenelse(Lprim(tst, [arg; Lconst(Const_base c)]), act, rem))
     const_lambda_list Lstaticfail
+(*e: function Matching.make_test_sequence *)
 
+(*s: function Matching.make_switch_or_test_sequence *)
 let make_switch_or_test_sequence arg const_lambda_list int_lambda_list =
   let min_key =
     List.fold_right (fun (k, l) m -> min k m) int_lambda_list max_int in
@@ -241,7 +281,9 @@ let make_switch_or_test_sequence arg const_lambda_list int_lambda_list =
             {sw_numconsts = numcases; sw_consts = cases;
              sw_numblocks = 0; sw_blocks = []; sw_checked = true})
   end
+(*e: function Matching.make_switch_or_test_sequence *)
 
+(*s: function Matching.make_bitvect_check *)
 let make_bitvect_check arg int_lambda_list =
   let bv = String.make 32 '\000' in
   List.iter
@@ -250,12 +292,16 @@ let make_bitvect_check arg int_lambda_list =
     int_lambda_list;
   Lifthenelse(Lprim(Pbittest, [Lconst(Const_base(Const_string bv)); arg]),
               lambda_unit, Lstaticfail)
+(*e: function Matching.make_bitvect_check *)
 
+(*s: constant Matching.prim_string_equal *)
 let prim_string_equal =
   Pccall{prim_name = "string_equal";
          prim_arity = 2; prim_alloc = false;
          prim_native_name = ""; prim_native_float = false}
+(*e: constant Matching.prim_string_equal *)
 
+(*s: function Matching.combine_constant *)
 let combine_constant arg cst (const_lambda_list, total1) (lambda2, total2) =
   let lambda1 =
     match cst with
@@ -278,7 +324,9 @@ let combine_constant arg cst (const_lambda_list, total1) (lambda2, total2) =
     | Const_float _ ->
         make_test_sequence (Pfloatcomp Ceq) arg const_lambda_list
   in (Lcatch(lambda1, lambda2), total2)
+(*e: function Matching.combine_constant *)
 
+(*s: function Matching.combine_constructor *)
 let combine_constructor arg cstr (tag_lambda_list, total1) (lambda2, total2) =
   if cstr.cstr_consts < 0 then begin
     (* Special cases for exceptions *)
@@ -325,10 +373,14 @@ let combine_constructor arg cstr (tag_lambda_list, total1) (lambda2, total2) =
     then (lambda1, true)
     else (Lcatch(lambda1, lambda2), total2)
   end
+(*e: function Matching.combine_constructor *)
 
+(*s: function Matching.combine_orpat *)
 let combine_orpat (lambda1, total1) (lambda2, total2) (lambda3, total3) =
   (Lcatch(Lsequence(lambda1, lambda2), lambda3), total3)
+(*e: function Matching.combine_orpat *)
 
+(*s: function Matching.event_branch *)
 (* Insertion of debugging events *)
 
 let rec event_branch repr lam =
@@ -351,7 +403,9 @@ let rec event_branch repr lam =
                    lev_env = Env.Env_empty})
 *)      fatal_error "Matching.event_branch"
   end
+(*e: function Matching.event_branch *)
 
+(*s: function Matching.compile_match *)
 (* The main compilation function.
    Input: a pattern matching.
    Output: a lambda term, a "total" flag (true if we're sure that the
@@ -419,7 +473,9 @@ let rec compile_match repr m =
         | _ -> fatal_error "Matching.compile_match2" in
       (Llet(str, v, arg, lam), total)
   | _ -> assert false
+(*e: function Matching.compile_match *)
 
+(*s: function Matching.compile_matching *)
 (* The entry points *)
 
 let compile_matching repr handler_fun arg pat_act_list =
@@ -428,7 +484,9 @@ let compile_matching repr handler_fun arg pat_act_list =
       args = [arg, Strict] } in
   let (lambda, total) = compile_match repr pm in
   if total then lambda else Lcatch(lambda, handler_fun())
+(*e: function Matching.compile_matching *)
 
+(*s: function Matching.partial_function *)
 let partial_function loc () =
   Lprim(Praise, [Lprim(Pmakeblock(0, Immutable),
           [transl_path Predef.path_match_failure;
@@ -436,38 +494,54 @@ let partial_function loc () =
               [Const_base(Const_string !Location.input_name);
                Const_base(Const_int loc.loc_start);
                Const_base(Const_int loc.loc_end)]))])])
+(*e: function Matching.partial_function *)
 
+(*s: function Matching.for_function *)
 let for_function loc repr param pat_act_list =
   compile_matching repr (partial_function loc) param pat_act_list
+(*e: function Matching.for_function *)
 
+(*s: function Matching.for_trywith *)
 let for_trywith param pat_act_list =
   compile_matching None (fun () -> Lprim(Praise, [param])) param pat_act_list
+(*e: function Matching.for_trywith *)
 
+(*s: function Matching.for_let *)
 let for_let loc param pat body =
   compile_matching None (partial_function loc) param [pat, body]
+(*e: function Matching.for_let *)
 
+(*s: exception Matching.Cannot_flatten (./bytecomp/matching.ml) *)
 (* Handling of tupled functions and matches *)
 
 exception Cannot_flatten
+(*e: exception Matching.Cannot_flatten (./bytecomp/matching.ml) *)
 
+(*s: function Matching.flatten_pattern *)
 let flatten_pattern size p =
   match p.pat_desc with
     Tpat_tuple args -> args
   | Tpat_any -> replicate_list any_pat size
   | _ -> raise Cannot_flatten
+(*e: function Matching.flatten_pattern *)
 
+(*s: function Matching.flatten_cases *)
 let flatten_cases size cases =
   List.map (function (pat :: _, act) -> (flatten_pattern size pat, act)
                    | _ -> assert false)
            cases
+(*e: function Matching.flatten_cases *)
 
+(*s: function Matching.for_tupled_function *)
 let for_tupled_function loc paraml pats_act_list =
   let pm =
     { cases = pats_act_list;
       args = List.map (fun id -> (Lvar id, Strict)) paraml } in
   let (lambda, total) = compile_match None pm in
   if total then lambda else Lcatch(lambda, partial_function loc ())
+(*e: function Matching.for_tupled_function *)
 
+(*s: function Matching.for_multiple_match *)
 let for_multiple_match loc paraml pat_act_list =
   let pm1 =
     { cases = List.map (fun (pat, act) -> ([pat], act)) pat_act_list;
@@ -482,3 +556,5 @@ let for_multiple_match loc paraml pat_act_list =
       pm2 in
   let (lambda, total) = compile_match None pm3 in
   if total then lambda else Lcatch(lambda, partial_function loc ())
+(*e: function Matching.for_multiple_match *)
+(*e: ./bytecomp/matching.ml *)

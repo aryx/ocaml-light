@@ -1,3 +1,4 @@
+(*s: ./typing/typetexp.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -18,8 +19,11 @@ open Parsetree
 open Types
 open Ctype
 
+(*s: exception Typetexp.Already_bound (./typing/typetexp.ml) *)
 exception Already_bound
+(*e: exception Typetexp.Already_bound (./typing/typetexp.ml) *)
 
+(*s: type Typetexp.error (./typing/typetexp.ml) *)
 type error =
     Unbound_type_variable of string
   | Unbound_type_constructor of Longident.t
@@ -27,22 +31,36 @@ type error =
   | Bound_type_variable of string
   | Type_mismatch of (type_expr * type_expr) list
   | Alias_type_mismatch of (type_expr * type_expr) list
+(*e: type Typetexp.error (./typing/typetexp.ml) *)
 
+(*s: exception Typetexp.Error (./typing/typetexp.ml) *)
 exception Error of Location.t * error
+(*e: exception Typetexp.Error (./typing/typetexp.ml) *)
 
+(*s: constant Typetexp.type_variables *)
 (* Translation of type expressions *)
 
 let type_variables = ref (Tbl.empty : (string, type_expr) Tbl.t)
+(*e: constant Typetexp.type_variables *)
+(*s: constant Typetexp.aliases *)
 let aliases        = ref (Tbl.empty : (string, type_expr) Tbl.t)
+(*e: constant Typetexp.aliases *)
 
+(*s: constant Typetexp.used_variables *)
 let used_variables = ref (Tbl.empty : (string, type_expr) Tbl.t)
+(*e: constant Typetexp.used_variables *)
+(*s: constant Typetexp.bindings *)
 let bindings       = ref ([] : (type_expr * type_expr) list)
+(*e: constant Typetexp.bindings *)
         (* These two variables are used for the "delayed" policy. *)
 
+(*s: function Typetexp.reset_type_variables *)
 let reset_type_variables () =
   reset_global_level ();
   type_variables := Tbl.empty
+(*e: function Typetexp.reset_type_variables *)
 
+(*s: function Typetexp.enter_type_variable *)
 let enter_type_variable strict name =
   try
     let v = Tbl.find name !type_variables in
@@ -52,15 +70,21 @@ let enter_type_variable strict name =
     let v = new_global_var() in
     type_variables := Tbl.add name v !type_variables;
     v
+(*e: function Typetexp.enter_type_variable *)
 
+(*s: function Typetexp.type_variable *)
 let type_variable loc name =
   try
     Tbl.find name !type_variables
   with Not_found ->
     raise(Error(loc, Unbound_type_variable name))
+(*e: function Typetexp.type_variable *)
 
+(*s: type Typetexp.policy *)
 type policy = Fixed | Extensible | Delayed
+(*e: type Typetexp.policy *)
 
+(*s: function Typetexp.transl_type *)
 let rec transl_type env policy styp =
   match styp.ptyp_desc with
     Ptyp_any -> new_global_var()
@@ -138,13 +162,17 @@ let rec transl_type env policy styp =
         end;
         ty
       end 
+(*e: function Typetexp.transl_type *)
 
+(*s: function Typetexp.transl_simple_type *)
 let transl_simple_type env fixed styp =
   aliases := Tbl.empty;
   let typ = transl_type env (if fixed then Fixed else Extensible) styp in
   aliases := Tbl.empty;
   typ
+(*e: function Typetexp.transl_simple_type *)
 
+(*s: function Typetexp.transl_simple_type_delayed *)
 let transl_simple_type_delayed env styp =
   aliases := Tbl.empty;
   used_variables := Tbl.empty;
@@ -156,7 +184,9 @@ let transl_simple_type_delayed env styp =
   bindings := [];
   (typ,
    function () -> List.iter (function (t1, t2) -> unify env t1 t2) b)
+(*e: function Typetexp.transl_simple_type_delayed *)
 
+(*s: function Typetexp.transl_type_scheme *)
 let transl_type_scheme env styp =
   reset_type_variables();
   begin_def();
@@ -164,12 +194,14 @@ let transl_type_scheme env styp =
   end_def();
   generalize typ;
   typ
+(*e: function Typetexp.transl_type_scheme *)
 
 (* Error report *)
 
 open Format
 open Printtyp
 
+(*s: constant Typetexp.report_error *)
 let report_error = function
     Unbound_type_variable name ->
       print_string "Unbound type parameter "; print_string name
@@ -197,3 +229,5 @@ let report_error = function
            print_string "This alias is bound to type")
         (function () ->
            print_string "but is used as an instance of type")
+(*e: constant Typetexp.report_error *)
+(*e: ./typing/typetexp.ml *)

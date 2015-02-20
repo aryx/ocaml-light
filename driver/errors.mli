@@ -1,3 +1,4 @@
+(*s: ./driver/errors.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -11,6 +12,9 @@
 
 (* $Id: errors.mli,v 1.3 1996/04/30 14:45:55 xleroy Exp $ *)
 
+(*s: signature Errors.report_error *)
 (* Error report *)
 
 val report_error: exn -> unit
+(*e: signature Errors.report_error *)
+(*e: ./driver/errors.mli *)

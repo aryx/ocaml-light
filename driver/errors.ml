@@ -1,3 +1,4 @@
+(*s: ./driver/errors.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -16,6 +17,7 @@
 open Format
 open Location
 
+(*s: function Errors.report_error *)
 (* Report an error *)
 
 let report_error exn =
@@ -52,3 +54,5 @@ let report_error exn =
       close_box(); raise x
   end;
   close_box(); print_newline()
+(*e: function Errors.report_error *)
+(*e: ./driver/errors.ml *)

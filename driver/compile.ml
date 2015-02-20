@@ -1,3 +1,4 @@
+(*s: ./driver/compile.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -18,6 +19,7 @@ open Config
 open Format
 open Typedtree
 
+(*s: function Compile.init_path *)
 (* Initialize the search path.
    The current directory is always searched first,
    then the directories specified with the -I option (in command-line order),
@@ -31,7 +33,9 @@ let init_path () =
      !Clflags.include_dirs in
   load_path := "" :: List.rev (Config.standard_library :: dirs);
   Env.reset_cache()
+(*e: function Compile.init_path *)
 
+(*s: function Compile.initial_env *)
 (* Return the initial environment in which compilation proceeds. *)
 
 let initial_env () =
@@ -41,7 +45,9 @@ let initial_env () =
     else Env.open_pers_signature "Pervasives" Env.initial
   with Not_found ->
     fatal_error "cannot open Pervasives.cmi"
+(*e: function Compile.initial_env *)
 
+(*s: function Compile.preprocess *)
 (* Optionally preprocess a source file *)
 
 let preprocess sourcefile tmpfile =
@@ -55,16 +61,22 @@ let preprocess sourcefile tmpfile =
         exit 2
       end;
       tmpfile
+(*e: function Compile.preprocess *)
 
+(*s: function Compile.remove_preprocessed *)
 let remove_preprocessed inputfile =
   match !Clflags.preprocessor with
     None -> ()
   | Some _ -> remove_file inputfile
+(*e: function Compile.remove_preprocessed *)
 
+(*s: exception Compile.Outdated_version *)
 (* Parse a file or get a dumped syntax tree in it *)
 
 exception Outdated_version
+(*e: exception Compile.Outdated_version *)
 
+(*s: function Compile.parse_file *)
 let parse_file inputfile parse_fun ast_magic =
   let ic = open_in_bin inputfile in
   let is_ast_file =
@@ -94,7 +106,9 @@ let parse_file inputfile parse_fun ast_magic =
   in
   close_in ic;
   ast
+(*e: function Compile.parse_file *)
 
+(*s: function Compile.interface *)
 (* Compile a .mli file *)
 
 let interface sourcefile =
@@ -107,13 +121,17 @@ let interface sourcefile =
   if !Clflags.print_types then (Printtyp.signature sg; print_newline());
   Env.save_signature sg modulename (prefixname ^ ".cmi");
   remove_preprocessed inputfile
+(*e: function Compile.interface *)
 
+(*s: function Compile.print_if *)
 (* Compile a .ml file *)
 
 let print_if flag printer arg =
   if !flag then begin printer arg; print_newline() end;
   arg
+(*e: function Compile.print_if *)
 
+(*s: function Compile.implementation *)
 let implementation sourcefile =
   init_path();
   let prefixname = Filename.chop_extension sourcefile in
@@ -151,6 +169,10 @@ let implementation sourcefile =
     close_out oc;
     remove_file objfile;
     raise x
+(*e: function Compile.implementation *)
 
+(*s: function Compile.c_file *)
 let c_file name =
   if Ccomp.compile_file_bytecode name <> 0 then exit 2
+(*e: function Compile.c_file *)
+(*e: ./driver/compile.ml *)

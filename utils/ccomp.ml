@@ -1,3 +1,4 @@
+(*s: ./utils/ccomp.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -11,6 +12,7 @@
 
 (* $Id: ccomp.ml,v 1.3 1997/06/23 14:36:30 doligez Exp $ *)
 
+(*s: function Ccomp.command *)
 (* Compiling C files and building C libraries *)
 
 let command cmdline =
@@ -20,7 +22,9 @@ let command cmdline =
     prerr_newline()
   end;
   Sys.command cmdline
+(*e: function Ccomp.command *)
 
+(*s: function Ccomp.compile_file_bytecode *)
 let compile_file_bytecode name =
   command
    (Printf.sprintf
@@ -32,7 +36,9 @@ let compile_file_bytecode name =
                  (List.rev !Clflags.include_dirs)))
      Config.standard_library
      name)
+(*e: function Ccomp.compile_file_bytecode *)
 
+(*s: function Ccomp.compile_file_native *)
 let compile_file_native name =
   command
    (Printf.sprintf
@@ -44,7 +50,9 @@ let compile_file_native name =
                  (List.rev !Clflags.include_dirs)))
      Config.standard_library
      name)
+(*e: function Ccomp.compile_file_native *)
 
+(*s: function Ccomp.create_archive *)
 let create_archive archive file_list =
   Misc.remove_file archive;
   match Config.system with
@@ -58,3 +66,5 @@ let create_archive archive file_list =
       if r1 <> 0 or String.length Config.ranlib = 0
       then r1
       else command(Config.ranlib ^ " " ^ archive)
+(*e: function Ccomp.create_archive *)
+(*e: ./utils/ccomp.ml *)

@@ -1,3 +1,4 @@
+(*s: ./typing/typecore.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -22,6 +23,7 @@ open Btype
 open Ctype
 
 
+(*s: type Typecore.error (./typing/typecore.ml) *)
 type error =
     Unbound_value of Longident.t
   | Unbound_constructor of Longident.t
@@ -40,9 +42,13 @@ type error =
   | Not_subtype of (type_expr * type_expr) list * (type_expr * type_expr) list
   | Coercion_failure of type_expr * type_expr * (type_expr * type_expr) list
   | Too_many_arguments
+(*e: type Typecore.error (./typing/typecore.ml) *)
 
+(*s: exception Typecore.Error (./typing/typecore.ml) *)
 exception Error of Location.t * error
+(*e: exception Typecore.Error (./typing/typecore.ml) *)
 
+(*s: constant Typecore.type_constant *)
 (* Typing of constants *)
 
 let type_constant = function
@@ -50,7 +56,9 @@ let type_constant = function
   | Const_char _ -> instance Predef.type_char
   | Const_string _ -> instance Predef.type_string
   | Const_float _ -> instance Predef.type_float
+(*e: constant Typecore.type_constant *)
 
+(*s: function Typecore.unify_pat *)
 (* Typing of patterns *)
 
 let unify_pat env pat expected_ty =
@@ -58,16 +66,22 @@ let unify_pat env pat expected_ty =
     unify env pat.pat_type expected_ty
   with Unify trace ->
     raise(Error(pat.pat_loc, Pattern_type_clash(trace)))
+(*e: function Typecore.unify_pat *)
 
+(*s: constant Typecore.pattern_variables *)
 let pattern_variables = ref ([]: (Ident.t * type_expr) list)
+(*e: constant Typecore.pattern_variables *)
 
+(*s: function Typecore.enter_variable *)
 let enter_variable loc name ty =
   if List.exists (fun (id, ty) -> Ident.name id = name) !pattern_variables
   then raise(Error(loc, Multiply_bound_variable));
   let id = Ident.create name in
   pattern_variables := (id, ty) :: !pattern_variables;
   id
+(*e: function Typecore.enter_variable *)
 
+(*s: function Typecore.type_pat *)
 let rec type_pat env sp =
   match sp.ppat_desc with
     Ppat_any ->
@@ -154,7 +168,9 @@ let rec type_pat env sp =
       let ty = Typetexp.transl_simple_type env false sty in
       unify_pat env p ty;
       p
+(*e: function Typecore.type_pat *)
 
+(*s: function Typecore.add_pattern_variables *)
 let add_pattern_variables env =
   let pv = !pattern_variables in
   pattern_variables := [];
@@ -162,19 +178,25 @@ let add_pattern_variables env =
     (fun (id, ty) env ->
       Env.add_value id {val_type = ty; val_kind = Val_reg} env)
     pv env
+(*e: function Typecore.add_pattern_variables *)
 
+(*s: function Typecore.type_pattern *)
 let type_pattern env spat =
   pattern_variables := [];
   let pat = type_pat env spat in
   let new_env = add_pattern_variables env in
   (pat, new_env)
+(*e: function Typecore.type_pattern *)
 
+(*s: function Typecore.type_pattern_list *)
 let type_pattern_list env spatl =
   pattern_variables := [];
   let patl = List.map (type_pat env) spatl in
   let new_env = add_pattern_variables env in
   (patl, new_env)
+(*e: function Typecore.type_pattern_list *)
 
+(*s: function Typecore.iter_pattern *)
 let rec iter_pattern f p =
   f p;
   match p.pat_desc with
@@ -191,7 +213,9 @@ let rec iter_pattern f p =
   | Tpat_or (p, p') ->
       iter_pattern f p;
       iter_pattern f p'
+(*e: function Typecore.iter_pattern *)
 
+(*s: function Typecore.is_nonexpansive *)
 (* Generalization criterion for expressions *)
 
 let rec is_nonexpansive exp =
@@ -213,7 +237,9 @@ let rec is_nonexpansive exp =
   | Texp_field(exp, lbl) -> is_nonexpansive exp
   | Texp_array [] -> true
   | _ -> false
+(*e: function Typecore.is_nonexpansive *)
 
+(*s: function Typecore.type_format *)
 (* Typing of printf formats *)
 
 let type_format loc fmt =
@@ -259,7 +285,9 @@ let type_format loc fmt =
     | _ -> scan_format (i+1) in
   newty
     (Tconstr(Predef.path_format, [scan_format 0; ty_input; ty_result], ref Mnil))
+(*e: function Typecore.type_format *)
 
+(*s: function Typecore.unify_exp *)
 (* Typing of expressions *)
 
 let unify_exp env exp expected_ty =
@@ -267,6 +295,7 @@ let unify_exp env exp expected_ty =
     unify env exp.exp_type expected_ty
   with Unify trace ->
     raise(Error(exp.exp_loc, Expr_type_clash(trace)))
+(*e: function Typecore.unify_exp *)
 
 let rec type_exp env sexp =
   match sexp.pexp_desc with
@@ -616,12 +645,15 @@ and type_let env rec_flag spat_sexp_list =
     pat_list;
   (List.combine pat_list exp_list, new_env)
 
+(*s: function Typecore.type_binding *)
 (* Typing of toplevel bindings *)
 
 let type_binding env rec_flag spat_sexp_list =
   Typetexp.reset_type_variables();
   type_let env rec_flag spat_sexp_list
+(*e: function Typecore.type_binding *)
 
+(*s: function Typecore.type_expression *)
 (* Typing of toplevel expressions *)
 
 let type_expression env sexp =
@@ -632,7 +664,9 @@ let type_expression env sexp =
   if is_nonexpansive exp then generalize exp.exp_type
   else make_nongen exp.exp_type;
   exp
+(*e: function Typecore.type_expression *)
 
+(*s: function Typecore.type_expect_fun *)
 (* Typing of methods *)
 
 let rec type_expect_fun env sexp ty_expected =
@@ -659,6 +693,7 @@ let rec type_expect_fun env sexp ty_expected =
         exp_env = env }
   | _ ->
       type_expect env sexp ty_expected
+(*e: function Typecore.type_expect_fun *)
 
 
 (* Error report *)
@@ -666,6 +701,7 @@ let rec type_expect_fun env sexp ty_expected =
 open Format
 open Printtyp
 
+(*s: constant Typecore.report_error *)
 let report_error = function
     Unbound_value lid ->
       print_string "Unbound value "; longident lid
@@ -746,3 +782,5 @@ let report_error = function
            print_string "but is here used with type")
   | Too_many_arguments ->
       print_string "This function has too many arguments"
+(*e: constant Typecore.report_error *)
+(*e: ./typing/typecore.ml *)

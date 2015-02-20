@@ -1,3 +1,4 @@
+(*s: ./typing/mtype.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -17,6 +18,7 @@ open Path
 open Types
 
 
+(*s: function Mtype.scrape *)
 let rec scrape env mty =
   match mty with
     Tmty_ident p ->
@@ -26,6 +28,7 @@ let rec scrape env mty =
         mty
       end
   | _ -> mty
+(*e: function Mtype.scrape *)
 
 let rec strengthen env mty p =
   match scrape env mty with
@@ -69,3 +72,4 @@ and strengthen_sig env sg p =
       strengthen_sig (Env.add_modtype id decl env) rem p
       (* Need to add the module type in case it is manifest *)
 
+(*e: ./typing/mtype.ml *)

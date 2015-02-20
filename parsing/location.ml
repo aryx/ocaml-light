@@ -1,3 +1,4 @@
+(*s: ./parsing/location.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -13,24 +14,38 @@
 
 open Lexing
 
+(*s: type Location.t (./parsing/location.ml) *)
 type t =
   { loc_start: int; loc_end: int }
+(*e: type Location.t (./parsing/location.ml) *)
 
+(*s: constant Location.none *)
 let none = { loc_start = -1; loc_end = -1 }
+(*e: constant Location.none *)
 
+(*s: function Location.symbol_loc *)
 let symbol_loc () = 
   { loc_start = Parsing.symbol_start(); loc_end = Parsing.symbol_end() }
+(*e: function Location.symbol_loc *)
 
+(*s: function Location.rhs_loc *)
 let rhs_loc n =
   { loc_start = Parsing.rhs_start n; loc_end = Parsing.rhs_end n }
+(*e: function Location.rhs_loc *)
 
+(*s: constant Location.input_name *)
 let input_name = ref ""
+(*e: constant Location.input_name *)
 
+(*s: constant Location.input_lexbuf *)
 let input_lexbuf = ref (None : lexbuf option)
+(*e: constant Location.input_lexbuf *)
 
+(*s: type Location.terminal_info_status *)
 (* Terminal info *)
 
 type terminal_info_status = Unknown | Bad_term | Good_term
+(*e: type Location.terminal_info_status *)
 
 let status = ref Unknown
 and num_lines = ref 0
@@ -39,6 +54,7 @@ and cursor_down = ref ""
 and start_standout = ref ""
 and end_standout = ref ""
 
+(*s: function Location.setup_terminal_info *)
 let setup_terminal_info() =
   try
     Terminfo.setupterm();
@@ -55,11 +71,15 @@ let setup_terminal_info() =
     status := Good_term
   with _ ->
     status := Bad_term
+(*e: function Location.setup_terminal_info *)
 
+(*s: constant Location.num_loc_lines *)
 (* Print the location using standout mode. *)
 
 let num_loc_lines = ref 0 (* number of lines already printed after input *)
+(*e: constant Location.num_loc_lines *)
 
+(*s: function Location.highlight_locations *)
 let rec highlight_locations loc1 loc2 =
   match !status with
     Unknown ->
@@ -87,7 +107,7 @@ let rec highlight_locations loc1 loc2 =
               done;
               (* Print the input, switching to standout for the location *)
               let bol = ref false in
-	      print_string "# ";
+          print_string "# ";
               for pos = 0 to String.length lb.lex_buffer - pos0 - 1 do
                 if !bol then (print_string "  "; bol := false);
                 if pos = loc1.loc_start || pos = loc2.loc_start then
@@ -107,19 +127,23 @@ let rec highlight_locations loc1 loc2 =
               true
             end
           end
+(*e: function Location.highlight_locations *)
 
 (* Print the location in some way or another *)
 
 open Format
 
+(*s: function Location.reset *)
 let reset () =
   num_loc_lines := 0
+(*e: function Location.reset *)
 
 let (msg_file, msg_line, msg_chars, msg_to, msg_colon, warn_head) =
   match Sys.os_type with
   | "MacOS" -> ("File \"", "\"; line ", "; characters ", " to ", "", "### ")
   | _ -> ("File \"", "\", line ", ", characters ", "-", ":", "")
 
+(*s: function Location.print *)
 let print loc =
   if String.length !input_name = 0 then
     if highlight_locations loc none then () else begin
@@ -138,7 +162,9 @@ let print loc =
     print_string msg_colon;
     force_newline()
   end
+(*e: function Location.print *)
 
+(*s: function Location.print_warning *)
 let print_warning loc msg =
   let (f1, f2) = Format.get_formatter_output_functions() in
   if not !Sys.interactive then Format.set_formatter_out_channel stderr;
@@ -147,8 +173,12 @@ let print_warning loc msg =
   print_string "Warning: "; print_string msg; print_newline();
   incr num_loc_lines;
   Format.set_formatter_output_functions f1 f2
+(*e: function Location.print_warning *)
 
+(*s: function Location.echo_eof *)
 let echo_eof () =
   print_newline ();
   incr num_loc_lines
+(*e: function Location.echo_eof *)
 
+(*e: ./parsing/location.ml *)

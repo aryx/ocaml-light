@@ -1,3 +1,4 @@
+(*s: ./typing/typedecl.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -19,6 +20,7 @@ open Types
 open Typedtree
 open Typetexp
 
+(*s: type Typedecl.error (./typing/typedecl.ml) *)
 type error =
     Repeated_parameter
   | Duplicate_constructor of string
@@ -29,9 +31,13 @@ type error =
   | Unconsistent_constraint
   | Type_clash of (type_expr * type_expr) list
   | Null_arity_external
+(*e: type Typedecl.error (./typing/typedecl.ml) *)
 
+(*s: exception Typedecl.Error (./typing/typedecl.ml) *)
 exception Error of Location.t * error
+(*e: exception Typedecl.Error (./typing/typedecl.ml) *)
 
+(*s: function Typedecl.enter_types *)
 (* Enter all declared types in the environment as abstract types *)
 
 let rec enter_types env = function
@@ -52,11 +58,13 @@ let rec enter_types env = function
       (ext_env, (id, decl) :: decl_rem)
   | _ ->
       fatal_error "Typedecl.enter_types"
+(*e: function Typedecl.enter_types *)
 
 (* Translate one type declaration *)
 
 module StringSet = Set
 
+(*s: function Typedecl.transl_declaration *)
 (* First pass: parameters, constraints and expansion *)
 let transl_declaration env (name, sdecl) (id, decl) =
   reset_type_variables();
@@ -102,7 +110,9 @@ let transl_declaration env (name, sdecl) (id, decl) =
             fatal_error "Typedecl.transl_declaration"
         end } in
   (id, decl')
+(*e: function Typedecl.transl_declaration *)
 
+(*s: function Typedecl.transl_declaration2 *)
 (* Second pass: representation *)
 let transl_declaration2 env (name, sdecl) (id, decl) =
   let (params, typ) =
@@ -157,7 +167,9 @@ let transl_declaration2 env (name, sdecl) (id, decl) =
         end;
       type_manifest = typ } in
   (id, decl')
+(*e: function Typedecl.transl_declaration2 *)
 
+(*s: function Typedecl.generalize_decl *)
 (* Generalize a type declaration *)
 
 let generalize_decl decl =
@@ -174,7 +186,9 @@ let generalize_decl decl =
     None    -> ()
   | Some ty -> Ctype.generalize ty
   end
+(*e: function Typedecl.generalize_decl *)
 
+(*s: function Typedecl.check_abbrev *)
 (*
    If both a variant/record definition and a type equation are given,
    need to check that the equation refers to a type of the same kind
@@ -204,9 +218,11 @@ let check_abbrev env (_, sdecl) (id, decl) =
       | _ -> raise(Error(sdecl.ptype_loc, Definition_mismatch ty))
       end
   | _ -> ()
+(*e: function Typedecl.check_abbrev *)
 
 (* Check for ill-defined abbrevs *)
 
+(*s: function Typedecl.check_recursive_abbrev *)
 (* Occur check *)
 let check_recursive_abbrev env (name, sdecl) (id, decl) =
   match decl.type_manifest with
@@ -217,7 +233,9 @@ let check_recursive_abbrev env (name, sdecl) (id, decl) =
       end
   | _ ->
       ()
+(*e: function Typedecl.check_recursive_abbrev *)
 
+(*s: function Typedecl.transl_type_decl *)
 (* Translate a set of mutually recursive type declarations *)
 let transl_type_decl env name_sdecl_list =
   (* Create identifiers. *)
@@ -264,7 +282,9 @@ let transl_type_decl env name_sdecl_list =
   List.iter2 (check_abbrev newenv) name_sdecl_list decls;
   (* Done *)
   (decls, newenv)
+(*e: function Typedecl.transl_type_decl *)
 
+(*s: function Typedecl.transl_exception *)
 (* Translate an exception declaration *)
 let transl_exception env excdecl =
   reset_type_variables();
@@ -273,7 +293,9 @@ let transl_exception env excdecl =
   Ctype.end_def();
   List.iter Ctype.generalize types;
   types
+(*e: function Typedecl.transl_exception *)
 
+(*s: function Typedecl.transl_value_decl *)
 (* Translate a value declaration *)
 let transl_value_decl env valdecl =
   let ty = Typetexp.transl_type_scheme env valdecl.pval_type in
@@ -286,11 +308,13 @@ let transl_value_decl env valdecl =
         raise(Error(valdecl.pval_type.ptyp_loc, Null_arity_external));
       let prim = Primitive.parse_declaration arity decl in
       { val_type = ty; val_kind = Val_prim prim }
+(*e: function Typedecl.transl_value_decl *)
 
 (**** Error report ****)
 
 open Format
 
+(*s: constant Typedecl.report_error *)
 let report_error = function
     Repeated_parameter ->
       print_string "A type parameter occurs several times"
@@ -320,3 +344,5 @@ let report_error = function
            print_string "but is here used with type")
   | Null_arity_external ->
       print_string "External identifiers must be functions"
+(*e: constant Typedecl.report_error *)
+(*e: ./typing/typedecl.ml *)

@@ -1,3 +1,4 @@
+(*s: ./parsing/parse.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -15,6 +16,7 @@
 
 open Location
 
+(*s: function Parse.skip_phrase *)
 (* Skip tokens to the end of the phrase *)
 
 let rec skip_phrase lexbuf =
@@ -26,13 +28,17 @@ let rec skip_phrase lexbuf =
     | Lexer.Error (Lexer.Unterminated_comment, _, _) -> ()
     | Lexer.Error (Lexer.Unterminated_string, _, _) -> ()
     | Lexer.Error(_,_,_) -> skip_phrase lexbuf
+(*e: function Parse.skip_phrase *)
 
+(*s: function Parse.maybe_skip_phrase *)
 let maybe_skip_phrase lexbuf =
   if Parsing.is_current_lookahead Parser.SEMISEMI
   or Parsing.is_current_lookahead Parser.EOF
   then ()
   else skip_phrase lexbuf
+(*e: function Parse.maybe_skip_phrase *)
 
+(*s: function Parse.wrap *)
 let wrap parsing_fun lexbuf =
   try
     let ast = parsing_fun Lexer.token lexbuf in
@@ -53,8 +59,10 @@ let wrap parsing_fun lexbuf =
         if !Location.input_name = "" 
         then maybe_skip_phrase lexbuf;
         raise(Syntaxerr.Error(Syntaxerr.Other loc))
+(*e: function Parse.wrap *)
 
 let implementation = wrap Parser.implementation
 and interface = wrap Parser.interface
 and toplevel_phrase = wrap Parser.toplevel_phrase
 and use_file = wrap Parser.use_file
+(*e: ./parsing/parse.ml *)

@@ -1,3 +1,4 @@
+(*s: ./bytecomp/bytelibrarian.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -17,12 +18,17 @@ open Misc
 open Config
 open Emitcode
 
+(*s: type Bytelibrarian.error (./bytecomp/bytelibrarian.ml) *)
 type error =
     File_not_found of string
   | Not_an_object_file of string
+(*e: type Bytelibrarian.error (./bytecomp/bytelibrarian.ml) *)
 
+(*s: exception Bytelibrarian.Error (./bytecomp/bytelibrarian.ml) *)
 exception Error of error
+(*e: exception Bytelibrarian.Error (./bytecomp/bytelibrarian.ml) *)
 
+(*s: function Bytelibrarian.copy_compunit *)
 let copy_compunit ic oc compunit =
   seek_in ic compunit.cu_pos;
   compunit.cu_pos <- pos_out oc;
@@ -33,7 +39,9 @@ let copy_compunit ic oc compunit =
     compunit.cu_debug <- pos_out oc;
     copy_file_chunk ic oc compunit.cu_debugsize
   end
+(*e: function Bytelibrarian.copy_compunit *)
 
+(*s: function Bytelibrarian.copy_object_file *)
 let copy_object_file oc name =
   let file_name =
     try
@@ -64,7 +72,9 @@ let copy_object_file oc name =
   with x ->
     close_in ic;
     raise x
+(*e: function Bytelibrarian.copy_object_file *)
 
+(*s: function Bytelibrarian.create_archive *)
 let create_archive file_list lib_name =
   let outchan = open_out_bin lib_name in
   try
@@ -81,13 +91,17 @@ let create_archive file_list lib_name =
     close_out outchan;
     remove_file lib_name;
     raise x
+(*e: function Bytelibrarian.create_archive *)
 
 open Format
 
+(*s: constant Bytelibrarian.report_error *)
 let report_error = function
     File_not_found name ->
       print_string "Cannot find file "; print_string name
   | Not_an_object_file name ->
       print_string "The file "; print_string name;
       print_string " is not a bytecode object file"
+(*e: constant Bytelibrarian.report_error *)
 
+(*e: ./bytecomp/bytelibrarian.ml *)

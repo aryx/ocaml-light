@@ -1,3 +1,4 @@
+(*s: ./bytecomp/bytelink.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -19,6 +20,7 @@ open Config
 open Instruct
 open Emitcode
 
+(*s: type Bytelink.error (./bytecomp/bytelink.ml) *)
 type error =
     File_not_found of string
   | Not_an_object_file of string
@@ -26,39 +28,53 @@ type error =
   | Inconsistent_import of string * string * string
   | Custom_runtime
   | File_exists of string
+(*e: type Bytelink.error (./bytecomp/bytelink.ml) *)
 
+(*s: exception Bytelink.Error (./bytecomp/bytelink.ml) *)
 exception Error of error
+(*e: exception Bytelink.Error (./bytecomp/bytelink.ml) *)
 
+(*s: type Bytelink.link_action *)
 type link_action =
     Link_object of string * compilation_unit
       (* Name of .cmo file and descriptor of the unit *)
   | Link_archive of string * compilation_unit list
       (* Name of .cma file and descriptors of the units to be linked. *)
+(*e: type Bytelink.link_action *)
 
 (* First pass: determine which units are needed *)
 
 module IdentSet = Set
 
+(*s: constant Bytelink.missing_globals *)
 let missing_globals = ref IdentSet.empty
+(*e: constant Bytelink.missing_globals *)
 
+(*s: function Bytelink.is_required *)
 let is_required (rel, pos) =
   match rel with
     Reloc_setglobal id ->
       IdentSet.mem id !missing_globals
   | _ -> false
+(*e: function Bytelink.is_required *)
 
+(*s: function Bytelink.add_required *)
 let add_required (rel, pos) =
   match rel with
     Reloc_getglobal id ->
       missing_globals := IdentSet.add id !missing_globals
   | _ -> ()
+(*e: function Bytelink.add_required *)
 
+(*s: function Bytelink.remove_required *)
 let remove_required (rel, pos) =
   match rel with
     Reloc_setglobal id ->
       missing_globals := IdentSet.remove id !missing_globals
   | _ -> ()
+(*e: function Bytelink.remove_required *)
 
+(*s: function Bytelink.scan_file *)
 let scan_file obj_name tolink =
   let file_name =
     try
@@ -105,16 +121,22 @@ let scan_file obj_name tolink =
     else raise(Error(Not_an_object_file file_name))
   with x ->
     close_in ic; raise x
+(*e: function Bytelink.scan_file *)
 
+(*s: constant Bytelink.debug_info *)
 (* Second pass: link in the required units *)
 
 let debug_info = ref ([] : debug_event list list)
+(*e: constant Bytelink.debug_info *)
 
+(*s: constant Bytelink.crc_interfaces *)
 (* Consistency check between interfaces *)
 
 let crc_interfaces =
+(*e: constant Bytelink.crc_interfaces *)
   (Hashtbl.create 17 : (string, string * Digest.t) Hashtbl.t)
 
+(*s: function Bytelink.check_consistency *)
 let check_consistency file_name cu =
   List.iter
     (fun (name, crc) ->
@@ -131,11 +153,15 @@ let check_consistency file_name cu =
           Hashtbl.add crc_interfaces name (file_name, crc)
       end)
     cu.cu_imports
+(*e: function Bytelink.check_consistency *)
 
+(*s: constant Bytelink.debug_info (./bytecomp/bytelink.ml) *)
 (* Relocate and record compilation events *)
 
 let debug_info = ref ([] : debug_event list list)
+(*e: constant Bytelink.debug_info (./bytecomp/bytelink.ml) *)
 
+(*s: function Bytelink.record_events *)
 let record_events orig evl =
   if evl <> [] then begin
     List.iter
@@ -148,7 +174,9 @@ let record_events orig evl =
       evl;
     debug_info := evl :: !debug_info
   end
+(*e: function Bytelink.record_events *)
 
+(*s: function Bytelink.link_compunit *)
 (* Link in a compilation unit *)
 
 let link_compunit output_fun currpos_fun inchan file_name compunit =
@@ -164,7 +192,9 @@ let link_compunit output_fun currpos_fun inchan file_name compunit =
   output_fun code_block;
   if !Clflags.link_everything then
     List.iter Symtable.require_primitive compunit.cu_primitives
+(*e: function Bytelink.link_compunit *)
 
+(*s: function Bytelink.link_object *)
 (* Link in a .cmo file *)
 
 let link_object output_fun currpos_fun file_name compunit =
@@ -177,7 +207,9 @@ let link_object output_fun currpos_fun file_name compunit =
       close_in inchan; raise(Error(Symbol_error(file_name, msg)))
   | x ->
       close_in inchan; raise x
+(*e: function Bytelink.link_object *)
 
+(*s: function Bytelink.link_archive *)
 (* Link in a .cma file *)
 
 let link_archive output_fun currpos_fun file_name units_required =
@@ -193,7 +225,9 @@ let link_archive output_fun currpos_fun file_name units_required =
       units_required;
     close_in inchan
   with x -> close_in inchan; raise x
+(*e: function Bytelink.link_archive *)
 
+(*s: function Bytelink.link_file *)
 (* Link in a .cmo or .cma file *)
 
 let link_file output_fun currpos_fun = function
@@ -201,7 +235,9 @@ let link_file output_fun currpos_fun = function
       link_object output_fun currpos_fun file_name unit
   | Link_archive(file_name, units) ->
       link_archive output_fun currpos_fun file_name units
+(*e: function Bytelink.link_file *)
 
+(*s: function Bytelink.link_bytecode *)
 (* Create a bytecode executable file *)
 
 let link_bytecode objfiles exec_name copy_header =
@@ -257,11 +293,15 @@ let link_bytecode objfiles exec_name copy_header =
     close_out outchan;
     remove_file exec_name;
     raise x
+(*e: function Bytelink.link_bytecode *)
 
+(*s: constant Bytelink.output_code_string_counter *)
 (* Output a string as a C array of unsigned ints *)
 
 let output_code_string_counter = ref 0
+(*e: constant Bytelink.output_code_string_counter *)
 
+(*s: function Bytelink.output_code_string *)
 let output_code_string outchan code =
   let pos = ref 0 in
   let len = String.length code in
@@ -278,7 +318,9 @@ let output_code_string outchan code =
       output_code_string_counter := 0
     end
   done
+(*e: function Bytelink.output_code_string *)
 
+(*s: function Bytelink.output_data_string *)
 (* Output a string as a C string *)
 
 let output_data_string outchan data =
@@ -293,7 +335,9 @@ let output_data_string outchan data =
     end
   done;
   output_string outchan "\";\n\n"
+(*e: function Bytelink.output_data_string *)
 
+(*s: function Bytelink.link_bytecode_as_c *)
 (* Output a bytecode executable as a C file *)
 
 let link_bytecode_as_c objfiles outfile =
@@ -326,7 +370,9 @@ void caml_startup(argv)
   with x ->
     close_out outchan;
     raise x
+(*e: function Bytelink.link_bytecode_as_c *)
 
+(*s: function Bytelink.extract *)
 (* Build a custom runtime *)
 
 let rec extract suffix l =
@@ -334,8 +380,10 @@ let rec extract suffix l =
   | [] -> []
   | h::t when Filename.check_suffix h suffix -> h :: (extract suffix t)
   | h::t -> extract suffix t
+(*e: function Bytelink.extract *)
 ;;
 
+(*s: function Bytelink.build_custom_runtime *)
 let build_custom_runtime prim_name exec_name =
   let libname = "libcamlrun" ^ ext_lib in
   let runtime_lib =
@@ -420,7 +468,9 @@ let build_custom_runtime prim_name exec_name =
         libsppc)
   | _ ->
     fatal_error "Bytelink.build_custom_runtime"
+(*e: function Bytelink.build_custom_runtime *)
 
+(*s: function Bytelink.append_bytecode_and_cleanup *)
 let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
   match Sys.os_type with
     "MacOS" ->
@@ -442,7 +492,9 @@ let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
       close_out oc;
       remove_file bytecode_name;
       remove_file prim_name
+(*e: function Bytelink.append_bytecode_and_cleanup *)
 
+(*s: function Bytelink.fix_exec_name *)
 (* Fix the name of the output file, if the C compiler changes it behind
    our back. *)
 
@@ -453,7 +505,9 @@ let fix_exec_name name =
       with Not_found -> name ^ ".exe"
       end
   | _ -> name
+(*e: function Bytelink.fix_exec_name *)
 
+(*s: function Bytelink.link *)
 (* Main entry point (build a custom runtime if needed) *)
 
 let link objfiles =
@@ -490,11 +544,13 @@ let link objfiles =
       remove_file !Clflags.object_name;
       raise x
   end
+(*e: function Bytelink.link *)
 
 (* Error report *)
 
 open Format
 
+(*s: constant Bytelink.report_error *)
 let report_error = function
     File_not_found name ->
       print_string "Cannot find file "; print_string name
@@ -516,3 +572,5 @@ let report_error = function
       print_string "Error while building custom runtime system"
   | File_exists file ->
       print_string "Cannot overwrite existing file "; print_string file
+(*e: constant Bytelink.report_error *)
+(*e: ./bytecomp/bytelink.ml *)

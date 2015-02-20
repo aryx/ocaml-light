@@ -1,3 +1,4 @@
+(*s: ./bytecomp/printlambda.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -18,6 +19,7 @@ open Types
 open Lambda
 
 
+(*s: constant Printlambda.structured_constant *)
 let rec structured_constant = function
     Const_base(Const_int n) -> print_int n
   | Const_base(Const_char c) ->
@@ -50,7 +52,9 @@ let rec structured_constant = function
       close_box();
       print_string "|]";
       close_box()
+(*e: constant Printlambda.structured_constant *)
 
+(*s: constant Printlambda.primitive *)
 let primitive = function
     Pidentity -> print_string "id"
   | Pgetglobal id -> print_string "global "; Ident.print id
@@ -112,6 +116,7 @@ let primitive = function
   | Parrayrefs _ -> print_string "array.get"
   | Parraysets _ -> print_string "array.set"
   | Pbittest -> print_string "testbit"
+(*e: constant Printlambda.primitive *)
 
 let rec lambda = function
     Lvar id ->
@@ -287,3 +292,4 @@ and letbody = function
       close_box();
       print_space();
       lambda l
+(*e: ./bytecomp/printlambda.ml *)
