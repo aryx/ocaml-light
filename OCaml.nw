@@ -1,0 +1,310 @@
+\documentclass[twocolumn]{report}
+
+%******************************************************************************
+% Prelude
+%******************************************************************************
+\newif\iffinal
+\newif\ifverbose
+\finaltrue\verbosefalse
+% see also other newif in Macros.tex
+
+%------------------------------------------------------------------------------
+%history: 
+%------------------------------------------------------------------------------
+
+%thx to LP, changed for the better a few things:
+
+%thx to codemap/codegraph/scheck:
+% - use cg to to look at backward deps but the ocaml linker enforce layers
+%   (harder to understand non layered code)
+% - use scheck to remove deadcode, 
+%   (harder to understand big files)
+% - TODO use cg to reduce number of globals by moving them closer to the
+%   relevant file (or even function), better cluster the code
+%   (harder to understand non functional code using lots of globals)
+
+%thx to this manual, better understand OCaml?:
+
+%history LP-ization:
+% - skeleton, mostly copy paste of Template.nw skeleton
+% - put all content of files in the Extra section, via 'pfff -lpize'
+%   which also now split in chunks!
+%    * function, type, exception, constant
+%    * TODO ctor/dtor, dumper
+%    * TODO [[xxx]] other fields, [[xxx]] extra fields
+% - TODO read Extra section, identify concepts, first TOC
+% - TODO distribute parts of the Extra section in the main file
+% - TODO understand main(), LP split main, improve TOC
+% - TODO understand main functions, LP split, cluster, improve TOC
+% - TODO LP split the structures, use datalog for flow to field info
+% - TODO nullify, boolify, errorify, enumify,  typeify,    scheckify, plan9ify
+% - TODO aspecify advanced features! remove useless features
+% - TODO add figures
+% - TODO add explanations
+
+%------------------------------------------------------------------------------
+% Packages
+%------------------------------------------------------------------------------
+
+\usepackage{docs/latex/noweb}
+ \noweboptions{footnotesizecode,nomargintag}
+ %note: allow chunk on different pages, less white space at bottom of pages
+ \def\nwendcode{\endtrivlist \endgroup}
+ \let\nwdocspar=\par
+\usepackage{xspace}
+\usepackage{verbatim}
+%note: required by noweblatexpad for the \t \l \n in this file
+\usepackage{fancyvrb}
+\usepackage{url}
+\iffinal
+\usepackage{hyperref}
+ \hypersetup{colorlinks=true}
+\fi
+\usepackage[pageref]{backref}
+ \def\backref{{\footnotesize cited page(s)}~}
+%\usepackage{cleveref} %\cref
+%\usepackage{multirow}
+\usepackage{booktabs} 
+ \newcommand{\otoprule}{\midrule[\heavyrulewidth]}
+\usepackage{graphicx}
+ %\usepackage[margin=0.5in]{geometry}
+ %  but eat the bottom when very low
+ %\usepackage{fullpage} is deprecated 
+ % => do the more manual below:
+ \addtolength{\oddsidemargin}{-.850in}
+ \addtolength{\evensidemargin}{-.850in}
+ \addtolength{\textwidth}{1.70in}
+ \addtolength{\topmargin}{-.850in}
+ \addtolength{\textheight}{1.70in}
+%\usepackage{minitoc}
+
+%------------------------------------------------------------------------------
+% Macros
+%------------------------------------------------------------------------------
+\input{docs/latex/Macros}
+
+%------------------------------------------------------------------------------
+% Config
+%------------------------------------------------------------------------------
+\allcodefalse
+% used for forward decl, pragmas, func decl, extern decl, stats, #ifdef,
+% debugging macros
+
+%\setcounter{tocdepth}{1}
+
+%******************************************************************************
+% Title
+%******************************************************************************
+
+\begin{document}
+
+\title{
+{\Huge 
+Principia Softwarica: Objective Caml Light
+}\\
+{version 0.1}
+}
+
+\author{
+Yoann Padioleau\\
+\texttt{yoann.padioleau@gmail.com}
+}
+
+\maketitle 
+\onecolumn
+\hrule
+\begin{quote}
+    Copyright \copyright{} 2015 Yoann Padioleau \\
+    Permission is granted to copy, distribute and/or modify this document,
+    except all the source code it contains, under the terms of the GNU Free
+    Documentation License, Version 1.3.
+\end{quote}
+\hrule
+
+%CONFIG: \dominitoc
+
+\iffinal
+\begingroup
+\hypersetup{linkcolor=blue}
+% need to s/onecolumn/twocolumn in report.cls :) for \tableofcontents
+\twocolumn
+\tableofcontents
+\endgroup
+\else
+\tableofcontents
+\fi
+
+%******************************************************************************
+% Body
+%******************************************************************************
+
+\chapter{Introduction}
+
+\section{Motivations}
+
+The goal of this book is to present in full details the source code for
+the compiler of a high level language.
+Why? Because I think it makes you a better programmer if
+you fully understand how things work under the hood.
+
+% ocaml because good compromise! 
+
+Here are other candidates that were considered but ultimately discarded:
+\begin{itemize}
+\item ML
+% not active
+\item Haskell
+% nice but lazy
+\item Scheme
+% not typed
+\end{itemize}
+
+% too many candidates to list here actually.
+
+
+\section{Getting started}
+
+\section{Requirements}
+
+\section{About this document}
+#include "docs/latex/About.nw"
+
+\section{Copyright}
+
+Most of this document is actually source code from OCaml, so
+those parts are copyright by INRIA.
+The prose is mine and is licensed under the GNU Free Documentation
+License.
+
+<<copyright header>>=
+(***********************************************************************)
+(*                                                                     *)
+(*                           Objective Caml                            *)
+(*                                                                     *)
+(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
+(*                                                                     *)
+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Automatique.  Distributed only by permission.                      *)
+(*                                                                     *)
+(***********************************************************************)
+@
+
+\section{Acknowledgments}
+
+
+\chapter{Overview}
+
+\section{High-level language principles}
+
+\section{[[ocamlc]] services}
+
+\section{[[calc.ml]]}
+
+\section{Input Objective Caml Light language}
+
+\section{Code organization}
+
+\section{Software architecture}
+
+\section{Bootstrapping}
+
+%###############################################################################
+
+\chapter{Core Data Structures}
+
+
+%parsing/parsetree.mli and asttypes.mli
+%typing/types.mli
+%typing/typedtree.mli (and asttypes.mli)
+%bytecomp/lambda.mli
+%bytecomp/instruct.mli
+%byterun/instruct.h
+
+\section{Abstract Syntax Tree}
+
+\section{Types}
+
+\section{Typed Tree}
+
+\section{[[Lambda]] intermediate language}
+
+\section{[[Instruct]] intermediate language}
+
+\section{Bytecode}
+
+\section{Runtime values}
+
+
+\chapter{[[main()]]}
+
+\chapter{Lexing}
+
+\chapter{Parsing}
+
+\chapter{Typing}
+
+\chapter{Generating}
+
+\chapter{Running}
+
+\chapter{Collecting}
+
+
+
+\chapter{Advanced Topics}
+
+\chapter{Conclusion}
+
+\appendix
+
+\chapter{Debugging}
+
+\chapter{Profiling}
+
+\chapter{Error Managment}
+
+\chapter{Standard Library}
+
+\chapter{Extra Code}
+
+\ifallcode
+#include "OCaml_extra.nw"
+\fi
+
+\chapter{Changelog}
+\label{sec:changelog}
+
+\chapter{Glossary}
+\label{sec:glossary}
+
+\begin{verbatim}
+\end{verbatim}
+
+\chapter*{Indexes}
+\addcontentsline{toc}{section}{Index}
+
+%\chapter{References} 
+\addcontentsline{toc}{section}{References}
+
+\begin{thebibliography}{99}
+
+\bibitem[1]{wp-literate-programming} Donald Knuth,,
+{\em Literate Programming}, 
+\url{http://en.wikipedia.org/wiki/Literate\_Program}
+
+\bibitem[2]{noweb} Norman Ramsey,
+{\em Noweb}, 
+\url{http://www.cs.tufts.edu/~nr/noweb/}
+
+\bibitem[3]{syncweb} Yoann Padioleau,
+{\em Syncweb, literate programming meets unison}, 
+\url{http://padator.org/software/project-syncweb/readme.txt}
+
+\end{thebibliography}
+
+%******************************************************************************
+% Postlude
+%******************************************************************************
+
+\end{document}
+
