@@ -99,7 +99,6 @@ and structure_item =
   | Tstr_type of (Ident.t * type_declaration) list
   | Tstr_exception of Ident.t * exception_declaration
   | Tstr_module of Ident.t * module_expr
-  | Tstr_modtype of Ident.t * module_type
   | Tstr_open of Path.t
 (*e: type Typedtree.structure_item *)
 

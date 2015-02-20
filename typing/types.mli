@@ -133,10 +133,4 @@ and signature_item =
   | Tsig_exception of Ident.t * exception_declaration
   | Tsig_module of Ident.t * module_type
 (*e: type Types.signature_item *)
-
-(*s: type Types.modtype_declaration *)
-and modtype_declaration =
-    Tmodtype_abstract
-  | Tmodtype_manifest of module_type
-(*e: type Types.modtype_declaration *)
 (*e: ./typing/types.mli *)

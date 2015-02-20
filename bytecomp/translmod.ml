@@ -141,8 +141,6 @@ and transl_structure fields cc = function
   | Tstr_module(id, modl) :: rem ->
       Llet(Strict, id, transl_module Tcoerce_none modl,
            transl_structure (id :: fields) cc rem)
-  | Tstr_modtype(id, decl) :: rem ->
-      transl_structure fields cc rem
   | Tstr_open path :: rem ->
       transl_structure fields cc rem
 
@@ -189,8 +187,6 @@ let transl_store_structure glob map prims str =
   | Tstr_module(id, modl) :: rem ->
       Llet(Strict, id, transl_module Tcoerce_none modl,
            store_ident glob map id (transl_store rem))
-  | Tstr_modtype(id, decl) :: rem ->
-      transl_store rem
   | Tstr_open path :: rem ->
       transl_store rem
 
@@ -227,7 +223,6 @@ let rec defined_idents = function
   | Tstr_type decls :: rem -> defined_idents rem
   | Tstr_exception(id, decl) :: rem -> id :: defined_idents rem
   | Tstr_module(id, modl) :: rem -> id :: defined_idents rem
-  | Tstr_modtype(id, decl) :: rem -> defined_idents rem
   | Tstr_open path :: rem -> defined_idents rem
 (*e: constant Translmod.defined_idents *)
 
@@ -311,8 +306,6 @@ let transl_toplevel_item = function
   | Tstr_module(id, modl) ->
       Ident.make_global id;
       Lprim(Psetglobal id, [transl_module Tcoerce_none modl])
-  | Tstr_modtype(id, decl) ->
-      lambda_unit
   | Tstr_open path ->
       lambda_unit
 (*e: constant Translmod.transl_toplevel_item *)

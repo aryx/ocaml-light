@@ -22,11 +22,14 @@ open Types
 let rec scrape env mty =
   match mty with
     Tmty_ident p ->
+      failwith "TODO: find_modtype_Expansion"
+(*
       begin try
         Env.find_modtype_expansion p env
       with Not_found ->
         mty
       end
+*)
   | _ -> mty
 (*e: function Mtype.scrape *)
 

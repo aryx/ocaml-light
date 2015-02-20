@@ -155,12 +155,6 @@ and signature_item_desc =
   | Psig_open of Longident.t
 (*e: type Parsetree.signature_item_desc *)
 
-(*s: type Parsetree.modtype_declaration *)
-and modtype_declaration =
-    Pmodtype_abstract
-  | Pmodtype_manifest of module_type
-(*e: type Parsetree.modtype_declaration *)
-
 (* Value expressions for the module language *)
 
 (*s: type Parsetree.module_expr *)

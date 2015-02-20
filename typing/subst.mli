@@ -63,7 +63,4 @@ val modtype: t -> module_type -> module_type
 (*s: signature Subst.signature *)
 val signature: t -> signature -> signature
 (*e: signature Subst.signature *)
-(*s: signature Subst.modtype_declaration *)
-val modtype_declaration: t -> modtype_declaration -> modtype_declaration
-(*e: signature Subst.modtype_declaration *)
 (*e: ./typing/subst.mli *)

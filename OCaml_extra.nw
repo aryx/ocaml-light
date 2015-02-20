@@ -1001,8 +1001,6 @@ open Asttypes
 
 <<type Parsetree.signature_item_desc>>
 
-<<type Parsetree.modtype_declaration>>
-
 (* Value expressions for the module language *)
 
 <<type Parsetree.module_expr>>
@@ -1748,12 +1746,6 @@ and signature_item =
   | Tsig_module of Ident.t * module_type
 @
 
-<<type Types.modtype_declaration>>=
-and modtype_declaration =
-    Tmodtype_abstract
-  | Tmodtype_manifest of module_type
-@
-
 
 %-------------------------------------------------------------
 
@@ -1805,8 +1797,6 @@ open Asttypes
 <<type Types.signature>>
 
 <<type Types.signature_item>>
-
-<<type Types.modtype_declaration>>
 @
 
 
@@ -2134,9 +2124,6 @@ val modtype: t -> module_type -> module_type
 val signature: t -> signature -> signature
 @
 
-<<signature Subst.modtype_declaration>>=
-val modtype_declaration: t -> modtype_declaration -> modtype_declaration
-@
 
 
 %-------------------------------------------------------------
@@ -2162,7 +2149,6 @@ type t
 <<signature Subst.exception_declaration>>
 <<signature Subst.modtype>>
 <<signature Subst.signature>>
-<<signature Subst.modtype_declaration>>
 @
 
 
@@ -2389,9 +2375,6 @@ and signature s = function
   | Tsig_module(id, mty) :: sg ->
       Tsig_module(id, modtype s mty) :: signature (remove_module id s) sg
 
-and modtype_declaration s = function
-    Tmodtype_abstract -> Tmodtype_abstract
-  | Tmodtype_manifest mty -> Tmodtype_manifest(modtype s mty)
 @
 
 
@@ -2603,22 +2586,15 @@ open Types
 val find_module: Path.t -> t -> module_type
 @
 
-<<signature Env.find_modtype>>=
-val find_modtype: Path.t -> t -> modtype_declaration
-@
 
 <<signature Env.find_type_expansion>>=
 val find_type_expansion: Path.t -> t -> type_expr list * type_expr
 @
 
 <<signature Env.find_modtype_expansion>>=
-val find_modtype_expansion: Path.t -> t -> Types.module_type
 @
 
 
-<<signature Env.lookup_modtype>>=
-val lookup_modtype: Longident.t -> t -> Path.t * modtype_declaration
-@
 
 <<signature Env.add_value>>=
 (* Insertion by identifier *)
@@ -2638,9 +2614,6 @@ val add_exception: Ident.t -> exception_declaration -> t -> t
 val add_module: Ident.t -> module_type -> t -> t
 @
 
-<<signature Env.add_modtype>>=
-val add_modtype: Ident.t -> modtype_declaration -> t -> t
-@
 
 <<signature Env.add_item>>=
 (* Insertion of all fields of a signature. *)
@@ -2677,9 +2650,6 @@ val enter_exception: string -> exception_declaration -> t -> Ident.t * t
 val enter_module: string -> module_type -> t -> Ident.t * t
 @
 
-<<signature Env.enter_modtype>>=
-val enter_modtype: string -> modtype_declaration -> t -> Ident.t * t
-@
 
 <<signature Env.reset_cache>>=
 (* Reset the cache of in-core module interfaces.
@@ -2716,7 +2686,6 @@ type summary =
   | Env_type of summary * Ident.t * type_declaration
   | Env_exception of summary * Ident.t * exception_declaration
   | Env_module of summary * Ident.t * module_type
-  | Env_modtype of summary * Ident.t * modtype_declaration
   | Env_open of summary * Path.t
 @
 
@@ -2751,7 +2720,6 @@ open Types
 <<signature Env.find_value>>
 <<signature Env.find_type>>
 <<signature Env.find_module>>
-<<signature Env.find_modtype>>
 
 <<signature Env.find_type_expansion>>
 <<signature Env.find_modtype_expansion>>
@@ -2763,13 +2731,11 @@ open Types
 <<signature Env.lookup_label>>
 <<signature Env.lookup_type>>
 <<signature Env.lookup_module>>
-<<signature Env.lookup_modtype>>
 
 <<signature Env.add_value>>
 <<signature Env.add_type>>
 <<signature Env.add_exception>>
 <<signature Env.add_module>>
-<<signature Env.add_modtype>>
 
 <<signature Env.add_item>>
 <<signature Env.add_signature>>
@@ -2780,7 +2746,6 @@ open Types
 <<signature Env.enter_value>>
 <<signature Env.enter_exception>>
 <<signature Env.enter_module>>
-<<signature Env.enter_modtype>>
 
 <<signature Env.reset_cache>>
 
@@ -2818,7 +2783,6 @@ and structure_components = {
   mutable comp_labels: (string, (label_description * int)) Tbl.t;
   mutable comp_types: (string, (type_declaration * int)) Tbl.t;
   mutable comp_modules: (string, (module_type * int)) Tbl.t;
-  mutable comp_modtypes: (string, (modtype_declaration * int)) Tbl.t;
   mutable comp_components: (string, (module_components * int)) Tbl.t;
 }
 @
@@ -2932,10 +2896,6 @@ let find_type_expansion path env =
 @
 
 <<function Env.find_modtype_expansion>>=
-let find_modtype_expansion path env =
-  match find_modtype path env with
-    Tmodtype_abstract     -> raise Not_found
-  | Tmodtype_manifest mty -> mty
 @
 
 <<function Env.find_module>>=
@@ -2991,11 +2951,14 @@ let lookup_simple proj1 proj2 lid env =
 let rec scrape_modtype mty env =
   match mty with
     Tmty_ident path ->
+      failwith "TODO? or can remove, find_modtype_expansion"
+(*
       begin try
         scrape_modtype (find_modtype_expansion path env) env
       with Not_found ->
         mty
       end
+*)
   | _ -> mty
 @
 
@@ -3111,7 +3074,6 @@ let open_signature root sg env =
     labels = newenv.labels;
     types = newenv.types;
     modules = newenv.modules;
-    modtypes = newenv.modtypes;
     components = newenv.components;
     summary = Env_open(env.summary, root) }
 @
@@ -3242,8 +3204,6 @@ let find_value =
   find (fun env -> env.values) (fun sc -> sc.comp_values)
 and find_type =
   find (fun env -> env.types) (fun sc -> sc.comp_types)
-and find_modtype =
-  find (fun env -> env.modtypes) (fun sc -> sc.comp_modtypes)
 
 <<function Env.find_type_expansion>>
 
@@ -3299,8 +3259,6 @@ and lookup_label =
   lookup_simple (fun env -> env.labels) (fun sc -> sc.comp_labels)
 and lookup_type =
   lookup (fun env -> env.types) (fun sc -> sc.comp_types)
-and lookup_modtype =
-  lookup (fun env -> env.modtypes) (fun sc -> sc.comp_modtypes)
   
 <<function Env.scrape_modtype>>
 
@@ -3318,7 +3276,7 @@ let rec components_of_module env sub path mty =
       let c =
         { comp_values = Tbl.empty; comp_constrs = Tbl.empty;
           comp_labels = Tbl.empty; comp_types = Tbl.empty;
-          comp_modules = Tbl.empty; comp_modtypes = Tbl.empty;
+          comp_modules = Tbl.empty;
           comp_components = Tbl.empty; } in
       let (pl, sub) = prefix_idents path 0 sub sg in
       let env = ref env in
@@ -3366,7 +3324,7 @@ let rec components_of_module env sub path mty =
         Structure_comps {
           comp_values = Tbl.empty; comp_constrs = Tbl.empty;
           comp_labels = Tbl.empty; comp_types = Tbl.empty;
-          comp_modules = Tbl.empty; comp_modtypes = Tbl.empty;
+          comp_modules = Tbl.empty;
           comp_components = Tbl.empty; }
 
 (* Insertion of bindings by identifier + path *)
@@ -3377,7 +3335,6 @@ and store_value id path decl env =
     labels = env.labels;
     types = env.types;
     modules = env.modules;
-    modtypes = env.modtypes;
     components = env.components;
     summary = Env_value(env.summary, id, decl) }
 
@@ -3397,7 +3354,6 @@ and store_type id path info env =
         env.labels;
     types = Ident.add id (path, info) env.types;
     modules = env.modules;
-    modtypes = env.modtypes;
     components = env.components;
     summary = Env_type(env.summary, id, info) }
 
@@ -3407,7 +3363,6 @@ and store_exception id path decl env =
     labels = env.labels;
     types = env.types;
     modules = env.modules;
-    modtypes = env.modtypes;
     components = env.components;
     summary = Env_exception(env.summary, id, decl) }
 
@@ -3417,21 +3372,11 @@ and store_module id path mty env =
     labels = env.labels;
     types = env.types;
     modules = Ident.add id (path, mty) env.modules;
-    modtypes = env.modtypes;
     components =
       Ident.add id (path, components_of_module env Subst.identity path mty)
                    env.components;
     summary = Env_module(env.summary, id, mty) }
 
-and store_modtype id path info env =
-  { values = env.values;
-    constrs = env.constrs;
-    labels = env.labels;
-    types = env.types;
-    modules = env.modules;
-    modtypes = Ident.add id (path, info) env.modtypes;
-    components = env.components;
-    summary = Env_modtype(env.summary, id, info) }
 
 and store_components id path comps env =
   { values = env.values;
@@ -3439,7 +3384,6 @@ and store_components id path comps env =
     labels = env.labels;
     types = env.types;
     modules = env.modules;
-    modtypes = env.modtypes;
     components = Ident.add id (path, comps) env.components;
     summary = env.summary }
 
@@ -3461,15 +3405,11 @@ and add_exception id decl env =
 and add_module id mty env =
   store_module id (Pident id) mty env
 
-and add_modtype id info env =
-  store_modtype id (Pident id) info env
-
 <<function Env.enter>>
 
 let enter_value = enter store_value
 and enter_exception = enter store_exception
 and enter_module = enter store_module
-and enter_modtype = enter store_modtype
 
 <<function Env.add_item>>
 
@@ -5537,11 +5477,14 @@ open Types
 let rec scrape env mty =
   match mty with
     Tmty_ident p ->
+      failwith "TODO: find_modtype_Expansion"
+(*
       begin try
         Env.find_modtype_expansion p env
       with Not_found ->
         mty
       end
+*)
   | _ -> mty
 @
 
@@ -5647,10 +5590,6 @@ val signature: signature -> unit
 val signature_body: bool -> signature -> unit
 @
 
-<<signature Printtyp.modtype_declaration>>=
-val modtype_declaration: Ident.t -> modtype_declaration -> unit
-@
-
 <<signature Printtyp.type_expansion>>=
 val type_expansion: type_expr -> type_expr -> unit
 @
@@ -5688,7 +5627,6 @@ open Types
 <<signature Printtyp.modtype>>
 <<signature Printtyp.signature>>
 <<signature Printtyp.signature_body>>
-<<signature Printtyp.modtype_declaration>>
 <<signature Printtyp.type_expansion>>
 <<signature Printtyp.trace>>
 <<signature Printtyp.unification_error>>
@@ -6187,15 +6125,6 @@ and signature_body spc = function
             open_box 2; print_string "module "; ident id; print_string " :";
             print_space(); modtype mty; close_box(); rem
       in signature_body true cont
-
-and modtype_declaration id decl =
-  open_box 2; print_string "module type "; ident id;
-  begin match decl with
-    Tmodtype_abstract -> ()
-  | Tmodtype_manifest mty ->
-      print_string " ="; print_space(); modtype mty
-  end;
-  close_box()
 
 <<function Printtyp.signature>>
 
@@ -6938,7 +6867,8 @@ exception Dont_match
 <<function Includemod.expand_module_path>>=
 let expand_module_path env path =
   try
-    Env.find_modtype_expansion path env
+    failwith "TODO: find_modtype_expansion"
+(*    Env.find_modtype_expansion path env *)
   with Not_found ->
     raise Dont_match
 @
@@ -7174,19 +7104,6 @@ and signature_components env subst = function
       fatal_error "Includemod.signature_components"
 
 (* Inclusion between module type specifications *)
-
-and modtype_infos env subst id info1 info2 =
-  let info2 = Subst.modtype_declaration subst info2 in
-  try
-    match (info1, info2) with
-      (Tmodtype_abstract, Tmodtype_abstract) -> ()
-    | (Tmodtype_manifest mty1, Tmodtype_abstract) -> ()
-    | (Tmodtype_manifest mty1, Tmodtype_manifest mty2) ->
-        check_modtype_equiv env mty1 mty2
-    | (Tmodtype_abstract, Tmodtype_manifest mty2) ->
-        check_modtype_equiv env (Tmty_ident(Pident id)) mty2
-  with Error reasons ->
-    raise(Error(Modtype_infos(id, info1, info2) :: reasons))
 
 and check_modtype_equiv env mty1 mty2 =
   match
@@ -8437,12 +8354,15 @@ open Typedtree
 let rec transl_modtype env smty =
   match smty.pmty_desc with
     Pmty_ident lid ->
+      failwith "TODO: lookup_modtype"
+(*
       begin try
         let (path, info) = Env.lookup_modtype lid env in 
         Tmty_ident path
       with Not_found ->
         raise(Error(smty.pmty_loc, Unbound_modtype lid))
       end
+*)
   | Pmty_signature ssg ->
       Tmty_signature(transl_signature env ssg)
       
@@ -8474,13 +8394,6 @@ and transl_signature env sg =
       let sg = extract_sig_open env loc mty in
       let newenv = Env.open_signature path sg env in
       transl_signature newenv srem
-
-and transl_modtype_info env sinfo =
-  match sinfo with
-    Pmodtype_abstract ->
-      Tmodtype_abstract
-  | Pmodtype_manifest smty ->
-      Tmodtype_manifest(transl_modtype env smty)
 
 (* Check that all type and module identifiers in a structure have
    distinct names (so that access by named paths is unambiguous). *)
@@ -11260,8 +11173,6 @@ let transl_store_structure glob map prims str =
   | Tstr_module(id, modl) :: rem ->
       Llet(Strict, id, transl_module Tcoerce_none modl,
            store_ident glob map id (transl_store rem))
-  | Tstr_modtype(id, decl) :: rem ->
-      transl_store rem
   | Tstr_open path :: rem ->
       transl_store rem
 
@@ -11298,7 +11209,6 @@ let rec defined_idents = function
   | Tstr_type decls :: rem -> defined_idents rem
   | Tstr_exception(id, decl) :: rem -> id :: defined_idents rem
   | Tstr_module(id, modl) :: rem -> id :: defined_idents rem
-  | Tstr_modtype(id, decl) :: rem -> defined_idents rem
   | Tstr_open path :: rem -> defined_idents rem
 @
 
@@ -11382,8 +11292,6 @@ let transl_toplevel_item = function
   | Tstr_module(id, modl) ->
       Ident.make_global id;
       Lprim(Psetglobal id, [transl_module Tcoerce_none modl])
-  | Tstr_modtype(id, decl) ->
-      lambda_unit
   | Tstr_open path ->
       lambda_unit
 @
@@ -11485,8 +11393,6 @@ and transl_structure fields cc = function
   | Tstr_module(id, modl) :: rem ->
       Llet(Strict, id, transl_module Tcoerce_none modl,
            transl_structure (id :: fields) cc rem)
-  | Tstr_modtype(id, decl) :: rem ->
-      transl_structure fields cc rem
   | Tstr_open path :: rem ->
       transl_structure fields cc rem
 

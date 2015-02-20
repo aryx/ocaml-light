@@ -38,15 +38,11 @@ val find_type: Path.t -> t -> type_declaration
 (*s: signature Env.find_module *)
 val find_module: Path.t -> t -> module_type
 (*e: signature Env.find_module *)
-(*s: signature Env.find_modtype *)
-val find_modtype: Path.t -> t -> modtype_declaration
-(*e: signature Env.find_modtype *)
 
 (*s: signature Env.find_type_expansion *)
 val find_type_expansion: Path.t -> t -> type_expr list * type_expr
 (*e: signature Env.find_type_expansion *)
 (*s: signature Env.find_modtype_expansion *)
-val find_modtype_expansion: Path.t -> t -> Types.module_type
 (*e: signature Env.find_modtype_expansion *)
 
 (* Lookup by long identifiers *)
@@ -66,9 +62,6 @@ val lookup_type: Longident.t -> t -> Path.t * type_declaration
 (*s: signature Env.lookup_module *)
 val lookup_module: Longident.t -> t -> Path.t * module_type
 (*e: signature Env.lookup_module *)
-(*s: signature Env.lookup_modtype *)
-val lookup_modtype: Longident.t -> t -> Path.t * modtype_declaration
-(*e: signature Env.lookup_modtype *)
 
 (*s: signature Env.add_value *)
 (* Insertion by identifier *)
@@ -84,9 +77,6 @@ val add_exception: Ident.t -> exception_declaration -> t -> t
 (*s: signature Env.add_module *)
 val add_module: Ident.t -> module_type -> t -> t
 (*e: signature Env.add_module *)
-(*s: signature Env.add_modtype *)
-val add_modtype: Ident.t -> modtype_declaration -> t -> t
-(*e: signature Env.add_modtype *)
 
 (*s: signature Env.add_item *)
 (* Insertion of all fields of a signature. *)
@@ -118,9 +108,6 @@ val enter_exception: string -> exception_declaration -> t -> Ident.t * t
 (*s: signature Env.enter_module *)
 val enter_module: string -> module_type -> t -> Ident.t * t
 (*e: signature Env.enter_module *)
-(*s: signature Env.enter_modtype *)
-val enter_modtype: string -> modtype_declaration -> t -> Ident.t * t
-(*e: signature Env.enter_modtype *)
 
 (*s: signature Env.reset_cache *)
 (* Reset the cache of in-core module interfaces.
@@ -156,7 +143,6 @@ type summary =
   | Env_type of summary * Ident.t * type_declaration
   | Env_exception of summary * Ident.t * exception_declaration
   | Env_module of summary * Ident.t * module_type
-  | Env_modtype of summary * Ident.t * modtype_declaration
   | Env_open of summary * Path.t
 (*e: type Env.summary *)
 

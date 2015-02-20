@@ -386,15 +386,6 @@ and signature_body spc = function
             print_space(); modtype mty; close_box(); rem
       in signature_body true cont
 
-and modtype_declaration id decl =
-  open_box 2; print_string "module type "; ident id;
-  begin match decl with
-    Tmodtype_abstract -> ()
-  | Tmodtype_manifest mty ->
-      print_string " ="; print_space(); modtype mty
-  end;
-  close_box()
-
 (*s: function Printtyp.signature *)
 (* Print a signature body (used when compiling a .mli and printing results
    in interactive use). *)

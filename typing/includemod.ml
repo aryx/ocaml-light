@@ -27,7 +27,6 @@ type error =
   | Exception_declarations of
       Ident.t * exception_declaration * exception_declaration
   | Module_types of module_type * module_type
-  | Modtype_infos of Ident.t * modtype_declaration * modtype_declaration
   | Modtype_permutation
   | Interface_mismatch of string * string
 (*e: type Includemod.error *)
@@ -80,7 +79,8 @@ exception Dont_match
 (*s: function Includemod.expand_module_path *)
 let expand_module_path env path =
   try
-    Env.find_modtype_expansion path env
+    failwith "TODO: find_modtype_expansion"
+(*    Env.find_modtype_expansion path env *)
   with Not_found ->
     raise Dont_match
 (*e: function Includemod.expand_module_path *)
@@ -239,19 +239,6 @@ and signature_components env subst = function
 
 (* Inclusion between module type specifications *)
 
-and modtype_infos env subst id info1 info2 =
-  let info2 = Subst.modtype_declaration subst info2 in
-  try
-    match (info1, info2) with
-      (Tmodtype_abstract, Tmodtype_abstract) -> ()
-    | (Tmodtype_manifest mty1, Tmodtype_abstract) -> ()
-    | (Tmodtype_manifest mty1, Tmodtype_manifest mty2) ->
-        check_modtype_equiv env mty1 mty2
-    | (Tmodtype_abstract, Tmodtype_manifest mty2) ->
-        check_modtype_equiv env (Tmty_ident(Pident id)) mty2
-  with Error reasons ->
-    raise(Error(Modtype_infos(id, info1, info2) :: reasons))
-
 and check_modtype_equiv env mty1 mty2 =
   match
     (modtypes env Subst.identity mty1 mty2,
@@ -339,14 +326,6 @@ let include_err = function
       print_break 1 (-2);
       print_string "is not included in"; print_space();
       modtype mty2;
-      close_box()
-  | Modtype_infos(id, d1, d2) ->
-      open_hvbox 2;
-      print_string "Module type declarations do not match:"; print_space();
-      modtype_declaration id d1; 
-      print_break 1 (-2);
-      print_string "is not included in"; print_space();
-      modtype_declaration id d2;
       close_box()
   | Modtype_permutation ->
       print_string "Illegal permutation of structure fields"

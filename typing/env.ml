@@ -47,7 +47,6 @@ type summary =
   | Env_type of summary * Ident.t * type_declaration
   | Env_exception of summary * Ident.t * exception_declaration
   | Env_module of summary * Ident.t * module_type
-  | Env_modtype of summary * Ident.t * modtype_declaration
   | Env_open of summary * Path.t
 (*e: type Env.summary *)
 
@@ -58,7 +57,6 @@ type t = {
   labels     : Types.label_description              Ident.tbl;
   types      : (Path.t * Types.type_declaration)    Ident.tbl;
   modules    : (Path.t * Types.module_type)         Ident.tbl;
-  modtypes   : (Path.t * Types.modtype_declaration) Ident.tbl;
   components : (Path.t * module_components)   Ident.tbl;
   summary: summary
 }
@@ -77,7 +75,6 @@ and structure_components = {
   mutable comp_labels: (string, (label_description * int)) Tbl.t;
   mutable comp_types: (string, (type_declaration * int)) Tbl.t;
   mutable comp_modules: (string, (module_type * int)) Tbl.t;
-  mutable comp_modtypes: (string, (modtype_declaration * int)) Tbl.t;
   mutable comp_components: (string, (module_components * int)) Tbl.t;
 }
 (*e: type Env.structure_components *)
@@ -87,7 +84,7 @@ and structure_components = {
 let empty = {
   values = Ident.empty; constrs = Ident.empty;
   labels = Ident.empty; types = Ident.empty;
-  modules = Ident.empty; modtypes = Ident.empty;
+  modules = Ident.empty;
   components = Ident.empty; 
   summary = Env_empty }
 (*e: constant Env.empty *)
@@ -195,8 +192,6 @@ let find_value =
   find (fun env -> env.values) (fun sc -> sc.comp_values)
 and find_type =
   find (fun env -> env.types) (fun sc -> sc.comp_types)
-and find_modtype =
-  find (fun env -> env.modtypes) (fun sc -> sc.comp_modtypes)
 
 (*s: function Env.find_type_expansion *)
 let find_type_expansion path env =
@@ -207,10 +202,6 @@ let find_type_expansion path env =
 (*e: function Env.find_type_expansion *)
 
 (*s: function Env.find_modtype_expansion *)
-let find_modtype_expansion path env =
-  match find_modtype path env with
-    Tmodtype_abstract     -> raise Not_found
-  | Tmodtype_manifest mty -> mty
 (*e: function Env.find_modtype_expansion *)
 
 (*s: function Env.find_module *)
@@ -304,8 +295,6 @@ and lookup_label =
   lookup_simple (fun env -> env.labels) (fun sc -> sc.comp_labels)
 and lookup_type =
   lookup (fun env -> env.types) (fun sc -> sc.comp_types)
-and lookup_modtype =
-  lookup (fun env -> env.modtypes) (fun sc -> sc.comp_modtypes)
   
 (*s: function Env.scrape_modtype *)
 (* Scrape a module type *)
@@ -313,11 +302,14 @@ and lookup_modtype =
 let rec scrape_modtype mty env =
   match mty with
     Tmty_ident path ->
+      failwith "TODO? or can remove, find_modtype_expansion"
+(*
       begin try
         scrape_modtype (find_modtype_expansion path env) env
       with Not_found ->
         mty
       end
+*)
   | _ -> mty
 (*e: function Env.scrape_modtype *)
 
@@ -380,7 +372,7 @@ let rec components_of_module env sub path mty =
       let c =
         { comp_values = Tbl.empty; comp_constrs = Tbl.empty;
           comp_labels = Tbl.empty; comp_types = Tbl.empty;
-          comp_modules = Tbl.empty; comp_modtypes = Tbl.empty;
+          comp_modules = Tbl.empty;
           comp_components = Tbl.empty; } in
       let (pl, sub) = prefix_idents path 0 sub sg in
       let env = ref env in
@@ -428,7 +420,7 @@ let rec components_of_module env sub path mty =
         Structure_comps {
           comp_values = Tbl.empty; comp_constrs = Tbl.empty;
           comp_labels = Tbl.empty; comp_types = Tbl.empty;
-          comp_modules = Tbl.empty; comp_modtypes = Tbl.empty;
+          comp_modules = Tbl.empty;
           comp_components = Tbl.empty; }
 
 (* Insertion of bindings by identifier + path *)
@@ -439,7 +431,6 @@ and store_value id path decl env =
     labels = env.labels;
     types = env.types;
     modules = env.modules;
-    modtypes = env.modtypes;
     components = env.components;
     summary = Env_value(env.summary, id, decl) }
 
@@ -459,7 +450,6 @@ and store_type id path info env =
         env.labels;
     types = Ident.add id (path, info) env.types;
     modules = env.modules;
-    modtypes = env.modtypes;
     components = env.components;
     summary = Env_type(env.summary, id, info) }
 
@@ -469,7 +459,6 @@ and store_exception id path decl env =
     labels = env.labels;
     types = env.types;
     modules = env.modules;
-    modtypes = env.modtypes;
     components = env.components;
     summary = Env_exception(env.summary, id, decl) }
 
@@ -479,21 +468,11 @@ and store_module id path mty env =
     labels = env.labels;
     types = env.types;
     modules = Ident.add id (path, mty) env.modules;
-    modtypes = env.modtypes;
     components =
       Ident.add id (path, components_of_module env Subst.identity path mty)
                    env.components;
     summary = Env_module(env.summary, id, mty) }
 
-and store_modtype id path info env =
-  { values = env.values;
-    constrs = env.constrs;
-    labels = env.labels;
-    types = env.types;
-    modules = env.modules;
-    modtypes = Ident.add id (path, info) env.modtypes;
-    components = env.components;
-    summary = Env_modtype(env.summary, id, info) }
 
 and store_components id path comps env =
   { values = env.values;
@@ -501,7 +480,6 @@ and store_components id path comps env =
     labels = env.labels;
     types = env.types;
     modules = env.modules;
-    modtypes = env.modtypes;
     components = Ident.add id (path, comps) env.components;
     summary = env.summary }
 
@@ -528,9 +506,6 @@ and add_exception id decl env =
 and add_module id mty env =
   store_module id (Pident id) mty env
 
-and add_modtype id info env =
-  store_modtype id (Pident id) info env
-
 (*s: function Env.enter *)
 (* Insertion of bindings by name *)
 
@@ -541,7 +516,6 @@ let enter store_fun name data env =
 let enter_value = enter store_value
 and enter_exception = enter store_exception
 and enter_module = enter store_module
-and enter_modtype = enter store_modtype
 
 (*s: function Env.add_item *)
 (* Insertion of all components of a signature *)
@@ -590,7 +564,6 @@ let open_signature root sg env =
     labels = newenv.labels;
     types = newenv.types;
     modules = newenv.modules;
-    modtypes = newenv.modtypes;
     components = newenv.components;
     summary = Env_open(env.summary, root) }
 (*e: function Env.open_signature *)
