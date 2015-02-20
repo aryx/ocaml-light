@@ -1,4 +1,5 @@
 (*s: ./bytecomp/simplif.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: simplif.mli,v 1.2 1996/04/30 14:44:20 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Elimination of useless Llet(Alias) bindings *)
 

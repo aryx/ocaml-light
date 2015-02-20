@@ -1,4 +1,5 @@
 (*s: ./parsing/longident.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: longident.mli,v 1.5 1996/04/30 14:49:41 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: type Longident.t *)
 (* Long identifiers, used in parsetree. *)

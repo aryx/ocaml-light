@@ -1,4 +1,5 @@
 (*s: ./parsing/lexer.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: lexer.mli,v 1.4 1997/01/01 15:36:17 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Lexer.token *)
 (* The lexical analyzer *)

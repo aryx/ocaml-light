@@ -1,4 +1,5 @@
 (*s: ./bytecomp/bytelibrarian.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: bytelibrarian.ml,v 1.6 1997/02/19 16:08:03 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Build libraries of .cmo files *)
 

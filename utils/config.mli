@@ -1,4 +1,6 @@
 (*s: ./utils/config.mli *)
+
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +11,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: config.mli,v 1.14 1997/03/17 13:01:04 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Config.version *)
 (* System configuration *)

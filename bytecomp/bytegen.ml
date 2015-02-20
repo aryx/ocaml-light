@@ -1,4 +1,5 @@
 (*s: ./bytecomp/bytegen.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: bytegen.ml,v 1.31 1997/06/16 13:33:11 vouillon Exp $ *)
+(*e: copyright header *)
 
 (*  bytegen.ml : translation of lambda terms to lists of instructions. *)
 

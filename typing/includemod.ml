@@ -1,4 +1,5 @@
 (*s: ./typing/includemod.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: includemod.ml,v 1.20 1997/05/19 15:42:16 doligez Exp $ *)
+(*e: copyright header *)
 
 (* Inclusion checks for the module language *)
 

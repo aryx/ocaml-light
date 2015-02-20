@@ -1,4 +1,5 @@
 (*s: ./typing/env.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: env.mli,v 1.17 1997/05/15 13:30:02 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Environment handling *)
 

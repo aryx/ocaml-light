@@ -1,4 +1,5 @@
 (*s: ./typing/includecore.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: includecore.mli,v 1.8 1997/05/19 15:42:16 doligez Exp $ *)
+(*e: copyright header *)
 
 (* Inclusion checks for the core language *)
 

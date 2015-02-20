@@ -1,4 +1,5 @@
 (*s: ./bytecomp/printinstr.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: printinstr.ml,v 1.9 1997/02/04 08:01:48 weis Exp $ *)
+(*e: copyright header *)
 
 (* Pretty-print lists of instructions *)
 

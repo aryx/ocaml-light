@@ -1,4 +1,5 @@
 (*s: ./bytecomp/symtable.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: symtable.ml,v 1.16 1997/10/31 12:58:12 doligez Exp $ *)
+(*e: copyright header *)
 
 (* To assign numbers to globals and primitives *)
 

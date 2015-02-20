@@ -1,4 +1,5 @@
 (*s: ./typing/env.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: env.ml,v 1.25 1997/05/19 15:42:15 doligez Exp $ *)
+(*e: copyright header *)
 
 (* Environment handling *)
 

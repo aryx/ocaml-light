@@ -1,4 +1,5 @@
 (*s: ./bytecomp/translmod.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: translmod.ml,v 1.21 1997/05/19 15:41:37 doligez Exp $ *)
+(*e: copyright header *)
 
 (* Translation from typed abstract syntax to lambda terms,
    for the module language *)

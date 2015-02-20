@@ -1,4 +1,5 @@
 (*s: ./utils/terminfo.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: terminfo.ml,v 1.3 1996/04/30 14:53:40 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Basic interface to the terminfo database *)
 

@@ -1,4 +1,5 @@
 (*s: ./typing/primitive.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: primitive.mli,v 1.4 1997/05/13 14:06:56 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: type Primitive.description *)
 (* Description of primitive functions *)

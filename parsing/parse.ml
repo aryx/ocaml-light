@@ -1,4 +1,5 @@
 (*s: ./parsing/parse.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: parse.ml,v 1.9 1997/11/12 12:32:52 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Entry points in the parser *)
 

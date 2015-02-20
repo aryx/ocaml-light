@@ -1,4 +1,5 @@
 (*s: ./typing/typemod.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: typemod.mli,v 1.12 1996/09/23 11:33:24 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Type-checking of the module language *)
 

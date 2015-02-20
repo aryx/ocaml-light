@@ -1,4 +1,5 @@
 (*s: ./bytecomp/printinstr.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: printinstr.mli,v 1.3 1996/04/30 14:44:15 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Pretty-print lists of instructions *)
 

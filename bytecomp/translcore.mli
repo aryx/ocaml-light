@@ -1,4 +1,5 @@
 (*s: ./bytecomp/translcore.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: translcore.mli,v 1.9 1996/09/23 11:30:26 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Translation from typed abstract syntax to lambda terms,
    for the core language *)

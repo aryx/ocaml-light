@@ -1,4 +1,5 @@
 (*s: ./typing/ident.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: ident.ml,v 1.12 1997/10/31 13:02:29 doligez Exp $ *)
+(*e: copyright header *)
 
 open Format
 

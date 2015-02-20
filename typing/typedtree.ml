@@ -1,4 +1,5 @@
 (*s: ./typing/typedtree.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: typedtree.ml,v 1.16 1997/05/11 21:48:19 vouillon Exp $ *)
+(*e: copyright header *)
 
 (* Abstract syntax tree after typing *)
 

@@ -1,4 +1,5 @@
 (*s: ./typing/typecore.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: typecore.mli,v 1.14 1997/05/19 15:42:18 doligez Exp $ *)
+(*e: copyright header *)
 
 (* Type inference for the core language *)
 

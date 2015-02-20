@@ -1,4 +1,5 @@
 (*s: ./typing/path.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: path.mli,v 1.5 1996/07/15 16:35:34 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: type Path.t *)
 (* Access paths *)

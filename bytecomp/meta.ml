@@ -1,4 +1,5 @@
 (*s: ./bytecomp/meta.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: meta.ml,v 1.4 1996/05/28 12:40:08 xleroy Exp $ *)
+(*e: copyright header *)
 
 external global_data : unit -> Obj.t array = "get_global_data"
 external realloc_global_data : int -> unit = "realloc_global"

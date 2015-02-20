@@ -1,4 +1,5 @@
 (*s: ./bytecomp/printlambda.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: printlambda.mli,v 1.3 1996/04/30 14:44:17 xleroy Exp $ *)
+(*e: copyright header *)
 
 open Lambda
 

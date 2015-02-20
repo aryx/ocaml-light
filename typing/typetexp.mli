@@ -1,4 +1,5 @@
 (*s: ./typing/typetexp.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: typetexp.mli,v 1.8 1997/02/20 20:39:02 vouillon Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Typetexp.transl_simple_type *)
 (* Typechecking of type expressions for the core language *)

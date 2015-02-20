@@ -1,4 +1,5 @@
 (*s: ./typing/ident.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: ident.mli,v 1.8 1997/03/10 00:23:53 vouillon Exp $ *)
+(*e: copyright header *)
 
 (* Identifiers (unique names) *)
 

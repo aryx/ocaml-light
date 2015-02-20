@@ -1,4 +1,5 @@
 (*s: ./bytecomp/printlambda.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: printlambda.ml,v 1.25 1997/04/11 13:55:39 xleroy Exp $ *)
+(*e: copyright header *)
 
 open Format
 open Asttypes

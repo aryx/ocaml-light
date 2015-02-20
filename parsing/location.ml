@@ -1,4 +1,5 @@
 (*s: ./parsing/location.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: location.ml,v 1.17 1997/11/12 12:32:51 xleroy Exp $ *)
+(*e: copyright header *)
 
 open Lexing
 

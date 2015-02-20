@@ -130,18 +130,8 @@ val ext_lib: string
 %-------------------------------------------------------------
 
 <<./utils/config.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
 
-(* $Id: config.mli,v 1.14 1997/03/17 13:01:04 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Config.version>>
 
@@ -268,18 +258,7 @@ val no_overflow_sub: int -> int -> bool
 %-------------------------------------------------------------
 
 <<./utils/misc.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: misc.mli,v 1.11 1996/10/31 16:03:49 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Misc.fatal_error>>
 <<exception Misc.Fatal_error>>
@@ -438,18 +417,7 @@ let no_overflow_sub a b = (a lxor (lnot b)) lor (b lxor (a-b)) < 0
 %-------------------------------------------------------------
 
 <<./utils/misc.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: misc.ml,v 1.15 1997/06/16 17:09:14 doligez Exp $ *)
+<<copyright header>>
 
 <<exception Misc.Fatal_error (./utils/misc.ml)>>
 
@@ -516,18 +484,7 @@ val print: ('a -> unit) -> ('b -> unit) -> ('a, 'b) t -> unit
 %-------------------------------------------------------------
 
 <<./utils/tbl.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: tbl.mli,v 1.4 1996/05/16 14:15:35 xleroy Exp $ *)
+<<copyright header>>
 
 (* Association tables from any ordered type to any type.
    We use the generic ordering to compare keys. *)
@@ -547,7 +504,6 @@ type ('a, 'b) t
 \subsection*{[[./utils/tbl.ml]]}
 
 <<type Tbl.t>>=
-(* $Id: tbl.ml,v 1.8 1997/10/22 13:26:55 doligez Exp $ *)
 
 type ('a, 'b) t =
     Empty
@@ -664,17 +620,7 @@ let print print_key print_data tbl =
 %-------------------------------------------------------------
 
 <<./utils/tbl.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header>>
 <<type Tbl.t>>
 
 <<constant Tbl.empty>>
@@ -707,18 +653,7 @@ open Format
 %-------------------------------------------------------------
 
 <<./utils/terminfo.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: terminfo.mli,v 1.4 1996/04/30 14:53:40 xleroy Exp $ *)
+<<copyright header>>
 
 (* Basic interface to the terminfo database *)
 
@@ -736,18 +671,7 @@ external puts: out_channel -> string -> int -> unit = "terminfo_puts"
 %-------------------------------------------------------------
 
 <<./utils/terminfo.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: terminfo.ml,v 1.3 1996/04/30 14:53:40 xleroy Exp $ *)
+<<copyright header>>
 
 (* Basic interface to the terminfo database *)
 
@@ -825,18 +749,7 @@ let inline_threshold = ref 10
 %-------------------------------------------------------------
 
 <<./utils/clflags.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: clflags.ml,v 1.20 1997/05/15 13:30:31 xleroy Exp $ *)
+<<copyright header>>
 
 (* Command-line parameters *)
 
@@ -913,18 +826,7 @@ val create_archive: string -> string list -> int
 %-------------------------------------------------------------
 
 <<./utils/ccomp.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: ccomp.mli,v 1.3 1997/06/23 14:36:30 doligez Exp $ *)
+<<copyright header>>
 
 <<signature Ccomp.command>>
 <<signature Ccomp.compile_file_bytecode>>
@@ -995,18 +897,7 @@ let create_archive archive file_list =
 %-------------------------------------------------------------
 
 <<./utils/ccomp.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: ccomp.ml,v 1.3 1997/06/23 14:36:30 doligez Exp $ *)
+<<copyright header>>
 
 <<function Ccomp.command>>
 
@@ -1048,18 +939,7 @@ type mutable_flag = Immutable | Mutable
 %-------------------------------------------------------------
 
 <<./parsing/asttypes.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: asttypes.mli,v 1.4 1996/04/30 14:49:34 xleroy Exp $ *)
+<<copyright header>>
 
 <<type Asttypes.constant>>
 
@@ -1100,7 +980,6 @@ val for_position: string -> int -> string * int * int
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: linenum.mli,v 1.1 1997/02/04 15:40:20 xleroy Exp $ *)
 
 <<signature Linenum.for_position>>
 @
@@ -1124,18 +1003,7 @@ val flatten: t -> string list
 %-------------------------------------------------------------
 
 <<./parsing/longident.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: longident.mli,v 1.5 1996/04/30 14:49:41 xleroy Exp $ *)
+<<copyright header>>
 
 <<type Longident.t>>
 
@@ -1146,7 +1014,6 @@ val flatten: t -> string list
 \subsection*{[[./parsing/longident.ml]]}
 
 <<type Longident.t (./parsing/longident.ml)>>=
-(* $Id: longident.ml,v 1.2 1996/04/30 14:49:40 xleroy Exp $ *)
 
 type t =
     Lident of string
@@ -1167,17 +1034,7 @@ let flatten lid = flat [] lid
 %-------------------------------------------------------------
 
 <<./parsing/longident.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header>>
 <<type Longident.t (./parsing/longident.ml)>>
 
 <<function Longident.flat>>
@@ -1239,18 +1096,7 @@ val highlight_locations: t -> t -> bool
 %-------------------------------------------------------------
 
 <<./parsing/location.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: location.mli,v 1.7 1997/11/12 12:32:52 xleroy Exp $ *)
+<<copyright header>>
 
 <<type Location.t>>
 
@@ -1427,18 +1273,7 @@ let echo_eof () =
 %-------------------------------------------------------------
 
 <<./parsing/location.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: location.ml,v 1.17 1997/11/12 12:32:51 xleroy Exp $ *)
+<<copyright header>>
 
 open Lexing
 
@@ -1526,7 +1361,6 @@ val report_error: error -> unit
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: syntaxerr.mli,v 1.2 1997/11/12 12:32:53 xleroy Exp $ *)
 
 <<type Syntaxerr.error>>
 
@@ -1594,7 +1428,6 @@ let report_error = function
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: syntaxerr.ml,v 1.2 1997/11/12 12:32:53 xleroy Exp $ *)
 
 (* Auxiliary type for reporting syntax errors *)
 
@@ -1802,18 +1635,7 @@ and directive_argument =
 %-------------------------------------------------------------
 
 <<./parsing/parsetree.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: parsetree.mli,v 1.19 1997/06/16 18:10:32 ddr Exp $ *)
+<<copyright header>>
 
 (* Abstract syntax tree produced by parsing *)
 
@@ -1909,18 +1731,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<./parsing/lexer.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: lexer.mli,v 1.4 1997/01/01 15:36:17 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Lexer.token>>
 
@@ -1957,18 +1768,7 @@ val use_file : Lexing.lexbuf -> Parsetree.toplevel_phrase list
 %-------------------------------------------------------------
 
 <<./parsing/parse.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: parse.mli,v 1.5 1997/08/22 08:55:39 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Parse.implementation>>
 <<signature Parse.interface>>
@@ -2029,18 +1829,7 @@ let wrap parsing_fun lexbuf =
 %-------------------------------------------------------------
 
 <<./parsing/parse.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: parse.ml,v 1.9 1997/11/12 12:32:52 xleroy Exp $ *)
+<<copyright header>>
 
 (* Entry points in the parser *)
 
@@ -2153,18 +1942,7 @@ val print_tbl: ('a -> unit) -> 'a tbl -> unit
 %-------------------------------------------------------------
 
 <<./typing/ident.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: ident.mli,v 1.8 1997/03/10 00:23:53 vouillon Exp $ *)
+<<copyright header>>
 
 (* Identifiers (unique names) *)
 
@@ -2402,18 +2180,7 @@ let print_tbl print_elt tbl =
 %-------------------------------------------------------------
 
 <<./typing/ident.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: ident.ml,v 1.12 1997/10/31 13:02:29 doligez Exp $ *)
+<<copyright header>>
 
 open Format
 
@@ -2503,18 +2270,7 @@ val print_description: description -> unit
 %-------------------------------------------------------------
 
 <<./typing/primitive.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: primitive.mli,v 1.4 1997/05/13 14:06:56 xleroy Exp $ *)
+<<copyright header>>
 
 <<type Primitive.description>>
 
@@ -2578,18 +2334,7 @@ let print_description p =
 %-------------------------------------------------------------
 
 <<./typing/primitive.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: primitive.ml,v 1.4 1997/05/13 14:06:56 xleroy Exp $ *)
+<<copyright header>>
 
 (* Description of primitive functions *)
 
@@ -2636,18 +2381,7 @@ val nopos: int
 %-------------------------------------------------------------
 
 <<./typing/path.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: path.mli,v 1.5 1996/07/15 16:35:34 xleroy Exp $ *)
+<<copyright header>>
 
 <<type Path.t>>
 
@@ -2662,7 +2396,6 @@ val nopos: int
 \subsection*{[[./typing/path.ml]]}
 
 <<type Path.t (./typing/path.ml)>>=
-(* $Id: path.ml,v 1.5 1996/07/15 16:35:34 xleroy Exp $ *)
 
 type t =
     Pident of Ident.t
@@ -2697,17 +2430,7 @@ let rec binding_time = function
 %-------------------------------------------------------------
 
 <<./typing/path.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header>>
 <<type Path.t (./typing/path.ml)>>
 
 <<constant Path.nopos>>
@@ -2838,18 +2561,7 @@ and modtype_declaration =
 %-------------------------------------------------------------
 
 <<./typing/types.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: types.mli,v 1.6 1997/05/19 15:42:19 doligez Exp $ *)
+<<copyright header>>
 
 (* Representation of types and declarations *)
 
@@ -2978,18 +2690,7 @@ val memorize_abbrev:
 %-------------------------------------------------------------
 
 <<./typing/btype.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: btype.mli,v 1.2 1997/05/11 21:48:16 vouillon Exp $ *)
+<<copyright header>>
 
 (* Basic operations on core types *)
 
@@ -3135,7 +2836,6 @@ let memorize_abbrev mem path v =
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: btype.ml,v 1.2 1997/05/11 21:48:15 vouillon Exp $ *)
 
 (* Basic operations on core types *)
 
@@ -3245,18 +2945,7 @@ val modtype_declaration: t -> modtype_declaration -> modtype_declaration
 %-------------------------------------------------------------
 
 <<./typing/subst.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: subst.mli,v 1.7 1997/03/24 20:12:33 vouillon Exp $ *)
+<<copyright header>>
 
 (* Substitutions *)
 
@@ -3447,18 +3136,7 @@ let exception_declaration s tyl =
 %-------------------------------------------------------------
 
 <<./typing/subst.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: subst.ml,v 1.18 1997/05/19 15:42:17 doligez Exp $ *)
+<<copyright header>>
 
 (* Substitutions *)
 
@@ -3632,18 +3310,7 @@ val builtin_values: (string * Ident.t) list
 %-------------------------------------------------------------
 
 <<./typing/predef.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: predef.mli,v 1.6 1996/09/23 11:33:10 xleroy Exp $ *)
+<<copyright header>>
 
 (* Predefined type constructors (with special typing rules in typecore) *)
 
@@ -3760,18 +3427,7 @@ let builtin_values =
 %-------------------------------------------------------------
 
 <<./typing/predef.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: predef.ml,v 1.15 1997/05/15 13:30:02 xleroy Exp $ *)
+<<copyright header>>
 
 (* Predefined type constructors (with special typing rules in typecore) *)
 
@@ -3852,18 +3508,7 @@ val label_descrs:
 %-------------------------------------------------------------
 
 <<./typing/datarepr.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: datarepr.mli,v 1.4 1996/09/23 11:33:01 xleroy Exp $ *)
+<<copyright header>>
 
 (* Compute constructor and label descriptions from type declarations,
    determining their representation. *)
@@ -3963,18 +3608,7 @@ let label_descrs ty_res lbls =
 %-------------------------------------------------------------
 
 <<./typing/datarepr.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: datarepr.ml,v 1.7 1997/05/19 15:42:15 doligez Exp $ *)
+<<copyright header>>
 
 (* Compute constructor and label descriptions from type declarations,
    determining their representation. *)
@@ -4190,18 +3824,7 @@ val check_modtype_inclusion: (t -> module_type -> module_type -> unit) ref
 %-------------------------------------------------------------
 
 <<./typing/env.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: env.mli,v 1.17 1997/05/15 13:30:02 xleroy Exp $ *)
+<<copyright header>>
 
 (* Environment handling *)
 
@@ -4729,18 +4352,7 @@ let report_error = function
 %-------------------------------------------------------------
 
 <<./typing/env.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: env.ml,v 1.25 1997/05/19 15:42:15 doligez Exp $ *)
+<<copyright header>>
 
 (* Environment handling *)
 
@@ -5151,18 +4763,7 @@ val rev_let_bound_idents: (pattern * expression) list -> Ident.t list
 %-------------------------------------------------------------
 
 <<./typing/typedtree.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: typedtree.mli,v 1.16 1997/05/11 21:48:19 vouillon Exp $ *)
+<<copyright header>>
 
 (* Abstract syntax tree after typing *)
 
@@ -5322,18 +4923,7 @@ let let_bound_idents pat_expr_list =
 %-------------------------------------------------------------
 
 <<./typing/typedtree.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: typedtree.ml,v 1.16 1997/05/11 21:48:19 vouillon Exp $ *)
+<<copyright header>>
 
 (* Abstract syntax tree after typing *)
 
@@ -5586,18 +5176,7 @@ val arity: type_expr -> int
 %-------------------------------------------------------------
 
 <<./typing/ctype.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: ctype.mli,v 1.28 1997/06/29 13:16:46 vouillon Exp $ *)
+<<copyright header>>
 
 (* Operations on core types *)
 
@@ -6655,7 +6234,6 @@ let closed_schema ty =
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ctype.ml,v 1.56 1997/11/18 15:14:56 vouillon Exp $ *)
 
 (* Operations on core types *)
 
@@ -7186,18 +6764,7 @@ val exception_declarations:
 %-------------------------------------------------------------
 
 <<./typing/includecore.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: includecore.mli,v 1.8 1997/05/19 15:42:16 doligez Exp $ *)
+<<copyright header>>
 
 (* Inclusion checks for the core language *)
 
@@ -7286,18 +6853,7 @@ let exception_declarations env ed1 ed2 =
 %-------------------------------------------------------------
 
 <<./typing/includecore.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: includecore.ml,v 1.18 1997/05/11 21:48:16 vouillon Exp $ *)
+<<copyright header>>
 
 (* Inclusion checks for the core language *)
 
@@ -7335,18 +6891,7 @@ val strengthen: Env.t -> module_type -> Path.t -> module_type
 %-------------------------------------------------------------
 
 <<./typing/mtype.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: mtype.mli,v 1.4 1996/09/23 11:33:07 xleroy Exp $ *)
+<<copyright header>>
 
 (* Operations on module types *)
 
@@ -7375,18 +6920,7 @@ let rec scrape env mty =
 %-------------------------------------------------------------
 
 <<./typing/mtype.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: mtype.ml,v 1.15 1997/05/19 15:42:16 doligez Exp $ *)
+<<copyright header>>
 
 (* Operations on module types *)
 
@@ -7517,18 +7051,7 @@ val unification_error:
 %-------------------------------------------------------------
 
 <<./typing/printtyp.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: printtyp.mli,v 1.8 1996/09/23 11:33:13 xleroy Exp $ *)
+<<copyright header>>
 
 (* Printing functions *)
 
@@ -7791,7 +7314,6 @@ let unification_error tr txt1 txt2 =
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: printtyp.ml,v 1.38 1997/12/09 09:12:51 xleroy Exp $ *)
 
 (* Printing functions *)
 
@@ -8083,18 +7605,7 @@ val check_unused: (pattern * expression) list -> unit
 %-------------------------------------------------------------
 
 <<./typing/parmatch.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: parmatch.mli,v 1.3 1996/04/30 14:53:04 xleroy Exp $ *)
+<<copyright header>>
 
 (* Detection of partial matches and unused match cases. *)
 
@@ -8388,18 +7899,7 @@ let check_unused casel =
 %-------------------------------------------------------------
 
 <<./typing/parmatch.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: parmatch.ml,v 1.8 1997/03/21 07:14:34 ddr Exp $ *)
+<<copyright header>>
 
 (* Detection of partial matches and unused match cases. *)
 
@@ -8533,18 +8033,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<./typing/typetexp.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: typetexp.mli,v 1.8 1997/02/20 20:39:02 vouillon Exp $ *)
+<<copyright header>>
 
 <<signature Typetexp.transl_simple_type>>
 <<signature Typetexp.transl_simple_type_delayed>>
@@ -8777,18 +8266,7 @@ let report_error = function
 %-------------------------------------------------------------
 
 <<./typing/typetexp.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: typetexp.ml,v 1.18 1997/06/29 13:16:47 vouillon Exp $ *)
+<<copyright header>>
 
 (* Typechecking of type expressions for the core language *)
 
@@ -8879,18 +8357,7 @@ val report_error: error list -> unit
 %-------------------------------------------------------------
 
 <<./typing/includemod.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: includemod.mli,v 1.9 1997/03/10 00:25:52 vouillon Exp $ *)
+<<copyright header>>
 
 (* Inclusion checks for the module language *)
 
@@ -9121,18 +8588,7 @@ let report_error errlist =
 %-------------------------------------------------------------
 
 <<./typing/includemod.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: includemod.ml,v 1.20 1997/05/19 15:42:16 doligez Exp $ *)
+<<copyright header>>
 
 (* Inclusion checks for the module language *)
 
@@ -9374,18 +8830,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<./typing/typedecl.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: typedecl.mli,v 1.11 1997/05/13 14:07:00 xleroy Exp $ *)
+<<copyright header>>
 
 (* Typing of type definitions and primitive definitions *)
 
@@ -9737,7 +9182,6 @@ let report_error = function
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: typedecl.ml,v 1.27 1997/06/29 13:16:46 vouillon Exp $ *)
 
 (**** Typing of type definitions ****)
 
@@ -9846,18 +9290,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<./typing/typecore.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: typecore.mli,v 1.14 1997/05/19 15:42:18 doligez Exp $ *)
+<<copyright header>>
 
 (* Type inference for the core language *)
 
@@ -10291,18 +9724,7 @@ let report_error = function
 %-------------------------------------------------------------
 
 <<./typing/typecore.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: typecore.ml,v 1.33 1997/10/24 15:54:34 xleroy Exp $ *)
+<<copyright header>>
 
 (* Typechecking for the core language *)
 
@@ -10750,18 +10172,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<./typing/typemod.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: typemod.mli,v 1.12 1996/09/23 11:33:24 xleroy Exp $ *)
+<<copyright header>>
 
 (* Type-checking of the module language *)
 
@@ -10924,18 +10335,7 @@ let report_error = function
 %-------------------------------------------------------------
 
 <<./typing/typemod.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: typemod.ml,v 1.25 1997/05/19 15:42:19 doligez Exp $ *)
+<<copyright header>>
 
 (* Type-checking of the module language *)
 
@@ -11282,18 +10682,7 @@ val transl_path: Path.t -> lambda
 %-------------------------------------------------------------
 
 <<./bytecomp/lambda.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: lambda.mli,v 1.23 1997/03/27 20:53:29 vouillon Exp $ *)
+<<copyright header>>
 
 (* The "lambda" intermediate code *)
 
@@ -11533,18 +10922,7 @@ let rec transl_path = function
 %-------------------------------------------------------------
 
 <<./bytecomp/lambda.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: lambda.ml,v 1.25 1997/03/27 20:53:28 vouillon Exp $ *)
+<<copyright header>>
 
 open Misc
 open Path
@@ -11602,18 +10980,7 @@ val lambda: lambda -> unit
 %-------------------------------------------------------------
 
 <<./bytecomp/printlambda.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: printlambda.mli,v 1.3 1996/04/30 14:44:17 xleroy Exp $ *)
+<<copyright header>>
 
 open Lambda
 
@@ -11727,18 +11094,7 @@ let primitive = function
 %-------------------------------------------------------------
 
 <<./bytecomp/printlambda.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: printlambda.ml,v 1.25 1997/04/11 13:55:39 xleroy Exp $ *)
+<<copyright header>>
 
 open Format
 open Asttypes
@@ -11938,18 +11294,7 @@ type closure = unit -> Obj.t
 %-------------------------------------------------------------
 
 <<./bytecomp/meta.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: meta.mli,v 1.4 1996/05/28 12:40:09 xleroy Exp $ *)
+<<copyright header>>
 
 (* To control the runtime system and bytecode interpreter *)
 
@@ -11973,18 +11318,7 @@ type closure = unit -> Obj.t
 %-------------------------------------------------------------
 
 <<./bytecomp/meta.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: meta.ml,v 1.4 1996/05/28 12:40:08 xleroy Exp $ *)
+<<copyright header>>
 
 external global_data : unit -> Obj.t array = "get_global_data"
 external realloc_global_data : int -> unit = "realloc_global"
@@ -12012,18 +11346,7 @@ val builtin_primitives: string array
 %-------------------------------------------------------------
 
 <<./bytecomp/runtimedef.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: runtimedef.mli,v 1.3 1996/04/30 14:44:18 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Runtimedef.builtin_exceptions>>
 <<signature Runtimedef.builtin_primitives>>
@@ -12142,18 +11465,7 @@ val immed_max: int
 %-------------------------------------------------------------
 
 <<./bytecomp/instruct.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: instruct.mli,v 1.12 1997/06/16 13:33:10 vouillon Exp $ *)
+<<copyright header>>
 
 (* The type of the instructions of the abstract machine *)
 
@@ -12286,18 +11598,7 @@ type instruction =
 %-------------------------------------------------------------
 
 <<./bytecomp/instruct.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: instruct.ml,v 1.12 1997/06/16 13:33:09 vouillon Exp $ *)
+<<copyright header>>
 
 open Lambda
 
@@ -12339,18 +11640,7 @@ val instrlist: instruction list -> unit
 %-------------------------------------------------------------
 
 <<./bytecomp/printinstr.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: printinstr.mli,v 1.3 1996/04/30 14:44:15 xleroy Exp $ *)
+<<copyright header>>
 
 (* Pretty-print lists of instructions *)
 
@@ -12463,18 +11753,7 @@ let instrlist il =
 %-------------------------------------------------------------
 
 <<./bytecomp/printinstr.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: printinstr.ml,v 1.9 1997/02/04 08:01:48 weis Exp $ *)
+<<copyright header>>
 
 (* Pretty-print lists of instructions *)
 
@@ -12501,18 +11780,7 @@ val simplify_lambda: lambda -> lambda
 %-------------------------------------------------------------
 
 <<./bytecomp/simplif.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: simplif.mli,v 1.2 1996/04/30 14:44:20 xleroy Exp $ *)
+<<copyright header>>
 
 (* Elimination of useless Llet(Alias) bindings *)
 
@@ -12708,18 +11976,7 @@ let simplify_lambda lam =
 %-------------------------------------------------------------
 
 <<./bytecomp/simplif.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: simplif.ml,v 1.8 1997/03/17 13:00:40 xleroy Exp $ *)
+<<copyright header>>
 
 (* Elimination of useless Llet(Alias) bindings.
    Also transform let-bound references into variables. *)
@@ -12777,18 +12034,7 @@ val flatten_pattern: int -> pattern -> pattern list
 %-------------------------------------------------------------
 
 <<./bytecomp/matching.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: matching.mli,v 1.7 1997/03/27 20:53:29 vouillon Exp $ *)
+<<copyright header>>
 
 (* Compilation of pattern-matching *)
 
@@ -13349,18 +12595,7 @@ let for_multiple_match loc paraml pat_act_list =
 %-------------------------------------------------------------
 
 <<./bytecomp/matching.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: matching.ml,v 1.25 1997/10/22 13:25:39 doligez Exp $ *)
+<<copyright header>>
 
 (* Compilation of pattern matching *)
 
@@ -13493,18 +12728,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<./bytecomp/translcore.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: translcore.mli,v 1.9 1996/09/23 11:30:26 xleroy Exp $ *)
+<<copyright header>>
 
 (* Translation from typed abstract syntax to lambda terms,
    for the core language *)
@@ -13893,18 +13117,7 @@ let report_error = function
 %-------------------------------------------------------------
 
 <<./bytecomp/translcore.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: translcore.ml,v 1.46 1997/06/15 16:50:09 vouillon Exp $ *)
+<<copyright header>>
 
 (* Translation from typed abstract syntax to lambda terms,
    for the core language *)
@@ -14188,18 +13401,7 @@ val compile_phrase: lambda -> instruction list * instruction list
 %-------------------------------------------------------------
 
 <<./bytecomp/bytegen.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: bytegen.mli,v 1.5 1997/02/19 16:08:03 xleroy Exp $ *)
+<<copyright header>>
 
 (* Generation of bytecode from lambda terms *)
 
@@ -14475,18 +13677,7 @@ let compile_phrase expr =
 %-------------------------------------------------------------
 
 <<./bytecomp/bytegen.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: bytegen.ml,v 1.31 1997/06/16 13:33:11 vouillon Exp $ *)
+<<copyright header>>
 
 (*  bytegen.ml : translation of lambda terms to lists of instructions. *)
 
@@ -14917,18 +14108,7 @@ val primitive_declarations: string list ref
 %-------------------------------------------------------------
 
 <<./bytecomp/translmod.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: translmod.mli,v 1.6 1996/04/30 14:44:27 xleroy Exp $ *)
+<<copyright header>>
 
 (* Translation from typed abstract syntax to lambda terms,
    for the module language *)
@@ -15179,18 +14359,7 @@ let transl_toplevel_definition str =
 %-------------------------------------------------------------
 
 <<./bytecomp/translmod.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: translmod.ml,v 1.21 1997/05/19 15:41:37 doligez Exp $ *)
+<<copyright header>>
 
 (* Translation from typed abstract syntax to lambda terms,
    for the module language *)
@@ -15357,18 +14526,7 @@ val to_memory: instruction list -> instruction list ->
 %-------------------------------------------------------------
 
 <<./bytecomp/emitcode.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: emitcode.mli,v 1.9 1997/05/15 13:25:14 xleroy Exp $ *)
+<<copyright header>>
 
 (* Generation of bytecode for .cmo files *)
 
@@ -15727,18 +14885,7 @@ let to_memory init_code fun_code =
 %-------------------------------------------------------------
 
 <<./bytecomp/emitcode.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: emitcode.ml,v 1.19 1997/05/15 13:25:13 xleroy Exp $ *)
+<<copyright header>>
 
 (* Generation of bytecode + relocation information *)
 
@@ -15851,18 +14998,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<./bytecomp/bytelibrarian.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: bytelibrarian.mli,v 1.4 1996/04/30 14:44:02 xleroy Exp $ *)
+<<copyright header>>
 
 (* Build libraries of .cmo files *)
 
@@ -15966,18 +15102,7 @@ let report_error = function
 %-------------------------------------------------------------
 
 <<./bytecomp/bytelibrarian.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: bytelibrarian.ml,v 1.6 1997/02/19 16:08:03 xleroy Exp $ *)
+<<copyright header>>
 
 (* Build libraries of .cmo files *)
 
@@ -16088,18 +15213,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<./bytecomp/symtable.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: symtable.mli,v 1.8 1997/06/13 15:48:53 xleroy Exp $ *)
+<<copyright header>>
 
 (* Assign locations and numbers to globals and primitives *)
 
@@ -16432,18 +15546,7 @@ let report_error = function
 %-------------------------------------------------------------
 
 <<./bytecomp/symtable.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: symtable.ml,v 1.16 1997/10/31 12:58:12 doligez Exp $ *)
+<<copyright header>>
 
 (* To assign numbers to globals and primitives *)
 
@@ -16571,18 +15674,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<./bytecomp/bytelink.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: bytelink.mli,v 1.4 1996/11/07 10:56:52 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Bytelink.link>>
 
@@ -17146,18 +16238,7 @@ let report_error = function
 %-------------------------------------------------------------
 
 <<./bytecomp/bytelink.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: bytelink.ml,v 1.32 1997/10/24 15:51:36 xleroy Exp $ *)
+<<copyright header>>
 
 (* Link a set of .cmo files and produce a bytecode executable. *)
 
@@ -17265,18 +16346,7 @@ val init_path: unit -> unit
 %-------------------------------------------------------------
 
 <<./driver/compile.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: compile.mli,v 1.5 1996/04/30 14:45:54 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Compile.interface>>
 <<signature Compile.implementation>>
@@ -17450,18 +16520,7 @@ let c_file name =
 %-------------------------------------------------------------
 
 <<./driver/compile.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: compile.ml,v 1.28 1997/08/22 08:55:37 xleroy Exp $ *)
+<<copyright header>>
 
 (* The batch compiler *)
 
@@ -17504,18 +16563,7 @@ val report_error: exn -> unit
 %-------------------------------------------------------------
 
 <<./driver/errors.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: errors.mli,v 1.3 1996/04/30 14:45:55 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Errors.report_error>>
 @
@@ -17566,18 +16614,7 @@ let report_error exn =
 %-------------------------------------------------------------
 
 <<./driver/errors.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: errors.ml,v 1.8 1997/08/22 08:55:37 xleroy Exp $ *)
+<<copyright header>>
 
 (* Error report *)
 
@@ -17705,18 +16742,7 @@ let _ = Printexc.catch main ()
 %-------------------------------------------------------------
 
 <<./driver/main.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: main.ml,v 1.24 1997/05/15 13:26:34 xleroy Exp $ *)
+<<copyright header>>
 
 open Config
 open Clflags

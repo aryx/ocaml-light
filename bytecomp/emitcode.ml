@@ -1,4 +1,5 @@
 (*s: ./bytecomp/emitcode.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: emitcode.ml,v 1.19 1997/05/15 13:25:13 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Generation of bytecode + relocation information *)
 

@@ -1,4 +1,5 @@
 (*s: ./parsing/asttypes.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: asttypes.mli,v 1.4 1996/04/30 14:49:34 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: type Asttypes.constant *)
 (* Auxiliary a.s.t. types used by parsetree and typedtree. *)

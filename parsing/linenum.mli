@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: linenum.mli,v 1.1 1997/02/04 15:40:20 xleroy Exp $ *)
 
 (*s: signature Linenum.for_position *)
 (* An auxiliary lexer for determining the line number corresponding to

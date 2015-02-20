@@ -1,4 +1,5 @@
 (*s: ./bytecomp/runtimedef.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: runtimedef.mli,v 1.3 1996/04/30 14:44:18 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Runtimedef.builtin_exceptions *)
 (* Values and functions known and/or provided by the runtime system *)

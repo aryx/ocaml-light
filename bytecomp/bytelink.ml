@@ -1,4 +1,5 @@
 (*s: ./bytecomp/bytelink.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: bytelink.ml,v 1.32 1997/10/24 15:51:36 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Link a set of .cmo files and produce a bytecode executable. *)
 
