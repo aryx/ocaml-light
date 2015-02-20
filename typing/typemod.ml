@@ -64,12 +64,15 @@ let type_module_path env loc lid =
 let rec transl_modtype env smty =
   match smty.pmty_desc with
     Pmty_ident lid ->
+      failwith "TODO: lookup_modtype"
+(*
       begin try
         let (path, info) = Env.lookup_modtype lid env in 
         Tmty_ident path
       with Not_found ->
         raise(Error(smty.pmty_loc, Unbound_modtype lid))
       end
+*)
   | Pmty_signature ssg ->
       Tmty_signature(transl_signature env ssg)
       
@@ -101,13 +104,6 @@ and transl_signature env sg =
       let sg = extract_sig_open env loc mty in
       let newenv = Env.open_signature path sg env in
       transl_signature newenv srem
-
-and transl_modtype_info env sinfo =
-  match sinfo with
-    Pmodtype_abstract ->
-      Tmodtype_abstract
-  | Pmodtype_manifest smty ->
-      Tmodtype_manifest(transl_modtype env smty)
 
 (* Check that all type and module identifiers in a structure have
    distinct names (so that access by named paths is unambiguous). *)

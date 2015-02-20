@@ -203,7 +203,4 @@ and signature s = function
   | Tsig_module(id, mty) :: sg ->
       Tsig_module(id, modtype s mty) :: signature (remove_module id s) sg
 
-and modtype_declaration s = function
-    Tmodtype_abstract -> Tmodtype_abstract
-  | Tmodtype_manifest mty -> Tmodtype_manifest(modtype s mty)
 (*e: ./typing/subst.ml *)

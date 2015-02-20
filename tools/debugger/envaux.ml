@@ -49,8 +49,6 @@ let rec env_from_summary sum =
           Env.add_exception id desc (env_from_summary s)
       | Env_module(s, id, desc) ->
           Env.add_module id desc (env_from_summary s)
-      | Env_modtype(s, id, desc) ->
-          Env.add_modtype id desc (env_from_summary s)
       | Env_open(s, path) ->
           let env = env_from_summary s in
           let mty =

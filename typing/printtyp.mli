@@ -55,9 +55,6 @@ val signature: signature -> unit
 (*s: signature Printtyp.signature_body *)
 val signature_body: bool -> signature -> unit
 (*e: signature Printtyp.signature_body *)
-(*s: signature Printtyp.modtype_declaration *)
-val modtype_declaration: Ident.t -> modtype_declaration -> unit
-(*e: signature Printtyp.modtype_declaration *)
 (*s: signature Printtyp.type_expansion *)
 val type_expansion: type_expr -> type_expr -> unit
 (*e: signature Printtyp.type_expansion *)
