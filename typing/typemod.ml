@@ -96,11 +96,6 @@ and transl_signature env sg =
       let (id, newenv) = Env.enter_module name mty env in
       let rem = transl_signature newenv srem in
       Tsig_module(id, mty) :: rem
-  | {psig_desc = Psig_modtype(name, sinfo)} :: srem ->
-      let info = transl_modtype_info env sinfo in
-      let (id, newenv) = Env.enter_modtype name info env in
-      let rem = transl_signature newenv srem in
-      Tsig_modtype(id, info) :: rem
   | {psig_desc = Psig_open lid; psig_loc = loc} :: srem ->
       let (path, mty) = type_module_path env loc lid in
       let sg = extract_sig_open env loc mty in
@@ -140,8 +135,6 @@ let check_unique_names sg =
     | Pstr_exception(name, decl) -> ()
     | Pstr_module(name, smod) ->
         check "module" item.pstr_loc module_names name
-    | Pstr_modtype(name, decl) ->
-        check "module type" item.pstr_loc modtype_names name
     | Pstr_open lid -> ()
   in
     List.iter check_item sg
@@ -255,13 +248,6 @@ and type_struct env sstr =
       let (str_rem, sig_rem, final_env) = type_struct newenv srem in
       (Tstr_module(id, modl) :: str_rem,
        Tsig_module(id, modl.mod_type) :: sig_rem,
-       final_env)
-  | {pstr_desc = Pstr_modtype(name, smty)} :: srem ->
-      let mty = transl_modtype env smty in
-      let (id, newenv) = Env.enter_modtype name (Tmodtype_manifest mty) env in
-      let (str_rem, sig_rem, final_env) = type_struct newenv srem in
-      (Tstr_modtype(id, mty) :: str_rem,
-       Tsig_modtype(id, Tmodtype_manifest mty) :: sig_rem,
        final_env)
   | {pstr_desc = Pstr_open lid; pstr_loc = loc} :: srem ->
       let (path, mty) = type_module_path env loc lid in

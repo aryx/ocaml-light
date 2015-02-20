@@ -152,7 +152,6 @@ and signature_item_desc =
   | Psig_exception of string * exception_declaration
 
   | Psig_module of string * module_type
-  | Psig_modtype of string * modtype_declaration
   | Psig_open of Longident.t
 (*e: type Parsetree.signature_item_desc *)
 
@@ -196,7 +195,6 @@ and structure_item_desc =
   | Pstr_exception of string * exception_declaration
 
   | Pstr_module of string * module_expr
-  | Pstr_modtype of string * module_type
   | Pstr_open of Longident.t
 (*e: type Parsetree.structure_item_desc *)
 

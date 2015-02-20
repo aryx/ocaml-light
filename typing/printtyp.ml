@@ -384,8 +384,6 @@ and signature_body spc = function
         | Tsig_module(id, mty)  ->
             open_box 2; print_string "module "; ident id; print_string " :";
             print_space(); modtype mty; close_box(); rem
-        | Tsig_modtype(id, decl)  ->
-            modtype_declaration id decl; rem
       in signature_body true cont
 
 and modtype_declaration id decl =

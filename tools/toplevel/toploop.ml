@@ -96,9 +96,6 @@ let rec print_items env = function
       open_box 2; print_string "module "; Printtyp.ident id;
       print_string " :"; print_space(); Printtyp.modtype mty; close_box();
       print_space (); print_items env rem
-  | Tsig_modtype(id, decl)::rem ->
-      Printtyp.modtype_declaration id decl;
-      print_space (); print_items env rem
   | _ ->
       ()
 

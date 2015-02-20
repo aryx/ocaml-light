@@ -61,15 +61,4 @@ and strengthen_sig env sg p =
       Tsig_module(id, strengthen env mty (Pdot(p, Ident.name id, nopos))) ::
       strengthen_sig (Env.add_module id mty env) rem p
       (* Need to add the module in case it defines manifest module types *)
-  | Tsig_modtype(id, decl) :: rem ->
-      let newdecl =
-        match decl with
-          Tmodtype_abstract ->
-            Tmodtype_manifest(Tmty_ident(Pdot(p, Ident.name id, nopos)))
-        | Tmodtype_manifest _ ->
-            decl in
-      Tsig_modtype(id, newdecl) ::
-      strengthen_sig (Env.add_modtype id decl env) rem p
-      (* Need to add the module type in case it is manifest *)
-
 (*e: ./typing/mtype.ml *)
