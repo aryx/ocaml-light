@@ -33,8 +33,7 @@ val type_pattern_list:
 (*e: signature Typecore.type_pattern_list *)
 (*s: signature Typecore.type_expect *)
 val type_expect:
-        Env.t -> Parsetree.expression -> type_expr ->
-        Typedtree.expression
+        Env.t -> Parsetree.expression -> type_expr -> Typedtree.expression
 (*e: signature Typecore.type_expect *)
 (*s: signature Typecore.type_exp *)
 val type_exp:

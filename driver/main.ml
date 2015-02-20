@@ -28,26 +28,24 @@ let process_implementation_file name =
 
 (*s: function Main.process_file *)
 let process_file name =
-  if Filename.check_suffix name ".ml"
-  or Filename.check_suffix name ".mlt" then begin
-    Compile.implementation name;
-    objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
-  end
-  else if Filename.check_suffix name ".mli" then
-    Compile.interface name
-  else if Filename.check_suffix name ".cmo" 
-       or Filename.check_suffix name ".cma" then
-    objfiles := name :: !objfiles
-  else if Filename.check_suffix name ext_obj
-       or Filename.check_suffix name ext_lib then
-    ccobjs := name :: !ccobjs
-  else if Filename.check_suffix name ".c" then begin
-    Compile.c_file name;
-    ccobjs := (Filename.chop_suffix (Filename.basename name) ".c" ^ ext_obj)
-    :: !ccobjs
-  end
-  else
-    raise(Arg.Bad("don't know what to do with " ^ name))
+  match () with
+  | _ when Filename.check_suffix name ".ml" ->
+      Compile.implementation name;
+      objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
+  | _ when Filename.check_suffix name ".mli" ->
+      Compile.interface name
+  | _ when Filename.check_suffix name ".cmo" 
+        or Filename.check_suffix name ".cma" ->
+      objfiles := name :: !objfiles
+  | _ when Filename.check_suffix name ext_obj
+        or Filename.check_suffix name ext_lib ->
+      ccobjs := name :: !ccobjs
+  | _ when Filename.check_suffix name ".c" ->
+      Compile.c_file name;
+      ccobjs := (Filename.chop_suffix (Filename.basename name) ".c" ^ ext_obj)
+       :: !ccobjs
+  | _ -> 
+      raise(Arg.Bad("don't know what to do with " ^ name))
 (*e: function Main.process_file *)
 
 (*s: function Main.print_version_number *)
@@ -66,6 +64,7 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 let main () =
   try
     Arg.parse [
+       (*s: [[Main.main()]] command line options *)
        "-a", Arg.Set make_archive, " Build a library";
        "-c", Arg.Set compile_only, " Compile only (do not link)";
        "-cclib", Arg.String(fun s -> ccobjs := s :: !ccobjs),
@@ -106,15 +105,18 @@ let main () =
 
        "-", Arg.String process_file,
             "<file>  Treat <file> as a file name (even if it starts with `-')"
+       (*e: [[Main.main()]] command line options *)
       ] process_file usage;
-    if !make_archive then begin
-      Compile.init_path();
-      Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
-    end
-    else if not !compile_only & !objfiles <> [] then begin
-      Compile.init_path();
-      Bytelink.link (List.rev !objfiles)
-    end;
+
+    (match () with
+    | _ when !make_archive ->
+        Compile.init_path();
+        Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
+    | _ when not !compile_only & !objfiles <> [] ->
+        Compile.init_path();
+        Bytelink.link (List.rev !objfiles)
+    | _ -> ()
+    );
     exit 0
   with x ->
     Format.set_formatter_out_channel stderr;

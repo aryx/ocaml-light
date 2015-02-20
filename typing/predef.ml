@@ -25,9 +25,14 @@ and ident_string = Ident.create "string"
 and ident_float = Ident.create "float"
 and ident_bool = Ident.create "bool"
 and ident_unit = Ident.create "unit"
+
 and ident_exn = Ident.create "exn"
+
 and ident_array = Ident.create "array"
+
 and ident_list = Ident.create "list"
+
+
 and ident_format = Ident.create "format"
 (*e: constants Predef.ident_xxx *)
 
@@ -38,22 +43,25 @@ and path_string = Pident ident_string
 and path_float = Pident ident_float
 and path_bool = Pident ident_bool
 and path_unit = Pident ident_unit
-and path_exn = Pident ident_exn
-and path_array = Pident ident_array
+
 and path_list = Pident ident_list
+and path_array = Pident ident_array
+
+and path_exn = Pident ident_exn
+
 and path_format = Pident ident_format
 (*e: constants Predef.path_xxx *)
 
 (*s: constants Predef.type_xxx *)
-let type_int = newgenty (Tconstr(path_int, [], ref Mnil))
-and type_char = newgenty (Tconstr(path_char, [], ref Mnil))
-and type_string = newgenty (Tconstr(path_string, [], ref Mnil))
-and type_float = newgenty (Tconstr(path_float, [], ref Mnil))
-and type_bool = newgenty (Tconstr(path_bool, [], ref Mnil))
-and type_unit = newgenty (Tconstr(path_unit, [], ref Mnil))
-and type_exn = newgenty (Tconstr(path_exn, [], ref Mnil))
+let type_int     = newgenty (Tconstr(path_int, [], ref Mnil))
+and type_char    = newgenty (Tconstr(path_char, [], ref Mnil))
+and type_string  = newgenty (Tconstr(path_string, [], ref Mnil))
+and type_float   = newgenty (Tconstr(path_float, [], ref Mnil))
+and type_bool    = newgenty (Tconstr(path_bool, [], ref Mnil))
+and type_unit    = newgenty (Tconstr(path_unit, [], ref Mnil))
+and type_exn     = newgenty (Tconstr(path_exn, [], ref Mnil))
 and type_array t = newgenty (Tconstr(path_array, [t], ref Mnil))
-and type_list t = newgenty (Tconstr(path_list, [t], ref Mnil))
+and type_list t  = newgenty (Tconstr(path_list, [t], ref Mnil))
 (*e: constants Predef.type_xxx *)
 
 (*s: constants Predef.ident_exn_xxx *)

@@ -28,6 +28,7 @@ let report_error exn =
       Lexer.report_error err
   | Syntaxerr.Error err ->
       Syntaxerr.report_error err
+
   | Env.Error err ->
       Env.report_error err
   | Typecore.Error(loc, err) ->
@@ -40,6 +41,7 @@ let report_error exn =
       Includemod.report_error err
   | Typemod.Error(loc, err) ->
       Location.print loc; Typemod.report_error err
+
   | Translcore.Error(loc, err) ->
       Location.print loc; Translcore.report_error err
   | Symtable.Error code ->
@@ -48,8 +50,10 @@ let report_error exn =
       Bytelink.report_error code
   | Bytelibrarian.Error code ->
       Bytelibrarian.report_error code
+
   | Sys_error msg ->
       print_string "I/O error: "; print_string msg
+
   | x ->
       close_box(); raise x
   end;

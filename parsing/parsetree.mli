@@ -65,23 +65,29 @@ type expression =
 and expression_desc =
     Pexp_ident of Longident.t
   | Pexp_constant of constant
-  | Pexp_let of rec_flag * (pattern * expression) list * expression
-  | Pexp_function of (pattern * expression) list
-  | Pexp_apply of expression * expression list
-  | Pexp_match of expression * (pattern * expression) list
-  | Pexp_try of expression * (pattern * expression) list
+
   | Pexp_tuple of expression list
   | Pexp_construct of Longident.t * expression option * bool
   | Pexp_record of (Longident.t * expression) list
+  | Pexp_array of expression list
+
   | Pexp_field of expression * Longident.t
   | Pexp_setfield of expression * Longident.t * expression
-  | Pexp_array of expression list
+
+  | Pexp_apply of expression * expression list
+
+  | Pexp_let of rec_flag * (pattern * expression) list * expression
+  | Pexp_function of (pattern * expression) list
+  | Pexp_match of expression * (pattern * expression) list
+  | Pexp_when of expression * expression
+
+  | Pexp_try of expression * (pattern * expression) list
   | Pexp_ifthenelse of expression * expression * expression option
   | Pexp_sequence of expression * expression
   | Pexp_while of expression * expression
   | Pexp_for of string * expression * expression * direction_flag * expression
+
   | Pexp_constraint of expression * core_type option * core_type option
-  | Pexp_when of expression * expression
 (*e: type Parsetree.expression_desc *)
 
 (*s: type Parsetree.value_description *)
@@ -144,6 +150,7 @@ and signature_item_desc =
     Psig_value of string * value_description
   | Psig_type of (string * type_declaration) list
   | Psig_exception of string * exception_declaration
+
   | Psig_module of string * module_type
   | Psig_modtype of string * modtype_declaration
   | Psig_open of Longident.t
@@ -187,6 +194,7 @@ and structure_item_desc =
   | Pstr_primitive of string * value_description
   | Pstr_type of (string * type_declaration) list
   | Pstr_exception of string * exception_declaration
+
   | Pstr_module of string * module_expr
   | Pstr_modtype of string * module_type
   | Pstr_open of Longident.t

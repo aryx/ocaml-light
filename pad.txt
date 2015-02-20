@@ -89,6 +89,9 @@ Then I did many modifications, mostly removing stuff:
  - TODO go back to simpler typechecker with no Link, Nil and stuff
    introduced for the need of objects
 
+I have rewritten a few 
+ - if then else if --> match () with when
+ - iter f data in data |> iter f
 
 
 Then I backported a few things from a more recent ocaml distribution:
