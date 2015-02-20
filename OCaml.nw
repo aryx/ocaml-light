@@ -176,6 +176,9 @@ Here are other candidates that were considered but ultimately discarded:
 % so many candidates to list here actually.
 
 
+%https://rwmj.wordpress.com/2009/08/04/ocaml-internals/
+%https://github.com/ocamllabs/ocaml-internals/wiki
+
 \section{Getting started}
 
 \section{Requirements}
@@ -250,7 +253,11 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 
 \section{Code organization}
 
+%https://github.com/ocamllabs/ocaml-internals/wiki/Source-layout
+
 \section{Software architecture}
+
+% https://github.com/ocamllabs/ocaml-internals/wiki/Compiler-pipelines
 
 \section{Bootstrapping}
 
@@ -575,9 +582,16 @@ and module_expr_desc =
 
 \section{Bytecode}
 
+% https://github.com/ocamllabs/ocaml-internals/wiki/Bytecode-compiler-pipeline
+
 \section{Runtime values}
 
+%https://rwmj.wordpress.com/2009/08/04/ocaml-internals/
+
+% see also oreilly book, very good chapter on values
+
 % blocks, will help understand elts from Lambda and Instruct
+
 
 \chapter{[[main()]]}
 
@@ -2107,6 +2121,7 @@ let create_archive archive file_list =
 % Running
 
 \chapter{Running}
+
 
 \section{Startup}
 
