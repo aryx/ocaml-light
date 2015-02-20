@@ -1868,9 +1868,7 @@ val immed_max: int
 val compile_implementation: string -> lambda -> instruction list
 @
 
-\section{Instruction to Bytecode}
-
-\subsection{Bytecode format, [[.cmo]]}
+\subsection{Binary bytecode format, [[.cmo]]}
 
 %(* Format of a .cmo file:
 %     magic number (Config.cmo_magic_number)
