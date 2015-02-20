@@ -1,3 +1,4 @@
+(*s: ./bytecomp/lambda.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -15,6 +16,7 @@
 
 open Asttypes
 
+(*s: type Lambda.primitive *)
 type primitive =
     Pidentity
     (* Globals *)
@@ -55,25 +57,39 @@ type primitive =
   | Parraysets of array_kind
   (* Bitvect operations *)
   | Pbittest
+(*e: type Lambda.primitive *)
 
+(*s: type Lambda.comparison *)
 and comparison =
     Ceq | Cneq | Clt | Cgt | Cle | Cge
+(*e: type Lambda.comparison *)
 
+(*s: type Lambda.array_kind *)
 and array_kind =
     Pgenarray | Paddrarray | Pintarray | Pfloatarray
+(*e: type Lambda.array_kind *)
 
+(*s: type Lambda.structured_constant *)
 type structured_constant =
     Const_base of constant
   | Const_pointer of int
   | Const_block of int * structured_constant list
   | Const_float_array of string list
+(*e: type Lambda.structured_constant *)
 
+(*s: type Lambda.function_kind *)
 type function_kind = Curried | Tupled
+(*e: type Lambda.function_kind *)
 
+(*s: type Lambda.let_kind *)
 type let_kind = Strict | Alias | StrictOpt
+(*e: type Lambda.let_kind *)
 
+(*s: type Lambda.shared_code *)
 type shared_code = (int * int) list     (* stack size -> code label *)
+(*e: type Lambda.shared_code *)
 
+(*s: type Lambda.lambda *)
 type lambda =
     Lvar of Ident.t
   | Lconst of structured_constant
@@ -92,30 +108,50 @@ type lambda =
   | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
   | Lassign of Ident.t * lambda
   | Levent of lambda * lambda_event
+(*e: type Lambda.lambda *)
 
+(*s: type Lambda.lambda_switch *)
 and lambda_switch =
   { sw_numconsts: int;                  (* Number of integer cases *)
     sw_consts: (int * lambda) list;     (* Integer cases *)
     sw_numblocks: int;                  (* Number of tag block cases *)
     sw_blocks: (int * lambda) list;     (* Tag block cases *)
     sw_checked: bool }                  (* True if bound checks needed *)
+(*e: type Lambda.lambda_switch *)
 
+(*s: type Lambda.lambda_event *)
 and lambda_event =
   { lev_loc: int;
     lev_kind: lambda_event_kind;
     lev_repr: int ref option;
     lev_env: Env.summary }
+(*e: type Lambda.lambda_event *)
 
+(*s: type Lambda.lambda_event_kind *)
 and lambda_event_kind =
     Lev_before
   | Lev_after of Types.type_expr
   | Lev_function
+(*e: type Lambda.lambda_event_kind *)
 
+(*s: signature Lambda.const_unit *)
 val const_unit: structured_constant
+(*e: signature Lambda.const_unit *)
+(*s: signature Lambda.lambda_unit *)
 val lambda_unit: lambda
+(*e: signature Lambda.lambda_unit *)
+(*s: signature Lambda.name_lambda *)
 val name_lambda: lambda -> (Ident.t -> lambda) -> lambda
+(*e: signature Lambda.name_lambda *)
+(*s: signature Lambda.is_guarded *)
 val is_guarded: lambda -> bool
+(*e: signature Lambda.is_guarded *)
 
+(*s: signature Lambda.free_variables *)
 val free_variables: lambda -> Ident.t Set.t
+(*e: signature Lambda.free_variables *)
 
+(*s: signature Lambda.transl_path *)
 val transl_path: Path.t -> lambda
+(*e: signature Lambda.transl_path *)
+(*e: ./bytecomp/lambda.mli *)

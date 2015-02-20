@@ -1,3 +1,4 @@
+(*s: ./bytecomp/bytelibrarian.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -13,6 +14,7 @@
 
 (* Build libraries of .cmo files *)
 
+(*s: signature Bytelibrarian.create_archive *)
 (* Format of a library file:
       magic number (Config.cma_magic_number)
       absolute offset of content table
@@ -21,11 +23,19 @@
 *)
 
 val create_archive: string list -> string -> unit
+(*e: signature Bytelibrarian.create_archive *)
 
+(*s: type Bytelibrarian.error *)
 type error =
     File_not_found of string
   | Not_an_object_file of string
+(*e: type Bytelibrarian.error *)
 
+(*s: exception Bytelibrarian.Error *)
 exception Error of error
+(*e: exception Bytelibrarian.Error *)
 
+(*s: signature Bytelibrarian.report_error *)
 val report_error: error -> unit
+(*e: signature Bytelibrarian.report_error *)
+(*e: ./bytecomp/bytelibrarian.mli *)

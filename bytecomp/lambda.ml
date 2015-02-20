@@ -1,3 +1,4 @@
+(*s: ./bytecomp/lambda.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -15,6 +16,7 @@ open Misc
 open Path
 open Asttypes
 
+(*s: type Lambda.primitive (./bytecomp/lambda.ml) *)
 type primitive =
     Pidentity
     (* Globals *)
@@ -55,25 +57,39 @@ type primitive =
   | Parraysets of array_kind
   (* Bitvect operations *)
   | Pbittest
+(*e: type Lambda.primitive (./bytecomp/lambda.ml) *)
 
+(*s: type Lambda.comparison (./bytecomp/lambda.ml) *)
 and comparison =
     Ceq | Cneq | Clt | Cgt | Cle | Cge
+(*e: type Lambda.comparison (./bytecomp/lambda.ml) *)
 
+(*s: type Lambda.array_kind (./bytecomp/lambda.ml) *)
 and array_kind =
     Pgenarray | Paddrarray | Pintarray | Pfloatarray
+(*e: type Lambda.array_kind (./bytecomp/lambda.ml) *)
 
+(*s: type Lambda.structured_constant (./bytecomp/lambda.ml) *)
 type structured_constant =
     Const_base of constant
   | Const_pointer of int
   | Const_block of int * structured_constant list
   | Const_float_array of string list
+(*e: type Lambda.structured_constant (./bytecomp/lambda.ml) *)
 
+(*s: type Lambda.function_kind (./bytecomp/lambda.ml) *)
 type function_kind = Curried | Tupled
+(*e: type Lambda.function_kind (./bytecomp/lambda.ml) *)
 
+(*s: type Lambda.let_kind (./bytecomp/lambda.ml) *)
 type let_kind = Strict | Alias | StrictOpt
+(*e: type Lambda.let_kind (./bytecomp/lambda.ml) *)
 
+(*s: type Lambda.shared_code (./bytecomp/lambda.ml) *)
 type shared_code = (int * int) list
+(*e: type Lambda.shared_code (./bytecomp/lambda.ml) *)
 
+(*s: type Lambda.lambda (./bytecomp/lambda.ml) *)
 type lambda =
     Lvar of Ident.t
   | Lconst of structured_constant
@@ -92,36 +108,50 @@ type lambda =
   | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
   | Lassign of Ident.t * lambda
   | Levent of lambda * lambda_event
+(*e: type Lambda.lambda (./bytecomp/lambda.ml) *)
 
+(*s: type Lambda.lambda_switch (./bytecomp/lambda.ml) *)
 and lambda_switch =
   { sw_numconsts: int;
     sw_consts: (int * lambda) list;
     sw_numblocks: int;
     sw_blocks: (int * lambda) list;
     sw_checked: bool }
+(*e: type Lambda.lambda_switch (./bytecomp/lambda.ml) *)
 
+(*s: type Lambda.lambda_event (./bytecomp/lambda.ml) *)
 and lambda_event =
   { lev_loc: int;
     lev_kind: lambda_event_kind;
     lev_repr: int ref option;
     lev_env: Env.summary }
+(*e: type Lambda.lambda_event (./bytecomp/lambda.ml) *)
 
+(*s: type Lambda.lambda_event_kind (./bytecomp/lambda.ml) *)
 and lambda_event_kind =
     Lev_before
   | Lev_after of Types.type_expr
   | Lev_function
+(*e: type Lambda.lambda_event_kind (./bytecomp/lambda.ml) *)
 
+(*s: constant Lambda.const_unit *)
 let const_unit = Const_pointer 0
+(*e: constant Lambda.const_unit *)
 
+(*s: constant Lambda.lambda_unit *)
 let lambda_unit = Lconst const_unit
+(*e: constant Lambda.lambda_unit *)
 
+(*s: function Lambda.name_lambda *)
 let name_lambda arg fn =
   match arg with
     Lvar id -> fn id
   | _ -> let id = Ident.create "let" in Llet(Strict, id, arg, fn id)
+(*e: function Lambda.name_lambda *)
 
 module IdentSet = Set
 
+(*s: function Lambda.free_variables *)
 let free_variables l =
   let fv = ref IdentSet.empty in
   let rec freevars = function
@@ -163,7 +193,9 @@ let free_variables l =
   | Levent (lam, evt) ->
       freevars lam
   in freevars l; !fv
+(*e: function Lambda.free_variables *)
 
+(*s: constant Lambda.is_guarded *)
 (* Check if an action has a "when" guard *)
 
 let rec is_guarded = function
@@ -171,9 +203,13 @@ let rec is_guarded = function
   | Llet(str, id, lam, body) -> is_guarded body
   | Levent(lam, ev) -> is_guarded lam
   | _ -> false
+(*e: constant Lambda.is_guarded *)
 
+(*s: constant Lambda.transl_path *)
 let rec transl_path = function
     Pident id ->
       if Ident.global id then Lprim(Pgetglobal id, []) else Lvar id
   | Pdot(p, s, pos) ->
       Lprim(Pfield pos, [transl_path p])
+(*e: constant Lambda.transl_path *)
+(*e: ./bytecomp/lambda.ml *)

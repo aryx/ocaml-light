@@ -1,3 +1,4 @@
+(*s: ./typing/primitive.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -11,6 +12,7 @@
 
 (* $Id: primitive.mli,v 1.4 1997/05/13 14:06:56 xleroy Exp $ *)
 
+(*s: type Primitive.description *)
 (* Description of primitive functions *)
 
 type description =
@@ -19,6 +21,12 @@ type description =
     prim_alloc: bool;          (* Does it allocates or raise? *)
     prim_native_name: string;  (* Name of C function for the nat. code gen. *)
     prim_native_float: bool }  (* Does the above operate on unboxed floats? *)
+(*e: type Primitive.description *)
 
+(*s: signature Primitive.parse_declaration *)
 val parse_declaration: int -> string list -> description
+(*e: signature Primitive.parse_declaration *)
+(*s: signature Primitive.print_description *)
 val print_description: description -> unit
+(*e: signature Primitive.print_description *)
+(*e: ./typing/primitive.mli *)

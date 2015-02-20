@@ -1,3 +1,4 @@
+(*s: ./bytecomp/translmod.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -21,10 +22,13 @@ open Typedtree
 open Lambda
 open Translcore
 
+(*s: function Translmod.reset_labels *)
 let reset_labels () =
  (*  used_methods := [] *)
   ()
+(*e: function Translmod.reset_labels *)
 
+(*s: function Translmod.transl_label_init *)
 let transl_label_init expr =
 (*
   if !used_methods = [] then
@@ -43,6 +47,7 @@ let transl_label_init expr =
     expr'
 *)
   expr
+(*e: function Translmod.transl_label_init *)
 
 (* Compile a coercion *)
 
@@ -62,6 +67,7 @@ and apply_coercion_field id (pos, cc) =
     Tcoerce_primitive p -> transl_primitive p
   | _ -> apply_coercion cc (Lprim(Pfield pos, [Lvar id]))
 
+(*s: function Translmod.compose_coercions *)
 (* Compose two coercions
    apply_coercion c1 (apply_coercion c2 e) behaves like
    apply_coercion (compose_coercions c1 c2) e. *)
@@ -78,10 +84,13 @@ let rec compose_coercions c1 c2 =
              pc1)
   | (_, _) ->
       fatal_error "Translmod.compose_coercions"
+(*e: function Translmod.compose_coercions *)
 
+(*s: constant Translmod.primitive_declarations *)
 (* Record the primitive declarations occuring in the module compiled *)
 
 let primitive_declarations = ref ([] : string list)
+(*e: constant Translmod.primitive_declarations *)
 
 (* Compile a module expression *)
 
@@ -137,6 +146,7 @@ and transl_structure fields cc = function
   | Tstr_open path :: rem ->
       transl_structure fields cc rem
 
+(*s: function Translmod.transl_implementation *)
 (* Compile an implementation *)
 
 let transl_implementation module_name str cc =
@@ -144,7 +154,9 @@ let transl_implementation module_name str cc =
   primitive_declarations := [];
   let module_id = Ident.create_persistent module_name in
   Lprim(Psetglobal module_id, [transl_label_init (transl_structure [] cc str)])
+(*e: function Translmod.transl_implementation *)
 
+(*s: function Translmod.transl_store_structure *)
 (* A variant of transl_structure used to compile toplevel structure definitions
    for the native-code compiler. Store the defined values in the fields
    of the global as soon as they are defined, in order to reduce register
@@ -201,7 +213,9 @@ let transl_store_structure glob map prims str =
               cont)
   in
     List.fold_right store_primitive prims (transl_store str)
+(*e: function Translmod.transl_store_structure *)
 
+(*s: constant Translmod.defined_idents *)
 (* Build the list of value identifiers defined by a toplevel structure *)
 
 let rec defined_idents = function
@@ -215,7 +229,9 @@ let rec defined_idents = function
   | Tstr_module(id, modl) :: rem -> id :: defined_idents rem
   | Tstr_modtype(id, decl) :: rem -> defined_idents rem
   | Tstr_open path :: rem -> defined_idents rem
+(*e: constant Translmod.defined_idents *)
 
+(*s: function Translmod.build_ident_map *)
 (* Transform a coercion and the list of value identifiers built above
    into a table id -> (pos, coercion), with [pos] being the position
    in the global block where the value of [id] must be stored,
@@ -248,7 +264,9 @@ let build_ident_map restr idlist =
       in build_map 0 Ident.empty [] pos_cc_list
   | _ ->
       fatal_error "Translmod.build_ident_map"
+(*e: function Translmod.build_ident_map *)
         
+(*s: function Translmod.transl_store_implementation *)
 (* Compile an implementation using transl_store_structure 
    (for the native-code compiler). *)
 
@@ -258,7 +276,9 @@ let transl_store_implementation module_name str restr =
   let module_id = Ident.create_persistent module_name in
   let (map, prims, size) = build_ident_map restr (defined_idents str) in
   (size, transl_label_init (transl_store_structure module_id map prims str))
+(*e: function Translmod.transl_store_implementation *)
 
+(*s: function Translmod.make_sequence *)
 (* Compile a sequence of expressions *)
 
 let rec make_sequence fn = function
@@ -266,7 +286,9 @@ let rec make_sequence fn = function
   | [x] -> fn x
   | x::rem ->
       let lam = fn x in Lsequence(lam, make_sequence fn rem)
+(*e: function Translmod.make_sequence *)
 
+(*s: constant Translmod.transl_toplevel_item *)
 (* Compile a toplevel phrase *)
 
 let transl_toplevel_item = function
@@ -293,7 +315,11 @@ let transl_toplevel_item = function
       lambda_unit
   | Tstr_open path ->
       lambda_unit
+(*e: constant Translmod.transl_toplevel_item *)
 
+(*s: function Translmod.transl_toplevel_definition *)
 let transl_toplevel_definition str =
   reset_labels ();
   transl_label_init (make_sequence transl_toplevel_item str)
+(*e: function Translmod.transl_toplevel_definition *)
+(*e: ./bytecomp/translmod.ml *)

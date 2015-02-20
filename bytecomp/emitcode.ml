@@ -1,3 +1,4 @@
+(*s: ./bytecomp/emitcode.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -21,6 +22,7 @@ open Instruct
 open Opcodes
 
 
+(*s: type Emitcode.reloc_info (./bytecomp/emitcode.ml) *)
 (* Relocation information *)
 
 type reloc_info =
@@ -28,7 +30,9 @@ type reloc_info =
   | Reloc_getglobal of Ident.t             (* reference to a global *)
   | Reloc_setglobal of Ident.t             (* definition of a global *)
   | Reloc_primitive of string               (* C primitive number *)
+(*e: type Emitcode.reloc_info (./bytecomp/emitcode.ml) *)
 
+(*s: type Emitcode.compilation_unit (./bytecomp/emitcode.ml) *)
 (* Descriptor for compilation units *)
 
 type compilation_unit =
@@ -41,6 +45,7 @@ type compilation_unit =
     mutable cu_force_link: bool;        (* Must be linked even if unref'ed *)
     mutable cu_debug: int;              (* Position of debugging info, or 0 *)
     cu_debugsize: int }                 (* Length of debugging info *)
+(*e: type Emitcode.compilation_unit (./bytecomp/emitcode.ml) *)
 
 (* Format of a .cmo file:
      magic number (Config.cmo_magic_number)
@@ -53,6 +58,7 @@ type compilation_unit =
 let out_buffer = ref(String.create 1024)
 and out_position = ref 0
 
+(*s: function Emitcode.out_word *)
 let out_word b1 b2 b3 b4 =
   let p = !out_position in
   if p >= String.length !out_buffer then begin
@@ -66,35 +72,49 @@ let out_word b1 b2 b3 b4 =
   String.unsafe_set !out_buffer (p+2) (Char.unsafe_chr b3);
   String.unsafe_set !out_buffer (p+3) (Char.unsafe_chr b4);
   out_position := p + 4
+(*e: function Emitcode.out_word *)
 
+(*s: function Emitcode.out *)
 let out opcode =
   out_word opcode 0 0 0
+(*e: function Emitcode.out *)
 
+(*s: function Emitcode.out_int *)
 let out_int n =
   out_word n (n asr 8) (n asr 16) (n asr 24)
+(*e: function Emitcode.out_int *)
 
+(*s: type Emitcode.label_definition *)
 (* Handling of local labels and backpatching *)
 
 type label_definition =
     Label_defined of int
   | Label_undefined of (int * int) list
+(*e: type Emitcode.label_definition *)
 
+(*s: constant Emitcode.label_table *)
 let label_table  = ref ([| |] : label_definition array)
+(*e: constant Emitcode.label_table *)
 
+(*s: function Emitcode.extend_label_table *)
 let extend_label_table needed =
   let new_size = ref(Array.length !label_table) in
   while needed >= !new_size do new_size := 2 * !new_size done;
   let new_table = Array.create !new_size (Label_undefined []) in
   Array.blit !label_table 0 new_table 0 (Array.length !label_table);
   label_table := new_table
+(*e: function Emitcode.extend_label_table *)
 
+(*s: function Emitcode.backpatch *)
 let backpatch (pos, orig) =
   let displ = (!out_position - orig) asr 2 in
   !out_buffer.[pos] <- Char.unsafe_chr displ;
   !out_buffer.[pos+1] <- Char.unsafe_chr (displ asr 8);
   !out_buffer.[pos+2] <- Char.unsafe_chr (displ asr 16);
+(*e: function Emitcode.backpatch *)
   !out_buffer.[pos+3] <- Char.unsafe_chr (displ asr 24)
 
+(*s: function Emitcode.define_label *)
 let define_label lbl =
   if lbl >= Array.length !label_table then extend_label_table lbl;
   match (!label_table).(lbl) with
@@ -102,8 +122,10 @@ let define_label lbl =
       fatal_error "Emitcode.define_label"
   | Label_undefined patchlist ->
       List.iter backpatch patchlist;
+(*e: function Emitcode.define_label *)
       (!label_table).(lbl) <- Label_defined !out_position
 
+(*s: function Emitcode.out_label_with_orig *)
 let out_label_with_orig orig lbl =
   if lbl >= Array.length !label_table then extend_label_table lbl;
   match (!label_table).(lbl) with
@@ -113,15 +135,22 @@ let out_label_with_orig orig lbl =
       (!label_table).(lbl) <-
          Label_undefined((!out_position, orig) :: patchlist);
       out_int 0
+(*e: function Emitcode.out_label_with_orig *)
 
+(*s: function Emitcode.out_label *)
 let out_label l = out_label_with_orig !out_position l
+(*e: function Emitcode.out_label *)
 
+(*s: constant Emitcode.reloc_info *)
 (* Relocation information *)
 
 let reloc_info = ref ([] : (reloc_info * int) list)
+(*e: constant Emitcode.reloc_info *)
 
+(*s: function Emitcode.enter *)
 let enter info =
   reloc_info := (info, !out_position) :: !reloc_info
+(*e: function Emitcode.enter *)
 
 let slot_for_literal sc =
   enter (Reloc_literal sc);
@@ -136,14 +165,19 @@ and slot_for_c_prim name =
   enter (Reloc_primitive name);
   out_int 0
 
+(*s: constant Emitcode.events *)
 (* Debugging events *)
 
 let events = ref ([] : debug_event list)
+(*e: constant Emitcode.events *)
 
+(*s: function Emitcode.record_event *)
 let record_event ev =
   ev.ev_pos <- !out_position;
   events := ev :: !events
+(*e: function Emitcode.record_event *)
 
+(*s: function Emitcode.init *)
 (* Initialization *)
 
 let init () =
@@ -151,7 +185,9 @@ let init () =
   label_table := Array.create 16 (Label_undefined []);
   reloc_info := [];
   events := []
+(*e: function Emitcode.init *)
 
+(*s: constant Emitcode.emit_instr *)
 (* Emission of one instruction *)
 
 let emit_instr = function
@@ -246,7 +282,9 @@ let emit_instr = function
   | Koffsetref n -> out opOFFSETREF; out_int n
   | Kevent ev -> record_event ev
   | Kstop -> out opSTOP
+(*e: constant Emitcode.emit_instr *)
 
+(*s: constant Emitcode.emit *)
 (* Emission of a list of instructions. Include some peephole optimization. *)
 
 let rec emit = function
@@ -292,7 +330,9 @@ let rec emit = function
   (* Default case *)
   | instr :: c ->
       emit_instr instr; emit c
+(*e: constant Emitcode.emit *)
 
+(*s: function Emitcode.to_file *)
 (* Emission to a file *)
 
 let to_file outchan unit_name code =
@@ -327,7 +367,9 @@ let to_file outchan unit_name code =
   output_value outchan compunit;
   seek_out outchan pos_depl;
   output_binary_int outchan pos_compunit
+(*e: function Emitcode.to_file *)
 
+(*s: function Emitcode.to_memory *)
 (* Emission to a memory block *)
 
 let to_memory init_code fun_code =
@@ -340,3 +382,5 @@ let to_memory init_code fun_code =
   and code_size = !out_position in
   init();
   (code, code_size, reloc)
+(*e: function Emitcode.to_memory *)
+(*e: ./bytecomp/emitcode.ml *)

@@ -1,3 +1,4 @@
+(*s: ./utils/terminfo.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -18,3 +19,4 @@ external getstr: string -> string = "terminfo_getstr"
 external getnum: string -> int = "terminfo_getnum"
 external puts: out_channel -> string -> int -> unit = "terminfo_puts"
 
+(*e: ./utils/terminfo.ml *)

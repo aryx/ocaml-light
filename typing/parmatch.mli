@@ -1,3 +1,4 @@
+(*s: ./typing/parmatch.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -15,5 +16,10 @@
 
 open Typedtree
 
+(*s: signature Parmatch.check_partial *)
 val check_partial: Location.t -> (pattern * expression) list -> unit
+(*e: signature Parmatch.check_partial *)
+(*s: signature Parmatch.check_unused *)
 val check_unused: (pattern * expression) list -> unit
+(*e: signature Parmatch.check_unused *)
+(*e: ./typing/parmatch.mli *)
