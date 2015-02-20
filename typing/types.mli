@@ -30,6 +30,7 @@ and type_desc =
   | Tarrow of type_expr * type_expr
   | Ttuple of type_expr list
   | Tconstr of Path.t * type_expr list * abbrev_memo ref
+
   | Tnil
   | Tlink of type_expr
 (*e: type Types.type_desc *)

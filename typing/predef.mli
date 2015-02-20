@@ -23,9 +23,11 @@ val type_string: type_expr
 val type_float: type_expr
 val type_bool: type_expr
 val type_unit: type_expr
-val type_exn: type_expr
-val type_array: type_expr -> type_expr
+
 val type_list: type_expr -> type_expr
+val type_array: type_expr -> type_expr
+
+val type_exn: type_expr
 (*e: signatures Predef.type_xxx *)
 
 (*s: signatures Predef.path_xxx *)
@@ -35,9 +37,12 @@ val path_string: Path.t
 val path_float: Path.t
 val path_bool: Path.t
 val path_unit: Path.t
-val path_exn: Path.t
-val path_array: Path.t
+
 val path_list: Path.t
+val path_array: Path.t
+
+val path_exn: Path.t
+
 val path_format: Path.t
 (*e: signatures Predef.path_xxx *)
 
@@ -51,8 +56,8 @@ val path_match_failure: Path.t
    over Env.t, Env.add_type and Env.add_exception. *)
 
 val build_initial_env:
-  (Ident.t -> type_declaration -> 'a -> 'a) ->
-  (Ident.t -> exception_declaration -> 'a -> 'a) ->
+  (Ident.t -> Types.type_declaration -> 'a -> 'a) ->
+  (Ident.t -> Types.exception_declaration -> 'a -> 'a) ->
   'a -> 'a
 (*e: signature Predef.build_initial_env *)
 

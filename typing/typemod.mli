@@ -18,11 +18,12 @@ open Types
 
 (*s: signature Typemod.type_structure *)
 val type_structure:
-        Env.t -> Parsetree.structure -> Typedtree.structure * signature * Env.t
+        Env.t -> Parsetree.structure -> 
+          Typedtree.structure * Types.signature * Env.t
 (*e: signature Typemod.type_structure *)
 (*s: signature Typemod.transl_signature *)
 val transl_signature:
-        Env.t -> Parsetree.signature -> signature
+        Env.t -> Parsetree.signature -> Types.signature
 (*e: signature Typemod.transl_signature *)
 (*s: signature Typemod.check_nongen_schemes *)
 val check_nongen_schemes:

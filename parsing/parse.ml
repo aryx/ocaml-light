@@ -44,6 +44,13 @@ let wrap parsing_fun lexbuf =
     Parsing.clear_parser();
     ast
   with
+    | Parsing.Parse_error | Syntaxerr.Escape_error ->
+        let loc = { loc_start = Lexing.lexeme_start lexbuf;
+                    loc_end = Lexing.lexeme_end lexbuf } in
+        if !Location.input_name = "" 
+        then maybe_skip_phrase lexbuf;
+        raise(Syntaxerr.Error(Syntaxerr.Other loc))
+
     | Lexer.Error(Lexer.Unterminated_comment, _, _) as err -> raise err
     | Lexer.Error(Lexer.Unterminated_string, _, _) as err -> raise err
     | Lexer.Error(_, _, _) as err ->
@@ -52,12 +59,6 @@ let wrap parsing_fun lexbuf =
     | Syntaxerr.Error _ as err ->
         if !Location.input_name = "" then maybe_skip_phrase lexbuf;
         raise err
-    | Parsing.Parse_error | Syntaxerr.Escape_error ->
-        let loc = { loc_start = Lexing.lexeme_start lexbuf;
-                    loc_end = Lexing.lexeme_end lexbuf } in
-        if !Location.input_name = "" 
-        then maybe_skip_phrase lexbuf;
-        raise(Syntaxerr.Error(Syntaxerr.Other loc))
 (*e: function Parse.wrap *)
 
 (*s: function Parse.implementation *)

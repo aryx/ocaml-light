@@ -15,15 +15,19 @@
 %thx to LP, changed for the better a few things:
 
 %thx to codemap/codegraph/scheck:
-% - use cg to to look at backward deps but the ocaml linker enforce layers
+% - use cg to to look at backward deps (but the ocaml linker enforce layers)
 %   (harder to understand non layered code)
-% - use scheck to remove deadcode, 
+% - use scheck to remove deadcode, found some even in latest ocaml :)
 %   (harder to understand big files)
 % - TODO use cg to reduce number of globals by moving them closer to the
 %   relevant file (or even function), better cluster the code
 %   (harder to understand non functional code using lots of globals)
 
 %thx to this manual, better understand OCaml?:
+% - TODO how a gc works
+% - TODO how values are represented at runtime, Obj
+% - TODO how backend compiler works (register, liveness, etc)
+% - TODO how type inference works in ocaml itself, monomorphic limitations?
 
 %history LP-ization:
 % - skeleton, mostly copy paste of Template.nw skeleton
@@ -32,13 +36,13 @@
 %    * function, type, exception, constant
 %    * TODO ctor/dtor, dumper
 %    * TODO [[xxx]] other fields, [[xxx]] extra fields
-% - TODO read Extra section, identify concepts, first TOC
-% - TODO distribute parts of the Extra section in the main file
+% - read Extra section, identify concepts, first TOC
+% - SEMI distribute parts of the Extra section in the main file
 % - TODO understand main(), LP split main, improve TOC
 % - TODO understand main functions, LP split, cluster, improve TOC
 % - TODO LP split the structures, use datalog for flow to field info
-% - TODO nullify, boolify, errorify, enumify,  typeify,    scheckify, plan9ify
-% - TODO aspecify advanced features! remove useless features
+% - SEMI scheckify, plan9ify
+% - SEMI aspecify advanced features! remove useless features
 % - TODO add figures
 % - TODO add explanations
 
@@ -87,8 +91,7 @@
 % Config
 %------------------------------------------------------------------------------
 \allcodefalse
-% used for forward decl, pragmas, func decl, extern decl, stats, #ifdef,
-% debugging macros
+% used for ??
 
 %\setcounter{tocdepth}{1}
 
@@ -109,6 +112,7 @@ Principia Softwarica: The OCaml Light Compiler
 Yoann Padioleau\\
 \texttt{yoann.padioleau@gmail.com}
 }
+% with code from Xavier Leroy and Damien Doligez
 
 \maketitle 
 \onecolumn
@@ -142,29 +146,42 @@ Yoann Padioleau\\
 
 \section{Motivations}
 
-The goal of this book is to present in full details the source code for
-the compiler of a high level language.
+The goal of this book is to present in full details the source code of
+a compiler for a high level language.
 Why? Because I think it makes you a better programmer if
 you fully understand how things work under the hood.
 
-% ocaml because good compromise! 
+% ocaml because good compromise! functional, and imperative.
+% I removed parts that were not that used:
+%  - objects
+%  - functors
+% (indeed they were not that used in the code of ocaml itself ... hmm)
 
 Here are other candidates that were considered but ultimately discarded:
 \begin{itemize}
 \item ML
 % not active
 \item Haskell
-% nice but lazy
+% nice but lazy, and too strict (no pun intended) forcing programmer
+% to be purely functional (or to use intrusive and complex monads IO),
+% but some nice things to steal (typeclasses, template haskell)
 \item Scheme
-% not typed
+% not typed, no ADT, but some nice things: macros, call/cc, eval
+\item Scala
+% too big, don't need objects anyway.
+% implicits are nice, but controversial, just like OO they can
+% lead to spaghetti code or hard to follow code more easily
 \end{itemize}
 
-% too many candidates to list here actually.
+% so many candidates to list here actually.
 
 
 \section{Getting started}
 
 \section{Requirements}
+
+% actually code presented below is written in OCaml so you
+% need to understand OCaml :)
 
 \section{About this document}
 #include "docs/latex/About.nw"
@@ -173,8 +190,6 @@ Here are other candidates that were considered but ultimately discarded:
 
 Most of this document is actually source code from OCaml, so
 those parts are copyright by INRIA.
-The prose is mine and is licensed under the GNU Free Documentation
-License.
 
 <<copyright header>>=
 (***********************************************************************)
@@ -189,12 +204,39 @@ License.
 (***********************************************************************)
 @
 
+The prose is mine and is licensed under the GNU Free Documentation
+License.
+
+
 \section{Acknowledgments}
 
+I would like to thank of course Xavier Leroy and Damien Doligez,
+the authors of OCaml.
 
 \chapter{Overview}
 
 \section{High-level language principles}
+
+%advanced features not in C, so good increment:
+% - gc (no more malloc/free and bugs), which imply special bits
+%   for each values
+% - parametric polymorphism (no more code duplication and void* loophole)
+%   which imply boxing values for certain implementation strategy
+% - closures (can factorize more code, no more loop for everything)
+% - ADT and pattern matching (no more enum/switch loophole)
+% - type inference (less boilerplate, especially needed when have
+%   polymorphism and closures and quite complicated types)
+
+% missing: 
+%  - call/cc, too advanced? too complex for mere mortal?
+%  - macros (hmm but need compile time metaprogramming though at least)
+% missing on purpose: 
+%  - objects (see lablgtk mess), 
+%  - functors (see ocamlgraph or ocsigen mess).
+
+% toadd: 
+%  - type classes (no more + vs +., print_xxx, can factorize more code)
+%  - compile time metaprogramming? (no more boilerplate, show, map, visit, etc)
 
 \section{[[ocamlc]] services}
 
@@ -204,7 +246,7 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 
 \section{[[calc.ml]]}
 
-\section{Input Objective Caml Light language}
+\section{Input OCaml Light language}
 
 \section{Code organization}
 
@@ -212,9 +254,12 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 
 \section{Bootstrapping}
 
+
 <<constant Clflags.nopervasives>>=
 let nopervasives = ref false            (* -nopervasives *)
 @
+
+% make bootstrap
 
 %###############################################################################
 
@@ -227,7 +272,7 @@ let nopervasives = ref false            (* -nopervasives *)
 %bytecomp/instruct.mli
 %byterun/instruct.h
 
-\section{Abstract Syntax Tree}
+\section{Abstract syntax tree}
 
 \subsection{Names}
 
@@ -238,7 +283,7 @@ type t =
     Lident of string
   | Ldot of t * string
 @
-
+%note: like a list, but enforce have at least one element
 
 <<signature Longident.flatten>>=
 val flatten: t -> string list
@@ -253,7 +298,7 @@ let rec flat accu = function
 let flatten lid = flat [] lid
 @
 
-\subsection{Position}
+\subsection{Positions}
 
 <<type Location.t>>=
 (* Source code locations, used in parsetree *)
@@ -261,6 +306,7 @@ let flatten lid = flat [] lid
 type t =
   { loc_start: int; loc_end: int }
 @
+% charpos
 
 <<signature Location.none>>=
 val none: t
@@ -277,7 +323,7 @@ val symbol_loc: unit -> t
 let symbol_loc () = 
   { loc_start = Parsing.symbol_start(); loc_end = Parsing.symbol_end() }
 @
-
+% ?? global?
 
 <<signature Location.input_name>>=
 val input_name: string ref
@@ -285,27 +331,23 @@ val input_name: string ref
 <<constant Location.input_name>>=
 let input_name = ref ""
 @
+%alt: my info scheme, where the filaneme, charpos, and also
+% line is stored in the token.
 
 
 
 
-
-<<signature Location.rhs_loc>>=
-val rhs_loc: int -> t
-@
-<<function Location.rhs_loc>>=
-let rhs_loc n =
-  { loc_start = Parsing.rhs_start n; loc_end = Parsing.rhs_end n }
-@
 
 
 \subsection{Types}
+% this is the type "system", not the declaration of the types
 
 <<type Parsetree.core_type>>=
 type core_type =
   { ptyp_desc: core_type_desc;
     ptyp_loc: Location.t }
 @
+%alt: my info scheme and embedded token instead of wrapper extra type.
 
 <<type Parsetree.core_type_desc>>=
 and core_type_desc = 
@@ -316,8 +358,14 @@ and core_type_desc =
   | Ptyp_constr of Longident.t * core_type list
   | Ptyp_alias of core_type * string
 @
+% any?
+% less: rename constr? it's not constructor, it's apply
+% note: alias here, but should disappear at some point.
 
-\subsection{Expressions}
+% note that there is no '_a here, because it's not representable
+% by the user. It can't appear in the source code itself.
+
+\subsection{Expressions (and statements)}
 
 <<type Parsetree.expression>>=
 type expression =
@@ -332,24 +380,31 @@ type expression =
 and expression_desc =
     Pexp_ident of Longident.t
   | Pexp_constant of constant
-  | Pexp_let of rec_flag * (pattern * expression) list * expression
-  | Pexp_function of (pattern * expression) list
-  | Pexp_apply of expression * expression list
-  | Pexp_match of expression * (pattern * expression) list
-  | Pexp_try of expression * (pattern * expression) list
+
   | Pexp_tuple of expression list
   | Pexp_construct of Longident.t * expression option * bool
   | Pexp_record of (Longident.t * expression) list
+  | Pexp_array of expression list
+
   | Pexp_field of expression * Longident.t
   | Pexp_setfield of expression * Longident.t * expression
-  | Pexp_array of expression list
+
+  | Pexp_apply of expression * expression list
+
+  | Pexp_let of rec_flag * (pattern * expression) list * expression
+  | Pexp_function of (pattern * expression) list
+  | Pexp_match of expression * (pattern * expression) list
+  | Pexp_when of expression * expression
+
+  | Pexp_try of expression * (pattern * expression) list
   | Pexp_ifthenelse of expression * expression * expression option
   | Pexp_sequence of expression * expression
   | Pexp_while of expression * expression
   | Pexp_for of string * expression * expression * direction_flag * expression
+
   | Pexp_constraint of expression * core_type option * core_type option
-  | Pexp_when of expression * expression
 @
+% list for let, for mutually recursive functions or data
 
 <<type Asttypes.rec_flag>>=
 type rec_flag = Nonrecursive | Recursive
@@ -391,6 +446,7 @@ type type_declaration =
     ptype_manifest: core_type option;
     ptype_loc: Location.t }
 @
+% manifest?
 
 <<type Parsetree.type_kind>>=
 and type_kind =
@@ -399,11 +455,21 @@ and type_kind =
   | Ptype_record of (string * mutable_flag * core_type) list
 @
 
+<<type Asttypes.mutable_flag>>=
+type mutable_flag = Immutable | Mutable
+@
+
+%  | Psig_type of (string * type_declaration) list
+% list when mutually recursive!
+
 \subsubsection{Exception declarations}
 
 <<type Parsetree.exception_declaration>>=
 type exception_declaration = core_type list
 @
+% ??
+
+%  | Psig_exception of string * exception_declaration
 
 \subsubsection{Values}
 
@@ -414,6 +480,8 @@ type value_description =
   { pval_type: core_type;
     pval_prim: string list }
 @
+
+%    Psig_value of string * value_description
 
 \subsection{Modules}
 
@@ -434,6 +502,7 @@ and signature_item_desc =
     Psig_value of string * value_description
   | Psig_type of (string * type_declaration) list
   | Psig_exception of string * exception_declaration
+
   | Psig_module of string * module_type
   | Psig_modtype of string * modtype_declaration
   | Psig_open of Longident.t
@@ -482,6 +551,7 @@ and structure_item_desc =
   | Pstr_primitive of string * value_description
   | Pstr_type of (string * type_declaration) list
   | Pstr_exception of string * exception_declaration
+
   | Pstr_module of string * module_expr
   | Pstr_modtype of string * module_type
   | Pstr_open of Longident.t
@@ -504,7 +574,13 @@ and module_expr_desc =
 
 \section{Types and the Typed Tree}
 
-\section{[[Lambda]] and [[Instruct]] intermediate languages}
+% many Types.xxx are really close to Parsetree.xxx
+% they actually have the same name, but core_type
+% has been replaced by type_expr.
+
+% In the same way many Pxxx become Txxx
+
+\section{[[Lambda]] and [[Instruction]] intermediate languages}
 
 \section{Bytecode}
 
@@ -513,59 +589,26 @@ and module_expr_desc =
 
 \chapter{[[main()]]}
 
+<<toplevel Main._1>>=
+let _ = Printexc.catch main ()
+@
+
 <<function Main.main>>=
 let main () =
   try
     Arg.parse [
-       "-a", Arg.Set make_archive, " Build a library";
-       "-c", Arg.Set compile_only, " Compile only (do not link)";
-       "-cclib", Arg.String(fun s -> ccobjs := s :: !ccobjs),
-             "<opt>  Pass option <opt> to the C linker";
-       "-ccopt", Arg.String(fun s -> ccopts := s :: !ccopts),
-             "<opt>  Pass option <opt> to the C compiler and linker";
-       "-custom", Arg.Set custom_runtime, " Link in custom mode";
-       "-g", Arg.Set debug, " Save debugging information";
-       "-i", Arg.Set print_types, " Print the types";
-       "-I", Arg.String(fun dir -> include_dirs := dir :: !include_dirs),
-             "<dir>  Add <dir> to the list of include directories";
-       "-impl", Arg.String process_implementation_file,
-             "<file>  Compile <file> as a .ml file";
-       "-intf", Arg.String process_interface_file,
-             "<file>  Compile <file> as a .mli file";
-       "-linkall", Arg.Set link_everything,
-             " Link all modules, even unused ones";
-       "-noassert", Arg.Set noassert, " Don't compile assertion checks";
-       "-o", Arg.String(fun s -> exec_name := s;
-                                 archive_name := s;
-                                 object_name := s),
-             "<file>  Set output file name to <file> (default a.out)";
-       "-output-obj", Arg.Unit(fun () -> output_c_object := true;
-                                         custom_runtime := true),
-             "Output a C object file instead of an executable";
-       "-pp", Arg.String(fun s -> preprocessor := Some s),
-             "<command>  Pipe sources through preprocessor <command>";
-       "-thread", Arg.Set thread_safe, " Use thread-safe standard library";
-       "-unsafe", Arg.Set fast,
-             " No bounds checking on array and string access";
-       "-v", Arg.Unit print_version_number, " Print compiler version number";
-       "-verbose", Arg.Set verbose, " Print calls to external commands";
-
-       "-nopervasives", Arg.Set nopervasives, " (undocumented)";
-       "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
-       "-dlambda", Arg.Set dump_lambda, " (undocumented)";
-       "-dinstr", Arg.Set dump_instr, " (undocumented)";
-
-       "-", Arg.String process_file,
-            "<file>  Treat <file> as a file name (even if it starts with `-')"
+       <<[[Main.main()]] command line options>>
       ] process_file usage;
-    if !make_archive then begin
-      Compile.init_path();
-      Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
-    end
-    else if not !compile_only & !objfiles <> [] then begin
-      Compile.init_path();
-      Bytelink.link (List.rev !objfiles)
-    end;
+
+    (match () with
+    | _ when !make_archive ->
+        Compile.init_path();
+        Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
+    | _ when not !compile_only & !objfiles <> [] ->
+        Compile.init_path();
+        Bytelink.link (List.rev !objfiles)
+    | _ -> ()
+    );
     exit 0
   with x ->
     Format.set_formatter_out_channel stderr;
@@ -573,43 +616,47 @@ let main () =
     exit 2
 @
 
-<<toplevel Main._1>>=
-let _ = Printexc.catch main ()
-@
+<<[[Main.main()]] command line options>>=
+"-a", Arg.Set make_archive, " Build a library";
+"-c", Arg.Set compile_only, " Compile only (do not link)";
+"-cclib", Arg.String(fun s -> ccobjs := s :: !ccobjs),
+      "<opt>  Pass option <opt> to the C linker";
+"-ccopt", Arg.String(fun s -> ccopts := s :: !ccopts),
+      "<opt>  Pass option <opt> to the C compiler and linker";
+"-custom", Arg.Set custom_runtime, " Link in custom mode";
+"-g", Arg.Set debug, " Save debugging information";
+"-i", Arg.Set print_types, " Print the types";
+"-I", Arg.String(fun dir -> include_dirs := dir :: !include_dirs),
+      "<dir>  Add <dir> to the list of include directories";
+"-impl", Arg.String process_implementation_file,
+      "<file>  Compile <file> as a .ml file";
+"-intf", Arg.String process_interface_file,
+      "<file>  Compile <file> as a .mli file";
+"-linkall", Arg.Set link_everything,
+      " Link all modules, even unused ones";
+"-noassert", Arg.Set noassert, " Don't compile assertion checks";
+"-o", Arg.String(fun s -> exec_name := s;
+                          archive_name := s;
+                          object_name := s),
+      "<file>  Set output file name to <file> (default a.out)";
+"-output-obj", Arg.Unit(fun () -> output_c_object := true;
+                                  custom_runtime := true),
+      "Output a C object file instead of an executable";
+"-pp", Arg.String(fun s -> preprocessor := Some s),
+      "<command>  Pipe sources through preprocessor <command>";
+"-thread", Arg.Set thread_safe, " Use thread-safe standard library";
+"-unsafe", Arg.Set fast,
+      " No bounds checking on array and string access";
+"-v", Arg.Unit print_version_number, " Print compiler version number";
+"-verbose", Arg.Set verbose, " Print calls to external commands";
 
-<<function Main.process_file>>=
-let process_file name =
-  if Filename.check_suffix name ".ml"
-  or Filename.check_suffix name ".mlt" then begin
-    Compile.implementation name;
-    objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
-  end
-  else if Filename.check_suffix name ".mli" then
-    Compile.interface name
-  else if Filename.check_suffix name ".cmo" 
-       or Filename.check_suffix name ".cma" then
-    objfiles := name :: !objfiles
-  else if Filename.check_suffix name ext_obj
-       or Filename.check_suffix name ext_lib then
-    ccobjs := name :: !ccobjs
-  else if Filename.check_suffix name ".c" then begin
-    Compile.c_file name;
-    ccobjs := (Filename.chop_suffix (Filename.basename name) ".c" ^ ext_obj)
-    :: !ccobjs
-  end
-  else
-    raise(Arg.Bad("don't know what to do with " ^ name))
-@
+"-nopervasives", Arg.Set nopervasives, " (undocumented)";
+"-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
+"-dlambda", Arg.Set dump_lambda, " (undocumented)";
+"-dinstr", Arg.Set dump_instr, " (undocumented)";
 
-<<function Main.process_interface_file>>=
-let process_interface_file name =
-  Compile.interface name
-@
-
-<<function Main.process_implementation_file>>=
-let process_implementation_file name =
-  Compile.implementation name;
-  objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
+"-", Arg.String process_file,
+     "<file>  Treat <file> as a file name (even if it starts with `-')"
 @
 
 
@@ -621,17 +668,56 @@ let print_version_number () =
   print_string Config.standard_library; print_newline()
 @
 
+\section{[[Main.process_file()]]}
+
+<<constant Clflags.objfiles>>=
+let objfiles = ref ([] : string list)   (* .cmo and .cma files *)
+@
 
 
-\section{[[Compile.implementation()]}
+<<function Main.process_file>>=
+let process_file name =
+  match () with
+  | _ when Filename.check_suffix name ".ml" ->
+      Compile.implementation name;
+      objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
+  | _ when Filename.check_suffix name ".mli" ->
+      Compile.interface name
+  | _ when Filename.check_suffix name ".cmo" 
+        or Filename.check_suffix name ".cma" ->
+      objfiles := name :: !objfiles
+  | _ when Filename.check_suffix name ext_obj
+        or Filename.check_suffix name ext_lib ->
+      ccobjs := name :: !ccobjs
+  | _ when Filename.check_suffix name ".c" ->
+      Compile.c_file name;
+      ccobjs := (Filename.chop_suffix (Filename.basename name) ".c" ^ ext_obj)
+       :: !ccobjs
+  | _ -> 
+      raise(Arg.Bad("don't know what to do with " ^ name))
+@
+%old: or Filename.check_suffix name ".mlt" ??
+%old: I rewrote with match () with when
+
+
+
+
+
+
+
+\section{[[Compile.implementation()]]}
+
+<<function Main.process_implementation_file>>=
+let process_implementation_file name =
+  Compile.implementation name;
+  objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
+@
+
 
 <<signature Compile.implementation>>=
 val implementation: string -> unit
 @
 
-<<signature Compile.interface>>=
-val interface: string -> unit
-@
 
 
 <<signature Compile.initial_env>>=
@@ -650,12 +736,15 @@ let implementation sourcefile =
   let prefixname = Filename.chop_extension sourcefile in
   let modulename = String.capitalize(Filename.basename prefixname) in
   let inputfile = preprocess sourcefile (prefixname ^ ".ppo") in
+
   let ast = parse_file inputfile Parse.implementation ast_impl_magic_number in
+
   let objfile = prefixname ^ ".cmo" in
   let oc = open_out_bin objfile in
   try
     let (str, sg, finalenv) =
       Typemod.type_structure (initial_env()) ast in
+
     if !Clflags.print_types then (Printtyp.signature sg; print_newline());
     let coercion =
       if Sys.file_exists (prefixname ^ ".mli") then begin
@@ -669,6 +758,7 @@ let implementation sourcefile =
         Env.save_signature sg modulename (prefixname ^ ".cmi");
         Tcoerce_none
       end in
+
     Emitcode.to_file oc modulename
       (print_if Clflags.dump_instr Printinstr.instrlist
         (Bytegen.compile_implementation modulename
@@ -676,6 +766,7 @@ let implementation sourcefile =
             (Simplif.simplify_lambda
               (print_if Clflags.dump_rawlambda Printlambda.lambda
                 (Translmod.transl_implementation modulename str coercion))))));
+
     remove_preprocessed inputfile;
     close_out oc
   with x ->
@@ -683,7 +774,18 @@ let implementation sourcefile =
     remove_file objfile;
     raise x
 @
+%less: Common.finalize
 
+\section{[[Compile.interface()]]}
+
+<<function Main.process_interface_file>>=
+let process_interface_file name =
+  Compile.interface name
+@
+
+<<signature Compile.interface>>=
+val interface: string -> unit
+@
 
 <<function Compile.interface>>=
 (* Compile a .mli file *)
@@ -693,7 +795,9 @@ let interface sourcefile =
   let prefixname = Filename.chop_extension sourcefile in
   let modulename = String.capitalize(Filename.basename prefixname) in
   let inputfile = preprocess sourcefile (prefixname ^ ".ppi") in
+
   let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
+
   let sg = Typemod.transl_signature (initial_env()) ast in
   if !Clflags.print_types then (Printtyp.signature sg; print_newline());
   Env.save_signature sg modulename (prefixname ^ ".cmi");
@@ -730,6 +834,13 @@ let wrap parsing_fun lexbuf =
     Parsing.clear_parser();
     ast
   with
+    | Parsing.Parse_error | Syntaxerr.Escape_error ->
+        let loc = { loc_start = Lexing.lexeme_start lexbuf;
+                    loc_end = Lexing.lexeme_end lexbuf } in
+        if !Location.input_name = "" 
+        then maybe_skip_phrase lexbuf;
+        raise(Syntaxerr.Error(Syntaxerr.Other loc))
+
     | Lexer.Error(Lexer.Unterminated_comment, _, _) as err -> raise err
     | Lexer.Error(Lexer.Unterminated_string, _, _) as err -> raise err
     | Lexer.Error(_, _, _) as err ->
@@ -738,12 +849,6 @@ let wrap parsing_fun lexbuf =
     | Syntaxerr.Error _ as err ->
         if !Location.input_name = "" then maybe_skip_phrase lexbuf;
         raise err
-    | Parsing.Parse_error | Syntaxerr.Escape_error ->
-        let loc = { loc_start = Lexing.lexeme_start lexbuf;
-                    loc_end = Lexing.lexeme_end lexbuf } in
-        if !Location.input_name = "" 
-        then maybe_skip_phrase lexbuf;
-        raise(Syntaxerr.Error(Syntaxerr.Other loc))
 @
 
 
@@ -759,12 +864,9 @@ let interface = wrap Parser.interface
 
 \section{Values}
 
-\subsection{Functions}
-
-
-\subsection{Constants}
-
-\subsection{Globals}
+%\subsection{Functions}
+%\subsection{Constants}
+%\subsection{Globals}
 
 \section{Types}
 
@@ -772,9 +874,6 @@ let interface = wrap Parser.interface
 
 \subsection{Records}
 
-<<type Asttypes.mutable_flag>>=
-type mutable_flag = Immutable | Mutable
-@
 
 \section{Expressions}
 
@@ -796,6 +895,11 @@ type constant =
 type direction_flag = Upto | Downto
 @
 
+\section{Signatures}
+% the .mli
+
+\section{Structures}
+% the .ml
 
 
 \chapter{Typing}
@@ -803,38 +907,13 @@ type direction_flag = Upto | Downto
 % note that this phase build a global environment,
 % and will load .cmi of other files!
 
-\section{Types}
+\section{Resolving names, [[Ident]] and [[Path]]}
 
-<<type Types.type_expr>>=
-type type_expr =
-  { mutable desc: type_desc; 
-    mutable level: int }
-@
-
-<<type Types.type_desc>>=
-and type_desc =
-    Tvar
-  | Tarrow of type_expr * type_expr
-  | Ttuple of type_expr list
-  | Tconstr of Path.t * type_expr list * abbrev_memo ref
-  | Tnil
-  | Tlink of type_expr
-@
-
-<<type Types.abbrev_memo>>=
-and abbrev_memo =
-    Mnil
-  | Mcons of Path.t * type_expr * abbrev_memo
-  | Mlink of abbrev_memo ref
-@
-
-
-\section{Identifiers and Paths}
+% resolving? fully qualifying every idents?
 
 <<signature type t>>=
 type t
 @
-
 <<type Ident.t>>=
 type t = { stamp: int; name: string; mutable global: bool }
 @
@@ -849,8 +928,40 @@ type t =
     Pident of Ident.t
   | Pdot of t * string * int
 @
+% int?
 
-\section{Builtin types}
+\section{Types}
+
+<<type Types.type_expr>>=
+type type_expr =
+  { mutable desc: type_desc; 
+    mutable level: int }
+@
+% level??
+% todo: look previous implem? in caml light? or just before objects?
+
+<<type Types.type_desc>>=
+and type_desc =
+    Tvar
+  | Tarrow of type_expr * type_expr
+  | Ttuple of type_expr list
+  | Tconstr of Path.t * type_expr list * abbrev_memo ref
+
+  | Tnil
+  | Tlink of type_expr
+@
+%Tlink? Tnil? Tvar of nothing?
+% ref? use globals?
+
+<<type Types.abbrev_memo>>=
+and abbrev_memo =
+    Mnil
+  | Mcons of Path.t * type_expr * abbrev_memo
+  | Mlink of abbrev_memo ref
+@
+% ???
+
+\section{Builtin types and exceptions}
 
 %(* Predefined type constructors (with special typing rules in typecore) *)
 
@@ -861,9 +972,11 @@ val type_string: type_expr
 val type_float: type_expr
 val type_bool: type_expr
 val type_unit: type_expr
-val type_exn: type_expr
-val type_array: type_expr -> type_expr
+
 val type_list: type_expr -> type_expr
+val type_array: type_expr -> type_expr
+
+val type_exn: type_expr
 @
 
 <<signatures Predef.path_xxx>>=
@@ -873,15 +986,15 @@ val path_string: Path.t
 val path_float: Path.t
 val path_bool: Path.t
 val path_unit: Path.t
-val path_exn: Path.t
-val path_array: Path.t
+
 val path_list: Path.t
+val path_array: Path.t
+
+val path_exn: Path.t
+
 val path_format: Path.t
 @
 
-<<signature Predef.path_match_failure>>=
-val path_match_failure: Path.t
-@
 
 <<constants Predef.ident_xxx>>=
 let ident_int = Ident.create "int"
@@ -890,11 +1003,20 @@ and ident_string = Ident.create "string"
 and ident_float = Ident.create "float"
 and ident_bool = Ident.create "bool"
 and ident_unit = Ident.create "unit"
+
 and ident_exn = Ident.create "exn"
+
 and ident_array = Ident.create "array"
+
 and ident_list = Ident.create "list"
+
+
 and ident_format = Ident.create "format"
 @
+% no module
+% subtle: don't change the order here, otherwise you may
+%  have problem in otherlibs/unix, and get error like
+%  "type exn is used where expect exn"
 
 <<constants Predef.path_xxx>>=
 let path_int = Pident ident_int
@@ -903,22 +1025,34 @@ and path_string = Pident ident_string
 and path_float = Pident ident_float
 and path_bool = Pident ident_bool
 and path_unit = Pident ident_unit
-and path_exn = Pident ident_exn
-and path_array = Pident ident_array
+
 and path_list = Pident ident_list
+and path_array = Pident ident_array
+
+and path_exn = Pident ident_exn
+
 and path_format = Pident ident_format
 @
 
 <<constants Predef.type_xxx>>=
-let type_int = newgenty (Tconstr(path_int, [], ref Mnil))
-and type_char = newgenty (Tconstr(path_char, [], ref Mnil))
-and type_string = newgenty (Tconstr(path_string, [], ref Mnil))
-and type_float = newgenty (Tconstr(path_float, [], ref Mnil))
-and type_bool = newgenty (Tconstr(path_bool, [], ref Mnil))
-and type_unit = newgenty (Tconstr(path_unit, [], ref Mnil))
-and type_exn = newgenty (Tconstr(path_exn, [], ref Mnil))
+let type_int     = newgenty (Tconstr(path_int, [], ref Mnil))
+and type_char    = newgenty (Tconstr(path_char, [], ref Mnil))
+and type_string  = newgenty (Tconstr(path_string, [], ref Mnil))
+and type_float   = newgenty (Tconstr(path_float, [], ref Mnil))
+and type_bool    = newgenty (Tconstr(path_bool, [], ref Mnil))
+and type_unit    = newgenty (Tconstr(path_unit, [], ref Mnil))
+and type_exn     = newgenty (Tconstr(path_exn, [], ref Mnil))
 and type_array t = newgenty (Tconstr(path_array, [t], ref Mnil))
-and type_list t = newgenty (Tconstr(path_list, [t], ref Mnil))
+and type_list t  = newgenty (Tconstr(path_list, [t], ref Mnil))
+@
+
+<<signature Predef.path_match_failure>>=
+val path_match_failure: Path.t
+@
+% why a path for this one?
+
+<<constant Predef.path_match_failure>>=
+let path_match_failure = Pident ident_match_failure
 @
 
 <<constants Predef.ident_exn_xxx>>=
@@ -933,205 +1067,6 @@ and ident_division_by_zero = Ident.create "Division_by_zero"
 and ident_stack_overflow = Ident.create "Stack_overflow"
 @
 
-<<signature Predef.build_initial_env>>=
-(* To build the initial environment. Since there is a nasty mutual
-   recursion between predef and env, we break it by parameterizing
-   over Env.t, Env.add_type and Env.add_exception. *)
-
-val build_initial_env:
-  (Ident.t -> type_declaration -> 'a -> 'a) ->
-  (Ident.t -> exception_declaration -> 'a -> 'a) ->
-  'a -> 'a
-@
-
-<<signature Predef.builtin_values>>=
-(* To initialize linker tables *)
-
-val builtin_values: (string * Ident.t) list
-@
-
-
-
-<<constant Predef.path_match_failure>>=
-let path_match_failure = Pident ident_match_failure
-@
-
-
-
-<<function Predef.build_initial_env>>=
-let build_initial_env add_type add_exception empty_env =
-  let decl_abstr =
-    {type_params = [];
-     type_arity = 0;
-     type_kind = Type_abstract;
-     type_manifest = None}
-  and decl_bool =
-    {type_params = [];
-     type_arity = 0;
-     type_kind = Type_variant["false",[]; "true",[]];
-     type_manifest = None}
-  and decl_unit =
-    {type_params = []; 
-     type_arity = 0;
-     type_kind = Type_variant["()",[]];
-     type_manifest = None}
-  and decl_exn =
-    {type_params = [];
-     type_arity = 0;
-     type_kind = Type_variant [];
-     type_manifest = None}
-  and decl_array =
-    let tvar = newgenvar() in
-    {type_params = [tvar];
-     type_arity = 1;
-     type_kind = Type_abstract;
-     type_manifest = None}
-  and decl_list =
-    let tvar = newgenvar() in
-    {type_params = [tvar];
-     type_arity = 1;
-     type_kind = Type_variant["[]", []; "::", [tvar; type_list tvar]];
-     type_manifest = None}
-  and decl_format =
-    {type_params = [newgenvar(); newgenvar(); newgenvar()];
-     type_arity = 3;
-     type_kind = Type_abstract;
-     type_manifest = None} in
-
-  add_exception ident_match_failure
-                         [newgenty (Ttuple[type_string; type_int; type_int])] (
-  add_exception ident_out_of_memory [] (
-  add_exception ident_stack_overflow [] (
-  add_exception ident_invalid_argument [type_string] (
-  add_exception ident_failure [type_string] (
-  add_exception ident_not_found [] (
-  add_exception ident_sys_error [type_string] (
-  add_exception ident_end_of_file [] (
-  add_exception ident_division_by_zero [] (
-  add_type ident_format decl_format (
-  add_type ident_list decl_list (
-  add_type ident_array decl_array (
-  add_type ident_exn decl_exn (
-  add_type ident_unit decl_unit (
-  add_type ident_bool decl_bool (
-  add_type ident_float decl_abstr (
-  add_type ident_string decl_abstr (
-  add_type ident_char decl_abstr (
-  add_type ident_int decl_abstr (
-    empty_env)))))))))))))))))))
-@
-
-<<constant Predef.builtin_values>>=
-let builtin_values =
-  List.map (fun id -> Ident.make_global id; (Ident.name id, id))
-      [ident_match_failure; ident_out_of_memory; ident_stack_overflow;
-       ident_invalid_argument;
-       ident_failure; ident_not_found; ident_sys_error; ident_end_of_file;
-       ident_division_by_zero]
-@
-
-
-
-
-
-\section{Substitutions}
-
-<<type Subst.t>>=
-type t = 
-  { types: (Ident.t, Path.t) Tbl.t;
-    modules: (Ident.t, Path.t) Tbl.t;
-    modtypes: (Ident.t, module_type) Tbl.t }
-@
-
-
-\section{The environment}
-% The symbol table
-
-<<signature type Env.t>>=
-type t
-@
-
-<<type Env.t>>=
-type t = {
-  values: (Path.t * value_description) Ident.tbl;
-  constrs: constructor_description Ident.tbl;
-  labels: label_description Ident.tbl;
-  types: (Path.t * type_declaration) Ident.tbl;
-  modules: (Path.t * module_type) Ident.tbl;
-  modtypes: (Path.t * modtype_declaration) Ident.tbl;
-  components: (Path.t * module_components) Ident.tbl;
-  summary: summary
-}
-@
-
-
-
-<<signature Env.empty>>=
-val empty: t
-@
-
-<<constant Env.empty>>=
-let empty = {
-  values = Ident.empty; constrs = Ident.empty;
-  labels = Ident.empty; types = Ident.empty;
-  modules = Ident.empty; modtypes = Ident.empty;
-  components = Ident.empty; 
-  summary = Env_empty }
-@
-
-
-
-<<signature Env.initial>>=
-val initial: t
-@
-
-% by Path
-<<signature Env.find_value>>=
-val find_value: Path.t -> t -> value_description
-@
-
-<<signature Env.find_type>>=
-val find_type: Path.t -> t -> type_declaration
-@
-
-% by Longident
-
-<<signature Env.lookup_value>>=
-val lookup_value: Longident.t -> t -> Path.t * value_description
-@
-
-<<signature Env.lookup_constructor>>=
-val lookup_constructor: Longident.t -> t -> constructor_description
-@
-
-<<signature Env.lookup_label>>=
-val lookup_label: Longident.t -> t -> label_description
-@
-
-<<signature Env.lookup_type>>=
-val lookup_type: Longident.t -> t -> Path.t * type_declaration
-@
-
-<<signature Env.lookup_module>>=
-val lookup_module: Longident.t -> t -> Path.t * module_type
-@
-
-
-
-\section{Unification}
-
-<<exception Ctype.Unify>>=
-(**** Errors ****)
-
-exception Unify of (type_expr * type_expr) list
-@
-
-\section{Subtypes}
-
-<<exception Ctype.Subtype>>=
-exception Subtype of
-        (type_expr * type_expr) list * (type_expr * type_expr) list
-@
 
 \section{Typed tree}
 
@@ -1228,7 +1163,209 @@ and module_coercion =
 @
 
 
+\section{Builtin values}
+% different from primitives
+
+<<signature Predef.build_initial_env>>=
+(* To build the initial environment. Since there is a nasty mutual
+   recursion between predef and env, we break it by parameterizing
+   over Env.t, Env.add_type and Env.add_exception. *)
+
+val build_initial_env:
+  (Ident.t -> Types.type_declaration -> 'a -> 'a) ->
+  (Ident.t -> Types.exception_declaration -> 'a -> 'a) ->
+  'a -> 'a
+@
+
+<<signature Predef.builtin_values>>=
+(* To initialize linker tables *)
+
+val builtin_values: (string * Ident.t) list
+@
+
+
+
+
+% typed tree?
+<<function Predef.build_initial_env>>=
+let build_initial_env add_type add_exception empty_env =
+  let decl_abstr =
+    {type_params = [];
+     type_arity = 0;
+     type_kind = Type_abstract;
+     type_manifest = None}
+  and decl_bool =
+    {type_params = [];
+     type_arity = 0;
+     type_kind = Type_variant["false",[]; "true",[]];
+     type_manifest = None}
+  and decl_unit =
+    {type_params = []; 
+     type_arity = 0;
+     type_kind = Type_variant["()",[]];
+     type_manifest = None}
+  and decl_exn =
+    {type_params = [];
+     type_arity = 0;
+     type_kind = Type_variant [];
+     type_manifest = None}
+  and decl_array =
+    let tvar = newgenvar() in
+    {type_params = [tvar];
+     type_arity = 1;
+     type_kind = Type_abstract;
+     type_manifest = None}
+  and decl_list =
+    let tvar = newgenvar() in
+    {type_params = [tvar];
+     type_arity = 1;
+     type_kind = Type_variant["[]", []; "::", [tvar; type_list tvar]];
+     type_manifest = None}
+  and decl_format =
+    {type_params = [newgenvar(); newgenvar(); newgenvar()];
+     type_arity = 3;
+     type_kind = Type_abstract;
+     type_manifest = None} in
+
+  add_exception ident_match_failure
+                         [newgenty (Ttuple[type_string; type_int; type_int])] (
+  add_exception ident_out_of_memory [] (
+  add_exception ident_stack_overflow [] (
+  add_exception ident_invalid_argument [type_string] (
+  add_exception ident_failure [type_string] (
+  add_exception ident_not_found [] (
+  add_exception ident_sys_error [type_string] (
+  add_exception ident_end_of_file [] (
+  add_exception ident_division_by_zero [] (
+  add_type ident_format decl_format (
+  add_type ident_list decl_list (
+  add_type ident_array decl_array (
+  add_type ident_exn decl_exn (
+  add_type ident_unit decl_unit (
+  add_type ident_bool decl_bool (
+  add_type ident_float decl_abstr (
+  add_type ident_string decl_abstr (
+  add_type ident_char decl_abstr (
+  add_type ident_int decl_abstr (
+    empty_env)))))))))))))))))))
+@
+
+<<constant Predef.builtin_values>>=
+let builtin_values =
+  List.map (fun id -> Ident.make_global id; (Ident.name id, id))
+      [ident_match_failure; ident_out_of_memory; ident_stack_overflow;
+       ident_invalid_argument;
+       ident_failure; ident_not_found; ident_sys_error; ident_end_of_file;
+       ident_division_by_zero]
+@
+
+
+
+
+
+\section{The (typed, resolved) symbol table, [[Env.t]]}
+% The typed symbol table
+
+<<signature type Env.t>>=
+type t
+@
+
+<<type Env.t>>=
+type t = {
+  values     : (Path.t * Types.value_description)   Ident.tbl;
+  constrs    : Types.constructor_description        Ident.tbl;
+  labels     : Types.label_description              Ident.tbl;
+  types      : (Path.t * Types.type_declaration)    Ident.tbl;
+  modules    : (Path.t * Types.module_type)         Ident.tbl;
+  modtypes   : (Path.t * Types.modtype_declaration) Ident.tbl;
+  components : (Path.t * module_components)   Ident.tbl;
+  summary: summary
+}
+@
+% no Path for constructor and record?
+% components??
+
+<<signature Env.empty>>=
+val empty: t
+@
+
+<<constant Env.empty>>=
+let empty = {
+  values = Ident.empty; constrs = Ident.empty;
+  labels = Ident.empty; types = Ident.empty;
+  modules = Ident.empty; modtypes = Ident.empty;
+  components = Ident.empty; 
+  summary = Env_empty }
+@
+
+
+
+<<signature Env.initial>>=
+val initial: t
+@
+
+% by Path
+<<signature Env.find_value>>=
+val find_value: Path.t -> t -> value_description
+@
+
+<<signature Env.find_type>>=
+val find_type: Path.t -> t -> type_declaration
+@
+
+% by Longident
+
+<<signature Env.lookup_value>>=
+val lookup_value: Longident.t -> t -> Path.t * value_description
+@
+
+<<signature Env.lookup_constructor>>=
+val lookup_constructor: Longident.t -> t -> constructor_description
+@
+
+<<signature Env.lookup_label>>=
+val lookup_label: Longident.t -> t -> label_description
+@
+
+<<signature Env.lookup_type>>=
+val lookup_type: Longident.t -> t -> Path.t * type_declaration
+@
+
+<<signature Env.lookup_module>>=
+val lookup_module: Longident.t -> t -> Path.t * module_type
+@
+
+
+
+\section{Substitutions}
+
+<<type Subst.t>>=
+type t = 
+  { types: (Ident.t, Path.t) Tbl.t;
+    modules: (Ident.t, Path.t) Tbl.t;
+    modtypes: (Ident.t, module_type) Tbl.t }
+@
+
+
+\section{Unification}
+
+<<exception Ctype.Unify>>=
+(**** Errors ****)
+
+exception Unify of (type_expr * type_expr) list
+@
+
+\section{Subtypes}
+
+<<exception Ctype.Subtype>>=
+exception Subtype of
+        (type_expr * type_expr) list * (type_expr * type_expr) list
+@
+
 \section{Typing}
+
+% string -> Ident.t
+% Parsetree.xxx -> Types.xxx or Typedtree.xxx
 
 \subsection{Types}
 
@@ -1238,23 +1375,24 @@ and module_coercion =
 val transl_simple_type:
         Env.t -> bool -> Parsetree.core_type -> Types.type_expr
 @
+% bool?
 
 \subsection{Declarations}
 
 <<signature Typedecl.transl_type_decl>>=
 val transl_type_decl:
         Env.t -> (string * Parsetree.type_declaration) list ->
-                                  (Ident.t * type_declaration) list * Env.t
+                              (Ident.t * Types.type_declaration) list * Env.t
 @
 
 <<signature Typedecl.transl_exception>>=
 val transl_exception:
-        Env.t -> Parsetree.exception_declaration -> exception_declaration
+        Env.t -> Parsetree.exception_declaration -> Types.exception_declaration
 @
 
 <<signature Typedecl.transl_value_decl>>=
 val transl_value_decl:
-        Env.t -> Parsetree.value_description -> value_description
+        Env.t -> Parsetree.value_description -> Types.value_description
 @
 
 \subsection{Expressions}
@@ -1279,8 +1417,7 @@ val type_pattern_list:
 
 <<signature Typecore.type_expect>>=
 val type_expect:
-        Env.t -> Parsetree.expression -> type_expr ->
-        Typedtree.expression
+        Env.t -> Parsetree.expression -> type_expr -> Typedtree.expression
 @
 
 <<signature Typecore.type_exp>>=
@@ -1290,42 +1427,106 @@ val type_exp:
 
 \subsection{Modules}
 
-<<signature Typemod.type_structure>>=
-val type_structure:
-        Env.t -> Parsetree.structure -> Typedtree.structure * signature * Env.t
-@
-
 <<signature Typemod.transl_signature>>=
 val transl_signature:
-        Env.t -> Parsetree.signature -> signature
+        Env.t -> Parsetree.signature -> Types.signature
 @
 
+<<signature Typemod.type_structure>>=
+val type_structure:
+        Env.t -> Parsetree.structure -> 
+          Typedtree.structure * Types.signature * Env.t
+@
+
+
+\section{Advanced typing Issues}
+
+% type aliases
+
+% _a
 
 \chapter{Checking}
 
 \section{Partial matches}
 
 <<signature Parmatch.check_partial>>=
-val check_partial: Location.t -> (pattern * expression) list -> unit
+val check_partial: 
+      Location.t -> (Typedtree.pattern * Typedtree.expression) list -> unit
 @
 
 \section{Unused matches}
 
 <<signature Parmatch.check_unused>>=
-val check_unused: (pattern * expression) list -> unit
+val check_unused: (Typedtree.pattern * Typedtree.expression) list -> unit
 @
 
 
-\chapter{Generating}
+\chapter{Compiling}
+% Generating
 
 <<constant Clflags.compile_only>>=
 let compile_only = ref false            (* -c *)
 @
 
 
-\section{[[Lambda]]}
+\section{Typed AST to [[Lambda]] calcul}
 
-\subsection{Primitives}
+
+%(* Translation from typed abstract syntax to lambda terms,
+%   for the core language *)
+
+%<<signature Translcore.transl_exp>>=
+%val transl_exp: expression -> lambda
+%@
+
+
+\subsection{[[Lambda]]}
+
+<<type Lambda.lambda>>=
+type lambda =
+    Lvar of Ident.t
+  | Lconst of structured_constant
+  | Lapply of lambda * lambda list
+  | Lfunction of function_kind * Ident.t list * lambda
+  | Llet of let_kind * Ident.t * lambda * lambda
+  | Lletrec of (Ident.t * lambda) list * lambda
+  | Lprim of primitive * lambda list
+  | Lswitch of lambda * lambda_switch
+  | Lstaticfail
+  | Lcatch of lambda * lambda
+  | Ltrywith of lambda * Ident.t * lambda
+  | Lifthenelse of lambda * lambda * lambda
+  | Lsequence of lambda * lambda
+  | Lwhile of lambda * lambda
+  | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
+  | Lassign of Ident.t * lambda
+  | Levent of lambda * lambda_event
+@
+
+<<type Lambda.lambda_switch>>=
+and lambda_switch =
+  { sw_numconsts: int;                  (* Number of integer cases *)
+    sw_consts: (int * lambda) list;     (* Integer cases *)
+    sw_numblocks: int;                  (* Number of tag block cases *)
+    sw_blocks: (int * lambda) list;     (* Tag block cases *)
+    sw_checked: bool }                  (* True if bound checks needed *)
+@
+
+
+<<type Lambda.function_kind>>=
+type function_kind = Curried | Tupled
+@
+
+<<type Lambda.let_kind>>=
+type let_kind = Strict | Alias | StrictOpt
+@
+
+<<type Lambda.shared_code>>=
+type shared_code = (int * int) list     (* stack size -> code label *)
+@
+% ???
+
+\subsubsection{Primitives}
 
 <<type Lambda.primitive>>=
 type primitive =
@@ -1386,7 +1587,7 @@ and comparison =
 @
 
 
-\subsection{Structured constants}
+\subxsubsection{Structured constants}
 
 <<type Lambda.structured_constant>>=
 type structured_constant =
@@ -1396,64 +1597,9 @@ type structured_constant =
   | Const_float_array of string list
 @
 
-\subsection{[[Lambda]]}
-
-<<type Lambda.function_kind>>=
-type function_kind = Curried | Tupled
-@
-
-<<type Lambda.let_kind>>=
-type let_kind = Strict | Alias | StrictOpt
-@
-
-<<type Lambda.shared_code>>=
-type shared_code = (int * int) list     (* stack size -> code label *)
-@
-
-<<type Lambda.lambda>>=
-type lambda =
-    Lvar of Ident.t
-  | Lconst of structured_constant
-  | Lapply of lambda * lambda list
-  | Lfunction of function_kind * Ident.t list * lambda
-  | Llet of let_kind * Ident.t * lambda * lambda
-  | Lletrec of (Ident.t * lambda) list * lambda
-  | Lprim of primitive * lambda list
-  | Lswitch of lambda * lambda_switch
-  | Lstaticfail
-  | Lcatch of lambda * lambda
-  | Ltrywith of lambda * Ident.t * lambda
-  | Lifthenelse of lambda * lambda * lambda
-  | Lsequence of lambda * lambda
-  | Lwhile of lambda * lambda
-  | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
-  | Lassign of Ident.t * lambda
-  | Levent of lambda * lambda_event
-@
-
-<<type Lambda.lambda_switch>>=
-and lambda_switch =
-  { sw_numconsts: int;                  (* Number of integer cases *)
-    sw_consts: (int * lambda) list;     (* Integer cases *)
-    sw_numblocks: int;                  (* Number of tag block cases *)
-    sw_blocks: (int * lambda) list;     (* Tag block cases *)
-    sw_checked: bool }                  (* True if bound checks needed *)
-@
 
 
-\section{Typed AST to Lambda}
-
-%(* Translation from typed abstract syntax to lambda terms,
-%   for the core language *)
-
-<<signature Translcore.transl_exp>>=
-val transl_exp: expression -> lambda
-@
-
-<<signature Translcore.transl_let>>=
-val transl_let:
-      rec_flag -> (pattern * expression) list -> lambda -> lambda
-@
+\subsection{Primitives, [[Translcore.transl_primitive()]]}
 
 <<signature Translcore.transl_primitive>>=
 val transl_primitive: Primitive.description -> lambda
@@ -1463,7 +1609,9 @@ val transl_primitive: Primitive.description -> lambda
 val transl_exception: Ident.t -> exception_declaration -> lambda
 @
 
-\subsection{Primitives}
+
+
+
 
 <<signature Translmod.primitive_declarations>>=
 val primitive_declarations: string list ref
@@ -1584,10 +1732,19 @@ let primitives_table = create_hashtable 31 [
 ]
 @
 
-\subsection{Expressions}
+\subsection{Expressions, [[Translcore.transl_exp()]]}
 
 
-\subsection{Modules}
+<<signature Translcore.transl_exp>>=
+val transl_exp: expression -> lambda
+@
+
+<<signature Translcore.transl_let>>=
+val transl_let:
+      rec_flag -> (pattern * expression) list -> lambda -> lambda
+@
+
+\subsection{Modules, [[Translmod.transl_implementation()]]}
 
 <<signature Translmod.transl_implementation>>=
 val transl_implementation: string -> structure -> module_coercion -> lambda
@@ -1602,7 +1759,7 @@ val transl_store_implementation:
 val transl_toplevel_definition: structure -> lambda
 @
 
-\section{Simplifications}
+\section{Lambda simplifications}
 
 <<signature Simplif.simplify_lambda>>=
 val simplify_lambda: lambda -> lambda
@@ -1644,8 +1801,10 @@ val for_tupled_function:
 %    languages", chapter 5. *)
 
 
-\section{[[Instruction]]}
+\section{[[Lambda]] calcul to [[Instruction]]}
 
+
+\subsection{[[Instruction]]}
 
 <<type Instruct.label>>=
 (* Abstract machine instructions *)
@@ -1711,7 +1870,7 @@ val immed_min: int
 val immed_max: int
 @
 
-\section{Lambda to Instruction}
+\subsection{[[Bytegen.compile_implementation()]]}
 
 <<signature Bytegen.compile_implementation>>=
 val compile_implementation: string -> lambda -> instruction list
@@ -1753,8 +1912,7 @@ type compilation_unit =
 @
 
 
-\subsection{Emission}
-
+\subsection{[[Emitcode.to_file()]]}
 
 <<signature Emitcode.to_file>>=
 (* Format of a .cmo file:
@@ -1815,10 +1973,6 @@ let to_file outchan unit_name code =
 let ccobjs = ref ([] : string list)     (* .o, .a and -lxxx files *)
 @
 
-<<constant Clflags.objfiles>>=
-let objfiles = ref ([] : string list)   (* .cmo and .cma files *)
-@
-
 
 <<constant Clflags.exec_name>>=
 let exec_name = ref "a.out"             (* -o *)
@@ -1828,9 +1982,13 @@ let exec_name = ref "a.out"             (* -o *)
 let include_dirs = ref ([] : string list)(* -I *)
 @
 
+
+
+
 <<constant Clflags.link_everything>>=
 let link_everything = ref false         (* -linkall *)
 @
+
 <<constant Clflags.custom_runtime>>=
 let custom_runtime = ref false          (* -custom *)
 @
@@ -1844,9 +2002,6 @@ val link: string list -> unit
 @
 
 
-<<signature Bytelink.check_consistency>>=
-val check_consistency: string -> Emitcode.compilation_unit -> unit
-@
 
 
 \section{Linking with C}
@@ -1877,15 +2032,6 @@ val create_archive: string -> string list -> int
 @
 
 
-<<function Ccomp.command>>=
-let command cmdline =
-  if !Clflags.verbose then begin
-    prerr_string "+ ";
-    prerr_string cmdline;
-    prerr_newline()
-  end;
-  Sys.command cmdline
-@
 
 <<function Ccomp.compile_file_bytecode>>=
 let compile_file_bytecode name =
@@ -1933,6 +2079,10 @@ let create_archive archive file_list =
 
 
 \section{Safe linking}
+
+<<signature Bytelink.check_consistency>>=
+val check_consistency: string -> Emitcode.compilation_unit -> unit
+@
 
 \section{Archives}
 
@@ -2001,7 +2151,7 @@ let keep_asm_file = ref false           (* -S *)
 <<constant Clflags.object_name>>=
 let object_name = ref ("camlprog" ^ Config.ext_obj) (* -o *)
 @
-
+%camlprog??
 
 <<constant Clflags.output_c_object>>=
 let output_c_object = ref false         (* -output-obj *)
@@ -2017,7 +2167,8 @@ let debug = ref false                   (* -g *)
 
 \section{Events}
 
-\subsection{Lambda}
+\subsection{Lambda events}
+
 <<type Lambda.lambda_event>>=
 and lambda_event =
   { lev_loc: int;
@@ -2033,7 +2184,7 @@ and lambda_event_kind =
   | Lev_function
 @
 
-\subsection{Instruct}
+\subsection{Instruction events}
 
 <<type Instruct.compilation_env>>=
 (* Structure of compilation environments *)
@@ -2080,6 +2231,9 @@ and debug_event_repr =
 
 \chapter{Profiling Support}
 
+% actually there is no flag for profiling in ocamlc?
+
+
 \chapter{Advanced Features}
 
 \section{Floats}
@@ -2090,6 +2244,10 @@ and debug_event_repr =
 and array_kind =
     Pgenarray | Paddrarray | Pintarray | Pfloatarray
 @
+
+\section{Printf}
+
+% special format typechecking
 
 
 \chapter{Advanced Topics}
@@ -2109,14 +2267,18 @@ let fast = ref false                    (* -unsafe *)
 let optimize_for_speed = ref true       (* -compact *)
 @
 
-<<constant Clflags.thread_safe>>=
-let thread_safe = ref false             (* -thread *)
-@
+
 
 <<constant Clflags.noassert>>=
 let noassert = ref false                (* -noassert *)
 @
 
+
+\section{Threads}
+
+<<constant Clflags.thread_safe>>=
+let thread_safe = ref false             (* -thread *)
+@
 
 \section{Preprocessing}
 
@@ -2125,6 +2287,7 @@ let preprocessor = ref(None : string option) (* -pp *)
 @
 
 \subsection{[[#line]]}
+
 
 \section{Toplevel}
 
@@ -2181,18 +2344,38 @@ and directive_argument =
 
 \chapter{Conclusion}
 
+
+
+
+
+
+
 \appendix
 
 \chapter{Debugging}
 
 
+\section{Verbose mode, [[-v]]}
+
 <<constant Clflags.verbose>>=
 let verbose = ref false                 (* -verbose *)
 @
 
-\section{Dumpers}
+<<function Ccomp.command>>=
+let command cmdline =
+  if !Clflags.verbose then begin
+    prerr_string "+ ";
+    prerr_string cmdline;
+    prerr_newline()
+  end;
+  Sys.command cmdline
+@
 
-\subsection{Bytecode structures}
+\section{Dumpers, [[-dxxx]]}
+
+%laater: could be autogenerated! and save lots of boilerplate code!
+
+\subsection{Bytecode data structures}
 
 \subsubsection{[[-dlambda]]}
 
@@ -2203,114 +2386,14 @@ let dump_lambda = ref false             (* -dlambda *)
 <<constant Clflags.dump_rawlambda>>=
 let dump_rawlambda = ref false          (* -drawlambda *)
 @
+% before simplify
 
-<<signature Printlambda.structured_constant>>=
-val structured_constant: structured_constant -> unit
-@
+
 
 <<signature Printlambda.lambda>>=
 val lambda: lambda -> unit
 @
 
-
-<<function Printlambda.structured_constant>>=
-let rec structured_constant = function
-    Const_base(Const_int n) -> print_int n
-  | Const_base(Const_char c) ->
-      print_string "'"; print_string(Char.escaped c); print_string "'"
-  | Const_base(Const_string s) ->
-      print_string "\""; print_string(String.escaped s); print_string "\""
-  | Const_base(Const_float s) ->
-      print_string s
-  | Const_pointer n -> print_int n; print_string "a"
-  | Const_block(tag, []) ->
-      print_string "["; print_int tag; print_string "]"
-  | Const_block(tag, sc1::scl) ->
-      open_box 1;
-      print_string "["; print_int tag; print_string ":";
-      print_space();
-      open_box 0;
-      structured_constant sc1;
-      List.iter (fun sc -> print_space(); structured_constant sc) scl;
-      close_box();
-      print_string "]";
-      close_box()
-  | Const_float_array [] ->
-      print_string "[| |]"
-  | Const_float_array (f1 :: fl) ->
-      open_box 1;
-      print_string "[|";
-      open_box 0;
-      print_string f1;
-      List.iter (fun f -> print_space(); print_string f) fl;
-      close_box();
-      print_string "|]";
-      close_box()
-@
-
-<<function Printlambda.primitive>>=
-let primitive = function
-    Pidentity -> print_string "id"
-  | Pgetglobal id -> print_string "global "; Ident.print id
-  | Psetglobal id -> print_string "setglobal "; Ident.print id
-  | Pmakeblock(tag, Immutable) -> print_string "makeblock "; print_int tag
-  | Pmakeblock(tag, Mutable) -> print_string "makemutable "; print_int tag
-  | Pfield n -> print_string "field "; print_int n
-  | Psetfield(n, _) -> print_string "setfield "; print_int n
-  | Pfloatfield n -> print_string "floatfield "; print_int n
-  | Psetfloatfield n -> print_string "setfloatfield "; print_int n
-  | Pccall p -> print_string p.prim_name
-  | Praise -> print_string "raise"
-  | Psequand -> print_string "&&"
-  | Psequor -> print_string "||"
-  | Pnot -> print_string "not"
-  | Pnegint -> print_string "~"
-  | Paddint -> print_string "+"
-  | Psubint -> print_string "-"
-  | Pmulint -> print_string "*"
-  | Pdivint -> print_string "/"
-  | Pmodint -> print_string "mod"
-  | Pandint -> print_string "and"
-  | Porint -> print_string "or"
-  | Pxorint -> print_string "xor"
-  | Plslint -> print_string "lsl"
-  | Plsrint -> print_string "lsr"
-  | Pasrint -> print_string "asr"
-  | Pintcomp(Ceq) -> print_string "=="
-  | Pintcomp(Cneq) -> print_string "!="
-  | Pintcomp(Clt) -> print_string "<"
-  | Pintcomp(Cle) -> print_string "<="
-  | Pintcomp(Cgt) -> print_string ">"
-  | Pintcomp(Cge) -> print_string ">="
-  | Poffsetint n -> print_int n; print_string "+"
-  | Poffsetref n -> print_int n; print_string "+:="
-  | Pintoffloat -> print_string "int_of_float"
-  | Pfloatofint -> print_string "float_of_int"
-  | Pnegfloat -> print_string "~."
-  | Pabsfloat -> print_string "abs."
-  | Paddfloat -> print_string "+."
-  | Psubfloat -> print_string "-."
-  | Pmulfloat -> print_string "*."
-  | Pdivfloat -> print_string "/."
-  | Pfloatcomp(Ceq) -> print_string "==."
-  | Pfloatcomp(Cneq) -> print_string "!=."
-  | Pfloatcomp(Clt) -> print_string "<."
-  | Pfloatcomp(Cle) -> print_string "<=."
-  | Pfloatcomp(Cgt) -> print_string ">."
-  | Pfloatcomp(Cge) -> print_string ">=."
-  | Pstringlength -> print_string "string.length"
-  | Pstringrefu -> print_string "string.unsafe_get"
-  | Pstringsetu -> print_string "string.unsafe_set"
-  | Pstringrefs -> print_string "string.get"
-  | Pstringsets -> print_string "string.set"
-  | Parraylength _ -> print_string "array.length"
-  | Pmakearray _ -> print_string "makearray "
-  | Parrayrefu _ -> print_string "array.unsafe_get"
-  | Parraysetu _ -> print_string "array.unsafe_set"
-  | Parrayrefs _ -> print_string "array.get"
-  | Parraysets _ -> print_string "array.set"
-  | Pbittest -> print_string "testbit"
-@
 
 <<function Printlambda.lambda>>=
 let rec lambda = function
@@ -2490,6 +2573,112 @@ and letbody = function
 @
 
 
+<<signature Printlambda.structured_constant>>=
+val structured_constant: structured_constant -> unit
+@
+
+
+<<function Printlambda.structured_constant>>=
+let rec structured_constant = function
+    Const_base(Const_int n) -> print_int n
+  | Const_base(Const_char c) ->
+      print_string "'"; print_string(Char.escaped c); print_string "'"
+  | Const_base(Const_string s) ->
+      print_string "\""; print_string(String.escaped s); print_string "\""
+  | Const_base(Const_float s) ->
+      print_string s
+  | Const_pointer n -> print_int n; print_string "a"
+  | Const_block(tag, []) ->
+      print_string "["; print_int tag; print_string "]"
+  | Const_block(tag, sc1::scl) ->
+      open_box 1;
+      print_string "["; print_int tag; print_string ":";
+      print_space();
+      open_box 0;
+      structured_constant sc1;
+      List.iter (fun sc -> print_space(); structured_constant sc) scl;
+      close_box();
+      print_string "]";
+      close_box()
+  | Const_float_array [] ->
+      print_string "[| |]"
+  | Const_float_array (f1 :: fl) ->
+      open_box 1;
+      print_string "[|";
+      open_box 0;
+      print_string f1;
+      List.iter (fun f -> print_space(); print_string f) fl;
+      close_box();
+      print_string "|]";
+      close_box()
+@
+
+<<function Printlambda.primitive>>=
+let primitive = function
+    Pidentity -> print_string "id"
+  | Pgetglobal id -> print_string "global "; Ident.print id
+  | Psetglobal id -> print_string "setglobal "; Ident.print id
+  | Pmakeblock(tag, Immutable) -> print_string "makeblock "; print_int tag
+  | Pmakeblock(tag, Mutable) -> print_string "makemutable "; print_int tag
+  | Pfield n -> print_string "field "; print_int n
+  | Psetfield(n, _) -> print_string "setfield "; print_int n
+  | Pfloatfield n -> print_string "floatfield "; print_int n
+  | Psetfloatfield n -> print_string "setfloatfield "; print_int n
+  | Pccall p -> print_string p.prim_name
+  | Praise -> print_string "raise"
+  | Psequand -> print_string "&&"
+  | Psequor -> print_string "||"
+  | Pnot -> print_string "not"
+  | Pnegint -> print_string "~"
+  | Paddint -> print_string "+"
+  | Psubint -> print_string "-"
+  | Pmulint -> print_string "*"
+  | Pdivint -> print_string "/"
+  | Pmodint -> print_string "mod"
+  | Pandint -> print_string "and"
+  | Porint -> print_string "or"
+  | Pxorint -> print_string "xor"
+  | Plslint -> print_string "lsl"
+  | Plsrint -> print_string "lsr"
+  | Pasrint -> print_string "asr"
+  | Pintcomp(Ceq) -> print_string "=="
+  | Pintcomp(Cneq) -> print_string "!="
+  | Pintcomp(Clt) -> print_string "<"
+  | Pintcomp(Cle) -> print_string "<="
+  | Pintcomp(Cgt) -> print_string ">"
+  | Pintcomp(Cge) -> print_string ">="
+  | Poffsetint n -> print_int n; print_string "+"
+  | Poffsetref n -> print_int n; print_string "+:="
+  | Pintoffloat -> print_string "int_of_float"
+  | Pfloatofint -> print_string "float_of_int"
+  | Pnegfloat -> print_string "~."
+  | Pabsfloat -> print_string "abs."
+  | Paddfloat -> print_string "+."
+  | Psubfloat -> print_string "-."
+  | Pmulfloat -> print_string "*."
+  | Pdivfloat -> print_string "/."
+  | Pfloatcomp(Ceq) -> print_string "==."
+  | Pfloatcomp(Cneq) -> print_string "!=."
+  | Pfloatcomp(Clt) -> print_string "<."
+  | Pfloatcomp(Cle) -> print_string "<=."
+  | Pfloatcomp(Cgt) -> print_string ">."
+  | Pfloatcomp(Cge) -> print_string ">=."
+  | Pstringlength -> print_string "string.length"
+  | Pstringrefu -> print_string "string.unsafe_get"
+  | Pstringsetu -> print_string "string.unsafe_set"
+  | Pstringrefs -> print_string "string.get"
+  | Pstringsets -> print_string "string.set"
+  | Parraylength _ -> print_string "array.length"
+  | Pmakearray _ -> print_string "makearray "
+  | Parrayrefu _ -> print_string "array.unsafe_get"
+  | Parraysetu _ -> print_string "array.unsafe_set"
+  | Parrayrefs _ -> print_string "array.get"
+  | Parraysets _ -> print_string "array.set"
+  | Pbittest -> print_string "testbit"
+@
+
+
+
 \subsubsection{[[-dInstr]]}
 
 <<constant Clflags.dump_instr>>=
@@ -2603,7 +2792,7 @@ let instrlist il =
 @
 
 
-\subsection{Native structures}
+\subsection{Native code data structures}
 
 <<constant Clflags.dump_cmm>>=
 let dump_cmm = ref false                (* -dcmm *)
@@ -2652,6 +2841,8 @@ let dump_reload = ref false             (* -dreload *)
 let dump_linear = ref false             (* -dlinear *)
 @
 
+
+
 \chapter{Profiling}
 
 \chapter{Error Managment}
@@ -2663,6 +2854,7 @@ val report_error: exn -> unit
 @
 
 
+% main -> <>
 <<function Errors.report_error>>=
 (* Report an error *)
 
@@ -2674,6 +2866,7 @@ let report_error exn =
       Lexer.report_error err
   | Syntaxerr.Error err ->
       Syntaxerr.report_error err
+
   | Env.Error err ->
       Env.report_error err
   | Typecore.Error(loc, err) ->
@@ -2686,6 +2879,7 @@ let report_error exn =
       Includemod.report_error err
   | Typemod.Error(loc, err) ->
       Location.print loc; Typemod.report_error err
+
   | Translcore.Error(loc, err) ->
       Location.print loc; Translcore.report_error err
   | Symtable.Error code ->
@@ -2694,8 +2888,10 @@ let report_error exn =
       Bytelink.report_error code
   | Bytelibrarian.Error code ->
       Bytelibrarian.report_error code
+
   | Sys_error msg ->
       print_string "I/O error: "; print_string msg
+
   | x ->
       close_box(); raise x
   end;
@@ -2704,8 +2900,66 @@ let report_error exn =
 
 
 
+\section{Location errors}
+
+<<signature Location.print>>=
+val print: t -> unit
+@
+
+<<signature Location.print_warning>>=
+val print_warning: t -> string -> unit
+@
+
+
+
+<<constants Location.msg_xxx>>=
+let (msg_file, msg_line, msg_chars, msg_to, msg_colon, warn_head) =
+  match Sys.os_type with
+  | _ -> ("File \"", "\", line ", ", characters ", "-", ":", "")
+@
+
+<<function Location.print>>=
+let print loc =
+  if String.length !input_name = 0 then
+    if highlight_locations loc none then () else begin
+      print_string "Characters ";
+      print_int loc.loc_start; print_string "-";
+      print_int loc.loc_end; print_string ":";
+      force_newline()
+    end
+  else begin
+    let (filename, linenum, linebeg) =
+            Linenum.for_position !input_name loc.loc_start in
+    print_string msg_file; print_string filename;
+    print_string msg_line; print_int linenum;
+    print_string msg_chars; print_int (loc.loc_start - linebeg);
+    print_string msg_to; print_int (loc.loc_end - linebeg);
+    print_string msg_colon;
+    force_newline()
+  end
+@
+
+
+
+
+<<function Location.print_warning>>=
+let print_warning loc msg =
+  let (f1, f2) = Format.get_formatter_output_functions() in
+  if not !Sys.interactive then Format.set_formatter_out_channel stderr;
+  print loc;
+  print_string warn_head;
+  print_string "Warning: "; print_string msg; print_newline();
+  incr num_loc_lines;
+  Format.set_formatter_output_functions f1 f2
+@
+
+
+
+
+
 \section{Fatal errors}
 
+% ?? -> <>
 <<signature Misc.fatal_error>>=
 val fatal_error: string -> 'a
 @
@@ -2736,6 +2990,7 @@ exception Error of error * int * int
 val report_error: error -> unit
 @
 
+% in .mll
 
 \section{Syntax errors}
 
@@ -2805,6 +3060,30 @@ exception Error of error
 
 <<signature Env.report_error>>=
 val report_error: error -> unit
+@
+
+<<function Env.report_error>>=
+(* Error report *)
+
+let report_error = function
+    Not_an_interface filename ->
+      print_string filename; print_space();
+      print_string "is not a compiled interface."
+  | Corrupted_interface filename ->
+      print_string "Corrupted compiled interface"; print_space();
+      print_string filename
+  | Illegal_renaming(modname, filename) ->
+      print_string "Wrong file naming:"; print_space();
+      print_string filename; print_space();
+      print_string "contains the compiled interface for"; print_space();
+      print_string modname
+  | Inconsistent_import(name, source1, source2) ->
+      open_hvbox 0;
+      print_string "The compiled interfaces for "; print_string source1;
+      print_string " and "; print_string source2; print_space();
+      print_string "make inconsistent assumptions over interface ";
+      print_string name;
+      close_box()
 @
 
 
@@ -3206,7 +3485,7 @@ let report_error = function
       print_string "This function has too many arguments"
 @
 
-\section{Transformation errors}
+\section{Compilation errors}
 
 <<type Translcore.error>>=
 type error =
@@ -3305,63 +3584,6 @@ let report_error = function
       print_string "The file "; print_string name;
       print_string " is not a bytecode object file"
 @
-
-\section{Location errors}
-
-<<signature Location.print>>=
-val print: t -> unit
-@
-
-<<signature Location.print_warning>>=
-val print_warning: t -> string -> unit
-@
-
-
-
-<<constants Location.msg_xxx>>=
-let (msg_file, msg_line, msg_chars, msg_to, msg_colon, warn_head) =
-  match Sys.os_type with
-  | _ -> ("File \"", "\", line ", ", characters ", "-", ":", "")
-@
-
-<<function Location.print>>=
-let print loc =
-  if String.length !input_name = 0 then
-    if highlight_locations loc none then () else begin
-      print_string "Characters ";
-      print_int loc.loc_start; print_string "-";
-      print_int loc.loc_end; print_string ":";
-      force_newline()
-    end
-  else begin
-    let (filename, linenum, linebeg) =
-            Linenum.for_position !input_name loc.loc_start in
-    print_string msg_file; print_string filename;
-    print_string msg_line; print_int linenum;
-    print_string msg_chars; print_int (loc.loc_start - linebeg);
-    print_string msg_to; print_int (loc.loc_end - linebeg);
-    print_string msg_colon;
-    force_newline()
-  end
-@
-
-
-
-
-<<function Location.print_warning>>=
-let print_warning loc msg =
-  let (f1, f2) = Format.get_formatter_output_functions() in
-  if not !Sys.interactive then Format.set_formatter_out_channel stderr;
-  print loc;
-  print_string warn_head;
-  print_string "Warning: "; print_string msg; print_newline();
-  incr num_loc_lines;
-  Format.set_formatter_output_functions f1 f2
-@
-
-
-
-
 
 \chapter{Standard Library}
 
@@ -3567,6 +3789,12 @@ let no_overflow_add a b = (a lxor b) lor (a lxor (lnot (a+b))) < 0
 <<function Misc.no_overflow_sub>>=
 let no_overflow_sub a b = (a lxor (lnot b)) lor (b lxor (a-b)) < 0
 @
+
+\section{Pretty printing}
+
+% lots of use of Format, maybe could be good to explain,
+% as it's not as common as other stuff from stdlib/
+
 
 \chapter{Extra Code}
 

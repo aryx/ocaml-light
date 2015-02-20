@@ -116,7 +116,9 @@ let interface sourcefile =
   let prefixname = Filename.chop_extension sourcefile in
   let modulename = String.capitalize(Filename.basename prefixname) in
   let inputfile = preprocess sourcefile (prefixname ^ ".ppi") in
+
   let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
+
   let sg = Typemod.transl_signature (initial_env()) ast in
   if !Clflags.print_types then (Printtyp.signature sg; print_newline());
   Env.save_signature sg modulename (prefixname ^ ".cmi");
@@ -137,12 +139,15 @@ let implementation sourcefile =
   let prefixname = Filename.chop_extension sourcefile in
   let modulename = String.capitalize(Filename.basename prefixname) in
   let inputfile = preprocess sourcefile (prefixname ^ ".ppo") in
+
   let ast = parse_file inputfile Parse.implementation ast_impl_magic_number in
+
   let objfile = prefixname ^ ".cmo" in
   let oc = open_out_bin objfile in
   try
     let (str, sg, finalenv) =
       Typemod.type_structure (initial_env()) ast in
+
     if !Clflags.print_types then (Printtyp.signature sg; print_newline());
     let coercion =
       if Sys.file_exists (prefixname ^ ".mli") then begin
@@ -156,6 +161,7 @@ let implementation sourcefile =
         Env.save_signature sg modulename (prefixname ^ ".cmi");
         Tcoerce_none
       end in
+
     Emitcode.to_file oc modulename
       (print_if Clflags.dump_instr Printinstr.instrlist
         (Bytegen.compile_implementation modulename
@@ -163,6 +169,7 @@ let implementation sourcefile =
             (Simplif.simplify_lambda
               (print_if Clflags.dump_rawlambda Printlambda.lambda
                 (Translmod.transl_implementation modulename str coercion))))));
+
     remove_preprocessed inputfile;
     close_out oc
   with x ->

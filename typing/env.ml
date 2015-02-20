@@ -53,13 +53,13 @@ type summary =
 
 (*s: type Env.t *)
 type t = {
-  values: (Path.t * value_description) Ident.tbl;
-  constrs: constructor_description Ident.tbl;
-  labels: label_description Ident.tbl;
-  types: (Path.t * type_declaration) Ident.tbl;
-  modules: (Path.t * module_type) Ident.tbl;
-  modtypes: (Path.t * modtype_declaration) Ident.tbl;
-  components: (Path.t * module_components) Ident.tbl;
+  values     : (Path.t * Types.value_description)   Ident.tbl;
+  constrs    : Types.constructor_description        Ident.tbl;
+  labels     : Types.label_description              Ident.tbl;
+  types      : (Path.t * Types.type_declaration)    Ident.tbl;
+  modules    : (Path.t * Types.module_type)         Ident.tbl;
+  modtypes   : (Path.t * Types.modtype_declaration) Ident.tbl;
+  components : (Path.t * module_components)   Ident.tbl;
   summary: summary
 }
 (*e: type Env.t *)
@@ -682,7 +682,7 @@ let initial = Predef.build_initial_env add_type add_exception empty
 let summary env = env.summary
 (*e: function Env.summary *)
 
-(*s: constant Env.report_error *)
+(*s: function Env.report_error *)
 (* Error report *)
 
 let report_error = function
@@ -704,5 +704,5 @@ let report_error = function
       print_string "make inconsistent assumptions over interface ";
       print_string name;
       close_box()
-(*e: constant Env.report_error *)
+(*e: function Env.report_error *)
 (*e: ./typing/env.ml *)

@@ -668,6 +668,13 @@ val for_position: string -> int -> string * int * int
 
 \subsection*{[[./parsing/location.mli]]}
 
+<<signature Location.rhs_loc>>=
+val rhs_loc: int -> t
+@
+<<function Location.rhs_loc>>=
+let rhs_loc n =
+  { loc_start = Parsing.rhs_start n; loc_end = Parsing.rhs_end n }
+@
 
 <<signature Location.input_lexbuf>>=
 val input_lexbuf: Lexing.lexbuf option ref
@@ -3195,29 +3202,6 @@ let initial = Predef.build_initial_env add_type add_exception empty
 let summary env = env.summary
 @
 
-<<constant Env.report_error>>=
-(* Error report *)
-
-let report_error = function
-    Not_an_interface filename ->
-      print_string filename; print_space();
-      print_string "is not a compiled interface."
-  | Corrupted_interface filename ->
-      print_string "Corrupted compiled interface"; print_space();
-      print_string filename
-  | Illegal_renaming(modname, filename) ->
-      print_string "Wrong file naming:"; print_space();
-      print_string filename; print_space();
-      print_string "contains the compiled interface for"; print_space();
-      print_string modname
-  | Inconsistent_import(name, source1, source2) ->
-      open_hvbox 0;
-      print_string "The compiled interfaces for "; print_string source1;
-      print_string " and "; print_string source2; print_space();
-      print_string "make inconsistent assumptions over interface ";
-      print_string name;
-      close_box()
-@
 
 
 %-------------------------------------------------------------
@@ -3524,7 +3508,7 @@ and enter_modtype = enter store_modtype
 
 <<function Env.summary>>
 
-<<constant Env.report_error>>
+<<function Env.report_error>>
 @
 
 
