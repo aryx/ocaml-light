@@ -311,8 +311,6 @@ structure_item:
       { mkstr(Pstr_exception($2, $3)) }
   | MODULE UIDENT module_binding
       { mkstr(Pstr_module($2, $3)) }
-  | MODULE TYPE ident EQUAL module_type
-      { mkstr(Pstr_modtype($3, $5)) }
   | OPEN mod_longident
       { mkstr(Pstr_open $2) }
 ;
@@ -353,10 +351,6 @@ signature_item:
       { mksig(Psig_exception($2, $3)) }
   | MODULE UIDENT module_declaration
       { mksig(Psig_module($2, $3)) }
-  | MODULE TYPE ident
-      { mksig(Psig_modtype($3, Pmodtype_abstract)) }
-  | MODULE TYPE ident EQUAL module_type
-      { mksig(Psig_modtype($3, Pmodtype_manifest $5)) }
   | OPEN mod_longident
       { mksig(Psig_open $2) }
 ;
