@@ -1,4 +1,5 @@
 (*s: ./bytecomp/simplif.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: simplif.ml,v 1.8 1997/03/17 13:00:40 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Elimination of useless Llet(Alias) bindings.
    Also transform let-bound references into variables. *)

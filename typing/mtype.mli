@@ -1,4 +1,5 @@
 (*s: ./typing/mtype.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: mtype.mli,v 1.4 1996/09/23 11:33:07 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Operations on module types *)
 

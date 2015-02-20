@@ -1,4 +1,5 @@
 (*s: ./utils/tbl.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: tbl.mli,v 1.4 1996/05/16 14:15:35 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Association tables from any ordered type to any type.
    We use the generic ordering to compare keys. *)

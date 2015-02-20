@@ -1,4 +1,5 @@
 (*s: ./typing/types.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: types.mli,v 1.6 1997/05/19 15:42:19 doligez Exp $ *)
+(*e: copyright header *)
 
 (* Representation of types and declarations *)
 

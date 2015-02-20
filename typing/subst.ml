@@ -1,4 +1,5 @@
 (*s: ./typing/subst.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: subst.ml,v 1.18 1997/05/19 15:42:17 doligez Exp $ *)
+(*e: copyright header *)
 
 (* Substitutions *)
 

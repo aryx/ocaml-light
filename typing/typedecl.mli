@@ -1,4 +1,5 @@
 (*s: ./typing/typedecl.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: typedecl.mli,v 1.11 1997/05/13 14:07:00 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Typing of type definitions and primitive definitions *)
 

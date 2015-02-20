@@ -1,4 +1,5 @@
 (*s: ./parsing/location.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: location.mli,v 1.7 1997/11/12 12:32:52 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: type Location.t *)
 (* Source code locations, used in parsetree *)

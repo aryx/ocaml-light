@@ -1,4 +1,5 @@
 (*s: ./bytecomp/instruct.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: instruct.ml,v 1.12 1997/06/16 13:33:09 vouillon Exp $ *)
+(*e: copyright header *)
 
 open Lambda
 

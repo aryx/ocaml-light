@@ -1,4 +1,5 @@
 (*s: ./utils/tbl.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,9 +10,8 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright header *)
 (*s: type Tbl.t *)
-(* $Id: tbl.ml,v 1.8 1997/10/22 13:26:55 doligez Exp $ *)
 
 type ('a, 'b) t =
     Empty

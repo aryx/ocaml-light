@@ -1,4 +1,5 @@
 (*s: ./typing/datarepr.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: datarepr.mli,v 1.4 1996/09/23 11:33:01 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Compute constructor and label descriptions from type declarations,
    determining their representation. *)

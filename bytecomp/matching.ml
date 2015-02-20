@@ -1,4 +1,5 @@
 (*s: ./bytecomp/matching.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: matching.ml,v 1.25 1997/10/22 13:25:39 doligez Exp $ *)
+(*e: copyright header *)
 
 (* Compilation of pattern matching *)
 

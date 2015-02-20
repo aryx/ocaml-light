@@ -1,4 +1,5 @@
 (*s: ./bytecomp/matching.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: matching.mli,v 1.7 1997/03/27 20:53:29 vouillon Exp $ *)
+(*e: copyright header *)
 
 (* Compilation of pattern-matching *)
 

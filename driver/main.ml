@@ -1,4 +1,5 @@
 (*s: ./driver/main.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: main.ml,v 1.24 1997/05/15 13:26:34 xleroy Exp $ *)
+(*e: copyright header *)
 
 open Config
 open Clflags

@@ -1,4 +1,5 @@
 (*s: ./bytecomp/lambda.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: lambda.ml,v 1.25 1997/03/27 20:53:28 vouillon Exp $ *)
+(*e: copyright header *)
 
 open Misc
 open Path

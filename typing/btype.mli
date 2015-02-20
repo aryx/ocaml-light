@@ -1,4 +1,5 @@
 (*s: ./typing/btype.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: btype.mli,v 1.2 1997/05/11 21:48:16 vouillon Exp $ *)
+(*e: copyright header *)
 
 (* Basic operations on core types *)
 

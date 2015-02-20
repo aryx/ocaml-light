@@ -1,4 +1,5 @@
 (*s: ./bytecomp/symtable.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: symtable.mli,v 1.8 1997/06/13 15:48:53 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Assign locations and numbers to globals and primitives *)
 

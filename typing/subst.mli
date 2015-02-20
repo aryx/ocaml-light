@@ -1,4 +1,5 @@
 (*s: ./typing/subst.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: subst.mli,v 1.7 1997/03/24 20:12:33 vouillon Exp $ *)
+(*e: copyright header *)
 
 (* Substitutions *)
 

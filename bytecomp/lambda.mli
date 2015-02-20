@@ -1,4 +1,5 @@
 (*s: ./bytecomp/lambda.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: lambda.mli,v 1.23 1997/03/27 20:53:29 vouillon Exp $ *)
+(*e: copyright header *)
 
 (* The "lambda" intermediate code *)
 

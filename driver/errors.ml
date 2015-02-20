@@ -1,4 +1,5 @@
 (*s: ./driver/errors.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: errors.ml,v 1.8 1997/08/22 08:55:37 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Error report *)
 

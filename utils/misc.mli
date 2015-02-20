@@ -1,4 +1,5 @@
 (*s: ./utils/misc.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: misc.mli,v 1.11 1996/10/31 16:03:49 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Misc.fatal_error *)
 (* Miscellaneous useful types and functions *)

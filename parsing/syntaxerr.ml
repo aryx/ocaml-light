@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: syntaxerr.ml,v 1.2 1997/11/12 12:32:53 xleroy Exp $ *)
 
 (* Auxiliary type for reporting syntax errors *)
 

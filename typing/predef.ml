@@ -1,4 +1,5 @@
 (*s: ./typing/predef.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: predef.ml,v 1.15 1997/05/15 13:30:02 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Predefined type constructors (with special typing rules in typecore) *)
 

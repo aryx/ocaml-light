@@ -1,4 +1,5 @@
 (*s: ./typing/typecore.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: typecore.ml,v 1.33 1997/10/24 15:54:34 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Typechecking for the core language *)
 

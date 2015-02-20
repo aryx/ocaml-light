@@ -1,4 +1,5 @@
 (*s: ./utils/misc.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: misc.ml,v 1.15 1997/06/16 17:09:14 doligez Exp $ *)
+(*e: copyright header *)
 
 (*s: exception Misc.Fatal_error (./utils/misc.ml) *)
 (* Errors *)

@@ -1,4 +1,5 @@
 (*s: ./parsing/longident.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,9 +10,8 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright header *)
 (*s: type Longident.t (./parsing/longident.ml) *)
-(* $Id: longident.ml,v 1.2 1996/04/30 14:49:40 xleroy Exp $ *)
 
 type t =
     Lident of string

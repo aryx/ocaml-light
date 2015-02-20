@@ -1,4 +1,5 @@
 (*s: ./parsing/parsetree.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: parsetree.mli,v 1.19 1997/06/16 18:10:32 ddr Exp $ *)
+(*e: copyright header *)
 
 (* Abstract syntax tree produced by parsing *)
 

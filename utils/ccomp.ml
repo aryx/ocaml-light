@@ -1,4 +1,5 @@
 (*s: ./utils/ccomp.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: ccomp.ml,v 1.3 1997/06/23 14:36:30 doligez Exp $ *)
+(*e: copyright header *)
 
 (*s: function Ccomp.command *)
 (* Compiling C files and building C libraries *)

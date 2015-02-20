@@ -1,4 +1,5 @@
 (*s: ./typing/path.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,9 +10,8 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright header *)
 (*s: type Path.t (./typing/path.ml) *)
-(* $Id: path.ml,v 1.5 1996/07/15 16:35:34 xleroy Exp $ *)
 
 type t =
     Pident of Ident.t

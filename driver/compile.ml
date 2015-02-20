@@ -1,4 +1,5 @@
 (*s: ./driver/compile.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: compile.ml,v 1.28 1997/08/22 08:55:37 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* The batch compiler *)
 

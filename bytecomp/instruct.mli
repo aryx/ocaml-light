@@ -1,4 +1,5 @@
 (*s: ./bytecomp/instruct.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: instruct.mli,v 1.12 1997/06/16 13:33:10 vouillon Exp $ *)
+(*e: copyright header *)
 
 (* The type of the instructions of the abstract machine *)
 

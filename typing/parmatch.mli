@@ -1,4 +1,5 @@
 (*s: ./typing/parmatch.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: parmatch.mli,v 1.3 1996/04/30 14:53:04 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Detection of partial matches and unused match cases. *)
 

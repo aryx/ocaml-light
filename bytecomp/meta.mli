@@ -1,4 +1,5 @@
 (*s: ./bytecomp/meta.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: meta.mli,v 1.4 1996/05/28 12:40:09 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* To control the runtime system and bytecode interpreter *)
 

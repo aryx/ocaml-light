@@ -1,4 +1,5 @@
 (*s: ./bytecomp/emitcode.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: emitcode.mli,v 1.9 1997/05/15 13:25:14 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Generation of bytecode for .cmo files *)
 

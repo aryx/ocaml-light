@@ -1,4 +1,5 @@
 (*s: ./utils/clflags.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: clflags.ml,v 1.20 1997/05/15 13:30:31 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Command-line parameters *)
 
