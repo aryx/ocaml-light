@@ -12,9 +12,9 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Compile.interface *)
 (* Compile a .ml or .mli file *)
 
+(*s: signature Compile.interface *)
 val interface: string -> unit
 (*e: signature Compile.interface *)
 (*s: signature Compile.implementation *)

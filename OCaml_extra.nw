@@ -167,98 +167,13 @@ val ext_lib: string
 
 \subsection*{[[./utils/misc.mli]]}
 
-<<signature Misc.fatal_error>>=
-(* Miscellaneous useful types and functions *)
-
-val fatal_error: string -> 'a
-@
-
-<<exception Misc.Fatal_error>>=
-exception Fatal_error
-@
-
-<<signature Misc.map_end>>=
-val map_end: ('a -> 'b) -> 'a list -> 'b list -> 'b list
-        (* [map_end f l t] is [map f l @ t], just more efficient. *)
-@
-
-<<signature Misc.for_all2>>=
-val for_all2: ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
-        (* Same as [List.for_all] but for a binary predicate. *)
-@
-
-<<signature Misc.filter>>=
-val filter: ('a -> bool) -> 'a list -> 'a list
-@
-
-<<signature Misc.mem_assq>>=
-val mem_assq: 'a -> ('a * 'b) list -> bool
-@
-
-<<signature Misc.replicate_list>>=
-val replicate_list: 'a -> int -> 'a list
-        (* [replicate_list elem n] is the list with [n] elements
-           all identical to [elem]. *)
-@
-
-<<signature Misc.find_in_path>>=
-val find_in_path: string list -> string -> string
-        (* Search a file in a list of directories. *)
-@
-
-<<signature Misc.remove_file>>=
-val remove_file: string -> unit
-        (* Delete the given file if it exists. Never raise an error. *)
-@
-
-<<signature Misc.create_hashtable>>=
-val create_hashtable: int -> ('a * 'b) list -> ('a, 'b) Hashtbl.t
-        (* Create a hashtable of the given size and fills it with the
-           given bindings. *)
-@
-
-<<signature Misc.copy_file>>=
-val copy_file: in_channel -> out_channel -> unit
-        (* [copy_file ic oc] reads the contents of file [ic] and copies
-           them to [oc]. It stops when encountering EOF on [ic]. *)
-@
-
-<<signature Misc.copy_file_chunk>>=
-val copy_file_chunk: in_channel -> out_channel -> int -> unit
-        (* [copy_file_chunk ic oc n] reads [n] bytes from [ic] and copies
-           them to [oc]. It raises [End_of_file] when encountering
-           EOF on [ic]. *)
-@
-
-<<signature Misc.log2>>=
-val log2: int -> int
-        (* [log2 n] returns [s] such that [n = 1 lsl s] 
-           if [n] is a power of 2*)
-@
-
-<<signature Misc.align>>=
-val align: int -> int -> int
-        (* [align n a] rounds [n] upwards to a multiple of [a]
-           (a power of 2). *)
-@
-
-<<signature Misc.no_overflow_add>>=
-val no_overflow_add: int -> int -> bool
-        (* [no_overflow_add n1 n2] returns [true] if the computation of
-           [n1 + n2] does not overflow. *)
-@
-
-<<signature Misc.no_overflow_sub>>=
-val no_overflow_sub: int -> int -> bool
-        (* [no_overflow_add n1 n2] returns [true] if the computation of
-           [n1 - n2] does not overflow. *)
-@
-
 
 %-------------------------------------------------------------
 
 <<./utils/misc.mli>>=
 <<copyright header>>
+
+(* Miscellaneous useful types and functions *)
 
 <<signature Misc.fatal_error>>
 <<exception Misc.Fatal_error>>
@@ -286,132 +201,6 @@ val no_overflow_sub: int -> int -> bool
 
 \subsection*{[[./utils/misc.ml]]}
 
-<<exception Misc.Fatal_error (./utils/misc.ml)>>=
-(* Errors *)
-
-exception Fatal_error
-@
-
-<<function Misc.fatal_error>>=
-let fatal_error msg =
-  prerr_string ">> Fatal error: "; prerr_endline msg; raise Fatal_error
-@
-
-<<function Misc.map_end>>=
-(* List functions *)
-
-let rec map_end f l1 l2 =
-  match l1 with
-    [] -> l2
-  | hd::tl -> f hd :: map_end f tl l2
-@
-
-<<function Misc.for_all2>>=
-let rec for_all2 pred l1 l2 =
-  match (l1, l2) with
-    ([], []) -> true
-  | (hd1::tl1, hd2::tl2) -> pred hd1 hd2 & for_all2 pred tl1 tl2
-  | (_, _) -> false
-@
-
-<<function Misc.filter>>=
-let rec filter pred =
-  function
-    [] ->
-      []
-  | a::l ->
-      if pred a then
-        a::(filter pred l)
-      else
-        filter pred l
-@
-
-<<function Misc.mem_assq>>=
-let rec mem_assq x = function
-    [] -> false
-  | (a,b)::l -> a == x or mem_assq x l
-@
-
-<<function Misc.replicate_list>>=
-let rec replicate_list elem n =
-  if n <= 0 then [] else elem :: replicate_list elem (n-1)
-@
-
-<<function Misc.find_in_path>>=
-(* File functions *)
-
-let find_in_path path name =
-  if not (Filename.is_implicit name) then
-    if Sys.file_exists name then name else raise Not_found
-  else begin
-    let rec try_dir = function
-      [] -> raise Not_found
-    | dir::rem ->
-        let fullname = Filename.concat dir name in
-        if Sys.file_exists fullname then fullname else try_dir rem
-    in try_dir path
-  end
-@
-
-<<function Misc.remove_file>>=
-let remove_file filename =
-  try
-    Sys.remove filename
-  with Sys_error msg ->
-    ()
-@
-
-<<function Misc.create_hashtable>>=
-(* Hashtable functions *)
-
-let create_hashtable size init =
-  let tbl = Hashtbl.create size in
-  List.iter (fun (key, data) -> Hashtbl.add tbl key data) init;
-  tbl
-@
-
-<<function Misc.copy_file>>=
-(* File copy *)
-
-let copy_file ic oc =
-  let buff = String.create 0x1000 in
-  let rec copy () =
-    let n = input ic buff 0 0x1000 in
-    if n = 0 then () else (output oc buff 0 n; copy())
-  in copy()
-@
-
-<<function Misc.copy_file_chunk>>=
-let copy_file_chunk ic oc len =
-  let buff = String.create 0x1000 in
-  let rec copy n =
-    if n <= 0 then () else begin
-      let r = input ic buff 0 (min n 0x1000) in
-      if r = 0 then raise End_of_file else (output oc buff 0 r; copy(n-r))
-    end
-  in copy len
-@
-
-<<function Misc.log2>>=
-(* Integer operations *)
-
-let rec log2 n =
-  if n <= 1 then 0 else 1 + log2(n asr 1)
-@
-
-<<function Misc.align>>=
-(* @Scheck: dead by nice to have *)
-let align n a =
-  if n >= 0 then (n + a - 1) land (-a) else n land (-a)
-@
-
-<<function Misc.no_overflow_add>>=
-let no_overflow_add a b = (a lxor b) lor (a lxor (lnot (a+b))) < 0
-@
-
-<<function Misc.no_overflow_sub>>=
-let no_overflow_sub a b = (a lxor (lnot b)) lor (b lxor (a-b)) < 0
-@
 
 
 %-------------------------------------------------------------
@@ -419,9 +208,13 @@ let no_overflow_sub a b = (a lxor (lnot b)) lor (b lxor (a-b)) < 0
 <<./utils/misc.ml>>=
 <<copyright header>>
 
-<<exception Misc.Fatal_error (./utils/misc.ml)>>
+(* Errors *)
+
+<<exception Misc.Fatal_error>>
 
 <<function Misc.fatal_error>>
+
+(* List functions *)
 
 <<function Misc.map_end>>
 
@@ -433,15 +226,21 @@ let no_overflow_sub a b = (a lxor (lnot b)) lor (b lxor (a-b)) < 0
 
 <<function Misc.replicate_list>>
 
+(* File functions *)
+
 <<function Misc.find_in_path>>
 
 <<function Misc.remove_file>>
+
+(* Hashtable functions *)
 
 <<function Misc.create_hashtable>>
 
 <<function Misc.copy_file>>
 
 <<function Misc.copy_file_chunk>>
+
+(* Integer operations *)
 
 <<function Misc.log2>>
 
@@ -502,6 +301,8 @@ type ('a, 'b) t
 
 
 \subsection*{[[./utils/tbl.ml]]}
+
+% lol, can now use Map :)
 
 <<type Tbl.t>>=
 
@@ -685,65 +486,6 @@ external puts: out_channel -> string -> int -> unit = "terminfo_puts"
 
 \subsection*{[[./utils/clflags.ml]]}
 
-<<constant Clflags.keep_asm_file>>=
-let keep_asm_file = ref false           (* -S *)
-@
-
-<<constant Clflags.dump_selection>>=
-let dump_selection = ref false          (* -dsel *)
-@
-
-<<constant Clflags.dump_live>>=
-let dump_live = ref false               (* -dlive *)
-@
-
-<<constant Clflags.dump_spill>>=
-let dump_spill = ref false              (* -dspill *)
-@
-
-<<constant Clflags.dump_split>>=
-let dump_split = ref false              (* -dsplit *)
-@
-
-<<constant Clflags.dump_scheduling>>=
-let dump_scheduling = ref false         (* -dscheduling *)
-@
-
-<<constant Clflags.dump_interf>>=
-let dump_interf = ref false             (* -dinterf *)
-@
-
-<<constant Clflags.dump_prefer>>=
-let dump_prefer = ref false             (* -dprefer *)
-@
-
-<<constant Clflags.dump_regalloc>>=
-let dump_regalloc = ref false           (* -dalloc *)
-@
-
-<<constant Clflags.dump_reload>>=
-let dump_reload = ref false             (* -dreload *)
-@
-
-<<constant Clflags.dump_scheduling (./utils/clflags.ml)>>=
-let dump_scheduling = ref false         (* -dscheduling *)
-@
-
-<<constant Clflags.dump_linear>>=
-let dump_linear = ref false             (* -dlinear *)
-@
-
-<<constant Clflags.keep_startup_file>>=
-let keep_startup_file = ref false       (* -dstartup *)
-@
-
-<<constant Clflags.native_code>>=
-let native_code = ref false             (* set to true under ocamlopt *)
-@
-
-<<constant Clflags.inline_threshold>>=
-let inline_threshold = ref 10
-@
 
 
 %-------------------------------------------------------------
@@ -753,36 +495,35 @@ let inline_threshold = ref 10
 
 (* Command-line parameters *)
 
-let objfiles = ref ([] : string list)   (* .cmo and .cma files *)
-and ccobjs = ref ([] : string list)     (* .o, .a and -lxxx files *)
+<<constant Clflags.objfiles>>
+<<constant Clflags.ccobjs>>
+<<constant Clflags.compile_only>>
+<<constant Clflags.exec_name>>
+<<constant Clflags.archive_name>>
+<<constant Clflags.object_name>>
+<<constant Clflags.include_dirs>>
+<<constant Clflags.print_types>>
+<<constant Clflags.make_archive>>
+<<constant Clflags.debug>>
+<<constant Clflags.fast>>
+<<constant Clflags.link_everything>>
+<<constant Clflags.custom_runtime>>
+<<constant Clflags.output_c_object>>
+<<constant Clflags.ccopts>>
+<<constant Clflags.nopervasives>>
+<<constant Clflags.preprocessor>>
+<<constant Clflags.thread_safe>>
+<<constant Clflags.noassert>>
+<<constant Clflags.verbose>>
 
-let compile_only = ref false            (* -c *)
-and exec_name = ref "a.out"             (* -o *)
-and archive_name = ref "library.cma"    (* -o *)
-and object_name = ref ("camlprog" ^ Config.ext_obj) (* -o *)
-and include_dirs = ref ([] : string list)(* -I *)
-and print_types = ref false             (* -i *)
-and make_archive = ref false            (* -a *)
-and debug = ref false                   (* -g *)
-and fast = ref false                    (* -unsafe *)
-and link_everything = ref false         (* -linkall *)
-and custom_runtime = ref false          (* -custom *)
-and output_c_object = ref false         (* -output-obj *)
-and ccopts = ref ([] : string list)     (* -ccopt *)
-and nopervasives = ref false            (* -nopervasives *)
-and preprocessor = ref(None : string option) (* -pp *)
-and thread_safe = ref false             (* -thread *)
-and noassert = ref false                (* -noassert *)
-and verbose = ref false                 (* -verbose *)
-
-let dump_rawlambda = ref false          (* -drawlambda *)
-and dump_lambda = ref false             (* -dlambda *)
-and dump_instr = ref false              (* -dinstr *)
+<<constant Clflags.dump_rawlambda>>
+<<constant Clflags.dump_lambda>>
+<<constant Clflags.dump_instr>>
 
 <<constant Clflags.keep_asm_file>>
-let optimize_for_speed = ref true       (* -compact *)
+<<constant Clflags.optimize_for_speed>>
 
-and dump_cmm = ref false                (* -dcmm *)
+<<constant Clflags.dump_cmm>>
 <<constant Clflags.dump_selection>>
 <<constant Clflags.dump_live>>
 <<constant Clflags.dump_spill>>
@@ -792,7 +533,6 @@ and dump_cmm = ref false                (* -dcmm *)
 <<constant Clflags.dump_prefer>>
 <<constant Clflags.dump_regalloc>>
 <<constant Clflags.dump_reload>>
-<<constant Clflags.dump_scheduling (./utils/clflags.ml)>>
 <<constant Clflags.dump_linear>>
 <<constant Clflags.keep_startup_file>>
 
@@ -804,29 +544,14 @@ and dump_cmm = ref false                (* -dcmm *)
 
 \subsection*{[[./utils/ccomp.mli]]}
 
-<<signature Ccomp.command>>=
-(* Compiling C files and building C libraries *)
-
-val command: string -> int
-@
-
-<<signature Ccomp.compile_file_bytecode>>=
-val compile_file_bytecode: string -> int
-@
-
-<<signature Ccomp.compile_file_native>>=
-val compile_file_native: string -> int
-@
-
-<<signature Ccomp.create_archive>>=
-val create_archive: string -> string list -> int
-@
 
 
 %-------------------------------------------------------------
 
 <<./utils/ccomp.mli>>=
 <<copyright header>>
+
+(* Compiling C files and building C libraries *)
 
 <<signature Ccomp.command>>
 <<signature Ccomp.compile_file_bytecode>>
@@ -837,67 +562,12 @@ val create_archive: string -> string list -> int
 
 \subsection*{[[./utils/ccomp.ml]]}
 
-<<function Ccomp.command>>=
-(* Compiling C files and building C libraries *)
-
-let command cmdline =
-  if !Clflags.verbose then begin
-    prerr_string "+ ";
-    prerr_string cmdline;
-    prerr_newline()
-  end;
-  Sys.command cmdline
-@
-
-<<function Ccomp.compile_file_bytecode>>=
-let compile_file_bytecode name =
-  command
-   (Printf.sprintf
-     "%s -c %s %s -I%s %s"
-     Config.bytecomp_c_compiler
-     (String.concat " " (List.rev !Clflags.ccopts))
-     (String.concat " "
-       (List.map (fun dir -> "-I" ^ dir) 
-                 (List.rev !Clflags.include_dirs)))
-     Config.standard_library
-     name)
-@
-
-<<function Ccomp.compile_file_native>>=
-let compile_file_native name =
-  command
-   (Printf.sprintf
-     "%s -c %s %s -I%s %s"
-     Config.native_c_compiler
-     (String.concat " " (List.rev !Clflags.ccopts))
-     (String.concat " "
-       (List.map (fun dir -> "-I" ^ dir) 
-                 (List.rev !Clflags.include_dirs)))
-     Config.standard_library
-     name)
-@
-
-<<function Ccomp.create_archive>>=
-let create_archive archive file_list =
-  Misc.remove_file archive;
-  match Config.system with
-    "win32" ->
-      command(Printf.sprintf "lib /nologo /debugtype:cv /out:%s %s"
-                                 archive (String.concat " " file_list))
-  | _ ->
-      let r1 =
-        command(Printf.sprintf "ar rc %s %s"
-                                   archive (String.concat " " file_list)) in
-      if r1 <> 0 or String.length Config.ranlib = 0
-      then r1
-      else command(Config.ranlib ^ " " ^ archive)
-@
-
-
 %-------------------------------------------------------------
 
 <<./utils/ccomp.ml>>=
 <<copyright header>>
+
+(* Compiling C files and building C libraries *)
 
 <<function Ccomp.command>>
 
@@ -913,33 +583,15 @@ let create_archive archive file_list =
 
 \subsection*{[[./parsing/asttypes.mli]]}
 
-<<type Asttypes.constant>>=
-(* Auxiliary a.s.t. types used by parsetree and typedtree. *)
 
-type constant =
-    Const_int of int
-  | Const_char of char
-  | Const_string of string
-  | Const_float of string
-@
-
-<<type Asttypes.rec_flag>>=
-type rec_flag = Nonrecursive | Recursive
-@
-
-<<type Asttypes.direction_flag>>=
-type direction_flag = Upto | Downto
-@
-
-<<type Asttypes.mutable_flag>>=
-type mutable_flag = Immutable | Mutable
-@
 
 
 %-------------------------------------------------------------
 
 <<./parsing/asttypes.mli>>=
 <<copyright header>>
+
+(* Auxiliary a.s.t. types used by parsetree and typedtree. *)
 
 <<type Asttypes.constant>>
 
@@ -987,18 +639,6 @@ val for_position: string -> int -> string * int * int
 
 \subsection*{[[./parsing/longident.mli]]}
 
-<<type Longident.t>>=
-(* Long identifiers, used in parsetree. *)
-
-type t =
-    Lident of string
-  | Ldot of t * string
-@
-
-<<signature Longident.flatten>>=
-val flatten: t -> string list
-@
-
 
 %-------------------------------------------------------------
 
@@ -1013,29 +653,12 @@ val flatten: t -> string list
 
 \subsection*{[[./parsing/longident.ml]]}
 
-<<type Longident.t (./parsing/longident.ml)>>=
-
-type t =
-    Lident of string
-  | Ldot of t * string
-@
-
-<<function Longident.flat>>=
-let rec flat accu = function
-    Lident s -> s :: accu
-  | Ldot(lid, s) -> flat (s :: accu) lid
-@
-
-<<function Longident.flatten>>=
-let flatten lid = flat [] lid
-@
-
 
 %-------------------------------------------------------------
 
 <<./parsing/longident.ml>>=
 <<copyright header>>
-<<type Longident.t (./parsing/longident.ml)>>
+<<type Longident.t>>
 
 <<function Longident.flat>>
 
@@ -1045,40 +668,11 @@ let flatten lid = flat [] lid
 
 \subsection*{[[./parsing/location.mli]]}
 
-<<type Location.t>>=
-(* Source code locations, used in parsetree *)
-
-type t =
-  { loc_start: int; loc_end: int }
-@
-
-<<signature Location.none>>=
-val none: t
-@
-
-<<signature Location.symbol_loc>>=
-val symbol_loc: unit -> t
-@
-
-<<signature Location.rhs_loc>>=
-val rhs_loc: int -> t
-@
-
-<<signature Location.input_name>>=
-val input_name: string ref
-@
 
 <<signature Location.input_lexbuf>>=
 val input_lexbuf: Lexing.lexbuf option ref
 @
 
-<<signature Location.print>>=
-val print: t -> unit
-@
-
-<<signature Location.print_warning>>=
-val print_warning: t -> string -> unit
-@
 
 <<signature Location.echo_eof>>=
 val echo_eof: unit -> unit
@@ -1118,28 +712,9 @@ val highlight_locations: t -> t -> bool
 
 \subsection*{[[./parsing/location.ml]]}
 
-<<type Location.t (./parsing/location.ml)>>=
-type t =
-  { loc_start: int; loc_end: int }
-@
 
-<<constant Location.none>>=
-let none = { loc_start = -1; loc_end = -1 }
-@
 
-<<function Location.symbol_loc>>=
-let symbol_loc () = 
-  { loc_start = Parsing.symbol_start(); loc_end = Parsing.symbol_end() }
-@
 
-<<function Location.rhs_loc>>=
-let rhs_loc n =
-  { loc_start = Parsing.rhs_start n; loc_end = Parsing.rhs_end n }
-@
-
-<<constant Location.input_name>>=
-let input_name = ref ""
-@
 
 <<constant Location.input_lexbuf>>=
 let input_lexbuf = ref (None : lexbuf option)
@@ -1231,37 +806,7 @@ let reset () =
   num_loc_lines := 0
 @
 
-<<function Location.print>>=
-let print loc =
-  if String.length !input_name = 0 then
-    if highlight_locations loc none then () else begin
-      print_string "Characters ";
-      print_int loc.loc_start; print_string "-";
-      print_int loc.loc_end; print_string ":";
-      force_newline()
-    end
-  else begin
-    let (filename, linenum, linebeg) =
-            Linenum.for_position !input_name loc.loc_start in
-    print_string msg_file; print_string filename;
-    print_string msg_line; print_int linenum;
-    print_string msg_chars; print_int (loc.loc_start - linebeg);
-    print_string msg_to; print_int (loc.loc_end - linebeg);
-    print_string msg_colon;
-    force_newline()
-  end
-@
 
-<<function Location.print_warning>>=
-let print_warning loc msg =
-  let (f1, f2) = Format.get_formatter_output_functions() in
-  if not !Sys.interactive then Format.set_formatter_out_channel stderr;
-  print loc;
-  print_string warn_head;
-  print_string "Warning: "; print_string msg; print_newline();
-  incr num_loc_lines;
-  Format.set_formatter_output_functions f1 f2
-@
 
 <<function Location.echo_eof>>=
 let echo_eof () =
@@ -1277,7 +822,7 @@ let echo_eof () =
 
 open Lexing
 
-<<type Location.t (./parsing/location.ml)>>
+<<type Location.t>>
 
 <<constant Location.none>>
 
@@ -1310,10 +855,7 @@ open Format
 
 <<function Location.reset>>
 
-let (msg_file, msg_line, msg_chars, msg_to, msg_colon, warn_head) =
-  match Sys.os_type with
-  | "MacOS" -> ("File \"", "\"; line ", "; characters ", " to ", "", "### ")
-  | _ -> ("File \"", "\", line ", ", characters ", "-", ":", "")
+<<constants Location.msg_xxx>>
 
 <<function Location.print>>
 
@@ -1325,26 +867,6 @@ let (msg_file, msg_line, msg_chars, msg_to, msg_colon, warn_head) =
 
 
 \subsection*{[[./parsing/syntaxerr.mli]]}
-
-<<type Syntaxerr.error>>=
-(* Auxiliary type for reporting syntax errors *)
-
-type error =
-    Unclosed of Location.t * string * Location.t * string
-  | Other of Location.t
-@
-
-<<exception Syntaxerr.Error>>=
-exception Error of error
-@
-
-<<exception Syntaxerr.Escape_error>>=
-exception Escape_error
-@
-
-<<signature Syntaxerr.report_error>>=
-val report_error: error -> unit
-@
 
 
 %-------------------------------------------------------------
@@ -1373,45 +895,6 @@ val report_error: error -> unit
 
 \subsection*{[[./parsing/syntaxerr.ml]]}
 
-<<type Syntaxerr.error (./parsing/syntaxerr.ml)>>=
-type error =
-    Unclosed of Location.t * string * Location.t * string
-  | Other of Location.t
-@
-
-<<exception Syntaxerr.Error (./parsing/syntaxerr.ml)>>=
-exception Error of error
-@
-
-<<exception Syntaxerr.Escape_error (./parsing/syntaxerr.ml)>>=
-exception Escape_error
-@
-
-<<constant Syntaxerr.report_error>>=
-let report_error = function
-    Unclosed(opening_loc, opening, closing_loc, closing) ->
-      if String.length !Location.input_name = 0
-      && Location.highlight_locations opening_loc closing_loc
-      then begin
-        print_string "Syntax error: '";
-        print_string closing;
-        print_string "' expected, the highlighted '";
-        print_string opening;
-        print_string "' might be unmatched"
-      end else begin
-        Location.print closing_loc;
-        print_string "Syntax error: '";
-        print_string closing;
-        print_string "' expected"; force_newline();
-        Location.print opening_loc;
-        print_string "This '";
-        print_string opening;
-        print_string "' might be unmatched"
-      end
-  | Other loc ->
-      Location.print loc;
-      print_string "Syntax error"
-@
 
 
 %-------------------------------------------------------------
@@ -1433,12 +916,12 @@ let report_error = function
 
 open Format
 
-<<type Syntaxerr.error (./parsing/syntaxerr.ml)>>
+<<type Syntaxerr.error>>
 
-<<exception Syntaxerr.Error (./parsing/syntaxerr.ml)>>
-<<exception Syntaxerr.Escape_error (./parsing/syntaxerr.ml)>>
+<<exception Syntaxerr.Error>>
+<<exception Syntaxerr.Escape_error>>
 
-<<constant Syntaxerr.report_error>>
+<<function Syntaxerr.report_error>>
 
 
 @
@@ -1446,190 +929,21 @@ open Format
 
 \subsection*{[[./parsing/parsetree.mli]]}
 
-<<type Parsetree.core_type>>=
-type core_type =
-  { ptyp_desc: core_type_desc;
-    ptyp_loc: Location.t }
-@
 
-<<type Parsetree.core_type_desc>>=
-and core_type_desc = 
-    Ptyp_any
-  | Ptyp_var of string
-  | Ptyp_arrow of core_type * core_type
-  | Ptyp_tuple of core_type list
-  | Ptyp_constr of Longident.t * core_type list
-  | Ptyp_alias of core_type * string
-@
 
-<<type Parsetree.pattern>>=
-type pattern =
-  { ppat_desc: pattern_desc;
-    ppat_loc: Location.t }
-@
 
-<<type Parsetree.pattern_desc>>=
-and pattern_desc =
-    Ppat_any
-  | Ppat_var of string
-  | Ppat_alias of pattern * string
-  | Ppat_constant of constant
-  | Ppat_tuple of pattern list
-  | Ppat_construct of Longident.t * pattern option * bool
-  | Ppat_record of (Longident.t * pattern) list
-  | Ppat_or of pattern * pattern
-  | Ppat_constraint of pattern * core_type
-@
 
-<<type Parsetree.expression>>=
-type expression =
-  { pexp_desc: expression_desc;
-    pexp_loc: Location.t }
-@
 
-<<type Parsetree.expression_desc>>=
-and expression_desc =
-    Pexp_ident of Longident.t
-  | Pexp_constant of constant
-  | Pexp_let of rec_flag * (pattern * expression) list * expression
-  | Pexp_function of (pattern * expression) list
-  | Pexp_apply of expression * expression list
-  | Pexp_match of expression * (pattern * expression) list
-  | Pexp_try of expression * (pattern * expression) list
-  | Pexp_tuple of expression list
-  | Pexp_construct of Longident.t * expression option * bool
-  | Pexp_record of (Longident.t * expression) list
-  | Pexp_field of expression * Longident.t
-  | Pexp_setfield of expression * Longident.t * expression
-  | Pexp_array of expression list
-  | Pexp_ifthenelse of expression * expression * expression option
-  | Pexp_sequence of expression * expression
-  | Pexp_while of expression * expression
-  | Pexp_for of string * expression * expression * direction_flag * expression
-  | Pexp_constraint of expression * core_type option * core_type option
-  | Pexp_when of expression * expression
-@
 
-<<type Parsetree.value_description>>=
-(* Value descriptions *)
 
-type value_description =
-  { pval_type: core_type;
-    pval_prim: string list }
-@
 
-<<type Parsetree.type_declaration>>=
-type type_declaration =
-  { ptype_params: string list;
-    ptype_cstrs: (string * core_type * Location.t) list;
-    ptype_kind: type_kind;
-    ptype_manifest: core_type option;
-    ptype_loc: Location.t }
-@
 
-<<type Parsetree.type_kind>>=
-and type_kind =
-    Ptype_abstract
-  | Ptype_variant of (string * core_type list) list
-  | Ptype_record of (string * mutable_flag * core_type) list
-@
 
-<<type Parsetree.exception_declaration>>=
-type exception_declaration = core_type list
-@
 
-<<type Parsetree.module_type>>=
-type module_type =
-  { pmty_desc: module_type_desc;
-    pmty_loc: Location.t }
-@
 
-<<type Parsetree.module_type_desc>>=
-and module_type_desc =
-    Pmty_ident of Longident.t
-  | Pmty_signature of signature
-@
 
-<<type Parsetree.signature>>=
-and signature = signature_item list
-@
 
-<<type Parsetree.signature_item>>=
-and signature_item =
-  { psig_desc: signature_item_desc;
-    psig_loc: Location.t }
-@
 
-<<type Parsetree.signature_item_desc>>=
-and signature_item_desc =
-    Psig_value of string * value_description
-  | Psig_type of (string * type_declaration) list
-  | Psig_exception of string * exception_declaration
-  | Psig_module of string * module_type
-  | Psig_modtype of string * modtype_declaration
-  | Psig_open of Longident.t
-@
-
-<<type Parsetree.modtype_declaration>>=
-and modtype_declaration =
-    Pmodtype_abstract
-  | Pmodtype_manifest of module_type
-@
-
-<<type Parsetree.with_constraint>>=
-and with_constraint =
-    Pwith_type of type_declaration
-  | Pwith_module of Longident.t
-@
-
-<<type Parsetree.module_expr>>=
-type module_expr =
-  { pmod_desc: module_expr_desc;
-    pmod_loc: Location.t }
-@
-
-<<type Parsetree.module_expr_desc>>=
-and module_expr_desc =
-    Pmod_ident of Longident.t
-  | Pmod_structure of structure
-  | Pmod_constraint of module_expr * module_type
-@
-
-<<type Parsetree.structure>>=
-and structure = structure_item list
-@
-
-<<type Parsetree.structure_item>>=
-and structure_item =
-  { pstr_desc: structure_item_desc;
-    pstr_loc: Location.t }
-@
-
-<<type Parsetree.structure_item_desc>>=
-and structure_item_desc =
-    Pstr_eval of expression
-  | Pstr_value of rec_flag * (pattern * expression) list
-  | Pstr_primitive of string * value_description
-  | Pstr_type of (string * type_declaration) list
-  | Pstr_exception of string * exception_declaration
-  | Pstr_module of string * module_expr
-  | Pstr_modtype of string * module_type
-  | Pstr_open of Longident.t
-@
-
-<<type Parsetree.toplevel_phrase>>=
-type toplevel_phrase =
-    Ptop_def of structure
-  | Ptop_dir of string * directive_argument
-@
-
-<<type Parsetree.directive_argument>>=
-and directive_argument =
-    Pdir_none
-  | Pdir_string of string
-  | Pdir_int of int
-  | Pdir_ident of Longident.t
-@
 
 
 %-------------------------------------------------------------
@@ -1682,8 +996,6 @@ open Asttypes
 
 <<type Parsetree.modtype_declaration>>
 
-<<type Parsetree.with_constraint>>
-
 (* Value expressions for the module language *)
 
 <<type Parsetree.module_expr>>
@@ -1706,27 +1018,6 @@ open Asttypes
 
 \subsection*{[[./parsing/lexer.mli]]}
 
-<<signature Lexer.token>>=
-(* The lexical analyzer *)
-
-val token: Lexing.lexbuf -> Parser.token
-@
-
-<<type Lexer.error>>=
-type error =
-    Illegal_character
-  | Unterminated_comment
-  | Unterminated_string
-@
-
-<<exception Lexer.Error>>=
-exception Error of error * int * int
-@
-
-<<signature Lexer.report_error>>=
-val report_error: error -> unit
-@
-
 
 %-------------------------------------------------------------
 
@@ -1746,29 +1037,13 @@ val report_error: error -> unit
 
 \subsection*{[[./parsing/parse.mli]]}
 
-<<signature Parse.implementation>>=
-(* Entry points in the parser *)
-
-val implementation : Lexing.lexbuf -> Parsetree.structure
-@
-
-<<signature Parse.interface>>=
-val interface : Lexing.lexbuf -> Parsetree.signature
-@
-
-<<signature Parse.toplevel_phrase>>=
-val toplevel_phrase : Lexing.lexbuf -> Parsetree.toplevel_phrase
-@
-
-<<signature Parse.use_file>>=
-val use_file : Lexing.lexbuf -> Parsetree.toplevel_phrase list
-@
-
 
 %-------------------------------------------------------------
 
 <<./parsing/parse.mli>>=
 <<copyright header>>
+
+(* Entry points in the parser *)
 
 <<signature Parse.implementation>>
 <<signature Parse.interface>>
@@ -1779,52 +1054,6 @@ val use_file : Lexing.lexbuf -> Parsetree.toplevel_phrase list
 
 
 \subsection*{[[./parsing/parse.ml]]}
-
-<<function Parse.skip_phrase>>=
-(* Skip tokens to the end of the phrase *)
-
-let rec skip_phrase lexbuf =
-  try
-    match Lexer.token lexbuf with
-      Parser.SEMISEMI | Parser.EOF -> ()
-    | _ -> skip_phrase lexbuf
-  with
-    | Lexer.Error (Lexer.Unterminated_comment, _, _) -> ()
-    | Lexer.Error (Lexer.Unterminated_string, _, _) -> ()
-    | Lexer.Error(_,_,_) -> skip_phrase lexbuf
-@
-
-<<function Parse.maybe_skip_phrase>>=
-let maybe_skip_phrase lexbuf =
-  if Parsing.is_current_lookahead Parser.SEMISEMI
-  or Parsing.is_current_lookahead Parser.EOF
-  then ()
-  else skip_phrase lexbuf
-@
-
-<<function Parse.wrap>>=
-let wrap parsing_fun lexbuf =
-  try
-    let ast = parsing_fun Lexer.token lexbuf in
-    Parsing.clear_parser();
-    ast
-  with
-    | Lexer.Error(Lexer.Unterminated_comment, _, _) as err -> raise err
-    | Lexer.Error(Lexer.Unterminated_string, _, _) as err -> raise err
-    | Lexer.Error(_, _, _) as err ->
-        if !Location.input_name = "" then skip_phrase lexbuf;
-        raise err
-    | Syntaxerr.Error _ as err ->
-        if !Location.input_name = "" then maybe_skip_phrase lexbuf;
-        raise err
-    | Parsing.Parse_error | Syntaxerr.Escape_error ->
-        let loc = { loc_start = Lexing.lexeme_start lexbuf;
-                    loc_end = Lexing.lexeme_end lexbuf } in
-        if !Location.input_name = "" 
-        then maybe_skip_phrase lexbuf;
-        raise(Syntaxerr.Error(Syntaxerr.Other loc))
-@
-
 
 %-------------------------------------------------------------
 
@@ -1841,10 +1070,10 @@ open Location
 
 <<function Parse.wrap>>
 
-let implementation = wrap Parser.implementation
-and interface = wrap Parser.interface
-and toplevel_phrase = wrap Parser.toplevel_phrase
-and use_file = wrap Parser.use_file
+<<function Parse.implementation>>
+<<function Parse.interface>>
+
+<<function Parse.xxx>>
 @
 
 
@@ -1946,7 +1175,7 @@ val print_tbl: ('a -> unit) -> 'a tbl -> unit
 
 (* Identifiers (unique names) *)
 
-type t
+<<signature type t>>
 
 <<signature Ident.create>>
 <<signature Ident.create_persistent>>
@@ -1980,9 +1209,6 @@ type 'a tbl
 
 \subsection*{[[./typing/ident.ml]]}
 
-<<type Ident.t>>=
-type t = { stamp: int; name: string; mutable global: bool }
-@
 
 <<constant Ident.currentstamp>>=
 (* A stamp of 0 denotes a persistent identifier *)
@@ -2353,13 +1579,6 @@ open Format
 
 \subsection*{[[./typing/path.mli]]}
 
-<<type Path.t>>=
-(* Access paths *)
-
-type t =
-    Pident of Ident.t
-  | Pdot of t * string * int
-@
 
 <<signature Path.same>>=
 val same: t -> t -> bool
@@ -2395,13 +1614,6 @@ val nopos: int
 
 \subsection*{[[./typing/path.ml]]}
 
-<<type Path.t (./typing/path.ml)>>=
-
-type t =
-    Pident of Ident.t
-  | Pdot of t * string * int
-@
-
 <<constant Path.nopos>>=
 let nopos = -1
 @
@@ -2431,7 +1643,7 @@ let rec binding_time = function
 
 <<./typing/path.ml>>=
 <<copyright header>>
-<<type Path.t (./typing/path.ml)>>
+<<type Path.t>>
 
 <<constant Path.nopos>>
 
@@ -2445,28 +1657,7 @@ let rec binding_time = function
 
 \subsection*{[[./typing/types.mli]]}
 
-<<type Types.type_expr>>=
-type type_expr =
-  { mutable desc: type_desc; 
-    mutable level: int }
-@
 
-<<type Types.type_desc>>=
-and type_desc =
-    Tvar
-  | Tarrow of type_expr * type_expr
-  | Ttuple of type_expr list
-  | Tconstr of Path.t * type_expr list * abbrev_memo ref
-  | Tnil
-  | Tlink of type_expr
-@
-
-<<type Types.abbrev_memo>>=
-and abbrev_memo =
-    Mnil
-  | Mcons of Path.t * type_expr * abbrev_memo
-  | Mlink of abbrev_memo ref
-@
 
 <<type Types.value_description>>=
 type value_description =
@@ -2779,6 +1970,7 @@ let iter_type_expr f ty =
 
 <<constant Btype.saved_desc>>=
 let saved_desc = ref []
+  (* Saved association of generic nodes with their description. *)
 @
 
 <<function Btype.save_desc>>=
@@ -2805,6 +1997,7 @@ let rec unmark_type ty =
 
 <<constant Btype.memo>>=
 let memo = ref []
+        (* Contains the list of saved abbreviation expansions. *)
 @
 
 <<function Btype.cleanup_abbrev>>=
@@ -2860,7 +2053,6 @@ open Types
 <<function Btype.iter_type_expr>>
 
 <<constant Btype.saved_desc>>
-  (* Saved association of generic nodes with their description. *)
 
 <<function Btype.save_desc>>
 
@@ -2874,7 +2066,6 @@ open Types
                   (*******************************************)
 
 <<constant Btype.memo>>
-        (* Contains the list of saved abbreviation expansions. *)
 
 <<function Btype.cleanup_abbrev>>
 
@@ -2971,12 +2162,6 @@ type t
 
 \subsection*{[[./typing/subst.ml]]}
 
-<<type Subst.t>>=
-type t = 
-  { types: (Ident.t, Path.t) Tbl.t;
-    modules: (Ident.t, Path.t) Tbl.t;
-    modtypes: (Ident.t, module_type) Tbl.t }
-@
 
 <<constant Subst.identity>>=
 let identity =
@@ -3209,103 +2394,6 @@ and modtype_declaration s = function
 
 \subsection*{[[./typing/predef.mli]]}
 
-<<signature Predef.type_int>>=
-val type_int: type_expr
-@
-
-<<signature Predef.type_char>>=
-val type_char: type_expr
-@
-
-<<signature Predef.type_string>>=
-val type_string: type_expr
-@
-
-<<signature Predef.type_float>>=
-val type_float: type_expr
-@
-
-<<signature Predef.type_bool>>=
-val type_bool: type_expr
-@
-
-<<signature Predef.type_unit>>=
-val type_unit: type_expr
-@
-
-<<signature Predef.type_exn>>=
-val type_exn: type_expr
-@
-
-<<signature Predef.type_array>>=
-val type_array: type_expr -> type_expr
-@
-
-<<signature Predef.type_list>>=
-val type_list: type_expr -> type_expr
-@
-
-<<signature Predef.path_int>>=
-val path_int: Path.t
-@
-
-<<signature Predef.path_char>>=
-val path_char: Path.t
-@
-
-<<signature Predef.path_string>>=
-val path_string: Path.t
-@
-
-<<signature Predef.path_float>>=
-val path_float: Path.t
-@
-
-<<signature Predef.path_bool>>=
-val path_bool: Path.t
-@
-
-<<signature Predef.path_unit>>=
-val path_unit: Path.t
-@
-
-<<signature Predef.path_exn>>=
-val path_exn: Path.t
-@
-
-<<signature Predef.path_array>>=
-val path_array: Path.t
-@
-
-<<signature Predef.path_list>>=
-val path_list: Path.t
-@
-
-<<signature Predef.path_format>>=
-val path_format: Path.t
-@
-
-<<signature Predef.path_match_failure>>=
-val path_match_failure: Path.t
-@
-
-<<signature Predef.build_initial_env>>=
-(* To build the initial environment. Since there is a nasty mutual
-   recursion between predef and env, we break it by parameterizing
-   over Env.t, Env.add_type and Env.add_exception. *)
-
-val build_initial_env:
-  (Ident.t -> type_declaration -> 'a -> 'a) ->
-  (Ident.t -> exception_declaration -> 'a -> 'a) ->
-  'a -> 'a
-@
-
-<<signature Predef.builtin_values>>=
-(* To initialize linker tables *)
-
-val builtin_values: (string * Ident.t) list
-@
-
 
 %-------------------------------------------------------------
 
@@ -3316,26 +2404,9 @@ val builtin_values: (string * Ident.t) list
 
 open Types
 
-<<signature Predef.type_int>>
-<<signature Predef.type_char>>
-<<signature Predef.type_string>>
-<<signature Predef.type_float>>
-<<signature Predef.type_bool>>
-<<signature Predef.type_unit>>
-<<signature Predef.type_exn>>
-<<signature Predef.type_array>>
-<<signature Predef.type_list>>
+<<signatures Predef.type_xxx>>
 
-<<signature Predef.path_int>>
-<<signature Predef.path_char>>
-<<signature Predef.path_string>>
-<<signature Predef.path_float>>
-<<signature Predef.path_bool>>
-<<signature Predef.path_unit>>
-<<signature Predef.path_exn>>
-<<signature Predef.path_array>>
-<<signature Predef.path_list>>
-<<signature Predef.path_format>>
+<<signatures Predef.path_xxx>>
 
 <<signature Predef.path_match_failure>>
 
@@ -3347,81 +2418,6 @@ open Types
 
 \subsection*{[[./typing/predef.ml]]}
 
-<<constant Predef.path_match_failure>>=
-let path_match_failure = Pident ident_match_failure
-@
-
-<<function Predef.build_initial_env>>=
-let build_initial_env add_type add_exception empty_env =
-  let decl_abstr =
-    {type_params = [];
-     type_arity = 0;
-     type_kind = Type_abstract;
-     type_manifest = None}
-  and decl_bool =
-    {type_params = [];
-     type_arity = 0;
-     type_kind = Type_variant["false",[]; "true",[]];
-     type_manifest = None}
-  and decl_unit =
-    {type_params = []; 
-     type_arity = 0;
-     type_kind = Type_variant["()",[]];
-     type_manifest = None}
-  and decl_exn =
-    {type_params = [];
-     type_arity = 0;
-     type_kind = Type_variant [];
-     type_manifest = None}
-  and decl_array =
-    let tvar = newgenvar() in
-    {type_params = [tvar];
-     type_arity = 1;
-     type_kind = Type_abstract;
-     type_manifest = None}
-  and decl_list =
-    let tvar = newgenvar() in
-    {type_params = [tvar];
-     type_arity = 1;
-     type_kind = Type_variant["[]", []; "::", [tvar; type_list tvar]];
-     type_manifest = None}
-  and decl_format =
-    {type_params = [newgenvar(); newgenvar(); newgenvar()];
-     type_arity = 3;
-     type_kind = Type_abstract;
-     type_manifest = None} in
-
-  add_exception ident_match_failure
-                         [newgenty (Ttuple[type_string; type_int; type_int])] (
-  add_exception ident_out_of_memory [] (
-  add_exception ident_stack_overflow [] (
-  add_exception ident_invalid_argument [type_string] (
-  add_exception ident_failure [type_string] (
-  add_exception ident_not_found [] (
-  add_exception ident_sys_error [type_string] (
-  add_exception ident_end_of_file [] (
-  add_exception ident_division_by_zero [] (
-  add_type ident_format decl_format (
-  add_type ident_list decl_list (
-  add_type ident_array decl_array (
-  add_type ident_exn decl_exn (
-  add_type ident_unit decl_unit (
-  add_type ident_bool decl_bool (
-  add_type ident_float decl_abstr (
-  add_type ident_string decl_abstr (
-  add_type ident_char decl_abstr (
-  add_type ident_int decl_abstr (
-    empty_env)))))))))))))))))))
-@
-
-<<constant Predef.builtin_values>>=
-let builtin_values =
-  List.map (fun id -> Ident.make_global id; (Ident.name id, id))
-      [ident_match_failure; ident_out_of_memory; ident_stack_overflow;
-       ident_invalid_argument;
-       ident_failure; ident_not_found; ident_sys_error; ident_end_of_file;
-       ident_division_by_zero]
-@
 
 
 %-------------------------------------------------------------
@@ -3435,47 +2431,14 @@ open Path
 open Types
 open Btype
 
-let ident_int = Ident.create "int"
-and ident_char = Ident.create "char"
-and ident_string = Ident.create "string"
-and ident_float = Ident.create "float"
-and ident_bool = Ident.create "bool"
-and ident_unit = Ident.create "unit"
-and ident_exn = Ident.create "exn"
-and ident_array = Ident.create "array"
-and ident_list = Ident.create "list"
-and ident_format = Ident.create "format"
+<<constants Predef.ident_xxx>>
 
-let path_int = Pident ident_int
-and path_char = Pident ident_char
-and path_string = Pident ident_string
-and path_float = Pident ident_float
-and path_bool = Pident ident_bool
-and path_unit = Pident ident_unit
-and path_exn = Pident ident_exn
-and path_array = Pident ident_array
-and path_list = Pident ident_list
-and path_format = Pident ident_format
+<<constants Predef.path_xxx>>
 
-let type_int = newgenty (Tconstr(path_int, [], ref Mnil))
-and type_char = newgenty (Tconstr(path_char, [], ref Mnil))
-and type_string = newgenty (Tconstr(path_string, [], ref Mnil))
-and type_float = newgenty (Tconstr(path_float, [], ref Mnil))
-and type_bool = newgenty (Tconstr(path_bool, [], ref Mnil))
-and type_unit = newgenty (Tconstr(path_unit, [], ref Mnil))
-and type_exn = newgenty (Tconstr(path_exn, [], ref Mnil))
-and type_array t = newgenty (Tconstr(path_array, [t], ref Mnil))
-and type_list t = newgenty (Tconstr(path_list, [t], ref Mnil))
+<<constants Predef.type_xxx>>
 
-let ident_match_failure = Ident.create "Match_failure"
-and ident_out_of_memory = Ident.create "Out_of_memory"
-and ident_invalid_argument = Ident.create "Invalid_argument"
-and ident_failure = Ident.create "Failure"
-and ident_not_found = Ident.create "Not_found"
-and ident_sys_error = Ident.create "Sys_error"
-and ident_end_of_file = Ident.create "End_of_file"
-and ident_division_by_zero = Ident.create "Division_by_zero"
-and ident_stack_overflow = Ident.create "Stack_overflow"
+<<constants Predef.ident_exn_xxx>>
+
 
 <<constant Predef.path_match_failure>>
 
@@ -3632,23 +2595,6 @@ open Types
 
 \subsection*{[[./typing/env.mli]]}
 
-<<signature Env.empty>>=
-val empty: t
-@
-
-<<signature Env.initial>>=
-val initial: t
-@
-
-<<signature Env.find_value>>=
-(* Lookup by paths *)
-
-val find_value: Path.t -> t -> value_description
-@
-
-<<signature Env.find_type>>=
-val find_type: Path.t -> t -> type_declaration
-@
 
 <<signature Env.find_module>>=
 val find_module: Path.t -> t -> module_type
@@ -3666,27 +2612,6 @@ val find_type_expansion: Path.t -> t -> type_expr list * type_expr
 val find_modtype_expansion: Path.t -> t -> Types.module_type
 @
 
-<<signature Env.lookup_value>>=
-(* Lookup by long identifiers *)
-
-val lookup_value: Longident.t -> t -> Path.t * value_description
-@
-
-<<signature Env.lookup_constructor>>=
-val lookup_constructor: Longident.t -> t -> constructor_description
-@
-
-<<signature Env.lookup_label>>=
-val lookup_label: Longident.t -> t -> label_description
-@
-
-<<signature Env.lookup_type>>=
-val lookup_type: Longident.t -> t -> Path.t * type_declaration
-@
-
-<<signature Env.lookup_module>>=
-val lookup_module: Longident.t -> t -> Path.t * module_type
-@
 
 <<signature Env.lookup_modtype>>=
 val lookup_modtype: Longident.t -> t -> Path.t * modtype_declaration
@@ -3796,23 +2721,6 @@ type summary =
 val summary: t -> summary
 @
 
-<<type Env.error>>=
-(* Error report *)
-
-type error =
-    Not_an_interface of string
-  | Corrupted_interface of string
-  | Illegal_renaming of string * string
-  | Inconsistent_import of string * string * string
-@
-
-<<exception Env.Error>>=
-exception Error of error
-@
-
-<<signature Env.report_error>>=
-val report_error: error -> unit
-@
 
 <<signature Env.check_modtype_inclusion>>=
 (* Forward declaration to break mutual recursion with includemod. *)
@@ -3830,10 +2738,12 @@ val check_modtype_inclusion: (t -> module_type -> module_type -> unit) ref
 
 open Types
 
-type t
+<<signature type Env.t>>
 
 <<signature Env.empty>>
 <<signature Env.initial>>
+
+(* Lookup by paths *)
 
 <<signature Env.find_value>>
 <<signature Env.find_type>>
@@ -3842,6 +2752,8 @@ type t
 
 <<signature Env.find_type_expansion>>
 <<signature Env.find_modtype_expansion>>
+
+(* Lookup by long identifiers *)
 
 <<signature Env.lookup_value>>
 <<signature Env.lookup_constructor>>
@@ -3890,41 +2802,6 @@ type t
 
 \subsection*{[[./typing/env.ml]]}
 
-<<type Env.error (./typing/env.ml)>>=
-type error =
-    Not_an_interface of string
-  | Corrupted_interface of string
-  | Illegal_renaming of string * string
-  | Inconsistent_import of string * string * string
-@
-
-<<exception Env.Error (./typing/env.ml)>>=
-exception Error of error
-@
-
-<<type Env.summary (./typing/env.ml)>>=
-type summary =
-    Env_empty
-  | Env_value of summary * Ident.t * value_description
-  | Env_type of summary * Ident.t * type_declaration
-  | Env_exception of summary * Ident.t * exception_declaration
-  | Env_module of summary * Ident.t * module_type
-  | Env_modtype of summary * Ident.t * modtype_declaration
-  | Env_open of summary * Path.t
-@
-
-<<type Env.t>>=
-type t = {
-  values: (Path.t * value_description) Ident.tbl;
-  constrs: constructor_description Ident.tbl;
-  labels: label_description Ident.tbl;
-  types: (Path.t * type_declaration) Ident.tbl;
-  modules: (Path.t * module_type) Ident.tbl;
-  modtypes: (Path.t * modtype_declaration) Ident.tbl;
-  components: (Path.t * module_components) Ident.tbl;
-  summary: summary
-}
-@
 
 <<type Env.module_components>>=
 and module_components =
@@ -3943,14 +2820,6 @@ and structure_components = {
 }
 @
 
-<<constant Env.empty>>=
-let empty = {
-  values = Ident.empty; constrs = Ident.empty;
-  labels = Ident.empty; types = Ident.empty;
-  modules = Ident.empty; modtypes = Ident.empty;
-  components = Ident.empty; 
-  summary = Env_empty }
-@
 
 <<type Env.pers_struct>>=
 (* Persistent structure descriptions *)
@@ -3964,6 +2833,7 @@ type pers_struct =
 
 <<constant Env.persistent_structures>>=
 let persistent_structures =
+  (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 @
 
 <<function Env.read_pers_struct>>=
@@ -4012,6 +2882,7 @@ let reset_cache() =
 let check_modtype_inclusion =
   (* to be filled with includemod.check_modtype_inclusion *)
   ref ((fun env mty1 mty2 -> fatal_error "Env.include_modtypes") :
+       t -> module_type -> module_type -> unit)
 @
 
 <<function Env.find_module_descr>>=
@@ -4365,11 +3236,11 @@ open Path
 open Types
 
 
-<<type Env.error (./typing/env.ml)>>
+<<type Env.error>>
 
-<<exception Env.Error (./typing/env.ml)>>
+<<exception Env.Error>>
 
-<<type Env.summary (./typing/env.ml)>>
+<<type Env.summary>>
 
 <<type Env.t>>
 
@@ -4384,7 +3255,6 @@ open Types
 <<type Env.pers_struct>>
 
 <<constant Env.persistent_structures>>
-  (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
 <<function Env.read_pers_struct>>
 
@@ -4393,7 +3263,6 @@ open Types
 <<function Env.reset_cache>>
 
 <<constant Env.check_modtype_inclusion>>
-       t -> module_type -> module_type -> unit)
 
 <<function Env.find_module_descr>>
 
@@ -4661,93 +3530,6 @@ and enter_modtype = enter store_modtype
 
 \subsection*{[[./typing/typedtree.mli]]}
 
-<<type Typedtree.pattern>>=
-type pattern =
-  { pat_desc: pattern_desc;
-    pat_loc: Location.t;
-    pat_type: type_expr }
-@
-
-<<type Typedtree.pattern_desc>>=
-and pattern_desc =
-    Tpat_any
-  | Tpat_var of Ident.t
-  | Tpat_alias of pattern * Ident.t
-  | Tpat_constant of constant
-  | Tpat_tuple of pattern list
-  | Tpat_construct of constructor_description * pattern list
-  | Tpat_record of (label_description * pattern) list
-  | Tpat_or of pattern * pattern
-@
-
-<<type Typedtree.expression>>=
-type expression =
-  { exp_desc: expression_desc;
-    exp_loc: Location.t;
-    exp_type: type_expr;
-    exp_env: Env.t }
-@
-
-<<type Typedtree.expression_desc>>=
-and expression_desc =
-    Texp_ident of Path.t * value_description
-  | Texp_constant of constant
-  | Texp_let of rec_flag * (pattern * expression) list * expression
-  | Texp_function of (pattern * expression) list
-  | Texp_apply of expression * expression list
-  | Texp_match of expression * (pattern * expression) list
-  | Texp_try of expression * (pattern * expression) list
-  | Texp_tuple of expression list
-  | Texp_construct of constructor_description * expression list
-  | Texp_record of (label_description * expression) list
-  | Texp_field of expression * label_description
-  | Texp_setfield of expression * label_description * expression
-  | Texp_array of expression list
-  | Texp_ifthenelse of expression * expression * expression option
-  | Texp_sequence of expression * expression
-  | Texp_while of expression * expression
-  | Texp_for of
-      Ident.t * expression * expression * direction_flag * expression
-  | Texp_when of expression * expression
-@
-
-<<type Typedtree.module_expr>>=
-type module_expr =
-  { mod_desc: module_expr_desc;
-    mod_loc: Location.t;
-    mod_type: module_type;
-    mod_env: Env.t }
-@
-
-<<type Typedtree.module_expr_desc>>=
-and module_expr_desc =
-    Tmod_ident of Path.t
-  | Tmod_structure of structure
-  | Tmod_constraint of module_expr * module_type * module_coercion
-@
-
-<<type Typedtree.structure>>=
-and structure = structure_item list
-@
-
-<<type Typedtree.structure_item>>=
-and structure_item =
-    Tstr_eval of expression
-  | Tstr_value of rec_flag * (pattern * expression) list
-  | Tstr_primitive of Ident.t * value_description
-  | Tstr_type of (Ident.t * type_declaration) list
-  | Tstr_exception of Ident.t * exception_declaration
-  | Tstr_module of Ident.t * module_expr
-  | Tstr_modtype of Ident.t * module_type
-  | Tstr_open of Path.t
-@
-
-<<type Typedtree.module_coercion>>=
-and module_coercion =
-    Tcoerce_none
-  | Tcoerce_structure of (int * module_coercion) list
-  | Tcoerce_primitive of Primitive.description
-@
 
 <<signature Typedtree.let_bound_idents>>=
 (* Auxiliary functions over the a.s.t. *)
@@ -4799,97 +3581,8 @@ open Types
 
 \subsection*{[[./typing/typedtree.ml]]}
 
-<<type Typedtree.pattern (./typing/typedtree.ml)>>=
-type pattern =
-  { pat_desc: pattern_desc;
-    pat_loc: Location.t;
-    pat_type: type_expr }
-@
-
-<<type Typedtree.pattern_desc (./typing/typedtree.ml)>>=
-and pattern_desc =
-    Tpat_any
-  | Tpat_var of Ident.t
-  | Tpat_alias of pattern * Ident.t
-  | Tpat_constant of constant
-  | Tpat_tuple of pattern list
-  | Tpat_construct of constructor_description * pattern list
-  | Tpat_record of (label_description * pattern) list
-  | Tpat_or of pattern * pattern
-@
-
-<<type Typedtree.expression (./typing/typedtree.ml)>>=
-type expression =
-  { exp_desc: expression_desc;
-    exp_loc: Location.t;
-    exp_type: type_expr;
-    exp_env: Env.t }
-@
-
-<<type Typedtree.expression_desc (./typing/typedtree.ml)>>=
-and expression_desc =
-    Texp_ident of Path.t * value_description
-  | Texp_constant of constant
-  | Texp_let of rec_flag * (pattern * expression) list * expression
-  | Texp_function of (pattern * expression) list
-  | Texp_apply of expression * expression list
-  | Texp_match of expression * (pattern * expression) list
-  | Texp_try of expression * (pattern * expression) list
-  | Texp_tuple of expression list
-  | Texp_construct of constructor_description * expression list
-  | Texp_record of (label_description * expression) list
-  | Texp_field of expression * label_description
-  | Texp_setfield of expression * label_description * expression
-  | Texp_array of expression list
-  | Texp_ifthenelse of expression * expression * expression option
-  | Texp_sequence of expression * expression
-  | Texp_while of expression * expression
-  | Texp_for of
-      Ident.t * expression * expression * direction_flag * expression
-  | Texp_when of expression * expression
-@
-
-<<type Typedtree.module_expr (./typing/typedtree.ml)>>=
-type module_expr =
-  { mod_desc: module_expr_desc;
-    mod_loc: Location.t;
-    mod_type: module_type;
-    mod_env: Env.t }
-@
-
-<<type Typedtree.module_expr_desc (./typing/typedtree.ml)>>=
-and module_expr_desc =
-    Tmod_ident of Path.t
-  | Tmod_structure of structure
-  | Tmod_constraint of module_expr * module_type * module_coercion
-@
-
-<<type Typedtree.structure (./typing/typedtree.ml)>>=
-and structure = structure_item list
-@
-
-<<type Typedtree.structure_item (./typing/typedtree.ml)>>=
-and structure_item =
-    Tstr_eval of expression
-  | Tstr_value of rec_flag * (pattern * expression) list
-  | Tstr_primitive of Ident.t * value_description
-  | Tstr_type of (Ident.t * type_declaration) list
-  | Tstr_exception of Ident.t * exception_declaration
-  | Tstr_module of Ident.t * module_expr
-  | Tstr_modtype of Ident.t * module_type
-  | Tstr_open of Path.t
-@
-
-<<type Typedtree.module_coercion (./typing/typedtree.ml)>>=
-and module_coercion =
-    Tcoerce_none
-  | Tcoerce_structure of (int * module_coercion) list
-  | Tcoerce_primitive of Primitive.description
-@
-
 <<constant Typedtree.idents>>=
 (* List the identifiers bound by a pattern or a let *)
-
 let idents = ref([]: Ident.t list)
 @
 
@@ -4933,25 +3626,25 @@ open Types
 
 (* Value expressions for the core language *)
 
-<<type Typedtree.pattern (./typing/typedtree.ml)>>
+<<type Typedtree.pattern>>
 
-<<type Typedtree.pattern_desc (./typing/typedtree.ml)>>
+<<type Typedtree.pattern_desc>>
 
-<<type Typedtree.expression (./typing/typedtree.ml)>>
+<<type Typedtree.expression>>
 
-<<type Typedtree.expression_desc (./typing/typedtree.ml)>>
+<<type Typedtree.expression_desc>>
 
 (* Value expressions for the module language *)
 
-<<type Typedtree.module_expr (./typing/typedtree.ml)>>
+<<type Typedtree.module_expr>>
 
-<<type Typedtree.module_expr_desc (./typing/typedtree.ml)>>
+<<type Typedtree.module_expr_desc>>
 
-<<type Typedtree.structure (./typing/typedtree.ml)>>
+<<type Typedtree.structure>>
 
-<<type Typedtree.structure_item (./typing/typedtree.ml)>>
+<<type Typedtree.structure_item>>
 
-<<type Typedtree.module_coercion (./typing/typedtree.ml)>>
+<<type Typedtree.module_coercion>>
 
 (* Auxiliary functions over the a.s.t. *)
 
@@ -4967,14 +3660,6 @@ open Types
 
 \subsection*{[[./typing/ctype.mli]]}
 
-<<exception Ctype.Unify>>=
-exception Unify of (type_expr * type_expr) list
-@
-
-<<exception Ctype.Subtype>>=
-exception Subtype of
-        (type_expr * type_expr) list * (type_expr * type_expr) list
-@
 
 <<exception Ctype.Cannot_expand>>=
 exception Cannot_expand
@@ -5246,28 +3931,7 @@ open Types
 
 \subsection*{[[./typing/ctype.ml]]}
 
-<<exception Ctype.Unify (./typing/ctype.ml)>>=
-(**** Errors ****)
 
-exception Unify of (type_expr * type_expr) list
-@
-
-<<exception Ctype.Subtype (./typing/ctype.ml)>>=
-exception Subtype of
-        (type_expr * type_expr) list * (type_expr * type_expr) list
-@
-
-<<exception Ctype.Cannot_expand (./typing/ctype.ml)>>=
-exception Cannot_expand
-@
-
-<<exception Ctype.Cannot_apply (./typing/ctype.ml)>>=
-exception Cannot_apply
-@
-
-<<exception Ctype.Recursive_abbrev (./typing/ctype.ml)>>=
-exception Recursive_abbrev
-@
 
 <<constant Ctype.current_level>>=
 (**** Type level management ****)
@@ -6303,15 +4967,15 @@ open Btype
      [unify].
 *)
 
-<<exception Ctype.Unify (./typing/ctype.ml)>>
+<<exception Ctype.Unify>>
 
-<<exception Ctype.Subtype (./typing/ctype.ml)>>
+<<exception Ctype.Subtype>>
 
-<<exception Ctype.Cannot_expand (./typing/ctype.ml)>>
+<<exception Ctype.Cannot_expand>>
 
-<<exception Ctype.Cannot_apply (./typing/ctype.ml)>>
+<<exception Ctype.Cannot_apply>>
 
-<<exception Ctype.Recursive_abbrev (./typing/ctype.ml)>>
+<<exception Ctype.Recursive_abbrev>>
 
 <<constant Ctype.current_level>>
 <<constant Ctype.global_level>>
@@ -7593,14 +6257,6 @@ and modtype_declaration id decl =
 
 \subsection*{[[./typing/parmatch.mli]]}
 
-<<signature Parmatch.check_partial>>=
-val check_partial: Location.t -> (pattern * expression) list -> unit
-@
-
-<<signature Parmatch.check_unused>>=
-val check_unused: (pattern * expression) list -> unit
-@
-
 
 %-------------------------------------------------------------
 
@@ -7976,12 +6632,6 @@ and le_pats ps qs =
 
 \subsection*{[[./typing/typetexp.mli]]}
 
-<<signature Typetexp.transl_simple_type>>=
-(* Typechecking of type expressions for the core language *)
-
-val transl_simple_type:
-        Env.t -> bool -> Parsetree.core_type -> Types.type_expr
-@
 
 <<signature Typetexp.transl_simple_type_delayed>>=
 val transl_simple_type_delayed:
@@ -8011,23 +6661,6 @@ val type_variable : Location.t -> string -> Types.type_expr
 exception Already_bound
 @
 
-<<type Typetexp.error>>=
-type error =
-    Unbound_type_variable of string
-  | Unbound_type_constructor of Longident.t
-  | Type_arity_mismatch of Longident.t * int * int
-  | Bound_type_variable of string
-  | Type_mismatch of (Types.type_expr * Types.type_expr) list
-  | Alias_type_mismatch of (Types.type_expr * Types.type_expr) list
-@
-
-<<exception Typetexp.Error>>=
-exception Error of Location.t * error
-@
-
-<<signature Typetexp.report_error>>=
-val report_error: error -> unit
-@
 
 
 %-------------------------------------------------------------
@@ -8054,23 +6687,6 @@ val report_error: error -> unit
 
 \subsection*{[[./typing/typetexp.ml]]}
 
-<<exception Typetexp.Already_bound (./typing/typetexp.ml)>>=
-exception Already_bound
-@
-
-<<type Typetexp.error (./typing/typetexp.ml)>>=
-type error =
-    Unbound_type_variable of string
-  | Unbound_type_constructor of Longident.t
-  | Type_arity_mismatch of Longident.t * int * int
-  | Bound_type_variable of string
-  | Type_mismatch of (type_expr * type_expr) list
-  | Alias_type_mismatch of (type_expr * type_expr) list
-@
-
-<<exception Typetexp.Error (./typing/typetexp.ml)>>=
-exception Error of Location.t * error
-@
 
 <<constant Typetexp.type_variables>>=
 (* Translation of type expressions *)
@@ -8088,6 +6704,7 @@ let used_variables = ref (Tbl.empty : (string, type_expr) Tbl.t)
 
 <<constant Typetexp.bindings>>=
 let bindings       = ref ([] : (type_expr * type_expr) list)
+        (* These two variables are used for the "delayed" policy. *)
 @
 
 <<function Typetexp.reset_type_variables>>=
@@ -8232,35 +6849,6 @@ let transl_type_scheme env styp =
   typ
 @
 
-<<constant Typetexp.report_error>>=
-let report_error = function
-    Unbound_type_variable name ->
-      print_string "Unbound type parameter "; print_string name
-  | Unbound_type_constructor lid ->
-      print_string "Unbound type constructor "; longident lid
-  | Type_arity_mismatch(lid, expected, provided) ->
-      open_box 0;
-      print_string "The type constructor "; longident lid;
-      print_space(); print_string "expects "; print_int expected;
-      print_string " argument(s),"; print_space();
-      print_string "but is here applied to "; print_int provided;
-      print_string " argument(s)";
-      close_box()
-  | Bound_type_variable name ->
-      print_string "Already bound type parameter "; print_string name
-  | Type_mismatch trace ->
-      Printtyp.unification_error trace
-        (function () ->
-           print_string "This type parameter")
-        (function () ->
-           print_string "should be an instance of type")
-  | Alias_type_mismatch trace ->
-      Printtyp.unification_error trace
-        (function () ->
-           print_string "This alias is bound to type")
-        (function () ->
-           print_string "but is used as an instance of type")
-@
 
 
 %-------------------------------------------------------------
@@ -8275,18 +6863,17 @@ open Parsetree
 open Types
 open Ctype
 
-<<exception Typetexp.Already_bound (./typing/typetexp.ml)>>
+<<exception Typetexp.Already_bound>>
 
-<<type Typetexp.error (./typing/typetexp.ml)>>
+<<type Typetexp.error>>
 
-<<exception Typetexp.Error (./typing/typetexp.ml)>>
+<<exception Typetexp.Error>>
 
 <<constant Typetexp.type_variables>>
 <<constant Typetexp.aliases>>
 
 <<constant Typetexp.used_variables>>
 <<constant Typetexp.bindings>>
-        (* These two variables are used for the "delayed" policy. *)
 
 <<function Typetexp.reset_type_variables>>
 
@@ -8332,26 +6919,6 @@ val type_declarations:
       Env.t -> Ident.t -> type_declaration -> type_declaration -> unit
 @
 
-<<type Includemod.error>>=
-type error =
-    Missing_field of Ident.t
-  | Value_descriptions of Ident.t * value_description * value_description
-  | Type_declarations of Ident.t * type_declaration * type_declaration
-  | Exception_declarations of
-      Ident.t * exception_declaration * exception_declaration
-  | Module_types of module_type * module_type
-  | Modtype_infos of Ident.t * modtype_declaration * modtype_declaration
-  | Modtype_permutation
-  | Interface_mismatch of string * string
-@
-
-<<exception Includemod.Error>>=
-exception Error of error list
-@
-
-<<signature Includemod.report_error>>=
-val report_error: error list -> unit
-@
 
 
 %-------------------------------------------------------------
@@ -8378,23 +6945,6 @@ open Typedtree
 
 
 \subsection*{[[./typing/includemod.ml]]}
-
-<<type Includemod.error (./typing/includemod.ml)>>=
-type error =
-    Missing_field of Ident.t
-  | Value_descriptions of Ident.t * value_description * value_description
-  | Type_declarations of Ident.t * type_declaration * type_declaration
-  | Exception_declarations of
-      Ident.t * exception_declaration * exception_declaration
-  | Module_types of module_type * module_type
-  | Modtype_infos of Ident.t * modtype_declaration * modtype_declaration
-  | Modtype_permutation
-  | Interface_mismatch of string * string
-@
-
-<<exception Includemod.Error (./typing/includemod.ml)>>=
-exception Error of error list
-@
 
 <<function Includemod.value_descriptions>>=
 (* Inclusion between value descriptions *)
@@ -8517,72 +7067,6 @@ let type_declarations env id decl1 decl2 =
   type_declarations env Subst.identity id decl1 decl2
 @
 
-<<constant Includemod.include_err>>=
-let include_err = function
-    Missing_field id ->
-      print_string "The field `"; ident id; 
-      print_string "' is required but not provided"
-  | Value_descriptions(id, d1, d2) ->
-      open_hvbox 2;
-      print_string "Values do not match:"; print_space();
-      value_description id d1; 
-      print_break 1 (-2);
-      print_string "is not included in"; print_space();
-      value_description id d2;
-      close_box()
-  | Type_declarations(id, d1, d2) ->
-      open_hvbox 2;
-      print_string "Type declarations do not match:"; print_space();
-      type_declaration id d1; 
-      print_break 1 (-2);
-      print_string "is not included in"; print_space();
-      type_declaration id d2;
-      close_box()
-  | Exception_declarations(id, d1, d2) ->
-      open_hvbox 2;
-      print_string "Exception declarations do not match:"; print_space();
-      exception_declaration id d1; 
-      print_break 1 (-2);
-      print_string "is not included in"; print_space();
-      exception_declaration id d2;
-      close_box()
-  | Module_types(mty1, mty2)->
-      open_hvbox 2;
-      print_string "Modules do not match:"; print_space();
-      modtype mty1;
-      print_break 1 (-2);
-      print_string "is not included in"; print_space();
-      modtype mty2;
-      close_box()
-  | Modtype_infos(id, d1, d2) ->
-      open_hvbox 2;
-      print_string "Module type declarations do not match:"; print_space();
-      modtype_declaration id d1; 
-      print_break 1 (-2);
-      print_string "is not included in"; print_space();
-      modtype_declaration id d2;
-      close_box()
-  | Modtype_permutation ->
-      print_string "Illegal permutation of structure fields"
-  | Interface_mismatch(impl_name, intf_name) ->
-      open_box 0;
-      print_string "The implementation "; print_string impl_name;
-      print_space(); print_string "does not match the interface ";
-      print_string intf_name;
-      print_string ":";
-      close_box()
-@
-
-<<function Includemod.report_error>>=
-let report_error errlist =
-  match errlist with
-    [] -> ()
-  | err :: rem ->
-      open_vbox 0;
-      include_err err;
-      List.iter (fun err -> print_space(); include_err err) rem;
-      close_box()
-@
 
 
 %-------------------------------------------------------------
@@ -8597,9 +7081,9 @@ open Path
 open Types
 open Typedtree
 
-<<type Includemod.error (./typing/includemod.ml)>>
+<<type Includemod.error>>
 
-<<exception Includemod.Error (./typing/includemod.ml)>>
+<<exception Includemod.Error>>
 
 (* All functions "blah env x1 x2" check that x1 is included in x2,
    i.e. that x1 is the type of an implementation that fulfills the
@@ -8789,42 +7273,7 @@ open Printtyp
 
 \subsection*{[[./typing/typedecl.mli]]}
 
-<<signature Typedecl.transl_type_decl>>=
-val transl_type_decl:
-        Env.t -> (string * Parsetree.type_declaration) list ->
-                                  (Ident.t * type_declaration) list * Env.t
-@
 
-<<signature Typedecl.transl_exception>>=
-val transl_exception:
-        Env.t -> Parsetree.exception_declaration -> exception_declaration
-@
-
-<<signature Typedecl.transl_value_decl>>=
-val transl_value_decl:
-        Env.t -> Parsetree.value_description -> value_description
-@
-
-<<type Typedecl.error>>=
-type error =
-    Repeated_parameter
-  | Duplicate_constructor of string
-  | Too_many_constructors
-  | Duplicate_label of string
-  | Recursive_abbrev of string
-  | Definition_mismatch of type_expr
-  | Unconsistent_constraint
-  | Type_clash of (type_expr * type_expr) list
-  | Null_arity_external
-@
-
-<<exception Typedecl.Error>>=
-exception Error of Location.t * error
-@
-
-<<signature Typedecl.report_error>>=
-val report_error: error -> unit
-@
 
 
 %-------------------------------------------------------------
@@ -8850,23 +7299,6 @@ open Types
 
 
 \subsection*{[[./typing/typedecl.ml]]}
-
-<<type Typedecl.error (./typing/typedecl.ml)>>=
-type error =
-    Repeated_parameter
-  | Duplicate_constructor of string
-  | Too_many_constructors
-  | Duplicate_label of string
-  | Recursive_abbrev of string
-  | Definition_mismatch of type_expr
-  | Unconsistent_constraint
-  | Type_clash of (type_expr * type_expr) list
-  | Null_arity_external
-@
-
-<<exception Typedecl.Error (./typing/typedecl.ml)>>=
-exception Error of Location.t * error
-@
 
 <<function Typedecl.enter_types>>=
 (* Enter all declared types in the environment as abstract types *)
@@ -9135,38 +7567,6 @@ let transl_value_decl env valdecl =
       { val_type = ty; val_kind = Val_prim prim }
 @
 
-<<constant Typedecl.report_error>>=
-let report_error = function
-    Repeated_parameter ->
-      print_string "A type parameter occurs several times"
-  | Duplicate_constructor s ->
-      print_string "Two constructors are named "; print_string s
-  | Too_many_constructors ->
-      print_string "Too many constructors -- maximum is ";
-      print_int Config.max_tag; print_string " constructors"
-  | Duplicate_label s ->
-      print_string "Two labels are named "; print_string s
-  | Recursive_abbrev s ->
-      print_string "The type abbreviation "; print_string s;
-      print_string " is cyclic" (* " expands to itself" *)
-  | Definition_mismatch ty ->
-      Printtyp.reset ();
-      Printtyp.mark_loops ty;
-      print_string
-        "The variant or record definition does not match that of type";
-      print_space(); Printtyp.type_expr ty
-  | Unconsistent_constraint ->
-      print_string "The type constraints are not consistent"
-  | Type_clash trace ->
-      Printtyp.unification_error trace
-        (function () ->
-           print_string "This type constructor expands to type")
-        (function () ->
-           print_string "but is here used with type")
-  | Null_arity_external ->
-      print_string "External identifiers must be functions"
-@
-
 
 %-------------------------------------------------------------
 
@@ -9191,9 +7591,9 @@ open Types
 open Typedtree
 open Typetexp
 
-<<type Typedecl.error (./typing/typedecl.ml)>>
+<<type Typedecl.error>>
 
-<<exception Typedecl.Error (./typing/typedecl.ml)>>
+<<exception Typedecl.Error>>
 
 <<function Typedecl.enter_types>>
 
@@ -9229,63 +7629,6 @@ open Format
 
 \subsection*{[[./typing/typecore.mli]]}
 
-<<signature Typecore.type_binding>>=
-val type_binding:
-        Env.t -> rec_flag ->
-          (Parsetree.pattern * Parsetree.expression) list -> 
-          (Typedtree.pattern * Typedtree.expression) list * Env.t
-@
-
-<<signature Typecore.type_expression>>=
-val type_expression:
-        Env.t -> Parsetree.expression -> Typedtree.expression
-@
-
-<<signature Typecore.type_pattern_list>>=
-val type_pattern_list:
-        Env.t -> Parsetree.pattern list -> Typedtree.pattern list * Env.t
-@
-
-<<signature Typecore.type_expect>>=
-val type_expect:
-        Env.t -> Parsetree.expression -> type_expr ->
-        Typedtree.expression
-@
-
-<<signature Typecore.type_exp>>=
-val type_exp:
-        Env.t -> Parsetree.expression -> Typedtree.expression
-@
-
-<<type Typecore.error>>=
-type error =
-    Unbound_value of Longident.t
-  | Unbound_constructor of Longident.t
-  | Unbound_label of Longident.t
-  | Constructor_arity_mismatch of Longident.t * int * int
-  | Label_mismatch of Longident.t * (type_expr * type_expr) list
-  | Pattern_type_clash of (type_expr * type_expr) list
-  | Multiply_bound_variable
-  | Orpat_not_closed
-  | Expr_type_clash of (type_expr * type_expr) list
-  | Apply_non_function of type_expr
-  | Label_multiply_defined of Longident.t
-  | Label_missing
-  | Label_not_mutable of Longident.t
-  | Bad_format of string
-  | Not_subtype of (type_expr * type_expr) list * (type_expr * type_expr) list
-  | Coercion_failure of type_expr * type_expr * (type_expr * type_expr) list
-  | Too_many_arguments
-@
-
-<<exception Typecore.Error>>=
-exception Error of Location.t * error
-@
-
-<<signature Typecore.report_error>>=
-val report_error: error -> unit
-@
-
 
 %-------------------------------------------------------------
 
@@ -9313,30 +7656,6 @@ open Types
 
 \subsection*{[[./typing/typecore.ml]]}
 
-<<type Typecore.error (./typing/typecore.ml)>>=
-type error =
-    Unbound_value of Longident.t
-  | Unbound_constructor of Longident.t
-  | Unbound_label of Longident.t
-  | Constructor_arity_mismatch of Longident.t * int * int
-  | Label_mismatch of Longident.t * (type_expr * type_expr) list
-  | Pattern_type_clash of (type_expr * type_expr) list
-  | Multiply_bound_variable
-  | Orpat_not_closed
-  | Expr_type_clash of (type_expr * type_expr) list
-  | Apply_non_function of type_expr
-  | Label_multiply_defined of Longident.t
-  | Label_missing
-  | Label_not_mutable of Longident.t
-  | Bad_format of string
-  | Not_subtype of (type_expr * type_expr) list * (type_expr * type_expr) list
-  | Coercion_failure of type_expr * type_expr * (type_expr * type_expr) list
-  | Too_many_arguments
-@
-
-<<exception Typecore.Error (./typing/typecore.ml)>>=
-exception Error of Location.t * error
-@
 
 <<constant Typecore.type_constant>>=
 (* Typing of constants *)
@@ -9637,90 +7956,6 @@ let rec type_expect_fun env sexp ty_expected =
       type_expect env sexp ty_expected
 @
 
-<<constant Typecore.report_error>>=
-let report_error = function
-    Unbound_value lid ->
-      print_string "Unbound value "; longident lid
-  | Unbound_constructor lid ->
-      print_string "Unbound constructor "; longident lid
-  | Unbound_label lid ->
-      print_string "Unbound label "; longident lid
-  | Constructor_arity_mismatch(lid, expected, provided) ->
-      open_box 0;
-      print_string "The constructor "; longident lid;
-      print_space(); print_string "expects "; print_int expected;
-      print_string " argument(s),"; print_space();
-      print_string "but is here applied to "; print_int provided;
-      print_string " argument(s)";
-      close_box()
-  | Label_mismatch(lid, trace) ->
-      unification_error trace
-        (function () ->
-           print_string "The label "; longident lid;
-           print_space(); print_string "belongs to the type")
-        (function () ->
-           print_string "but is here mixed with labels of type")
-  | Pattern_type_clash trace ->
-      unification_error trace
-        (function () ->
-           print_string "This pattern matches values of type")
-        (function () ->
-           print_string "but is here used to match values of type")
-  | Multiply_bound_variable ->
-      print_string "This variable is bound several times in this matching"
-  | Orpat_not_closed ->
-      print_string "A pattern with | must not bind variables"
-  | Expr_type_clash trace ->
-      unification_error trace
-        (function () ->
-           print_string "This expression has type")
-        (function () ->
-           print_string "but is here used with type")
-  | Apply_non_function typ ->
-      begin match (repr typ).desc with
-        Tarrow(_, _) ->
-          print_string "This function is applied to too many arguments"
-      | _ ->
-          print_string
-            "This expression is not a function, it cannot be applied"
-      end
-  | Label_multiply_defined lid ->
-      print_string "The label "; longident lid;
-      print_string " is defined several times"
-  | Label_missing ->
-      print_string "Some labels are undefined"
-  | Label_not_mutable lid ->
-      print_string "The label "; longident lid;
-      print_string " is not mutable"
-  | Bad_format s ->
-      print_string "Bad format `"; print_string s; print_string "'"
-  | Not_subtype(tr1, tr2) ->
-      reset ();
-      List.iter
-        (function (t, t') -> mark_loops t; if t != t' then mark_loops t')
-        tr1;
-      List.iter
-        (function (t, t') -> mark_loops t; if t != t' then mark_loops t')
-        tr2;
-      trace true (fun _ -> print_string "is not a subtype of type") tr1;
-      trace false (fun _ -> print_string "is not compatible with type") tr2
-  | Coercion_failure (ty, ty', trace) ->
-      unification_error trace
-        (function () ->
-           mark_loops ty; if ty' != ty then mark_loops ty';
-           print_string "This expression cannot be coerced to type";
-           print_break 1 2;
-           type_expansion ty ty';
-           print_string ";";
-           print_space ();
-           print_string "it has type")
-        (function () ->
-           print_string "but is here used with type")
-  | Too_many_arguments ->
-      print_string "This function has too many arguments"
-@
-
-
 %-------------------------------------------------------------
 
 <<./typing/typecore.ml>>=
@@ -9737,9 +7972,9 @@ open Btype
 open Ctype
 
 
-<<type Typecore.error (./typing/typecore.ml)>>
+<<type Typecore.error>>
 
-<<exception Typecore.Error (./typing/typecore.ml)>>
+<<exception Typecore.Error>>
 
 <<constant Typecore.type_constant>>
 
@@ -10131,42 +8366,12 @@ open Printtyp
 
 \subsection*{[[./typing/typemod.mli]]}
 
-<<signature Typemod.type_structure>>=
-val type_structure:
-        Env.t -> Parsetree.structure -> Typedtree.structure * signature * Env.t
-@
-
-<<signature Typemod.transl_signature>>=
-val transl_signature:
-        Env.t -> Parsetree.signature -> signature
-@
 
 <<signature Typemod.check_nongen_schemes>>=
 val check_nongen_schemes:
         Env.t -> Typedtree.structure -> unit
 @
 
-<<type Typemod.error>>=
-type error =
-    Unbound_module of Longident.t
-  | Unbound_modtype of Longident.t
-  | Not_included of Includemod.error list
-  | Signature_expected
-  | Structure_expected of module_type
-  | With_no_component of Longident.t
-  | With_mismatch of Longident.t * Includemod.error list
-  | Repeated_name of string * string
-  | Non_generalizable of type_expr
-  | Non_generalizable_module of module_type
-@
-
-<<exception Typemod.Error>>=
-exception Error of Location.t * error
-@
-
-<<signature Typemod.report_error>>=
-val report_error: error -> unit
-@
 
 
 %-------------------------------------------------------------
@@ -10191,24 +8396,6 @@ open Types
 
 
 \subsection*{[[./typing/typemod.ml]]}
-
-<<type Typemod.error (./typing/typemod.ml)>>=
-type error =
-    Unbound_module of Longident.t
-  | Unbound_modtype of Longident.t
-  | Not_included of Includemod.error list
-  | Signature_expected
-  | Structure_expected of module_type
-  | With_no_component of Longident.t
-  | With_mismatch of Longident.t * Includemod.error list
-  | Repeated_name of string * string
-  | Non_generalizable of type_expr
-  | Non_generalizable_module of module_type
-@
-
-<<exception Typemod.Error (./typing/typemod.ml)>>=
-exception Error of Location.t * error
-@
 
 <<function Typemod.extract_sig_open>>=
 (* Extract a signature from a module type *)
@@ -10276,60 +8463,6 @@ let check_nongen_schemes env str =
   List.iter (check_nongen_scheme env) str
 @
 
-<<constant Typemod.report_error>>=
-let report_error = function
-    Unbound_module lid ->
-      print_string "Unbound module "; longident lid
-  | Unbound_modtype lid ->
-      print_string "Unbound module type "; longident lid
-  | Not_included errs ->
-      open_vbox 0;
-      print_string "Signature mismatch:"; print_space();
-      Includemod.report_error errs;
-      close_box()
-  | Signature_expected ->
-      print_string "This module type is not a signature"
-  | Structure_expected mty ->
-      open_box 0;
-      print_string "This module is not a structure; it has type";
-      print_space(); modtype mty;
-      close_box()
-  | With_no_component lid ->
-      open_box 0;
-      print_string "The signature constrained by `with' has no component named";
-      print_space(); longident lid;
-      close_box()
-  | With_mismatch(lid, explanation) ->
-      open_vbox 0;
-      open_box 0;
-      print_string "In this `with' constraint, the new definition of";
-      print_space(); longident lid; print_space();
-      print_string "does not match its original definition";
-      print_space(); print_string "in the constrained signature:";
-      close_box();
-      print_space();
-      Includemod.report_error explanation;
-      close_box()
-  | Repeated_name(kind, name) ->
-      open_box 0;
-      print_string "Multiple definition of the "; print_string kind;
-      print_string " name "; print_string name; print_string ".";
-      print_space();
-      print_string "Names must be unique in a given structure.";
-      close_box()
-  | Non_generalizable typ ->
-      open_box 0;
-      print_string "The type of this expression,"; print_space();
-      type_scheme typ; print_string ","; print_space();
-      print_string "contains type variables that cannot be generalized";
-      close_box()
-  | Non_generalizable_module mty ->
-      open_box 0;
-      print_string "The type of this module,"; print_space();
-      modtype mty; print_string ","; print_space();
-      print_string "contains type variables that cannot be generalized";
-      close_box()
-@
 
 
 %-------------------------------------------------------------
@@ -10347,9 +8480,9 @@ open Types
 open Typedtree
 
 
-<<type Typemod.error (./typing/typemod.ml)>>
+<<type Typemod.error>>
 
-<<exception Typemod.Error (./typing/typemod.ml)>>
+<<exception Typemod.Error>>
 
 <<function Typemod.extract_sig_open>>
 
@@ -10534,125 +8667,9 @@ open Printtyp
 
 \section{[[./bytecomp/]]}
 
+
 \subsection*{[[./bytecomp/lambda.mli]]}
 
-<<type Lambda.primitive>>=
-type primitive =
-    Pidentity
-    (* Globals *)
-  | Pgetglobal of Ident.t
-  | Psetglobal of Ident.t
-  (* Operations on heap blocks *)
-  | Pmakeblock of int * mutable_flag
-  | Pfield of int
-  | Psetfield of int * bool
-  | Pfloatfield of int
-  | Psetfloatfield of int
-  (* External call *)
-  | Pccall of Primitive.description
-  (* Exceptions *)
-  | Praise
-  (* Boolean operations *)
-  | Psequand | Psequor | Pnot
-  (* Integer operations *)
-  | Pnegint | Paddint | Psubint | Pmulint | Pdivint | Pmodint
-  | Pandint | Porint | Pxorint
-  | Plslint | Plsrint | Pasrint
-  | Pintcomp of comparison
-  | Poffsetint of int
-  | Poffsetref of int
-  (* Float operations *)
-  | Pintoffloat | Pfloatofint
-  | Pnegfloat | Pabsfloat
-  | Paddfloat | Psubfloat | Pmulfloat | Pdivfloat
-  | Pfloatcomp of comparison
-  (* String operations *)
-  | Pstringlength | Pstringrefu | Pstringsetu | Pstringrefs | Pstringsets
-  (* Array operations *)
-  | Pmakearray of array_kind
-  | Parraylength of array_kind
-  | Parrayrefu of array_kind
-  | Parraysetu of array_kind
-  | Parrayrefs of array_kind
-  | Parraysets of array_kind
-  (* Bitvect operations *)
-  | Pbittest
-@
-
-<<type Lambda.comparison>>=
-and comparison =
-    Ceq | Cneq | Clt | Cgt | Cle | Cge
-@
-
-<<type Lambda.array_kind>>=
-and array_kind =
-    Pgenarray | Paddrarray | Pintarray | Pfloatarray
-@
-
-<<type Lambda.structured_constant>>=
-type structured_constant =
-    Const_base of constant
-  | Const_pointer of int
-  | Const_block of int * structured_constant list
-  | Const_float_array of string list
-@
-
-<<type Lambda.function_kind>>=
-type function_kind = Curried | Tupled
-@
-
-<<type Lambda.let_kind>>=
-type let_kind = Strict | Alias | StrictOpt
-@
-
-<<type Lambda.shared_code>>=
-type shared_code = (int * int) list     (* stack size -> code label *)
-@
-
-<<type Lambda.lambda>>=
-type lambda =
-    Lvar of Ident.t
-  | Lconst of structured_constant
-  | Lapply of lambda * lambda list
-  | Lfunction of function_kind * Ident.t list * lambda
-  | Llet of let_kind * Ident.t * lambda * lambda
-  | Lletrec of (Ident.t * lambda) list * lambda
-  | Lprim of primitive * lambda list
-  | Lswitch of lambda * lambda_switch
-  | Lstaticfail
-  | Lcatch of lambda * lambda
-  | Ltrywith of lambda * Ident.t * lambda
-  | Lifthenelse of lambda * lambda * lambda
-  | Lsequence of lambda * lambda
-  | Lwhile of lambda * lambda
-  | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
-  | Lassign of Ident.t * lambda
-  | Levent of lambda * lambda_event
-@
-
-<<type Lambda.lambda_switch>>=
-and lambda_switch =
-  { sw_numconsts: int;                  (* Number of integer cases *)
-    sw_consts: (int * lambda) list;     (* Integer cases *)
-    sw_numblocks: int;                  (* Number of tag block cases *)
-    sw_blocks: (int * lambda) list;     (* Tag block cases *)
-    sw_checked: bool }                  (* True if bound checks needed *)
-@
-
-<<type Lambda.lambda_event>>=
-and lambda_event =
-  { lev_loc: int;
-    lev_kind: lambda_event_kind;
-    lev_repr: int ref option;
-    lev_env: Env.summary }
-@
-
-<<type Lambda.lambda_event_kind>>=
-and lambda_event_kind =
-    Lev_before
-  | Lev_after of Types.type_expr
-  | Lev_function
-@
 
 <<signature Lambda.const_unit>>=
 val const_unit: structured_constant
@@ -10723,123 +8740,7 @@ open Asttypes
 
 \subsection*{[[./bytecomp/lambda.ml]]}
 
-<<type Lambda.primitive (./bytecomp/lambda.ml)>>=
-type primitive =
-    Pidentity
-    (* Globals *)
-  | Pgetglobal of Ident.t
-  | Psetglobal of Ident.t
-  (* Operations on heap blocks *)
-  | Pmakeblock of int * mutable_flag
-  | Pfield of int
-  | Psetfield of int * bool
-  | Pfloatfield of int
-  | Psetfloatfield of int
-  (* External call *)
-  | Pccall of Primitive.description
-  (* Exceptions *)
-  | Praise
-  (* Boolean operations *)
-  | Psequand | Psequor | Pnot
-  (* Integer operations *)
-  | Pnegint | Paddint | Psubint | Pmulint | Pdivint | Pmodint
-  | Pandint | Porint | Pxorint
-  | Plslint | Plsrint | Pasrint
-  | Pintcomp of comparison
-  | Poffsetint of int
-  | Poffsetref of int
-  (* Float operations *)
-  | Pintoffloat | Pfloatofint
-  | Pnegfloat | Pabsfloat
-  | Paddfloat | Psubfloat | Pmulfloat | Pdivfloat
-  | Pfloatcomp of comparison
-  (* String operations *)
-  | Pstringlength | Pstringrefu | Pstringsetu | Pstringrefs | Pstringsets
-  (* Array operations *)
-  | Pmakearray of array_kind
-  | Parraylength of array_kind
-  | Parrayrefu of array_kind
-  | Parraysetu of array_kind
-  | Parrayrefs of array_kind
-  | Parraysets of array_kind
-  (* Bitvect operations *)
-  | Pbittest
-@
 
-<<type Lambda.comparison (./bytecomp/lambda.ml)>>=
-and comparison =
-    Ceq | Cneq | Clt | Cgt | Cle | Cge
-@
-
-<<type Lambda.array_kind (./bytecomp/lambda.ml)>>=
-and array_kind =
-    Pgenarray | Paddrarray | Pintarray | Pfloatarray
-@
-
-<<type Lambda.structured_constant (./bytecomp/lambda.ml)>>=
-type structured_constant =
-    Const_base of constant
-  | Const_pointer of int
-  | Const_block of int * structured_constant list
-  | Const_float_array of string list
-@
-
-<<type Lambda.function_kind (./bytecomp/lambda.ml)>>=
-type function_kind = Curried | Tupled
-@
-
-<<type Lambda.let_kind (./bytecomp/lambda.ml)>>=
-type let_kind = Strict | Alias | StrictOpt
-@
-
-<<type Lambda.shared_code (./bytecomp/lambda.ml)>>=
-type shared_code = (int * int) list
-@
-
-<<type Lambda.lambda (./bytecomp/lambda.ml)>>=
-type lambda =
-    Lvar of Ident.t
-  | Lconst of structured_constant
-  | Lapply of lambda * lambda list
-  | Lfunction of function_kind * Ident.t list * lambda
-  | Llet of let_kind * Ident.t * lambda * lambda
-  | Lletrec of (Ident.t * lambda) list * lambda
-  | Lprim of primitive * lambda list
-  | Lswitch of lambda * lambda_switch
-  | Lstaticfail
-  | Lcatch of lambda * lambda
-  | Ltrywith of lambda * Ident.t * lambda
-  | Lifthenelse of lambda * lambda * lambda
-  | Lsequence of lambda * lambda
-  | Lwhile of lambda * lambda
-  | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
-  | Lassign of Ident.t * lambda
-  | Levent of lambda * lambda_event
-@
-
-<<type Lambda.lambda_switch (./bytecomp/lambda.ml)>>=
-and lambda_switch =
-  { sw_numconsts: int;
-    sw_consts: (int * lambda) list;
-    sw_numblocks: int;
-    sw_blocks: (int * lambda) list;
-    sw_checked: bool }
-@
-
-<<type Lambda.lambda_event (./bytecomp/lambda.ml)>>=
-and lambda_event =
-  { lev_loc: int;
-    lev_kind: lambda_event_kind;
-    lev_repr: int ref option;
-    lev_env: Env.summary }
-@
-
-<<type Lambda.lambda_event_kind (./bytecomp/lambda.ml)>>=
-and lambda_event_kind =
-    Lev_before
-  | Lev_after of Types.type_expr
-  | Lev_function
-@
 
 <<constant Lambda.const_unit>>=
 let const_unit = Const_pointer 0
@@ -10928,27 +8829,27 @@ open Misc
 open Path
 open Asttypes
 
-<<type Lambda.primitive (./bytecomp/lambda.ml)>>
+<<type Lambda.primitive>>
 
-<<type Lambda.comparison (./bytecomp/lambda.ml)>>
+<<type Lambda.comparison>>
 
-<<type Lambda.array_kind (./bytecomp/lambda.ml)>>
+<<type Lambda.array_kind>>
 
-<<type Lambda.structured_constant (./bytecomp/lambda.ml)>>
+<<type Lambda.structured_constant>>
 
-<<type Lambda.function_kind (./bytecomp/lambda.ml)>>
+<<type Lambda.function_kind>>
 
-<<type Lambda.let_kind (./bytecomp/lambda.ml)>>
+<<type Lambda.let_kind>>
 
-<<type Lambda.shared_code (./bytecomp/lambda.ml)>>
+<<type Lambda.shared_code>>
 
-<<type Lambda.lambda (./bytecomp/lambda.ml)>>
+<<type Lambda.lambda>>
 
-<<type Lambda.lambda_switch (./bytecomp/lambda.ml)>>
+<<type Lambda.lambda_switch>>
 
-<<type Lambda.lambda_event (./bytecomp/lambda.ml)>>
+<<type Lambda.lambda_event>>
 
-<<type Lambda.lambda_event_kind (./bytecomp/lambda.ml)>>
+<<type Lambda.lambda_event_kind>>
 
 <<constant Lambda.const_unit>>
 
@@ -10968,15 +8869,6 @@ module IdentSet = Set
 
 \subsection*{[[./bytecomp/printlambda.mli]]}
 
-<<signature Printlambda.structured_constant>>=
-val structured_constant: structured_constant -> unit
-@
-
-<<signature Printlambda.lambda>>=
-val lambda: lambda -> unit
-@
-
-
 %-------------------------------------------------------------
 
 <<./bytecomp/printlambda.mli>>=
@@ -10991,106 +8883,6 @@ open Lambda
 
 \subsection*{[[./bytecomp/printlambda.ml]]}
 
-<<constant Printlambda.structured_constant>>=
-let rec structured_constant = function
-    Const_base(Const_int n) -> print_int n
-  | Const_base(Const_char c) ->
-      print_string "'"; print_string(Char.escaped c); print_string "'"
-  | Const_base(Const_string s) ->
-      print_string "\""; print_string(String.escaped s); print_string "\""
-  | Const_base(Const_float s) ->
-      print_string s
-  | Const_pointer n -> print_int n; print_string "a"
-  | Const_block(tag, []) ->
-      print_string "["; print_int tag; print_string "]"
-  | Const_block(tag, sc1::scl) ->
-      open_box 1;
-      print_string "["; print_int tag; print_string ":";
-      print_space();
-      open_box 0;
-      structured_constant sc1;
-      List.iter (fun sc -> print_space(); structured_constant sc) scl;
-      close_box();
-      print_string "]";
-      close_box()
-  | Const_float_array [] ->
-      print_string "[| |]"
-  | Const_float_array (f1 :: fl) ->
-      open_box 1;
-      print_string "[|";
-      open_box 0;
-      print_string f1;
-      List.iter (fun f -> print_space(); print_string f) fl;
-      close_box();
-      print_string "|]";
-      close_box()
-@
-
-<<constant Printlambda.primitive>>=
-let primitive = function
-    Pidentity -> print_string "id"
-  | Pgetglobal id -> print_string "global "; Ident.print id
-  | Psetglobal id -> print_string "setglobal "; Ident.print id
-  | Pmakeblock(tag, Immutable) -> print_string "makeblock "; print_int tag
-  | Pmakeblock(tag, Mutable) -> print_string "makemutable "; print_int tag
-  | Pfield n -> print_string "field "; print_int n
-  | Psetfield(n, _) -> print_string "setfield "; print_int n
-  | Pfloatfield n -> print_string "floatfield "; print_int n
-  | Psetfloatfield n -> print_string "setfloatfield "; print_int n
-  | Pccall p -> print_string p.prim_name
-  | Praise -> print_string "raise"
-  | Psequand -> print_string "&&"
-  | Psequor -> print_string "||"
-  | Pnot -> print_string "not"
-  | Pnegint -> print_string "~"
-  | Paddint -> print_string "+"
-  | Psubint -> print_string "-"
-  | Pmulint -> print_string "*"
-  | Pdivint -> print_string "/"
-  | Pmodint -> print_string "mod"
-  | Pandint -> print_string "and"
-  | Porint -> print_string "or"
-  | Pxorint -> print_string "xor"
-  | Plslint -> print_string "lsl"
-  | Plsrint -> print_string "lsr"
-  | Pasrint -> print_string "asr"
-  | Pintcomp(Ceq) -> print_string "=="
-  | Pintcomp(Cneq) -> print_string "!="
-  | Pintcomp(Clt) -> print_string "<"
-  | Pintcomp(Cle) -> print_string "<="
-  | Pintcomp(Cgt) -> print_string ">"
-  | Pintcomp(Cge) -> print_string ">="
-  | Poffsetint n -> print_int n; print_string "+"
-  | Poffsetref n -> print_int n; print_string "+:="
-  | Pintoffloat -> print_string "int_of_float"
-  | Pfloatofint -> print_string "float_of_int"
-  | Pnegfloat -> print_string "~."
-  | Pabsfloat -> print_string "abs."
-  | Paddfloat -> print_string "+."
-  | Psubfloat -> print_string "-."
-  | Pmulfloat -> print_string "*."
-  | Pdivfloat -> print_string "/."
-  | Pfloatcomp(Ceq) -> print_string "==."
-  | Pfloatcomp(Cneq) -> print_string "!=."
-  | Pfloatcomp(Clt) -> print_string "<."
-  | Pfloatcomp(Cle) -> print_string "<=."
-  | Pfloatcomp(Cgt) -> print_string ">."
-  | Pfloatcomp(Cge) -> print_string ">=."
-  | Pstringlength -> print_string "string.length"
-  | Pstringrefu -> print_string "string.unsafe_get"
-  | Pstringsetu -> print_string "string.unsafe_set"
-  | Pstringrefs -> print_string "string.get"
-  | Pstringsets -> print_string "string.set"
-  | Parraylength _ -> print_string "array.length"
-  | Pmakearray _ -> print_string "makearray "
-  | Parrayrefu _ -> print_string "array.unsafe_get"
-  | Parraysetu _ -> print_string "array.unsafe_set"
-  | Parrayrefs _ -> print_string "array.get"
-  | Parraysets _ -> print_string "array.set"
-  | Pbittest -> print_string "testbit"
-@
-
-
 %-------------------------------------------------------------
 
 <<./bytecomp/printlambda.ml>>=
@@ -11103,186 +8895,12 @@ open Types
 open Lambda
 
 
-<<constant Printlambda.structured_constant>>
+<<function Printlambda.structured_constant>>
 
-<<constant Printlambda.primitive>>
+<<function Printlambda.primitive>>
 
-let rec lambda = function
-    Lvar id ->
-      Ident.print id
-  | Lconst cst ->
-      structured_constant cst
-  | Lapply(lfun, largs) ->
-      open_box 2;
-      print_string "(apply"; print_space();
-      lambda lfun;
-      List.iter (fun l -> print_space(); lambda l) largs;
-      print_string ")";
-      close_box()
-  | Lfunction(kind, params, body) ->
-      open_box 2;
-      print_string "(function";
-      begin match kind with
-        Curried ->
-          List.iter (fun param -> print_space(); Ident.print param) params
-      | Tupled ->
-          print_string " (";
-          let first = ref true in
-          List.iter
-            (fun param ->
-              if !first
-              then first := false
-              else begin print_string ",";print_space() end;
-              Ident.print param)
-            params
-      end;
-      print_space(); lambda body; print_string ")"; close_box()
-  | Llet(str, id, arg, body) ->
-      open_box 2;
-      print_string "(let"; print_space();
-      open_hvbox 1;
-      print_string "(";
-      open_box 2; Ident.print id; print_space(); lambda arg; close_box();
-      letbody body;
-      print_string ")";
-      close_box()
-  | Lletrec(id_arg_list, body) ->
-      open_box 2;
-      print_string "(letrec"; print_space();
-      print_string "(";
-      open_hvbox 1;
-      let spc = ref false in
-      List.iter
-        (fun (id, l) ->
-          if !spc then print_space() else spc := true;
-          open_box 2;
-          Ident.print id; print_space(); lambda l;
-          close_box())
-        id_arg_list;
-      close_box();
-      print_string ")";
-      print_space(); lambda body;
-      print_string ")"; close_box()
-  | Lprim(prim, largs) ->
-      open_box 2;
-      print_string "("; primitive prim;
-      List.iter (fun l -> print_space(); lambda l) largs;
-      print_string ")";
-      close_box()
-  | Lswitch(larg, sw) ->
-      open_box 1;
-      print_string (if sw.sw_checked then "(switch-checked " else "(switch ");
-      lambda larg; print_space();
-      open_vbox 0;
-      let spc = ref false in
-      List.iter
-        (fun (n, l) ->
-          if !spc then print_space() else spc := true;
-          open_hvbox 1;
-          print_string "case int "; print_int n;
-          print_string ":"; print_space();
-          lambda l;
-          close_box())
-        sw.sw_consts;
-      List.iter
-        (fun (n, l) ->
-          if !spc then print_space() else spc := true;
-          open_hvbox 1;
-          print_string "case tag "; print_int n;
-          print_string ":"; print_space();
-          lambda l;
-          close_box())
-        sw.sw_blocks;
-      print_string ")"; close_box(); close_box()
-  | Lstaticfail ->
-      print_string "exit"
-  | Lcatch(lbody, lhandler) ->
-      open_box 2;
-      print_string "(catch"; print_space();
-      lambda lbody; print_break 1 (-1);
-      print_string "with"; print_space(); lambda lhandler;
-      print_string ")";
-      close_box()
-  | Ltrywith(lbody, param, lhandler) ->
-      open_box 2;
-      print_string "(try"; print_space();
-      lambda lbody; print_break 1 (-1);
-      print_string "with "; Ident.print param; print_space();
-      lambda lhandler;
-      print_string ")";
-      close_box()
-  | Lifthenelse(lcond, lif, lelse) ->
-      open_box 2;
-      print_string "(if"; print_space();
-      lambda lcond; print_space();
-      lambda lif; print_space();
-      lambda lelse; print_string ")";
-      close_box()
-  | Lsequence(l1, l2) ->
-      open_box 2;
-      print_string "(seq"; print_space();
-      lambda l1; print_space(); sequence l2; print_string ")";
-      close_box()
-  | Lwhile(lcond, lbody) ->
-      open_box 2;
-      print_string "(while"; print_space();
-      lambda lcond; print_space();
-      lambda lbody; print_string ")";
-      close_box()
-  | Lfor(param, lo, hi, dir, body) ->
-      open_box 2;
-      print_string "(for "; Ident.print param; print_space();
-      lambda lo; print_space();
-      print_string(match dir with Upto -> "to" | Downto -> "downto");
-      print_space();
-      lambda hi; print_space();
-      lambda body; print_string ")";
-      close_box()
-  | Lassign(id, expr) ->
-      open_box 2;
-      print_string "(assign"; print_space();
-      Ident.print id; print_space();
-      lambda expr; print_string ")";
-      close_box()
-  | Levent(lam, ev) ->
-      open_box 2;
-      begin match ev.lev_kind with
-        Lev_before   -> print_string "(before "
-      | Lev_after _  -> print_string "(after "
-      | Lev_function -> print_string "(funct-body "
-      end;
-      print_int ev.lev_loc;
-      print_space();
-      lambda lam;
-      print_string ")";
-      close_box()
-
-and sequence = function
-    Lsequence(l1, l2) ->
-      sequence l1; print_space(); sequence l2
-  | Llet(str, id, arg, body) ->
-      open_box 2;
-      print_string "let"; print_space();
-      Ident.print id; print_space(); lambda arg;
-      close_box();
-      print_space();
-      sequence body
-  | l ->
-      lambda l
-
-and letbody = function
-    Llet(str, id, arg, body) ->
-      print_space();
-      open_box 2; Ident.print id; print_space(); lambda arg;
-      close_box();
-      letbody body
-  | l ->
-      print_string ")";
-      close_box();
-      print_space();
-      lambda l
+<<function Printlambda.lambda>>
 @
-
 
 \subsection*{[[./bytecomp/meta.mli]]}
 
@@ -11355,112 +8973,6 @@ val builtin_primitives: string array
 
 \subsection*{[[./bytecomp/instruct.mli]]}
 
-<<type Instruct.compilation_env>>=
-(* Structure of compilation environments *)
-
-type compilation_env =
-  { ce_stack: int Ident.tbl; (* Positions of variables in the stack *)
-    ce_heap: int Ident.tbl } (* Structure of the heap-allocated env *)
-@
-
-<<type Instruct.debug_event>>=
-type debug_event =
-  { mutable ev_pos: int;                (* Position in bytecode *)
-    ev_module: string;                  (* Name of defining module *)
-    ev_char: int;                       (* Location in source file *)
-    ev_kind: debug_event_kind;          (* Before/after event *)
-    ev_info: debug_event_info;          (* Extra information *)
-    ev_typenv: Env.summary;             (* Typing environment *)
-    ev_compenv: compilation_env;        (* Compilation environment *)
-    ev_stacksize: int;                  (* Size of stack frame *)
-    ev_repr: debug_event_repr }         (* Position of the representative *)
-@
-
-<<type Instruct.debug_event_kind>>=
-and debug_event_kind =
-    Event_before
-  | Event_after of Types.type_expr
-  | Event_pseudo
-@
-
-<<type Instruct.debug_event_info>>=
-and debug_event_info =
-    Event_function
-  | Event_return of int
-  | Event_other
-@
-
-<<type Instruct.debug_event_repr>>=
-and debug_event_repr =
-    Event_none
-  | Event_parent of int ref
-  | Event_child of int ref
-@
-
-<<type Instruct.label>>=
-(* Abstract machine instructions *)
-
-type label = int                        (* Symbolic code labels *)
-@
-
-<<type Instruct.instruction>>=
-type instruction =
-    Klabel of label
-  | Kacc of int
-  | Kenvacc of int
-  | Kpush
-  | Kpop of int
-  | Kassign of int
-  | Kpush_retaddr of label
-  | Kapply of int                       (* number of arguments *)
-  | Kappterm of int * int               (* number of arguments, slot size *)
-  | Kreturn of int                      (* slot size *)
-  | Krestart
-  | Kgrab of int                        (* number of arguments *)
-  | Kclosure of label * int
-  | Kclosurerec of label * int
-  | Kgetglobal of Ident.t
-  | Ksetglobal of Ident.t
-  | Kconst of structured_constant
-  | Kmakeblock of int * int             (* size, tag *)
-  | Kgetfield of int
-  | Ksetfield of int
-  | Kdummy of int                       (* block size *)
-  | Kupdate of int                      (* block size *)
-  | Kvectlength
-  | Kgetvectitem
-  | Ksetvectitem
-  | Kgetstringchar
-  | Ksetstringchar
-  | Kbranch of label
-  | Kbranchif of label
-  | Kbranchifnot of label
-  | Kstrictbranchif of label
-  | Kstrictbranchifnot of label
-  | Kswitch of label array * label array
-  | Kboolnot
-  | Kpushtrap of label
-  | Kpoptrap
-  | Kraise
-  | Kcheck_signals
-  | Kccall of string * int
-  | Knegint | Kaddint | Ksubint | Kmulint | Kdivint | Kmodint
-  | Kandint | Korint | Kxorint | Klslint | Klsrint | Kasrint
-  | Kintcomp of comparison
-  | Koffsetint of int
-  | Koffsetref of int
-  | Kevent of debug_event
-  | Kstop
-@
-
-<<signature Instruct.immed_min>>=
-val immed_min: int
-@
-
-<<signature Instruct.immed_max>>=
-val immed_max: int
-@
-
 
 %-------------------------------------------------------------
 
@@ -11500,99 +9012,6 @@ open Lambda
 
 \subsection*{[[./bytecomp/instruct.ml]]}
 
-<<type Instruct.compilation_env (./bytecomp/instruct.ml)>>=
-type compilation_env =
-  { ce_stack: int Ident.tbl;
-    ce_heap: int Ident.tbl }
-@
-
-<<type Instruct.debug_event (./bytecomp/instruct.ml)>>=
-type debug_event =
-  { mutable ev_pos: int;                (* Position in bytecode *)
-    ev_module: string;                  (* Name of defining module *)
-    ev_char: int;                       (* Location in source file *)
-    ev_kind: debug_event_kind;          (* Before/after event *)
-    ev_info: debug_event_info;          (* Extra information *)
-    ev_typenv: Env.summary;             (* Typing environment *)
-    ev_compenv: compilation_env;        (* Compilation environment *)
-    ev_stacksize: int;                  (* Size of stack frame *)
-    ev_repr: debug_event_repr }         (* Position of the representative *)
-@
-
-<<type Instruct.debug_event_kind (./bytecomp/instruct.ml)>>=
-and debug_event_kind =
-    Event_before
-  | Event_after of Types.type_expr
-  | Event_pseudo
-@
-
-<<type Instruct.debug_event_info (./bytecomp/instruct.ml)>>=
-and debug_event_info =
-    Event_function
-  | Event_return of int
-  | Event_other
-@
-
-<<type Instruct.debug_event_repr (./bytecomp/instruct.ml)>>=
-and debug_event_repr =
-    Event_none
-  | Event_parent of int ref
-  | Event_child of int ref
-@
-
-<<type Instruct.label (./bytecomp/instruct.ml)>>=
-type label = int                     (* Symbolic code labels *)
-@
-
-<<type Instruct.instruction (./bytecomp/instruct.ml)>>=
-type instruction =
-    Klabel of label
-  | Kacc of int
-  | Kenvacc of int
-  | Kpush
-  | Kpop of int
-  | Kassign of int
-  | Kpush_retaddr of label
-  | Kapply of int                       (* number of arguments *)
-  | Kappterm of int * int               (* number of arguments, slot size *)
-  | Kreturn of int                      (* slot size *)
-  | Krestart
-  | Kgrab of int                        (* number of arguments *)
-  | Kclosure of label * int
-  | Kclosurerec of label * int
-  | Kgetglobal of Ident.t
-  | Ksetglobal of Ident.t
-  | Kconst of structured_constant
-  | Kmakeblock of int * int             (* size, tag *)
-  | Kgetfield of int
-  | Ksetfield of int
-  | Kdummy of int
-  | Kupdate of int
-  | Kvectlength
-  | Kgetvectitem
-  | Ksetvectitem
-  | Kgetstringchar
-  | Ksetstringchar
-  | Kbranch of label
-  | Kbranchif of label
-  | Kbranchifnot of label
-  | Kstrictbranchif of label
-  | Kstrictbranchifnot of label
-  | Kswitch of label array * label array
-  | Kboolnot
-  | Kpushtrap of label
-  | Kpoptrap
-  | Kraise
-  | Kcheck_signals
-  | Kccall of string * int
-  | Knegint | Kaddint | Ksubint | Kmulint | Kdivint | Kmodint
-  | Kandint | Korint | Kxorint | Klslint | Klsrint | Kasrint
-  | Kintcomp of comparison
-  | Koffsetint of int
-  | Koffsetref of int
-  | Kevent of debug_event
-  | Kstop
-@
 
 
 %-------------------------------------------------------------
@@ -11602,20 +9021,20 @@ type instruction =
 
 open Lambda
 
-<<type Instruct.compilation_env (./bytecomp/instruct.ml)>>
+<<type Instruct.compilation_env>>
 
 
-<<type Instruct.debug_event (./bytecomp/instruct.ml)>>
+<<type Instruct.debug_event>>
 
-<<type Instruct.debug_event_kind (./bytecomp/instruct.ml)>>
+<<type Instruct.debug_event_kind>>
 
-<<type Instruct.debug_event_info (./bytecomp/instruct.ml)>>
+<<type Instruct.debug_event_info>>
 
-<<type Instruct.debug_event_repr (./bytecomp/instruct.ml)>>
+<<type Instruct.debug_event_repr>>
 
-<<type Instruct.label (./bytecomp/instruct.ml)>>
+<<type Instruct.label>>
 
-<<type Instruct.instruction (./bytecomp/instruct.ml)>>
+<<type Instruct.instruction>>
 
 let immed_min = -0x40000000
 and immed_max = 0x3FFFFFFF
@@ -11627,15 +9046,6 @@ and immed_max = 0x3FFFFFFF
 
 
 \subsection*{[[./bytecomp/printinstr.mli]]}
-
-<<signature Printinstr.instruction>>=
-val instruction: instruction -> unit
-@
-
-<<signature Printinstr.instrlist>>=
-val instrlist: instruction list -> unit
-@
-
 
 %-------------------------------------------------------------
 
@@ -11652,102 +9062,6 @@ open Instruct
 
 
 \subsection*{[[./bytecomp/printinstr.ml]]}
-
-<<constant Printinstr.instruction>>=
-let instruction = function
-    Klabel lbl -> print_string "L"; print_int lbl; print_string ":"
-  | Kacc n -> print_string "\tacc "; print_int n
-  | Kenvacc n -> print_string "\tenvacc "; print_int n
-  | Kpush -> print_string "\tpush"
-  | Kpop n -> print_string "\tpop "; print_int n
-  | Kassign n -> print_string "\tassign "; print_int n
-  | Kpush_retaddr lbl -> print_string "\tpush_retaddr L"; print_int lbl
-  | Kapply n -> print_string "\tapply "; print_int n
-  | Kappterm(n, m) ->
-      print_string "\tappterm "; print_int n; print_string ", "; print_int m
-  | Kreturn n -> print_string "\treturn "; print_int n
-  | Krestart -> print_string "\trestart"
-  | Kgrab n -> print_string "\tgrab "; print_int n
-  | Kclosure(lbl, n) ->
-      print_string "\tclosure L"; print_int lbl; print_string ", "; print_int n
-  | Kclosurerec(lbl, n) ->
-      print_string "\tclosurerec L"; print_int lbl;
-      print_string ", "; print_int n
-  | Kgetglobal id -> print_string "\tgetglobal "; Ident.print id
-  | Ksetglobal id -> print_string "\tsetglobal "; Ident.print id
-  | Kconst cst ->
-      open_box 10; print_string "\tconst"; print_space();
-      Printlambda.structured_constant cst; close_box()
-  | Kmakeblock(n, m) ->
-      print_string "\tmakeblock "; print_int n; print_string ", "; print_int m
-  | Kgetfield n -> print_string "\tgetfield "; print_int n
-  | Ksetfield n -> print_string "\tsetfield "; print_int n
-  | Kdummy n -> print_string "\tdummy "; print_int n
-  | Kupdate n -> print_string "\tupdate"; print_int n
-  | Kvectlength -> print_string "\tvectlength"
-  | Kgetvectitem -> print_string "\tgetvectitem"
-  | Ksetvectitem -> print_string "\tsetvectitem"
-  | Kgetstringchar -> print_string "\tgetstringchar"
-  | Ksetstringchar -> print_string "\tsetstringchar"
-  | Kbranch lbl -> print_string "\tbranch L"; print_int lbl
-  | Kbranchif lbl -> print_string "\tbranchif L"; print_int lbl
-  | Kbranchifnot lbl -> print_string "\tbranchifnot L"; print_int lbl
-  | Kstrictbranchif lbl -> print_string "\tstrictbranchif L"; print_int lbl
-  | Kstrictbranchifnot lbl ->
-      print_string "\tstrictbranchifnot L"; print_int lbl
-  | Kswitch(consts, blocks) ->
-      open_box 10;
-      print_string "\tswitch";
-      Array.iter (fun lbl -> print_space(); print_int lbl) consts;
-      print_string "/";
-      Array.iter (fun lbl -> print_space(); print_int lbl) blocks;
-      close_box()
-  | Kboolnot -> print_string "\tboolnot"
-  | Kpushtrap lbl -> print_string "\tpushtrap L"; print_int lbl
-  | Kpoptrap -> print_string "\tpoptrap"
-  | Kraise -> print_string "\traise"
-  | Kcheck_signals -> print_string "\tcheck_signals"
-  | Kccall(s, n) ->
-      print_string "\tccall "; print_string s; print_string ", "; print_int n
-  | Knegint -> print_string "\tnegint"
-  | Kaddint -> print_string "\taddint"
-  | Ksubint -> print_string "\tsubint"
-  | Kmulint -> print_string "\tmulint"
-  | Kdivint -> print_string "\tdivint"
-  | Kmodint -> print_string "\tmodint"
-  | Kandint -> print_string "\tandint"
-  | Korint -> print_string "\torint"
-  | Kxorint -> print_string "\txorint"
-  | Klslint -> print_string "\tlslint"
-  | Klsrint -> print_string "\tlsrint"
-  | Kasrint -> print_string "\tasrint"
-  | Kintcomp Ceq -> print_string "\teqint"
-  | Kintcomp Cneq -> print_string "\tneqint"
-  | Kintcomp Clt -> print_string "\tltint"
-  | Kintcomp Cgt -> print_string "\tgtint"
-  | Kintcomp Cle -> print_string "\tleint"
-  | Kintcomp Cge -> print_string "\tgeint"
-  | Koffsetint n -> print_string "\toffsetint "; print_int n
-  | Koffsetref n -> print_string "\toffsetref "; print_int n
-  | Kstop -> print_string "\tstop"
-  | Kevent ev -> print_string "\tevent "; print_int ev.ev_char
-@
-
-<<constant Printinstr.instruction_list>>=
-let rec instruction_list = function
-    [] -> ()
-  | Klabel lbl :: il ->
-      print_string "L"; print_int lbl; print_string ":"; instruction_list il
-  | instr :: il ->
-      instruction instr; print_space(); instruction_list il
-@
-
-<<function Printinstr.instrlist>>=
-let instrlist il =
-  open_vbox 0;
-  instruction_list il;
-  close_box()
-@
 
 
 %-------------------------------------------------------------
@@ -11772,9 +9086,6 @@ open Instruct
 
 \subsection*{[[./bytecomp/simplif.mli]]}
 
-<<signature Simplif.simplify_lambda>>=
-val simplify_lambda: lambda -> lambda
-@
 
 
 %-------------------------------------------------------------
@@ -11996,31 +9307,6 @@ module IdentSet = Set
 
 \subsection*{[[./bytecomp/matching.mli]]}
 
-<<signature Matching.for_function>>=
-val for_function:
-        Location.t -> int ref option -> lambda -> (pattern * lambda) list ->
-        lambda
-@
-
-<<signature Matching.for_trywith>>=
-val for_trywith:
-        lambda -> (pattern * lambda) list -> lambda
-@
-
-<<signature Matching.for_let>>=
-val for_let:
-        Location.t -> lambda -> pattern -> lambda -> lambda
-@
-
-<<signature Matching.for_multiple_match>>=
-val for_multiple_match:
-        Location.t -> lambda list -> (pattern * lambda) list -> lambda
-@
-
-<<signature Matching.for_tupled_function>>=
-val for_tupled_function:
-        Location.t -> Ident.t list -> (pattern list * lambda) list -> lambda
-@
 
 <<exception Matching.Cannot_flatten>>=
 exception Cannot_flatten
@@ -12693,36 +9979,7 @@ val name_pattern: string -> (pattern * 'a) list -> Ident.t
 val maybe_pointer: expression -> bool
 @
 
-<<signature Translcore.transl_exp>>=
-val transl_exp: expression -> lambda
-@
 
-<<signature Translcore.transl_let>>=
-val transl_let:
-      rec_flag -> (pattern * expression) list -> lambda -> lambda
-@
-
-<<signature Translcore.transl_primitive>>=
-val transl_primitive: Primitive.description -> lambda
-@
-
-<<signature Translcore.transl_exception>>=
-val transl_exception: Ident.t -> exception_declaration -> lambda
-@
-
-<<type Translcore.error>>=
-type error =
-    Illegal_letrec_pat
-  | Illegal_letrec_expr
-@
-
-<<exception Translcore.Error>>=
-exception Error of Location.t * error
-@
-
-<<signature Translcore.report_error>>=
-val report_error: error -> unit
-@
 
 
 %-------------------------------------------------------------
@@ -12756,129 +10013,6 @@ open Lambda
 
 \subsection*{[[./bytecomp/translcore.ml]]}
 
-<<type Translcore.error (./bytecomp/translcore.ml)>>=
-type error =
-    Illegal_letrec_pat
-  | Illegal_letrec_expr
-@
-
-<<exception Translcore.Error (./bytecomp/translcore.ml)>>=
-exception Error of Location.t * error
-@
-
-<<constant Translcore.comparisons_table>>=
-(* Translation of primitives *)
-
-let comparisons_table = create_hashtable 11 [
-  "%equal",
-      (Pccall{prim_name = "equal"; prim_arity = 2; prim_alloc = false;
-              prim_native_name = ""; prim_native_float = false},
-       Pintcomp Ceq,
-       Pfloatcomp Ceq,
-       Pccall{prim_name = "string_equal"; prim_arity = 2; prim_alloc = false;
-              prim_native_name = ""; prim_native_float = false});
-  "%notequal",
-      (Pccall{prim_name = "notequal"; prim_arity = 2; prim_alloc = false;
-              prim_native_name = ""; prim_native_float = false},
-       Pintcomp Cneq,
-       Pfloatcomp Cneq,
-       Pccall{prim_name = "string_notequal"; prim_arity = 2;
-              prim_alloc = false; prim_native_name = ""; 
-              prim_native_float = false});
-  "%lessthan",
-      (Pccall{prim_name = "lessthan"; prim_arity = 2; prim_alloc = false; 
-              prim_native_name = ""; prim_native_float = false},
-       Pintcomp Clt,
-       Pfloatcomp Clt,
-       Pccall{prim_name = "lessthan"; prim_arity = 2; prim_alloc = false;
-              prim_native_name = ""; prim_native_float = false});
-  "%greaterthan",
-      (Pccall{prim_name = "greaterthan"; prim_arity = 2; prim_alloc = false;
-              prim_native_name = ""; prim_native_float = false},
-       Pintcomp Cgt,
-       Pfloatcomp Cgt,
-       Pccall{prim_name = "greaterthan"; prim_arity = 2; prim_alloc = false;
-              prim_native_name = ""; prim_native_float = false});
-  "%lessequal",
-      (Pccall{prim_name = "lessequal"; prim_arity = 2; prim_alloc = false;
-              prim_native_name = ""; prim_native_float = false},
-       Pintcomp Cle,
-       Pfloatcomp Cle,
-       Pccall{prim_name = "lessequal"; prim_arity = 2; prim_alloc = false;
-              prim_native_name = ""; prim_native_float = false});
-  "%greaterequal",
-      (Pccall{prim_name = "greaterequal"; prim_arity = 2; prim_alloc = false;
-              prim_native_name = ""; prim_native_float = false},
-       Pintcomp Cge,
-       Pfloatcomp Cge,
-       Pccall{prim_name = "greaterequal"; prim_arity = 2; prim_alloc = false;
-              prim_native_name = ""; prim_native_float = false})
-]
-@
-
-<<constant Translcore.primitives_table>>=
-let primitives_table = create_hashtable 31 [
-  "%identity", Pidentity;
-  "%field0", Pfield 0;
-  "%field1", Pfield 1;
-  "%setfield0", Psetfield(0, true);
-  "%makeblock", Pmakeblock(0, Immutable);
-  "%makemutable", Pmakeblock(0, Mutable);
-  "%raise", Praise;
-  "%sequand", Psequand;
-  "%sequor", Psequor;
-  "%boolnot", Pnot;
-  "%negint", Pnegint;
-  "%succint", Poffsetint 1;
-  "%predint", Poffsetint(-1);
-  "%addint", Paddint;
-  "%subint", Psubint;
-  "%mulint", Pmulint;
-  "%divint", Pdivint;
-  "%modint", Pmodint;
-  "%andint", Pandint;
-  "%orint", Porint;
-  "%xorint", Pxorint;
-  "%lslint", Plslint;
-  "%lsrint", Plsrint;
-  "%asrint", Pasrint;
-  "%eq", Pintcomp Ceq;
-  "%noteq", Pintcomp Cneq;
-  "%ltint", Pintcomp Clt;
-  "%leint", Pintcomp Cle;
-  "%gtint", Pintcomp Cgt;
-  "%geint", Pintcomp Cge;
-  "%incr", Poffsetref(1);
-  "%decr", Poffsetref(-1);
-  "%intoffloat", Pintoffloat;
-  "%floatofint", Pfloatofint;
-  "%negfloat", Pnegfloat;
-  "%absfloat", Pabsfloat;
-  "%addfloat", Paddfloat;
-  "%subfloat", Psubfloat;
-  "%mulfloat", Pmulfloat;
-  "%divfloat", Pdivfloat;
-  "%eqfloat", Pfloatcomp Ceq;
-  "%noteqfloat", Pfloatcomp Cneq;
-  "%ltfloat", Pfloatcomp Clt;
-  "%lefloat", Pfloatcomp Cle;
-  "%gtfloat", Pfloatcomp Cgt;
-  "%gefloat", Pfloatcomp Cge;
-  "%string_length", Pstringlength;
-  "%string_safe_get", Pstringrefs;
-  "%string_safe_set", Pstringsets;
-  "%string_unsafe_get", Pstringrefu;
-  "%string_unsafe_set", Pstringsetu;
-  "%array_length", Parraylength Pgenarray;
-  "%array_safe_get", Parrayrefs Pgenarray;
-  "%array_safe_set", Parraysets Pgenarray;
-  "%array_unsafe_get", Parrayrefu Pgenarray;
-  "%array_unsafe_set", Parraysetu Pgenarray;
-  "%obj_size", Parraylength Paddrarray;
-  "%obj_field", Parrayrefu Paddrarray;
-  "%obj_set_field", Parraysetu Paddrarray
-]
-@
 
 <<function Translcore.has_base_type>>=
 let has_base_type exp base_ty =
@@ -13103,15 +10237,6 @@ let transl_exception id decl =
           [Lconst(Const_base(Const_string(Ident.name id)))])
 @
 
-<<constant Translcore.report_error>>=
-let report_error = function
-    Illegal_letrec_pat ->
-      print_string
-      "Only variables are allowed as left-hand side of `let rec'"
-  | Illegal_letrec_expr ->
-      print_string
-      "This kind of expression is not allowed as right-hand side of `let rec'"
-@
 
 
 %-------------------------------------------------------------
@@ -13130,9 +10255,9 @@ open Types
 open Typedtree
 open Lambda
 
-<<type Translcore.error (./bytecomp/translcore.ml)>>
+<<type Translcore.error>>
 
-<<exception Translcore.Error (./bytecomp/translcore.ml)>>
+<<exception Translcore.Error>>
 
 <<constant Translcore.comparisons_table>>
 
@@ -13389,9 +10514,6 @@ open Format
 
 \subsection*{[[./bytecomp/bytegen.mli]]}
 
-<<signature Bytegen.compile_implementation>>=
-val compile_implementation: string -> lambda -> instruction list
-@
 
 <<signature Bytegen.compile_phrase>>=
 val compile_phrase: lambda -> instruction list * instruction list
@@ -14087,22 +11209,7 @@ and comp_binary_test env cond ifso ifnot sz cont =
 
 \subsection*{[[./bytecomp/translmod.mli]]}
 
-<<signature Translmod.transl_implementation>>=
-val transl_implementation: string -> structure -> module_coercion -> lambda
-@
 
-<<signature Translmod.transl_store_implementation>>=
-val transl_store_implementation:
-      string -> structure -> module_coercion -> int * lambda
-@
-
-<<signature Translmod.transl_toplevel_definition>>=
-val transl_toplevel_definition: structure -> lambda
-@
-
-<<signature Translmod.primitive_declarations>>=
-val primitive_declarations: string list ref
-@
 
 
 %-------------------------------------------------------------
@@ -14471,44 +11578,6 @@ and transl_structure fields cc = function
 
 \subsection*{[[./bytecomp/emitcode.mli]]}
 
-<<type Emitcode.reloc_info>>=
-(* Relocation information *)
-
-type reloc_info =
-    Reloc_literal of structured_constant    (* structured constant *)
-  | Reloc_getglobal of Ident.t              (* reference to a global *)
-  | Reloc_setglobal of Ident.t              (* definition of a global *)
-  | Reloc_primitive of string               (* C primitive number *)
-@
-
-<<type Emitcode.compilation_unit>>=
-(* Descriptor for compilation units *)
-
-type compilation_unit =
-  { cu_name: string;                    (* Name of compilation unit *)
-    mutable cu_pos: int;                (* Absolute position in file *)
-    cu_codesize: int;                   (* Size of code block *)
-    cu_reloc: (reloc_info * int) list;  (* Relocation information *)
-    cu_imports: (string * Digest.t) list; (* Names and CRC of intfs imported *)
-    cu_primitives: string list;         (* Primitives declared inside *)
-    mutable cu_force_link: bool;        (* Must be linked even if unref'ed *)
-    mutable cu_debug: int;              (* Position of debugging info, or 0 *)
-    cu_debugsize: int }                 (* Length of debugging info *)
-@
-
-<<signature Emitcode.to_file>>=
-(* Format of a .cmo file:
-     magic number (Config.cmo_magic_number)
-     absolute offset of compilation unit descriptor
-     block of relocatable bytecode
-     compilation unit descriptor *)
-
-val to_file: out_channel -> string -> instruction list -> unit
-        (* Arguments:
-             channel on output file
-             name of compilation unit implemented
-             list of instructions to emit *)
-@
 
 <<signature Emitcode.to_memory>>=
 val to_memory: instruction list -> instruction list ->
@@ -14545,30 +11614,7 @@ open Instruct
 
 \subsection*{[[./bytecomp/emitcode.ml]]}
 
-<<type Emitcode.reloc_info (./bytecomp/emitcode.ml)>>=
-(* Relocation information *)
 
-type reloc_info =
-    Reloc_literal of structured_constant    (* structured constant *)
-  | Reloc_getglobal of Ident.t             (* reference to a global *)
-  | Reloc_setglobal of Ident.t             (* definition of a global *)
-  | Reloc_primitive of string               (* C primitive number *)
-@
-
-<<type Emitcode.compilation_unit (./bytecomp/emitcode.ml)>>=
-(* Descriptor for compilation units *)
-
-type compilation_unit =
-  { cu_name: string;                    (* Name of compilation unit *)
-    mutable cu_pos: int;                (* Absolute position in file *)
-    cu_codesize: int;                   (* Size of code block *)
-    cu_reloc: (reloc_info * int) list;  (* Relocation information *)
-    cu_imports: (string * Digest.t) list; (* Names and CRC of intfs imported *)
-    cu_primitives: string list;         (* Primitives declared inside *)
-    mutable cu_force_link: bool;        (* Must be linked even if unref'ed *)
-    mutable cu_debug: int;              (* Position of debugging info, or 0 *)
-    cu_debugsize: int }                 (* Length of debugging info *)
-@
 
 <<function Emitcode.out_word>>=
 let out_word b1 b2 b3 b4 =
@@ -14829,42 +11875,6 @@ let rec emit = function
       emit_instr instr; emit c
 @
 
-<<function Emitcode.to_file>>=
-(* Emission to a file *)
-
-let to_file outchan unit_name code =
-  init();
-  output_string outchan cmo_magic_number;
-  let pos_depl = pos_out outchan in
-  output_binary_int outchan 0;
-  let pos_code = pos_out outchan in
-  emit code;
-  output outchan !out_buffer 0 !out_position;
-  let (pos_debug, size_debug) =
-    if !Clflags.debug then begin
-      let p = pos_out outchan in
-      output_value outchan !events;
-      (p, pos_out outchan - p)
-    end else
-      (0, 0) in
-  let compunit =
-    { cu_name = unit_name;
-      cu_pos = pos_code;
-      cu_codesize = !out_position;
-      cu_reloc = List.rev !reloc_info;
-      cu_imports = Env.imported_units();
-      cu_primitives = !Translmod.primitive_declarations;
-      cu_force_link = false;
-      cu_debug = pos_debug;
-      cu_debugsize = size_debug } in
-  init();                               (* Free out_buffer and reloc_info *)
-  Btype.cleanup_abbrev ();              (* Remove any cached abbreviation
-                                           expansion before saving *)
-  let pos_compunit = pos_out outchan in
-  output_value outchan compunit;
-  seek_out outchan pos_depl;
-  output_binary_int outchan pos_compunit
-@
 
 <<function Emitcode.to_memory>>=
 (* Emission to a memory block *)
@@ -14897,9 +11907,9 @@ open Instruct
 open Opcodes
 
 
-<<type Emitcode.reloc_info (./bytecomp/emitcode.ml)>>
+<<type Emitcode.reloc_info>>
 
-<<type Emitcode.compilation_unit (./bytecomp/emitcode.ml)>>
+<<type Emitcode.compilation_unit>>
 
 (* Format of a .cmo file:
      magic number (Config.cmo_magic_number)
@@ -14969,30 +11979,7 @@ and slot_for_c_prim name =
 
 \subsection*{[[./bytecomp/bytelibrarian.mli]]}
 
-<<signature Bytelibrarian.create_archive>>=
-(* Format of a library file:
-      magic number (Config.cma_magic_number)
-      absolute offset of content table
-      blocks of relocatable bytecode
-      content table = list of compilation units
-*)
 
-val create_archive: string list -> string -> unit
-@
-
-<<type Bytelibrarian.error>>=
-type error =
-    File_not_found of string
-  | Not_an_object_file of string
-@
-
-<<exception Bytelibrarian.Error>>=
-exception Error of error
-@
-
-<<signature Bytelibrarian.report_error>>=
-val report_error: error -> unit
-@
 
 
 %-------------------------------------------------------------
@@ -15013,16 +12000,6 @@ val report_error: error -> unit
 
 
 \subsection*{[[./bytecomp/bytelibrarian.ml]]}
-
-<<type Bytelibrarian.error (./bytecomp/bytelibrarian.ml)>>=
-type error =
-    File_not_found of string
-  | Not_an_object_file of string
-@
-
-<<exception Bytelibrarian.Error (./bytecomp/bytelibrarian.ml)>>=
-exception Error of error
-@
 
 <<function Bytelibrarian.copy_compunit>>=
 let copy_compunit ic oc compunit =
@@ -15089,15 +12066,6 @@ let create_archive file_list lib_name =
     raise x
 @
 
-<<constant Bytelibrarian.report_error>>=
-let report_error = function
-    File_not_found name ->
-      print_string "Cannot find file "; print_string name
-  | Not_an_object_file name ->
-      print_string "The file "; print_string name;
-      print_string " is not a bytecode object file"
-@
-
 
 %-------------------------------------------------------------
 
@@ -15110,9 +12078,9 @@ open Misc
 open Config
 open Emitcode
 
-<<type Bytelibrarian.error (./bytecomp/bytelibrarian.ml)>>
+<<type Bytelibrarian.error>>
 
-<<exception Bytelibrarian.Error (./bytecomp/bytelibrarian.ml)>>
+<<exception Bytelibrarian.Error>>
 
 <<function Bytelibrarian.copy_compunit>>
 
@@ -15248,18 +12216,6 @@ type global_map
 
 
 \subsection*{[[./bytecomp/symtable.ml]]}
-
-<<type Symtable.error (./bytecomp/symtable.ml)>>=
-(* Functions for batch linking *)
-
-type error =
-    Undefined_global of string
-  | Unavailable_primitive of string
-@
-
-<<exception Symtable.Error (./bytecomp/symtable.ml)>>=
-exception Error of error
-@
 
 <<type Symtable.numtable>>=
 (* Tables for numbering objects *)
@@ -15556,9 +12512,9 @@ open Lambda
 open Emitcode
 
 
-<<type Symtable.error (./bytecomp/symtable.ml)>>
+<<type Symtable.error>>
 
-<<exception Symtable.Error (./bytecomp/symtable.ml)>>
+<<exception Symtable.Error>>
 
 <<type Symtable.numtable>>
 
@@ -15642,33 +12598,8 @@ open Format
 
 \subsection*{[[./bytecomp/bytelink.mli]]}
 
-<<signature Bytelink.link>>=
-(* Link .cmo files and produce a bytecode executable. *)
 
-val link: string list -> unit
-@
 
-<<signature Bytelink.check_consistency>>=
-val check_consistency: string -> Emitcode.compilation_unit -> unit
-@
-
-<<type Bytelink.error>>=
-type error =
-    File_not_found of string
-  | Not_an_object_file of string
-  | Symbol_error of string * Symtable.error
-  | Inconsistent_import of string * string * string
-  | Custom_runtime
-  | File_exists of string
-@
-
-<<exception Bytelink.Error>>=
-exception Error of error
-@
-
-<<signature Bytelink.report_error>>=
-val report_error: error -> unit
-@
 
 
 %-------------------------------------------------------------
@@ -15689,20 +12620,6 @@ val report_error: error -> unit
 
 
 \subsection*{[[./bytecomp/bytelink.ml]]}
-
-<<type Bytelink.error (./bytecomp/bytelink.ml)>>=
-type error =
-    File_not_found of string
-  | Not_an_object_file of string
-  | Symbol_error of string * Symtable.error
-  | Inconsistent_import of string * string * string
-  | Custom_runtime
-  | File_exists of string
-@
-
-<<exception Bytelink.Error (./bytecomp/bytelink.ml)>>=
-exception Error of error
-@
 
 <<type Bytelink.link_action>>=
 type link_action =
@@ -15799,6 +12716,7 @@ let debug_info = ref ([] : debug_event list list)
 (* Consistency check between interfaces *)
 
 let crc_interfaces =
+  (Hashtbl.create 17 : (string, string * Digest.t) Hashtbl.t)
 @
 
 <<function Bytelink.check_consistency>>=
@@ -16069,67 +12987,6 @@ let build_custom_runtime prim_name exec_name =
           (String.concat " " (List.rev !Clflags.ccobjs))
           runtime_lib
           Config.c_libraries)
-  | "Win32" ->
-      Ccomp.command
-       (Printf.sprintf
-          "%s /Fe%s -I%s %s %s %s %s %s"
-          Config.bytecomp_c_compiler
-          exec_name
-          Config.standard_library
-          (String.concat " " (List.rev !Clflags.ccopts))
-          prim_name
-          (String.concat " " (List.rev !Clflags.ccobjs))
-          runtime_lib
-          Config.c_libraries)
-  | "MacOS" ->
-      let c68k = "sc"
-      and libs68k = "\"{libraries}IntEnv.far.o\" " ^
-                    "\"{libraries}MacRuntime.o\" " ^
-                    "\"{clibraries}StdCLib.far.o\" " ^
-                    "\"{libraries}MathLib.far.o\" " ^
-                    "\"{libraries}ToolLibs.o\" " ^
-                    "\"{libraries}Interface.o\""
-      and link68k = "ilink -compact -state nouse -model far -msg nodup"
-      and cppc = "mrc"
-      and libsppc = "\"{sharedlibraries}MathLib\" " ^
-                    "\"{ppclibraries}PPCCRuntime.o\" " ^
-                    "\"{ppclibraries}PPCToolLibs.o\" " ^
-                    "\"{sharedlibraries}StdCLib\" " ^
-                    "\"{ppclibraries}StdCRuntime.o\" " ^
-                    "\"{sharedlibraries}InterfaceLib\" "
-      and linkppc = "ppclink -d"
-      and objs68k = extract ".o" (List.rev !Clflags.ccobjs)
-      and objsppc = extract ".x" (List.rev !Clflags.ccobjs)
-      in
-      Ccomp.command (Printf.sprintf "%s -i \"%s\" %s \"%s\" -o \"%s.o\""
-        c68k
-        Config.standard_library
-        (String.concat " " (List.rev !Clflags.ccopts))
-        prim_name
-        prim_name);
-      Ccomp.command (Printf.sprintf "%s -i \"%s\" %s \"%s\" -o \"%s.x\""
-        cppc
-        Config.standard_library
-        (String.concat " " (List.rev !Clflags.ccopts))
-        prim_name
-        prim_name);
-      Ccomp.command ("delete -i \""^exec_name^"\"");
-      Ccomp.command (Printf.sprintf
-        "%s -t MPST -c 'MPS ' -o \"%s\" \"%s.o\" \"%s\" \"%s\" %s"
-        link68k
-        exec_name
-        prim_name
-        (String.concat "\" \"" objs68k)
-        (Filename.concat Config.standard_library "libcamlrun.o")
-        libs68k);
-      Ccomp.command (Printf.sprintf
-        "%s -t MPST -c 'MPS ' -o \"%s\" \"%s.x\" \"%s\" \"%s\" %s"
-        linkppc
-        exec_name
-        prim_name
-        (String.concat "\" \"" objsppc)
-        (Filename.concat Config.standard_library "libcamlrun.x")
-        libsppc)
   | _ ->
     fatal_error "Bytelink.build_custom_runtime"
 @
@@ -16137,15 +12994,6 @@ let build_custom_runtime prim_name exec_name =
 <<function Bytelink.append_bytecode_and_cleanup>>=
 let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
   match Sys.os_type with
-    "MacOS" ->
-      Ccomp.command (Printf.sprintf
-          "mergefragment -c -t Caml \"%s\"" bytecode_name);
-      Ccomp.command (Printf.sprintf
-          "mergefragment \"%s\" \"%s\"" bytecode_name exec_name);
-      Ccomp.command (Printf.sprintf
-          "delete -i \"%s\" \"%s\" \"%s.o\" \"%s.x\""
-          bytecode_name prim_name prim_name prim_name);
-      ()
   | _ ->
       let oc =
         open_out_gen [Open_wronly; Open_append; Open_binary] 0
@@ -16164,10 +13012,6 @@ let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
 
 let fix_exec_name name =
   match Sys.os_type with
-    "Win32" ->
-      begin try String.rindex name '.'; name
-      with Not_found -> name ^ ".exe"
-      end
   | _ -> name
 @
 
@@ -16210,30 +13054,6 @@ let link objfiles =
   end
 @
 
-<<constant Bytelink.report_error>>=
-let report_error = function
-    File_not_found name ->
-      print_string "Cannot find file "; print_string name
-  | Not_an_object_file name ->
-      print_string "The file "; print_string name;
-      print_string " is not a bytecode object file"
-  | Symbol_error(name, err) ->
-      print_string "Error while linking "; print_string name; print_string ":";
-      print_space();
-      Symtable.report_error err
-  | Inconsistent_import(intf, file1, file2) ->
-      open_hvbox 0;
-      print_string "Files "; print_string file1; print_string " and ";
-      print_string file2; print_space();
-      print_string "make inconsistent assumptions over interface ";
-      print_string intf;
-      close_box()
-  | Custom_runtime ->
-      print_string "Error while building custom runtime system"
-  | File_exists file ->
-      print_string "Cannot overwrite existing file "; print_string file
-@
-
 
 %-------------------------------------------------------------
 
@@ -16248,9 +13068,9 @@ open Config
 open Instruct
 open Emitcode
 
-<<type Bytelink.error (./bytecomp/bytelink.ml)>>
+<<type Bytelink.error>>
 
-<<exception Bytelink.Error (./bytecomp/bytelink.ml)>>
+<<exception Bytelink.Error>>
 
 <<type Bytelink.link_action>>
 
@@ -16271,7 +13091,6 @@ module IdentSet = Set
 <<constant Bytelink.debug_info>>
 
 <<constant Bytelink.crc_interfaces>>
-  (Hashtbl.create 17 : (string, string * Digest.t) Hashtbl.t)
 
 <<function Bytelink.check_consistency>>
 
@@ -16320,33 +13139,13 @@ open Format
 
 \subsection*{[[./driver/compile.mli]]}
 
-<<signature Compile.interface>>=
-(* Compile a .ml or .mli file *)
-
-val interface: string -> unit
-@
-
-<<signature Compile.implementation>>=
-val implementation: string -> unit
-@
-
-<<signature Compile.c_file>>=
-val c_file: string -> unit
-@
-
-<<signature Compile.initial_env>>=
-val initial_env: unit -> Env.t
-@
-
-<<signature Compile.init_path>>=
-val init_path: unit -> unit
-@
-
 
 %-------------------------------------------------------------
 
 <<./driver/compile.mli>>=
 <<copyright header>>
+
+(* Compile a .ml or .mli file *)
 
 <<signature Compile.interface>>
 <<signature Compile.implementation>>
@@ -16448,20 +13247,6 @@ let parse_file inputfile parse_fun ast_magic =
   ast
 @
 
-<<function Compile.interface>>=
-(* Compile a .mli file *)
-
-let interface sourcefile =
-  init_path();
-  let prefixname = Filename.chop_extension sourcefile in
-  let modulename = String.capitalize(Filename.basename prefixname) in
-  let inputfile = preprocess sourcefile (prefixname ^ ".ppi") in
-  let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
-  let sg = Typemod.transl_signature (initial_env()) ast in
-  if !Clflags.print_types then (Printtyp.signature sg; print_newline());
-  Env.save_signature sg modulename (prefixname ^ ".cmi");
-  remove_preprocessed inputfile
-@
 
 <<function Compile.print_if>>=
 (* Compile a .ml file *)
@@ -16471,45 +13256,6 @@ let print_if flag printer arg =
   arg
 @
 
-<<function Compile.implementation>>=
-let implementation sourcefile =
-  init_path();
-  let prefixname = Filename.chop_extension sourcefile in
-  let modulename = String.capitalize(Filename.basename prefixname) in
-  let inputfile = preprocess sourcefile (prefixname ^ ".ppo") in
-  let ast = parse_file inputfile Parse.implementation ast_impl_magic_number in
-  let objfile = prefixname ^ ".cmo" in
-  let oc = open_out_bin objfile in
-  try
-    let (str, sg, finalenv) =
-      Typemod.type_structure (initial_env()) ast in
-    if !Clflags.print_types then (Printtyp.signature sg; print_newline());
-    let coercion =
-      if Sys.file_exists (prefixname ^ ".mli") then begin
-        let intf_file =
-          try find_in_path !load_path (prefixname ^ ".cmi")
-          with Not_found -> prefixname ^ ".cmi" in
-        let dclsig = Env.read_signature modulename intf_file in
-        Includemod.compunit sourcefile sg intf_file dclsig
-      end else begin
-        Typemod.check_nongen_schemes finalenv str;
-        Env.save_signature sg modulename (prefixname ^ ".cmi");
-        Tcoerce_none
-      end in
-    Emitcode.to_file oc modulename
-      (print_if Clflags.dump_instr Printinstr.instrlist
-        (Bytegen.compile_implementation modulename
-          (print_if Clflags.dump_lambda Printlambda.lambda
-            (Simplif.simplify_lambda
-              (print_if Clflags.dump_rawlambda Printlambda.lambda
-                (Translmod.transl_implementation modulename str coercion))))));
-    remove_preprocessed inputfile;
-    close_out oc
-  with x ->
-    close_out oc;
-    remove_file objfile;
-    raise x
-@
 
 <<function Compile.c_file>>=
 let c_file name =
@@ -16553,11 +13299,6 @@ open Typedtree
 
 \subsection*{[[./driver/errors.mli]]}
 
-<<signature Errors.report_error>>=
-(* Error report *)
-
-val report_error: exn -> unit
-@
 
 
 %-------------------------------------------------------------
@@ -16570,46 +13311,6 @@ val report_error: exn -> unit
 
 
 \subsection*{[[./driver/errors.ml]]}
-
-<<function Errors.report_error>>=
-(* Report an error *)
-
-let report_error exn =
-  open_box 0;
-  begin match exn with
-    Lexer.Error(err, start, stop) ->
-      Location.print {loc_start = start; loc_end = stop};
-      Lexer.report_error err
-  | Syntaxerr.Error err ->
-      Syntaxerr.report_error err
-  | Env.Error err ->
-      Env.report_error err
-  | Typecore.Error(loc, err) ->
-      Location.print loc; Typecore.report_error err
-  | Typetexp.Error(loc, err) ->
-      Location.print loc; Typetexp.report_error err
-  | Typedecl.Error(loc, err) ->
-      Location.print loc; Typedecl.report_error err
-  | Includemod.Error err ->
-      Includemod.report_error err
-  | Typemod.Error(loc, err) ->
-      Location.print loc; Typemod.report_error err
-  | Translcore.Error(loc, err) ->
-      Location.print loc; Translcore.report_error err
-  | Symtable.Error code ->
-      Symtable.report_error code
-  | Bytelink.Error code ->
-      Bytelink.report_error code
-  | Bytelibrarian.Error code ->
-      Bytelibrarian.report_error code
-  | Sys_error msg ->
-      print_string "I/O error: "; print_string msg
-  | x ->
-      close_box(); raise x
-  end;
-  close_box(); print_newline()
-@
-
 
 %-------------------------------------------------------------
 
@@ -16626,117 +13327,6 @@ open Location
 
 
 \subsection*{[[./driver/main.ml]]}
-
-<<function Main.process_interface_file>>=
-let process_interface_file name =
-  Compile.interface name
-@
-
-<<function Main.process_implementation_file>>=
-let process_implementation_file name =
-  Compile.implementation name;
-  objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
-@
-
-<<function Main.process_file>>=
-let process_file name =
-  if Filename.check_suffix name ".ml"
-  or Filename.check_suffix name ".mlt" then begin
-    Compile.implementation name;
-    objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
-  end
-  else if Filename.check_suffix name ".mli" then
-    Compile.interface name
-  else if Filename.check_suffix name ".cmo" 
-       or Filename.check_suffix name ".cma" then
-    objfiles := name :: !objfiles
-  else if Filename.check_suffix name ext_obj
-       or Filename.check_suffix name ext_lib then
-    ccobjs := name :: !ccobjs
-  else if Filename.check_suffix name ".c" then begin
-    Compile.c_file name;
-    ccobjs := (Filename.chop_suffix (Filename.basename name) ".c" ^ ext_obj)
-    :: !ccobjs
-  end
-  else
-    raise(Arg.Bad("don't know what to do with " ^ name))
-@
-
-<<function Main.print_version_number>>=
-let print_version_number () =
-  print_string "The Objective Caml compiler, version ";
-  print_string Config.version; print_newline();
-  print_string "Standard library directory: ";
-  print_string Config.standard_library; print_newline()
-@
-
-<<constant Main.usage>>=
-let usage = "Usage: ocamlc <options> <files>\nOptions are:"
-@
-
-<<function Main.main>>=
-let main () =
-  try
-    Arg.parse [
-       "-a", Arg.Set make_archive, " Build a library";
-       "-c", Arg.Set compile_only, " Compile only (do not link)";
-       "-cclib", Arg.String(fun s -> ccobjs := s :: !ccobjs),
-             "<opt>  Pass option <opt> to the C linker";
-       "-ccopt", Arg.String(fun s -> ccopts := s :: !ccopts),
-             "<opt>  Pass option <opt> to the C compiler and linker";
-       "-custom", Arg.Set custom_runtime, " Link in custom mode";
-       "-g", Arg.Set debug, " Save debugging information";
-       "-i", Arg.Set print_types, " Print the types";
-       "-I", Arg.String(fun dir -> include_dirs := dir :: !include_dirs),
-             "<dir>  Add <dir> to the list of include directories";
-       "-impl", Arg.String process_implementation_file,
-             "<file>  Compile <file> as a .ml file";
-       "-intf", Arg.String process_interface_file,
-             "<file>  Compile <file> as a .mli file";
-       "-linkall", Arg.Set link_everything,
-             " Link all modules, even unused ones";
-       "-noassert", Arg.Set noassert, " Don't compile assertion checks";
-       "-o", Arg.String(fun s -> exec_name := s;
-                                 archive_name := s;
-                                 object_name := s),
-             "<file>  Set output file name to <file> (default a.out)";
-       "-output-obj", Arg.Unit(fun () -> output_c_object := true;
-                                         custom_runtime := true),
-             "Output a C object file instead of an executable";
-       "-pp", Arg.String(fun s -> preprocessor := Some s),
-             "<command>  Pipe sources through preprocessor <command>";
-       "-thread", Arg.Set thread_safe, " Use thread-safe standard library";
-       "-unsafe", Arg.Set fast,
-             " No bounds checking on array and string access";
-       "-v", Arg.Unit print_version_number, " Print compiler version number";
-       "-verbose", Arg.Set verbose, " Print calls to external commands";
-
-       "-nopervasives", Arg.Set nopervasives, " (undocumented)";
-       "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
-       "-dlambda", Arg.Set dump_lambda, " (undocumented)";
-       "-dinstr", Arg.Set dump_instr, " (undocumented)";
-
-       "-", Arg.String process_file,
-            "<file>  Treat <file> as a file name (even if it starts with `-')"
-      ] process_file usage;
-    if !make_archive then begin
-      Compile.init_path();
-      Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
-    end
-    else if not !compile_only & !objfiles <> [] then begin
-      Compile.init_path();
-      Bytelink.link (List.rev !objfiles)
-    end;
-    exit 0
-  with x ->
-    Format.set_formatter_out_channel stderr;
-    Errors.report_error x;
-    exit 2
-@
-
-<<toplevel Main._1>>=
-let _ = Printexc.catch main ()
-@
 
 
 %-------------------------------------------------------------
@@ -16761,5 +13351,3 @@ open Clflags
 
 <<toplevel Main._1>>
 @
-
-

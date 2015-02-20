@@ -23,7 +23,7 @@ open Btype
 open Ctype
 
 
-(*s: type Typecore.error (./typing/typecore.ml) *)
+(*s: type Typecore.error *)
 type error =
     Unbound_value of Longident.t
   | Unbound_constructor of Longident.t
@@ -42,11 +42,11 @@ type error =
   | Not_subtype of (type_expr * type_expr) list * (type_expr * type_expr) list
   | Coercion_failure of type_expr * type_expr * (type_expr * type_expr) list
   | Too_many_arguments
-(*e: type Typecore.error (./typing/typecore.ml) *)
+(*e: type Typecore.error *)
 
-(*s: exception Typecore.Error (./typing/typecore.ml) *)
+(*s: exception Typecore.Error *)
 exception Error of Location.t * error
-(*e: exception Typecore.Error (./typing/typecore.ml) *)
+(*e: exception Typecore.Error *)
 
 (*s: constant Typecore.type_constant *)
 (* Typing of constants *)

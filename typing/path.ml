@@ -11,12 +11,13 @@
 (*                                                                     *)
 (***********************************************************************)
 (*e: copyright header *)
-(*s: type Path.t (./typing/path.ml) *)
+(*s: type Path.t *)
+(* Access paths *)
 
 type t =
     Pident of Ident.t
   | Pdot of t * string * int
-(*e: type Path.t (./typing/path.ml) *)
+(*e: type Path.t *)
 
 (*s: constant Path.nopos *)
 let nopos = -1

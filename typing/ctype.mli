@@ -18,6 +18,8 @@ open Asttypes
 open Types
 
 (*s: exception Ctype.Unify *)
+(**** Errors ****)
+
 exception Unify of (type_expr * type_expr) list
 (*e: exception Ctype.Unify *)
 (*s: exception Ctype.Subtype *)

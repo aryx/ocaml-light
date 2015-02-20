@@ -18,7 +18,6 @@ open Location
 
 (*s: function Parse.skip_phrase *)
 (* Skip tokens to the end of the phrase *)
-
 let rec skip_phrase lexbuf =
   try
     match Lexer.token lexbuf with
@@ -61,8 +60,15 @@ let wrap parsing_fun lexbuf =
         raise(Syntaxerr.Error(Syntaxerr.Other loc))
 (*e: function Parse.wrap *)
 
+(*s: function Parse.implementation *)
 let implementation = wrap Parser.implementation
-and interface = wrap Parser.interface
-and toplevel_phrase = wrap Parser.toplevel_phrase
-and use_file = wrap Parser.use_file
+(*e: function Parse.implementation *)
+(*s: function Parse.interface *)
+let interface = wrap Parser.interface
+(*e: function Parse.interface *)
+
+(*s: function Parse.xxx *)
+let toplevel_phrase = wrap Parser.toplevel_phrase
+let use_file = wrap Parser.use_file
+(*e: function Parse.xxx *)
 (*e: ./parsing/parse.ml *)

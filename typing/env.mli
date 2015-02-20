@@ -16,7 +16,9 @@
 
 open Types
 
+(*s: signature type Env.t *)
 type t
+(*e: signature type Env.t *)
 
 (*s: signature Env.empty *)
 val empty: t
@@ -25,9 +27,9 @@ val empty: t
 val initial: t
 (*e: signature Env.initial *)
 
-(*s: signature Env.find_value *)
 (* Lookup by paths *)
 
+(*s: signature Env.find_value *)
 val find_value: Path.t -> t -> value_description
 (*e: signature Env.find_value *)
 (*s: signature Env.find_type *)
@@ -47,9 +49,9 @@ val find_type_expansion: Path.t -> t -> type_expr list * type_expr
 val find_modtype_expansion: Path.t -> t -> Types.module_type
 (*e: signature Env.find_modtype_expansion *)
 
-(*s: signature Env.lookup_value *)
 (* Lookup by long identifiers *)
 
+(*s: signature Env.lookup_value *)
 val lookup_value: Longident.t -> t -> Path.t * value_description
 (*e: signature Env.lookup_value *)
 (*s: signature Env.lookup_constructor *)

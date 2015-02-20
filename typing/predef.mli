@@ -16,64 +16,30 @@
 
 open Types
 
-(*s: signature Predef.type_int *)
+(*s: signatures Predef.type_xxx *)
 val type_int: type_expr
-(*e: signature Predef.type_int *)
-(*s: signature Predef.type_char *)
 val type_char: type_expr
-(*e: signature Predef.type_char *)
-(*s: signature Predef.type_string *)
 val type_string: type_expr
-(*e: signature Predef.type_string *)
-(*s: signature Predef.type_float *)
 val type_float: type_expr
-(*e: signature Predef.type_float *)
-(*s: signature Predef.type_bool *)
 val type_bool: type_expr
-(*e: signature Predef.type_bool *)
-(*s: signature Predef.type_unit *)
 val type_unit: type_expr
-(*e: signature Predef.type_unit *)
-(*s: signature Predef.type_exn *)
 val type_exn: type_expr
-(*e: signature Predef.type_exn *)
-(*s: signature Predef.type_array *)
 val type_array: type_expr -> type_expr
-(*e: signature Predef.type_array *)
-(*s: signature Predef.type_list *)
 val type_list: type_expr -> type_expr
-(*e: signature Predef.type_list *)
+(*e: signatures Predef.type_xxx *)
 
-(*s: signature Predef.path_int *)
+(*s: signatures Predef.path_xxx *)
 val path_int: Path.t
-(*e: signature Predef.path_int *)
-(*s: signature Predef.path_char *)
 val path_char: Path.t
-(*e: signature Predef.path_char *)
-(*s: signature Predef.path_string *)
 val path_string: Path.t
-(*e: signature Predef.path_string *)
-(*s: signature Predef.path_float *)
 val path_float: Path.t
-(*e: signature Predef.path_float *)
-(*s: signature Predef.path_bool *)
 val path_bool: Path.t
-(*e: signature Predef.path_bool *)
-(*s: signature Predef.path_unit *)
 val path_unit: Path.t
-(*e: signature Predef.path_unit *)
-(*s: signature Predef.path_exn *)
 val path_exn: Path.t
-(*e: signature Predef.path_exn *)
-(*s: signature Predef.path_array *)
 val path_array: Path.t
-(*e: signature Predef.path_array *)
-(*s: signature Predef.path_list *)
 val path_list: Path.t
-(*e: signature Predef.path_list *)
-(*s: signature Predef.path_format *)
 val path_format: Path.t
-(*e: signature Predef.path_format *)
+(*e: signatures Predef.path_xxx *)
 
 (*s: signature Predef.path_match_failure *)
 val path_match_failure: Path.t

@@ -12,20 +12,20 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: exception Misc.Fatal_error (./utils/misc.ml) *)
 (* Errors *)
 
+(*s: exception Misc.Fatal_error *)
 exception Fatal_error
-(*e: exception Misc.Fatal_error (./utils/misc.ml) *)
+(*e: exception Misc.Fatal_error *)
 
 (*s: function Misc.fatal_error *)
 let fatal_error msg =
   prerr_string ">> Fatal error: "; prerr_endline msg; raise Fatal_error
 (*e: function Misc.fatal_error *)
 
-(*s: function Misc.map_end *)
 (* List functions *)
 
+(*s: function Misc.map_end *)
 let rec map_end f l1 l2 =
   match l1 with
     [] -> l2
@@ -63,9 +63,9 @@ let rec replicate_list elem n =
   if n <= 0 then [] else elem :: replicate_list elem (n-1)
 (*e: function Misc.replicate_list *)
 
-(*s: function Misc.find_in_path *)
 (* File functions *)
 
+(*s: function Misc.find_in_path *)
 let find_in_path path name =
   if not (Filename.is_implicit name) then
     if Sys.file_exists name then name else raise Not_found
@@ -87,9 +87,9 @@ let remove_file filename =
     ()
 (*e: function Misc.remove_file *)
 
-(*s: function Misc.create_hashtable *)
 (* Hashtable functions *)
 
+(*s: function Misc.create_hashtable *)
 let create_hashtable size init =
   let tbl = Hashtbl.create size in
   List.iter (fun (key, data) -> Hashtbl.add tbl key data) init;
@@ -97,8 +97,6 @@ let create_hashtable size init =
 (*e: function Misc.create_hashtable *)
 
 (*s: function Misc.copy_file *)
-(* File copy *)
-
 let copy_file ic oc =
   let buff = String.create 0x1000 in
   let rec copy () =
@@ -118,9 +116,9 @@ let copy_file_chunk ic oc len =
   in copy len
 (*e: function Misc.copy_file_chunk *)
 
-(*s: function Misc.log2 *)
 (* Integer operations *)
 
+(*s: function Misc.log2 *)
 let rec log2 n =
   if n <= 1 then 0 else 1 + log2(n asr 1)
 (*e: function Misc.log2 *)

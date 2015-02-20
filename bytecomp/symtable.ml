@@ -20,17 +20,17 @@ open Lambda
 open Emitcode
 
 
-(*s: type Symtable.error (./bytecomp/symtable.ml) *)
-(* Functions for batch linking *)
+(*s: type Symtable.error *)
+(* Error report *)
 
 type error =
     Undefined_global of string
   | Unavailable_primitive of string
-(*e: type Symtable.error (./bytecomp/symtable.ml) *)
+(*e: type Symtable.error *)
 
-(*s: exception Symtable.Error (./bytecomp/symtable.ml) *)
+(*s: exception Symtable.Error *)
 exception Error of error
-(*e: exception Symtable.Error (./bytecomp/symtable.ml) *)
+(*e: exception Symtable.Error *)
 
 (*s: type Symtable.numtable *)
 (* Tables for numbering objects *)

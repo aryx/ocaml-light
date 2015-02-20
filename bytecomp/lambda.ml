@@ -16,24 +16,30 @@ open Misc
 open Path
 open Asttypes
 
-(*s: type Lambda.primitive (./bytecomp/lambda.ml) *)
+(*s: type Lambda.primitive *)
 type primitive =
     Pidentity
-    (* Globals *)
+
+  (* Globals *)
   | Pgetglobal of Ident.t
   | Psetglobal of Ident.t
+
   (* Operations on heap blocks *)
   | Pmakeblock of int * mutable_flag
   | Pfield of int
   | Psetfield of int * bool
   | Pfloatfield of int
   | Psetfloatfield of int
+
   (* External call *)
   | Pccall of Primitive.description
+
   (* Exceptions *)
   | Praise
+
   (* Boolean operations *)
   | Psequand | Psequor | Pnot
+
   (* Integer operations *)
   | Pnegint | Paddint | Psubint | Pmulint | Pdivint | Pmodint
   | Pandint | Porint | Pxorint
@@ -41,13 +47,16 @@ type primitive =
   | Pintcomp of comparison
   | Poffsetint of int
   | Poffsetref of int
+
   (* Float operations *)
   | Pintoffloat | Pfloatofint
   | Pnegfloat | Pabsfloat
   | Paddfloat | Psubfloat | Pmulfloat | Pdivfloat
   | Pfloatcomp of comparison
+
   (* String operations *)
   | Pstringlength | Pstringrefu | Pstringsetu | Pstringrefs | Pstringsets
+
   (* Array operations *)
   | Pmakearray of array_kind
   | Parraylength of array_kind
@@ -55,41 +64,42 @@ type primitive =
   | Parraysetu of array_kind
   | Parrayrefs of array_kind
   | Parraysets of array_kind
+
   (* Bitvect operations *)
   | Pbittest
-(*e: type Lambda.primitive (./bytecomp/lambda.ml) *)
+(*e: type Lambda.primitive *)
 
-(*s: type Lambda.comparison (./bytecomp/lambda.ml) *)
+(*s: type Lambda.comparison *)
 and comparison =
     Ceq | Cneq | Clt | Cgt | Cle | Cge
-(*e: type Lambda.comparison (./bytecomp/lambda.ml) *)
+(*e: type Lambda.comparison *)
 
-(*s: type Lambda.array_kind (./bytecomp/lambda.ml) *)
+(*s: type Lambda.array_kind *)
 and array_kind =
     Pgenarray | Paddrarray | Pintarray | Pfloatarray
-(*e: type Lambda.array_kind (./bytecomp/lambda.ml) *)
+(*e: type Lambda.array_kind *)
 
-(*s: type Lambda.structured_constant (./bytecomp/lambda.ml) *)
+(*s: type Lambda.structured_constant *)
 type structured_constant =
     Const_base of constant
   | Const_pointer of int
   | Const_block of int * structured_constant list
   | Const_float_array of string list
-(*e: type Lambda.structured_constant (./bytecomp/lambda.ml) *)
+(*e: type Lambda.structured_constant *)
 
-(*s: type Lambda.function_kind (./bytecomp/lambda.ml) *)
+(*s: type Lambda.function_kind *)
 type function_kind = Curried | Tupled
-(*e: type Lambda.function_kind (./bytecomp/lambda.ml) *)
+(*e: type Lambda.function_kind *)
 
-(*s: type Lambda.let_kind (./bytecomp/lambda.ml) *)
+(*s: type Lambda.let_kind *)
 type let_kind = Strict | Alias | StrictOpt
-(*e: type Lambda.let_kind (./bytecomp/lambda.ml) *)
+(*e: type Lambda.let_kind *)
 
-(*s: type Lambda.shared_code (./bytecomp/lambda.ml) *)
-type shared_code = (int * int) list
-(*e: type Lambda.shared_code (./bytecomp/lambda.ml) *)
+(*s: type Lambda.shared_code *)
+type shared_code = (int * int) list     (* stack size -> code label *)
+(*e: type Lambda.shared_code *)
 
-(*s: type Lambda.lambda (./bytecomp/lambda.ml) *)
+(*s: type Lambda.lambda *)
 type lambda =
     Lvar of Ident.t
   | Lconst of structured_constant
@@ -108,31 +118,31 @@ type lambda =
   | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
   | Lassign of Ident.t * lambda
   | Levent of lambda * lambda_event
-(*e: type Lambda.lambda (./bytecomp/lambda.ml) *)
+(*e: type Lambda.lambda *)
 
-(*s: type Lambda.lambda_switch (./bytecomp/lambda.ml) *)
+(*s: type Lambda.lambda_switch *)
 and lambda_switch =
-  { sw_numconsts: int;
-    sw_consts: (int * lambda) list;
-    sw_numblocks: int;
-    sw_blocks: (int * lambda) list;
-    sw_checked: bool }
-(*e: type Lambda.lambda_switch (./bytecomp/lambda.ml) *)
+  { sw_numconsts: int;                  (* Number of integer cases *)
+    sw_consts: (int * lambda) list;     (* Integer cases *)
+    sw_numblocks: int;                  (* Number of tag block cases *)
+    sw_blocks: (int * lambda) list;     (* Tag block cases *)
+    sw_checked: bool }                  (* True if bound checks needed *)
+(*e: type Lambda.lambda_switch *)
 
-(*s: type Lambda.lambda_event (./bytecomp/lambda.ml) *)
+(*s: type Lambda.lambda_event *)
 and lambda_event =
   { lev_loc: int;
     lev_kind: lambda_event_kind;
     lev_repr: int ref option;
     lev_env: Env.summary }
-(*e: type Lambda.lambda_event (./bytecomp/lambda.ml) *)
+(*e: type Lambda.lambda_event *)
 
-(*s: type Lambda.lambda_event_kind (./bytecomp/lambda.ml) *)
+(*s: type Lambda.lambda_event_kind *)
 and lambda_event_kind =
     Lev_before
   | Lev_after of Types.type_expr
   | Lev_function
-(*e: type Lambda.lambda_event_kind (./bytecomp/lambda.ml) *)
+(*e: type Lambda.lambda_event_kind *)
 
 (*s: constant Lambda.const_unit *)
 let const_unit = Const_pointer 0

@@ -19,21 +19,27 @@ open Asttypes
 (*s: type Lambda.primitive *)
 type primitive =
     Pidentity
-    (* Globals *)
+
+  (* Globals *)
   | Pgetglobal of Ident.t
   | Psetglobal of Ident.t
+
   (* Operations on heap blocks *)
   | Pmakeblock of int * mutable_flag
   | Pfield of int
   | Psetfield of int * bool
   | Pfloatfield of int
   | Psetfloatfield of int
+
   (* External call *)
   | Pccall of Primitive.description
+
   (* Exceptions *)
   | Praise
+
   (* Boolean operations *)
   | Psequand | Psequor | Pnot
+
   (* Integer operations *)
   | Pnegint | Paddint | Psubint | Pmulint | Pdivint | Pmodint
   | Pandint | Porint | Pxorint
@@ -41,13 +47,16 @@ type primitive =
   | Pintcomp of comparison
   | Poffsetint of int
   | Poffsetref of int
+
   (* Float operations *)
   | Pintoffloat | Pfloatofint
   | Pnegfloat | Pabsfloat
   | Paddfloat | Psubfloat | Pmulfloat | Pdivfloat
   | Pfloatcomp of comparison
+
   (* String operations *)
   | Pstringlength | Pstringrefu | Pstringsetu | Pstringrefs | Pstringsets
+
   (* Array operations *)
   | Pmakearray of array_kind
   | Parraylength of array_kind
@@ -55,6 +64,7 @@ type primitive =
   | Parraysetu of array_kind
   | Parrayrefs of array_kind
   | Parraysets of array_kind
+
   (* Bitvect operations *)
   | Pbittest
 (*e: type Lambda.primitive *)

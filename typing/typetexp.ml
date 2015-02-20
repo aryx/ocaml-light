@@ -19,23 +19,23 @@ open Parsetree
 open Types
 open Ctype
 
-(*s: exception Typetexp.Already_bound (./typing/typetexp.ml) *)
+(*s: exception Typetexp.Already_bound *)
 exception Already_bound
-(*e: exception Typetexp.Already_bound (./typing/typetexp.ml) *)
+(*e: exception Typetexp.Already_bound *)
 
-(*s: type Typetexp.error (./typing/typetexp.ml) *)
+(*s: type Typetexp.error *)
 type error =
     Unbound_type_variable of string
   | Unbound_type_constructor of Longident.t
   | Type_arity_mismatch of Longident.t * int * int
   | Bound_type_variable of string
-  | Type_mismatch of (type_expr * type_expr) list
-  | Alias_type_mismatch of (type_expr * type_expr) list
-(*e: type Typetexp.error (./typing/typetexp.ml) *)
+  | Type_mismatch of (Types.type_expr * Types.type_expr) list
+  | Alias_type_mismatch of (Types.type_expr * Types.type_expr) list
+(*e: type Typetexp.error *)
 
-(*s: exception Typetexp.Error (./typing/typetexp.ml) *)
+(*s: exception Typetexp.Error *)
 exception Error of Location.t * error
-(*e: exception Typetexp.Error (./typing/typetexp.ml) *)
+(*e: exception Typetexp.Error *)
 
 (*s: constant Typetexp.type_variables *)
 (* Translation of type expressions *)
@@ -51,8 +51,8 @@ let used_variables = ref (Tbl.empty : (string, type_expr) Tbl.t)
 (*e: constant Typetexp.used_variables *)
 (*s: constant Typetexp.bindings *)
 let bindings       = ref ([] : (type_expr * type_expr) list)
-(*e: constant Typetexp.bindings *)
         (* These two variables are used for the "delayed" policy. *)
+(*e: constant Typetexp.bindings *)
 
 (*s: function Typetexp.reset_type_variables *)
 let reset_type_variables () =
