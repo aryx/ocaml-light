@@ -132,7 +132,6 @@ and signature_item =
   | Tsig_type of Ident.t * type_declaration
   | Tsig_exception of Ident.t * exception_declaration
   | Tsig_module of Ident.t * module_type
-  | Tsig_modtype of Ident.t * modtype_declaration
 (*e: type Types.signature_item *)
 
 (*s: type Types.modtype_declaration *)

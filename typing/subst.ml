@@ -202,9 +202,6 @@ and signature s = function
       Tsig_exception(id, exception_declaration s d) :: signature s sg
   | Tsig_module(id, mty) :: sg ->
       Tsig_module(id, modtype s mty) :: signature (remove_module id s) sg
-  | Tsig_modtype(id, d) :: sg ->
-      Tsig_modtype(id, modtype_declaration s d) ::
-      signature (remove_modtype id s) sg
 
 and modtype_declaration s = function
     Tmodtype_abstract -> Tmodtype_abstract

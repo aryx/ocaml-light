@@ -102,7 +102,6 @@ let item_ident_name = function
   | Tsig_type(id, _) -> (id, Field_type(Ident.name id))
   | Tsig_exception(id, _) -> (id, Field_exception(Ident.name id))
   | Tsig_module(id, _) -> (id, Field_module(Ident.name id))
-  | Tsig_modtype(id, _) -> (id, Field_modtype(Ident.name id))
 (*e: constant Includemod.item_ident_name *)
 
 (*s: function Includemod.simplify_structure_coercion *)
@@ -173,7 +172,7 @@ and signatures env subst sig1 sig2 =
           match item with
             Tsig_value(_,{val_kind = Val_prim _})
           | Tsig_type(_,_)
-          | Tsig_modtype(_,_) -> pos
+           -> pos
           | Tsig_value(_,_)
           | Tsig_exception(_,_)
           | Tsig_module(_,_)
@@ -204,8 +203,6 @@ and signatures env subst sig1 sig2 =
                 Subst.add_type id2 (Pident id1) subst
             | Tsig_module _ ->
                 Subst.add_module id2 (Pident id1) subst
-            | Tsig_modtype _ ->
-                Subst.add_modtype id2 (Tmty_ident (Pident id1)) subst
             | Tsig_value _ | Tsig_exception _  ->
                 subst
           in
@@ -237,9 +234,6 @@ and signature_components env subst = function
   | (Tsig_module(id1, mty1), Tsig_module(id2, mty2), pos) :: rem ->
       let cc = modtypes env subst mty1 mty2 in
       (pos, cc) :: signature_components env subst rem
-  | (Tsig_modtype(id1, info1), Tsig_modtype(id2, info2), pos) :: rem ->
-      modtype_infos env subst id1 info1 info2;
-      signature_components env subst rem
   | _ ->
       fatal_error "Includemod.signature_components"
 

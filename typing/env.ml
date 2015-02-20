@@ -370,12 +370,6 @@ let rec prefix_idents root pos sub = function
       let (pl, final_sub) =
         prefix_idents root (pos+1) (Subst.add_module id p sub) rem in
       (p::pl, final_sub)
-  | Tsig_modtype(id, decl) :: rem ->
-      let p = Pdot(root, Ident.name id, nopos) in
-      let (pl, final_sub) =
-        prefix_idents root pos
-                      (Subst.add_modtype id (Tmty_ident p) sub) rem in
-      (p::pl, final_sub)
 (*e: function Env.prefix_idents *)
 
 (* Compute structure descriptions *)
@@ -427,11 +421,6 @@ let rec components_of_module env sub path mty =
               Tbl.add (Ident.name id) (comps, !pos) c.comp_components;
             env := store_components id path comps !env;
             incr pos
-        | Tsig_modtype(id, decl) ->
-            let decl' = Subst.modtype_declaration sub decl in
-            c.comp_modtypes <-
-              Tbl.add (Ident.name id) (decl', nopos) c.comp_modtypes;
-            env := store_modtype id path decl' !env
         )
         sg pl;
         Structure_comps c
@@ -563,7 +552,6 @@ let add_item comp env =
   | Tsig_type(id, decl) -> add_type id decl env
   | Tsig_exception(id, decl) -> add_exception id decl env
   | Tsig_module(id, mty) -> add_module id mty env
-  | Tsig_modtype(id, decl) -> add_modtype id decl env
 (*e: function Env.add_item *)
 
 (*s: function Env.add_signature *)
@@ -595,9 +583,6 @@ let open_signature root sg env =
                             (Subst.exception_declaration sub decl) env
         | Tsig_module(id, mty) ->
             store_module (Ident.hide id) p (Subst.modtype sub mty) env
-        | Tsig_modtype(id, decl) ->
-            store_modtype (Ident.hide id) p
-                          (Subst.modtype_declaration sub decl) env
       )
       env sg pl in
   { values = newenv.values;
