@@ -348,6 +348,7 @@ type core_type =
     ptyp_loc: Location.t }
 @
 %alt: my info scheme and embedded token instead of wrapper extra type.
+%todo: at least could factorize? 'a wrap = 'a * Location.t  no?
 
 <<type Parsetree.core_type_desc>>=
 and core_type_desc = 
@@ -496,7 +497,6 @@ and signature_item =
   { psig_desc: signature_item_desc;
     psig_loc: Location.t }
 @
-
 <<type Parsetree.signature_item_desc>>=
 and signature_item_desc =
     Psig_value of string * value_description
@@ -513,7 +513,6 @@ type module_type =
   { pmty_desc: module_type_desc;
     pmty_loc: Location.t }
 @
-
 <<type Parsetree.module_type_desc>>=
 and module_type_desc =
     Pmty_ident of Longident.t
@@ -578,6 +577,7 @@ and module_expr_desc =
 
 \section{Runtime values}
 
+% blocks, will help understand elts from Lambda and Instruct
 
 \chapter{[[main()]]}
 
@@ -675,6 +675,7 @@ let process_file name =
       objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
   | _ when Filename.check_suffix name ".mli" ->
       Compile.interface name
+
   | _ when Filename.check_suffix name ".cmo" 
         or Filename.check_suffix name ".cma" ->
       objfiles := name :: !objfiles
@@ -1156,6 +1157,7 @@ and module_coercion =
 
 \section{Builtin values}
 % different from primitives
+% different from pervasives
 
 <<signature Predef.build_initial_env>>=
 (* To build the initial environment. Since there is a nasty mutual
@@ -1296,33 +1298,33 @@ val initial: t
 
 % by Path
 <<signature Env.find_value>>=
-val find_value: Path.t -> t -> value_description
+val find_value: Path.t -> t -> Types.value_description
 @
 
 <<signature Env.find_type>>=
-val find_type: Path.t -> t -> type_declaration
+val find_type: Path.t -> t -> Types.type_declaration
 @
 
 % by Longident
 
 <<signature Env.lookup_value>>=
-val lookup_value: Longident.t -> t -> Path.t * value_description
+val lookup_value: Longident.t -> t -> Path.t * Types.value_description
 @
 
 <<signature Env.lookup_constructor>>=
-val lookup_constructor: Longident.t -> t -> constructor_description
+val lookup_constructor: Longident.t -> t -> Types.constructor_description
 @
 
 <<signature Env.lookup_label>>=
-val lookup_label: Longident.t -> t -> label_description
+val lookup_label: Longident.t -> t -> Types.label_description
 @
 
 <<signature Env.lookup_type>>=
-val lookup_type: Longident.t -> t -> Path.t * type_declaration
+val lookup_type: Longident.t -> t -> Path.t * Types.type_declaration
 @
 
 <<signature Env.lookup_module>>=
-val lookup_module: Longident.t -> t -> Path.t * module_type
+val lookup_module: Longident.t -> t -> Path.t * Types.module_type
 @
 
 
@@ -1333,7 +1335,7 @@ val lookup_module: Longident.t -> t -> Path.t * module_type
 type t = 
   { types: (Ident.t, Path.t) Tbl.t;
     modules: (Ident.t, Path.t) Tbl.t;
-    modtypes: (Ident.t, module_type) Tbl.t }
+    modtypes: (Ident.t, Types.module_type) Tbl.t }
 @
 
 
@@ -1459,7 +1461,7 @@ let compile_only = ref false            (* -c *)
 @
 
 
-\section{Typed AST to [[Lambda]] calcul}
+\section{Typed AST to untyped [[Lambda]] calcul}
 
 
 %(* Translation from typed abstract syntax to lambda terms,
@@ -1791,7 +1793,7 @@ val for_tupled_function:
 %    languages", chapter 5. *)
 
 
-\section{[[Lambda]] calcul to [[Instruction]]}
+\section{[[Lambda]] calcul to bytecode [[Instruction]]}
 
 
 \subsection{[[Instruction]]}
@@ -1994,6 +1996,41 @@ val link: string list -> unit
 
 
 
+\section{Safe linking}
+
+<<signature Bytelink.check_consistency>>=
+val check_consistency: string -> Emitcode.compilation_unit -> unit
+@
+
+\section{Archives}
+
+<<constant Clflags.make_archive>>=
+let make_archive = ref false            (* -a *)
+@
+
+<<constant Clflags.archive_name>>=
+let archive_name = ref "library.cma"    (* -o *)
+@
+
+<<signature Bytelibrarian.create_archive>>=
+(* Format of a library file:
+      magic number (Config.cma_magic_number)
+      absolute offset of content table
+      blocks of relocatable bytecode
+      content table = list of compilation units
+*)
+val create_archive: string list -> string -> unit
+@
+
+\subsection{Archive format, [[.cma]]}
+
+%(* Format of a library file:
+%      magic number (Config.cma_magic_number)
+%      absolute offset of content table
+%      blocks of relocatable bytecode
+%      content table = list of compilation units
+%*)
+
 \section{Linking with C}
 
 <<signature Compile.c_file>>=
@@ -2067,41 +2104,6 @@ let create_archive archive file_list =
       else command(Config.ranlib ^ " " ^ archive)
 @
 
-
-\section{Safe linking}
-
-<<signature Bytelink.check_consistency>>=
-val check_consistency: string -> Emitcode.compilation_unit -> unit
-@
-
-\section{Archives}
-
-<<constant Clflags.make_archive>>=
-let make_archive = ref false            (* -a *)
-@
-
-<<constant Clflags.archive_name>>=
-let archive_name = ref "library.cma"    (* -o *)
-@
-
-<<signature Bytelibrarian.create_archive>>=
-(* Format of a library file:
-      magic number (Config.cma_magic_number)
-      absolute offset of content table
-      blocks of relocatable bytecode
-      content table = list of compilation units
-*)
-val create_archive: string list -> string -> unit
-@
-
-\subsection{Archive format, [[.cma]]}
-
-%(* Format of a library file:
-%      magic number (Config.cma_magic_number)
-%      absolute offset of content table
-%      blocks of relocatable bytecode
-%      content table = list of compilation units
-%*)
 
 \chapter{Interpreting}
 % Running
