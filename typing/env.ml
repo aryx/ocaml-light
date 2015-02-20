@@ -23,19 +23,24 @@ open Path
 open Types
 
 
-(*s: type Env.error (./typing/env.ml) *)
+(*s: type Env.error *)
+(* Error report *)
+
 type error =
     Not_an_interface of string
   | Corrupted_interface of string
   | Illegal_renaming of string * string
   | Inconsistent_import of string * string * string
-(*e: type Env.error (./typing/env.ml) *)
+(*e: type Env.error *)
 
-(*s: exception Env.Error (./typing/env.ml) *)
+(*s: exception Env.Error *)
 exception Error of error
-(*e: exception Env.Error (./typing/env.ml) *)
+(*e: exception Env.Error *)
 
-(*s: type Env.summary (./typing/env.ml) *)
+(*s: type Env.summary *)
+(* Summaries -- compact representation of an environment, to be
+   exported in debugging information. *)
+
 type summary =
     Env_empty
   | Env_value of summary * Ident.t * value_description
@@ -44,7 +49,7 @@ type summary =
   | Env_module of summary * Ident.t * module_type
   | Env_modtype of summary * Ident.t * modtype_declaration
   | Env_open of summary * Path.t
-(*e: type Env.summary (./typing/env.ml) *)
+(*e: type Env.summary *)
 
 (*s: type Env.t *)
 type t = {
@@ -99,8 +104,8 @@ type pers_struct =
 
 (*s: constant Env.persistent_structures *)
 let persistent_structures =
-(*e: constant Env.persistent_structures *)
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
+(*e: constant Env.persistent_structures *)
 
 (*s: function Env.read_pers_struct *)
 let read_pers_struct modname filename =
@@ -148,8 +153,8 @@ let reset_cache() =
 let check_modtype_inclusion =
   (* to be filled with includemod.check_modtype_inclusion *)
   ref ((fun env mty1 mty2 -> fatal_error "Env.include_modtypes") :
-(*e: constant Env.check_modtype_inclusion *)
        t -> module_type -> module_type -> unit)
+(*e: constant Env.check_modtype_inclusion *)
 
 (*s: function Env.find_module_descr *)
 (* Lookup by identifier *)

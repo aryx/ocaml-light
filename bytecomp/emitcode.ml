@@ -22,17 +22,17 @@ open Instruct
 open Opcodes
 
 
-(*s: type Emitcode.reloc_info (./bytecomp/emitcode.ml) *)
+(*s: type Emitcode.reloc_info *)
 (* Relocation information *)
 
 type reloc_info =
     Reloc_literal of structured_constant    (* structured constant *)
-  | Reloc_getglobal of Ident.t             (* reference to a global *)
-  | Reloc_setglobal of Ident.t             (* definition of a global *)
+  | Reloc_getglobal of Ident.t              (* reference to a global *)
+  | Reloc_setglobal of Ident.t              (* definition of a global *)
   | Reloc_primitive of string               (* C primitive number *)
-(*e: type Emitcode.reloc_info (./bytecomp/emitcode.ml) *)
+(*e: type Emitcode.reloc_info *)
 
-(*s: type Emitcode.compilation_unit (./bytecomp/emitcode.ml) *)
+(*s: type Emitcode.compilation_unit *)
 (* Descriptor for compilation units *)
 
 type compilation_unit =
@@ -45,7 +45,7 @@ type compilation_unit =
     mutable cu_force_link: bool;        (* Must be linked even if unref'ed *)
     mutable cu_debug: int;              (* Position of debugging info, or 0 *)
     cu_debugsize: int }                 (* Length of debugging info *)
-(*e: type Emitcode.compilation_unit (./bytecomp/emitcode.ml) *)
+(*e: type Emitcode.compilation_unit *)
 
 (* Format of a .cmo file:
      magic number (Config.cmo_magic_number)

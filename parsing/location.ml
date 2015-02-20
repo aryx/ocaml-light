@@ -14,10 +14,12 @@
 
 open Lexing
 
-(*s: type Location.t (./parsing/location.ml) *)
+(*s: type Location.t *)
+(* Source code locations, used in parsetree *)
+
 type t =
   { loc_start: int; loc_end: int }
-(*e: type Location.t (./parsing/location.ml) *)
+(*e: type Location.t *)
 
 (*s: constant Location.none *)
 let none = { loc_start = -1; loc_end = -1 }
@@ -138,10 +140,11 @@ let reset () =
   num_loc_lines := 0
 (*e: function Location.reset *)
 
+(*s: constants Location.msg_xxx *)
 let (msg_file, msg_line, msg_chars, msg_to, msg_colon, warn_head) =
   match Sys.os_type with
-  | "MacOS" -> ("File \"", "\"; line ", "; characters ", " to ", "", "### ")
   | _ -> ("File \"", "\", line ", ", characters ", "-", ":", "")
+(*e: constants Location.msg_xxx *)
 
 (*s: function Location.print *)
 let print loc =

@@ -12,9 +12,9 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: type Asttypes.constant *)
 (* Auxiliary a.s.t. types used by parsetree and typedtree. *)
 
+(*s: type Asttypes.constant *)
 type constant =
     Const_int of int
   | Const_char of char

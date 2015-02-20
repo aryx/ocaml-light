@@ -21,7 +21,6 @@
       blocks of relocatable bytecode
       content table = list of compilation units
 *)
-
 val create_archive: string list -> string -> unit
 (*e: signature Bytelibrarian.create_archive *)
 

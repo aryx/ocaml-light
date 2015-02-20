@@ -155,12 +155,6 @@ and modtype_declaration =
   | Pmodtype_manifest of module_type
 (*e: type Parsetree.modtype_declaration *)
 
-(*s: type Parsetree.with_constraint *)
-and with_constraint =
-    Pwith_type of type_declaration
-  | Pwith_module of Longident.t
-(*e: type Parsetree.with_constraint *)
-
 (* Value expressions for the module language *)
 
 (*s: type Parsetree.module_expr *)

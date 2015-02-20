@@ -19,7 +19,7 @@ open Path
 open Types
 open Typedtree
 
-(*s: type Includemod.error (./typing/includemod.ml) *)
+(*s: type Includemod.error *)
 type error =
     Missing_field of Ident.t
   | Value_descriptions of Ident.t * value_description * value_description
@@ -30,11 +30,11 @@ type error =
   | Modtype_infos of Ident.t * modtype_declaration * modtype_declaration
   | Modtype_permutation
   | Interface_mismatch of string * string
-(*e: type Includemod.error (./typing/includemod.ml) *)
+(*e: type Includemod.error *)
 
-(*s: exception Includemod.Error (./typing/includemod.ml) *)
+(*s: exception Includemod.Error *)
 exception Error of error list
-(*e: exception Includemod.Error (./typing/includemod.ml) *)
+(*e: exception Includemod.Error *)
 
 (* All functions "blah env x1 x2" check that x1 is included in x2,
    i.e. that x1 is the type of an implementation that fulfills the

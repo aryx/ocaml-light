@@ -22,7 +22,7 @@ open Types
 open Typedtree
 
 
-(*s: type Typemod.error (./typing/typemod.ml) *)
+(*s: type Typemod.error *)
 type error =
     Unbound_module of Longident.t
   | Unbound_modtype of Longident.t
@@ -34,11 +34,11 @@ type error =
   | Repeated_name of string * string
   | Non_generalizable of type_expr
   | Non_generalizable_module of module_type
-(*e: type Typemod.error (./typing/typemod.ml) *)
+(*e: type Typemod.error *)
 
-(*s: exception Typemod.Error (./typing/typemod.ml) *)
+(*s: exception Typemod.Error *)
 exception Error of Location.t * error
-(*e: exception Typemod.Error (./typing/typemod.ml) *)
+(*e: exception Typemod.Error *)
 
 (*s: function Typemod.extract_sig_open *)
 (* Extract a signature from a module type *)

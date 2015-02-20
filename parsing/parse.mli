@@ -12,9 +12,9 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Parse.implementation *)
 (* Entry points in the parser *)
 
+(*s: signature Parse.implementation *)
 val implementation : Lexing.lexbuf -> Parsetree.structure
 (*e: signature Parse.implementation *)
 (*s: signature Parse.interface *)

@@ -12,9 +12,9 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Ccomp.command *)
 (* Compiling C files and building C libraries *)
 
+(*s: signature Ccomp.command *)
 val command: string -> int
 (*e: signature Ccomp.command *)
 (*s: signature Ccomp.compile_file_bytecode *)

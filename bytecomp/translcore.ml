@@ -23,15 +23,15 @@ open Types
 open Typedtree
 open Lambda
 
-(*s: type Translcore.error (./bytecomp/translcore.ml) *)
+(*s: type Translcore.error *)
 type error =
     Illegal_letrec_pat
   | Illegal_letrec_expr
-(*e: type Translcore.error (./bytecomp/translcore.ml) *)
+(*e: type Translcore.error *)
 
-(*s: exception Translcore.Error (./bytecomp/translcore.ml) *)
+(*s: exception Translcore.Error *)
 exception Error of Location.t * error
-(*e: exception Translcore.Error (./bytecomp/translcore.ml) *)
+(*e: exception Translcore.Error *)
 
 (*s: constant Translcore.comparisons_table *)
 (* Translation of primitives *)

@@ -12,9 +12,9 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: function Ccomp.command *)
 (* Compiling C files and building C libraries *)
 
+(*s: function Ccomp.command *)
 let command cmdline =
   if !Clflags.verbose then begin
     prerr_string "+ ";

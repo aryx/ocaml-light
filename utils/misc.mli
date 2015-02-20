@@ -12,9 +12,9 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Misc.fatal_error *)
 (* Miscellaneous useful types and functions *)
 
+(*s: signature Misc.fatal_error *)
 val fatal_error: string -> 'a
 (*e: signature Misc.fatal_error *)
 (*s: exception Misc.Fatal_error *)

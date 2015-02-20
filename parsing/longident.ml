@@ -11,12 +11,13 @@
 (*                                                                     *)
 (***********************************************************************)
 (*e: copyright header *)
-(*s: type Longident.t (./parsing/longident.ml) *)
+(*s: type Longident.t *)
+(* Long identifiers, used in parsetree. *)
 
 type t =
     Lident of string
   | Ldot of t * string
-(*e: type Longident.t (./parsing/longident.ml) *)
+(*e: type Longident.t *)
 
 (*s: function Longident.flat *)
 let rec flat accu = function

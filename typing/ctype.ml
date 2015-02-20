@@ -79,28 +79,28 @@ open Btype
      [unify].
 *)
 
-(*s: exception Ctype.Unify (./typing/ctype.ml) *)
+(*s: exception Ctype.Unify *)
 (**** Errors ****)
 
 exception Unify of (type_expr * type_expr) list
-(*e: exception Ctype.Unify (./typing/ctype.ml) *)
+(*e: exception Ctype.Unify *)
 
-(*s: exception Ctype.Subtype (./typing/ctype.ml) *)
+(*s: exception Ctype.Subtype *)
 exception Subtype of
         (type_expr * type_expr) list * (type_expr * type_expr) list
-(*e: exception Ctype.Subtype (./typing/ctype.ml) *)
+(*e: exception Ctype.Subtype *)
 
-(*s: exception Ctype.Cannot_expand (./typing/ctype.ml) *)
+(*s: exception Ctype.Cannot_expand *)
 exception Cannot_expand
-(*e: exception Ctype.Cannot_expand (./typing/ctype.ml) *)
+(*e: exception Ctype.Cannot_expand *)
 
-(*s: exception Ctype.Cannot_apply (./typing/ctype.ml) *)
+(*s: exception Ctype.Cannot_apply *)
 exception Cannot_apply
-(*e: exception Ctype.Cannot_apply (./typing/ctype.ml) *)
+(*e: exception Ctype.Cannot_apply *)
 
-(*s: exception Ctype.Recursive_abbrev (./typing/ctype.ml) *)
+(*s: exception Ctype.Recursive_abbrev *)
 exception Recursive_abbrev
-(*e: exception Ctype.Recursive_abbrev (./typing/ctype.ml) *)
+(*e: exception Ctype.Recursive_abbrev *)
 
 (*s: constant Ctype.current_level *)
 (**** Type level management ****)

@@ -18,6 +18,7 @@ open Path
 open Types
 open Btype
 
+(*s: constants Predef.ident_xxx *)
 let ident_int = Ident.create "int"
 and ident_char = Ident.create "char"
 and ident_string = Ident.create "string"
@@ -28,7 +29,9 @@ and ident_exn = Ident.create "exn"
 and ident_array = Ident.create "array"
 and ident_list = Ident.create "list"
 and ident_format = Ident.create "format"
+(*e: constants Predef.ident_xxx *)
 
+(*s: constants Predef.path_xxx *)
 let path_int = Pident ident_int
 and path_char = Pident ident_char
 and path_string = Pident ident_string
@@ -39,7 +42,9 @@ and path_exn = Pident ident_exn
 and path_array = Pident ident_array
 and path_list = Pident ident_list
 and path_format = Pident ident_format
+(*e: constants Predef.path_xxx *)
 
+(*s: constants Predef.type_xxx *)
 let type_int = newgenty (Tconstr(path_int, [], ref Mnil))
 and type_char = newgenty (Tconstr(path_char, [], ref Mnil))
 and type_string = newgenty (Tconstr(path_string, [], ref Mnil))
@@ -49,7 +54,9 @@ and type_unit = newgenty (Tconstr(path_unit, [], ref Mnil))
 and type_exn = newgenty (Tconstr(path_exn, [], ref Mnil))
 and type_array t = newgenty (Tconstr(path_array, [t], ref Mnil))
 and type_list t = newgenty (Tconstr(path_list, [t], ref Mnil))
+(*e: constants Predef.type_xxx *)
 
+(*s: constants Predef.ident_exn_xxx *)
 let ident_match_failure = Ident.create "Match_failure"
 and ident_out_of_memory = Ident.create "Out_of_memory"
 and ident_invalid_argument = Ident.create "Invalid_argument"
@@ -59,6 +66,8 @@ and ident_sys_error = Ident.create "Sys_error"
 and ident_end_of_file = Ident.create "End_of_file"
 and ident_division_by_zero = Ident.create "Division_by_zero"
 and ident_stack_overflow = Ident.create "Stack_overflow"
+(*e: constants Predef.ident_exn_xxx *)
+
 
 (*s: constant Predef.path_match_failure *)
 let path_match_failure = Pident ident_match_failure

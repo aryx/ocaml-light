@@ -18,15 +18,15 @@ open Misc
 open Config
 open Emitcode
 
-(*s: type Bytelibrarian.error (./bytecomp/bytelibrarian.ml) *)
+(*s: type Bytelibrarian.error *)
 type error =
     File_not_found of string
   | Not_an_object_file of string
-(*e: type Bytelibrarian.error (./bytecomp/bytelibrarian.ml) *)
+(*e: type Bytelibrarian.error *)
 
-(*s: exception Bytelibrarian.Error (./bytecomp/bytelibrarian.ml) *)
+(*s: exception Bytelibrarian.Error *)
 exception Error of error
-(*e: exception Bytelibrarian.Error (./bytecomp/bytelibrarian.ml) *)
+(*e: exception Bytelibrarian.Error *)
 
 (*s: function Bytelibrarian.copy_compunit *)
 let copy_compunit ic oc compunit =

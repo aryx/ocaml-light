@@ -20,7 +20,7 @@ open Config
 open Instruct
 open Emitcode
 
-(*s: type Bytelink.error (./bytecomp/bytelink.ml) *)
+(*s: type Bytelink.error *)
 type error =
     File_not_found of string
   | Not_an_object_file of string
@@ -28,11 +28,11 @@ type error =
   | Inconsistent_import of string * string * string
   | Custom_runtime
   | File_exists of string
-(*e: type Bytelink.error (./bytecomp/bytelink.ml) *)
+(*e: type Bytelink.error *)
 
-(*s: exception Bytelink.Error (./bytecomp/bytelink.ml) *)
+(*s: exception Bytelink.Error *)
 exception Error of error
-(*e: exception Bytelink.Error (./bytecomp/bytelink.ml) *)
+(*e: exception Bytelink.Error *)
 
 (*s: type Bytelink.link_action *)
 type link_action =
@@ -133,8 +133,8 @@ let debug_info = ref ([] : debug_event list list)
 (* Consistency check between interfaces *)
 
 let crc_interfaces =
-(*e: constant Bytelink.crc_interfaces *)
   (Hashtbl.create 17 : (string, string * Digest.t) Hashtbl.t)
+(*e: constant Bytelink.crc_interfaces *)
 
 (*s: function Bytelink.check_consistency *)
 let check_consistency file_name cu =
@@ -405,67 +405,6 @@ let build_custom_runtime prim_name exec_name =
           (String.concat " " (List.rev !Clflags.ccobjs))
           runtime_lib
           Config.c_libraries)
-  | "Win32" ->
-      Ccomp.command
-       (Printf.sprintf
-          "%s /Fe%s -I%s %s %s %s %s %s"
-          Config.bytecomp_c_compiler
-          exec_name
-          Config.standard_library
-          (String.concat " " (List.rev !Clflags.ccopts))
-          prim_name
-          (String.concat " " (List.rev !Clflags.ccobjs))
-          runtime_lib
-          Config.c_libraries)
-  | "MacOS" ->
-      let c68k = "sc"
-      and libs68k = "\"{libraries}IntEnv.far.o\" " ^
-                    "\"{libraries}MacRuntime.o\" " ^
-                    "\"{clibraries}StdCLib.far.o\" " ^
-                    "\"{libraries}MathLib.far.o\" " ^
-                    "\"{libraries}ToolLibs.o\" " ^
-                    "\"{libraries}Interface.o\""
-      and link68k = "ilink -compact -state nouse -model far -msg nodup"
-      and cppc = "mrc"
-      and libsppc = "\"{sharedlibraries}MathLib\" " ^
-                    "\"{ppclibraries}PPCCRuntime.o\" " ^
-                    "\"{ppclibraries}PPCToolLibs.o\" " ^
-                    "\"{sharedlibraries}StdCLib\" " ^
-                    "\"{ppclibraries}StdCRuntime.o\" " ^
-                    "\"{sharedlibraries}InterfaceLib\" "
-      and linkppc = "ppclink -d"
-      and objs68k = extract ".o" (List.rev !Clflags.ccobjs)
-      and objsppc = extract ".x" (List.rev !Clflags.ccobjs)
-      in
-      Ccomp.command (Printf.sprintf "%s -i \"%s\" %s \"%s\" -o \"%s.o\""
-        c68k
-        Config.standard_library
-        (String.concat " " (List.rev !Clflags.ccopts))
-        prim_name
-        prim_name);
-      Ccomp.command (Printf.sprintf "%s -i \"%s\" %s \"%s\" -o \"%s.x\""
-        cppc
-        Config.standard_library
-        (String.concat " " (List.rev !Clflags.ccopts))
-        prim_name
-        prim_name);
-      Ccomp.command ("delete -i \""^exec_name^"\"");
-      Ccomp.command (Printf.sprintf
-        "%s -t MPST -c 'MPS ' -o \"%s\" \"%s.o\" \"%s\" \"%s\" %s"
-        link68k
-        exec_name
-        prim_name
-        (String.concat "\" \"" objs68k)
-        (Filename.concat Config.standard_library "libcamlrun.o")
-        libs68k);
-      Ccomp.command (Printf.sprintf
-        "%s -t MPST -c 'MPS ' -o \"%s\" \"%s.x\" \"%s\" \"%s\" %s"
-        linkppc
-        exec_name
-        prim_name
-        (String.concat "\" \"" objsppc)
-        (Filename.concat Config.standard_library "libcamlrun.x")
-        libsppc)
   | _ ->
     fatal_error "Bytelink.build_custom_runtime"
 (*e: function Bytelink.build_custom_runtime *)
@@ -473,15 +412,6 @@ let build_custom_runtime prim_name exec_name =
 (*s: function Bytelink.append_bytecode_and_cleanup *)
 let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
   match Sys.os_type with
-    "MacOS" ->
-      Ccomp.command (Printf.sprintf
-          "mergefragment -c -t Caml \"%s\"" bytecode_name);
-      Ccomp.command (Printf.sprintf
-          "mergefragment \"%s\" \"%s\"" bytecode_name exec_name);
-      Ccomp.command (Printf.sprintf
-          "delete -i \"%s\" \"%s\" \"%s.o\" \"%s.x\""
-          bytecode_name prim_name prim_name prim_name);
-      ()
   | _ ->
       let oc =
         open_out_gen [Open_wronly; Open_append; Open_binary] 0
@@ -500,10 +430,6 @@ let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
 
 let fix_exec_name name =
   match Sys.os_type with
-    "Win32" ->
-      begin try String.rindex name '.'; name
-      with Not_found -> name ^ ".exe"
-      end
   | _ -> name
 (*e: function Bytelink.fix_exec_name *)
 

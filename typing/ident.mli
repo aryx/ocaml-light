@@ -14,7 +14,9 @@
 
 (* Identifiers (unique names) *)
 
+(*s: signature type t *)
 type t
+(*e: signature type t *)
 
 (*s: signature Ident.create *)
 val create: string -> t

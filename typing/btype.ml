@@ -76,8 +76,8 @@ let iter_type_expr f ty =
 
 (*s: constant Btype.saved_desc *)
 let saved_desc = ref []
-(*e: constant Btype.saved_desc *)
   (* Saved association of generic nodes with their description. *)
+(*e: constant Btype.saved_desc *)
 
 (*s: function Btype.save_desc *)
 let save_desc ty desc = 
@@ -108,8 +108,8 @@ let rec unmark_type ty =
 
 (*s: constant Btype.memo *)
 let memo = ref []
-(*e: constant Btype.memo *)
         (* Contains the list of saved abbreviation expansions. *)
+(*e: constant Btype.memo *)
 
 (*s: function Btype.cleanup_abbrev *)
 let cleanup_abbrev () =
