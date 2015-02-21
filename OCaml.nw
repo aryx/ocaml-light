@@ -232,6 +232,9 @@ the authors of OCaml.
 
 % missing: 
 %  - call/cc, too advanced? too complex for mere mortal?
+%    but could, see
+%    http://gallium.inria.fr/~xleroy/software/ocaml-callcc-1.0.tar.gz
+%    or http://okmij.org/ftp/continuations/implementations.html
 %  - macros (hmm but need compile time metaprogramming though at least)
 % missing on purpose: 
 %  - objects (see lablgtk mess), 
