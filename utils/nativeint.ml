@@ -61,3 +61,10 @@ let to_hexa_string n =
     (if n.msw >= 0 then "" else "-")
     q
     (r * 2 + a.lsb)
+
+let logand n1 n2 =
+  { msw = n1.msw land n2.msw; lsb = n1.lsb land n2.lsb }
+let logor n1 n2 =
+  { msw = n1.msw lor n2.msw; lsb = n1.lsb lor n2.lsb }
+let logxor n1 n2 =
+  { msw = n1.msw lxor n2.msw; lsb = n1.lsb lxor n2.lsb }
