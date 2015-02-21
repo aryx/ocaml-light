@@ -96,15 +96,50 @@ let rec remove_instr node = function
 
 let some_load = (Iload(Cmm.Word, Arch.identity_addressing))
 
+type scheduler = {
+  (* old: virtual *)
+  (* Can be overriden by processor description *)
+  oper_issue_cycles : Mach.operation -> int;
+      (* Number of cycles needed to issue the given operation *)
+  oper_latency : Mach.operation -> int;
+      (* Number of cycles needed to complete the given operation *)
+  oper_in_basic_block : Mach.operation -> bool;
+      (* Says whether the given operation terminates a basic block *)
+
+  (* Entry point *)
+  schedule_fundecl : 
+    scheduler ->
+    Linearize.fundecl -> Linearize.fundecl;
+
+  (* old: protected *)
+
+  instr_in_basic_block: 
+   scheduler -> Linearize.instruction -> bool;
+  instr_latency:
+   scheduler -> Linearize.instruction -> int;
+  instr_issue_cycles:
+   scheduler -> Linearize.instruction -> int;
+  add_instruction:
+   scheduler -> 
+   code_dag_node list -> Linearize.instruction -> code_dag_node list;
+  ready_instruction:
+   int -> code_dag_node list -> code_dag_node option;
+  reschedule:  
+   scheduler -> 
+   code_dag_node list -> int -> Linearize.instruction -> Linearize.instruction;
+ 
+}
+
 (* The generic scheduler *)
 
-class virtual scheduler_generic () as self =
+let scheduler_generic () =
+ {
 
 (* Determine whether an operation ends a basic block or not.
    Can be overriden for some processors to signal specific instructions
    that terminate a basic block, e.g. Istore_symbol for the 386. *)
 
-method oper_in_basic_block = function
+ oper_in_basic_block = (function
     Icall_ind -> false
   | Icall_imm _ -> false
   | Itailcall_ind -> false
@@ -114,49 +149,53 @@ method oper_in_basic_block = function
   | Istore(_, _) -> false
   | Ialloc _ -> false
   | _ -> true
+ );
 
 (* Determine whether an instruction ends a basic block or not *)
 
-method protected instr_in_basic_block instr =
+ instr_in_basic_block = (fun self instr ->
   match instr.desc with
-    Lop op -> self#oper_in_basic_block op
+    Lop op -> self.oper_in_basic_block op
   | Lreloadretaddr -> true
   | _ -> false
+ );
 
 (* Estimate the delay needed to evaluate an operation. *)
 
-virtual oper_latency : Mach.operation -> int
+ oper_latency = (fun _ -> failwith "Schedgen.oper_lantency: virtual");
 
 (* Estimate the delay needed to evaluate an instruction *)
 
-method protected instr_latency instr =
+ instr_latency = (fun self instr ->
   match instr.desc with
     Lop op ->
-      self#oper_latency op
+      self.oper_latency op
   | Lreloadretaddr ->
-      self#oper_latency some_load
+      self.oper_latency some_load
   | _ ->
       assert false
+ );
 
 (* Estimate the number of cycles consumed by emitting an operation. *)
 
-virtual oper_issue_cycles : Mach.operation -> int
+ oper_issue_cycles = (fun _ -> failwith "Schedgen.oper_issue_cycles: virtual");
 
 (* Estimate the number of cycles consumed by emitting an instruction. *)
 
-method protected instr_issue_cycles instr =
+ instr_issue_cycles = (fun self instr ->
   match instr.desc with
     Lop op ->
-      self#oper_issue_cycles op
+      self.oper_issue_cycles op
   | Lreloadretaddr ->
-      self#oper_issue_cycles some_load
+      self.oper_issue_cycles some_load
   | _ ->
       assert false
+ );
 
 (* Add an instruction to the code dag *)
 
-method protected add_instruction ready_queue instr =
-  let delay = self#instr_latency instr in
+ add_instruction = (fun self ready_queue instr ->
+  let delay = self.instr_latency self instr in
   let node =
     { instr = instr;
       delay = delay;
@@ -199,6 +238,7 @@ method protected add_instruction ready_queue instr =
   (* If this is a root instruction (all arguments already computed),
      add it to the ready queue *)
   if node.ancestors = 0 then node :: ready_queue else ready_queue
+ );
 
 (* Given a list of instructions and a date, choose one or several
    that are ready to be computed (start date <= current date)
@@ -206,7 +246,7 @@ method protected add_instruction ready_queue instr =
    maximal distance to result.  If we can't find any, return None.
    This does not take multiple issues into account, though. *)
 
-method protected ready_instruction date queue =
+ ready_instruction = (fun date queue ->
   let rec extract best = function
     [] ->
       if best == dummy_node then None else Some best
@@ -216,22 +256,23 @@ method protected ready_instruction date queue =
         then instr else best in
       extract new_best rem in
   extract dummy_node queue
+ );
   
 (* Schedule a basic block, adding its instructions in front of the given
    instruction sequence *)
 
-method protected reschedule ready_queue date cont =
+ reschedule = (fun self ready_queue date cont ->
   if ready_queue = [] then cont else begin
-    match self#ready_instruction date ready_queue with
+    match self.ready_instruction date ready_queue with
       None ->
-        self#reschedule ready_queue (date + 1) cont
+        self.reschedule self ready_queue (date + 1) cont
     | Some node ->
         (* Remove node from queue *)
         let new_queue = ref (remove_instr node ready_queue) in
         (* Update the start date and number of ancestors emitted of
            all descendents of this node. Enter those that become ready
            in the queue. *)
-        let issue_cycles = self#instr_issue_cycles node.instr in
+        let issue_cycles = self.instr_issue_cycles self node.instr in
         List.iter
           (fun (son, delay) ->
             let completion_date = date + issue_cycles + delay - 1 in
@@ -241,19 +282,20 @@ method protected reschedule ready_queue date cont =
               new_queue := son :: !new_queue)
           node.sons;
         instr_cons node.instr.desc node.instr.arg node.instr.res
-          (self#reschedule !new_queue (date + issue_cycles) cont)
+          (self.reschedule self !new_queue (date + issue_cycles) cont)
   end
+ );
 
 (* Entry point *)
 (* Don't bother to schedule for initialization code and the like. *)
 
-method schedule_fundecl f =
+ schedule_fundecl = (fun self f ->
 
   let rec schedule i =
     match i.desc with
       Lend -> i
     | _ ->
-        if self#instr_in_basic_block i then begin
+        if self.instr_in_basic_block self i then begin
           clear_code_dag();
           schedule_block [] i
         end else
@@ -261,8 +303,8 @@ method schedule_fundecl f =
             next = schedule i.next }
 
   and schedule_block ready_queue i =
-    if self#instr_in_basic_block i then
-      schedule_block (self#add_instruction ready_queue i) i.next
+    if self.instr_in_basic_block self i then
+      schedule_block (self.add_instruction self ready_queue i) i.next
     else begin
       let critical_outputs =
         match i.desc with
@@ -271,7 +313,7 @@ method schedule_fundecl f =
         | Lreturn -> [||]
         | _ -> i.arg in
       List.iter (fun x -> longest_path critical_outputs x; ()) ready_queue;
-      self#reschedule ready_queue 0 (schedule i)
+      self.reschedule self ready_queue 0 (schedule i)
     end in
 
   if f.fun_fast then begin
@@ -282,5 +324,6 @@ method schedule_fundecl f =
       fun_fast = f.fun_fast }
   end else
     f
+ );
+ }
 
-end

@@ -22,15 +22,36 @@ type code_dag_node =
     mutable ancestors: int;
     mutable emitted_ancestors: int }
 
-class virtual scheduler_generic (unit) =
+type scheduler = {
+  (* old: virtual *)
   (* Can be overriden by processor description *)
-  virtual oper_issue_cycles : Mach.operation -> int
+  oper_issue_cycles : Mach.operation -> int;
       (* Number of cycles needed to issue the given operation *)
-  virtual oper_latency : Mach.operation -> int
+  oper_latency : Mach.operation -> int;
       (* Number of cycles needed to complete the given operation *)
-  method oper_in_basic_block : Mach.operation -> bool
+  oper_in_basic_block : Mach.operation -> bool;
       (* Says whether the given operation terminates a basic block *)
 
   (* Entry point *)
-  method schedule_fundecl : Linearize.fundecl -> Linearize.fundecl
-end
+  schedule_fundecl : 
+    scheduler ->
+    Linearize.fundecl -> Linearize.fundecl;
+
+  (* old: protected *)
+
+  instr_in_basic_block: 
+   scheduler -> Linearize.instruction -> bool;
+  instr_latency:
+   scheduler -> Linearize.instruction -> int;
+  instr_issue_cycles:
+   scheduler -> Linearize.instruction -> int;
+  add_instruction:
+   scheduler -> 
+   code_dag_node list -> Linearize.instruction -> code_dag_node list;
+  ready_instruction:
+   int -> code_dag_node list -> code_dag_node option;
+  reschedule:  
+   scheduler -> 
+   code_dag_node list -> int -> Linearize.instruction -> Linearize.instruction;
+ 
+}

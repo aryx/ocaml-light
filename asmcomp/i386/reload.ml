@@ -16,6 +16,8 @@ open Arch
 open Reg
 open Mach
 
+open Reloadgen
+
 (* Reloading for the Intel x86 *)
 
 let stackp r =
@@ -23,47 +25,59 @@ let stackp r =
     Stack _ -> true
   | _ -> false
 
-class reload () as self =
+let reload () =
+  let super = Reloadgen.reload_generic () in
+  {
+  (* todo: super with feature needed ... *)
 
-inherit Reloadgen.reload_generic () as super
+ fundecl = super.fundecl;
+ makeregs = super.makeregs;
+ makereg1 = super.makereg1;
+ reload = super.reload;
 
-method makereg r =
+
+  makereg = (fun r ->
   match r.typ with
     Float -> r
-  | _ -> super#makereg r
+  | _ -> super.makereg r
+  );
 
 (* By overriding makereg, we make sure that pseudoregs of type float
    will never be reloaded. Hence there is no need to make special cases for
    floating-point operations. *)
 
-method reload_operation op arg res =
+ reload_operation = (fun self op arg res ->
   match op with
     Iintop(Iadd|Isub|Imul|Iand|Ior|Ixor|Icomp _|Icheckbound) ->
       (* One of the two arguments can reside in the stack *)
       if stackp arg.(0) && stackp arg.(1)
-      then ([|arg.(0); self#makereg arg.(1)|], res)
+      then ([|arg.(0); self.makereg arg.(1)|], res)
       else (arg, res)
   | Iintop(Ilsl|Ilsr|Iasr) | Iintop_imm(_, _) | Ifloatofint | Iintoffloat |
     Ispecific(Ipush) ->
       (* The argument(s) can be either in register or on stack *)
       (arg, res)
   | _ -> (* Other operations: all args and results in registers *)
-      super#reload_operation op arg res
+      super.reload_operation self op arg res
+ );
 
-method reload_test tst arg =
+ reload_test = (fun self tst arg ->
   match tst with
     Iinttest cmp ->
       (* One of the two arguments can reside on stack *)
       if stackp arg.(0) && stackp arg.(1)
-      then [| self#makereg arg.(0); arg.(1) |]
+      then [| self.makereg arg.(0); arg.(1) |]
       else arg
   | _ ->
       (* The argument(s) can be either in register or on stack *)
       arg
+ );
+ }
 
-end
 
 let fundecl f =
-  (new reload ())#fundecl f
+  let r = reload () in
+  r.fundecl r f
+
 
 
