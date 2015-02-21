@@ -34,6 +34,7 @@ let process_file name =
       objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
   | _ when Filename.check_suffix name ".mli" ->
       Compile.interface name
+
   | _ when Filename.check_suffix name ".cmo" 
         or Filename.check_suffix name ".cma" ->
       objfiles := name :: !objfiles

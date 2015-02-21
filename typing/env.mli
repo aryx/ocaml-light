@@ -30,10 +30,10 @@ val initial: t
 (* Lookup by paths *)
 
 (*s: signature Env.find_value *)
-val find_value: Path.t -> t -> value_description
+val find_value: Path.t -> t -> Types.value_description
 (*e: signature Env.find_value *)
 (*s: signature Env.find_type *)
-val find_type: Path.t -> t -> type_declaration
+val find_type: Path.t -> t -> Types.type_declaration
 (*e: signature Env.find_type *)
 (*s: signature Env.find_module *)
 val find_module: Path.t -> t -> module_type
@@ -48,19 +48,19 @@ val find_type_expansion: Path.t -> t -> type_expr list * type_expr
 (* Lookup by long identifiers *)
 
 (*s: signature Env.lookup_value *)
-val lookup_value: Longident.t -> t -> Path.t * value_description
+val lookup_value: Longident.t -> t -> Path.t * Types.value_description
 (*e: signature Env.lookup_value *)
 (*s: signature Env.lookup_constructor *)
-val lookup_constructor: Longident.t -> t -> constructor_description
+val lookup_constructor: Longident.t -> t -> Types.constructor_description
 (*e: signature Env.lookup_constructor *)
 (*s: signature Env.lookup_label *)
-val lookup_label: Longident.t -> t -> label_description
+val lookup_label: Longident.t -> t -> Types.label_description
 (*e: signature Env.lookup_label *)
 (*s: signature Env.lookup_type *)
-val lookup_type: Longident.t -> t -> Path.t * type_declaration
+val lookup_type: Longident.t -> t -> Path.t * Types.type_declaration
 (*e: signature Env.lookup_type *)
 (*s: signature Env.lookup_module *)
-val lookup_module: Longident.t -> t -> Path.t * module_type
+val lookup_module: Longident.t -> t -> Path.t * Types.module_type
 (*e: signature Env.lookup_module *)
 
 (*s: signature Env.add_value *)

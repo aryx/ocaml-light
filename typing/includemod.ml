@@ -237,16 +237,6 @@ and signature_components env subst = function
   | _ ->
       fatal_error "Includemod.signature_components"
 
-(* Inclusion between module type specifications *)
-
-and check_modtype_equiv env mty1 mty2 =
-  match
-    (modtypes env Subst.identity mty1 mty2,
-     modtypes env Subst.identity mty2 mty1)
-  with
-    (Tcoerce_none, Tcoerce_none) -> ()
-  | (_, _) -> raise(Error [Modtype_permutation])
-
 (*s: function Includemod.check_modtype_inclusion *)
 (* Simplified inclusion check between module types *)
 

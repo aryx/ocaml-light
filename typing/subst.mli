@@ -40,9 +40,6 @@ val add_type: Ident.t -> Path.t -> t -> t
 (*s: signature Subst.add_module *)
 val add_module: Ident.t -> Path.t -> t -> t
 (*e: signature Subst.add_module *)
-(*s: signature Subst.add_modtype *)
-val add_modtype: Ident.t -> module_type -> t -> t
-(*e: signature Subst.add_modtype *)
 
 (*s: signature Subst.type_expr *)
 val type_expr: t -> type_expr -> type_expr
