@@ -11,15 +11,40 @@
 
 (* $Id: reloadgen.mli,v 1.2 1997/11/13 10:57:09 xleroy Exp $ *)
 
-class reload_generic (unit) =
-  method reload_operation :
-    Mach.operation -> Reg.t array -> Reg.t array -> Reg.t array * Reg.t array
-  method reload_test : Mach.test -> Reg.t array -> Reg.t array
+type reloader = {
+ reload_operation :
+    reloader ->
+    Mach.operation -> Reg.t array -> Reg.t array -> Reg.t array * Reg.t array;
+ reload_test: 
+    reloader ->
+    Mach.test -> Reg.t array -> Reg.t array;
     (* Can be overriden to reflect instructions that can operate
        directly on stack locations *)
-  method makereg : Reg.t -> Reg.t
+ makereg : Reg.t -> Reg.t;
     (* Can be overriden to avoid creating new registers of some class
        (i.e. if all "registers" of that class are actually on stack) *)
-  method fundecl : Mach.fundecl -> Mach.fundecl * bool
+ fundecl : 
+   reloader ->
+   Mach.fundecl -> Mach.fundecl * bool;
     (* The entry point *)
-end
+
+ (* old: protected *)
+
+ makeregs : reloader -> Reg.t array -> Reg.t array;
+ makereg1 : reloader -> Reg.t array -> Reg.t array;
+ 
+ reload:  
+   reloader -> Mach.instruction -> Mach.instruction;
+ 
+}
+
+val reload_generic: unit -> reloader
+
+(*
+ reload_operation = super.eload_operation;
+ reload_test: = super.eload_test:; makereg : Reg.t -> Reg.t;
+ fundecl = super.undecl;
+ makeregs = super.akeregs;
+ makereg1 = super.akereg1;
+ reload: = super.eload:;
+*)
