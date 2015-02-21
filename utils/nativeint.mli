@@ -41,3 +41,8 @@ val to_string: t -> string
 val to_hexa_string: t -> string
         (* Return the signed hexadecimal representation of a native integer,
            in 0x notation. *)
+
+val logand: t -> t -> t
+val logor: t -> t -> t
+val logxor: t -> t -> t
+	(* Bitwise and, or, xor *)
