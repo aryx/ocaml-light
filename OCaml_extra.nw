@@ -2095,9 +2095,6 @@ val add_type: Ident.t -> Path.t -> t -> t
 val add_module: Ident.t -> Path.t -> t -> t
 @
 
-<<signature Subst.add_modtype>>=
-val add_modtype: Ident.t -> module_type -> t -> t
-@
 
 <<signature Subst.type_expr>>=
 val type_expr: t -> type_expr -> type_expr
@@ -2141,7 +2138,6 @@ type t
 
 <<signature Subst.add_type>>
 <<signature Subst.add_module>>
-<<signature Subst.add_modtype>>
 
 <<signature Subst.type_expr>>
 <<signature Subst.value_description>>
@@ -2174,12 +2170,6 @@ let add_module id p s =
     modtypes = s.modtypes }
 @
 
-<<function Subst.add_modtype>>=
-let add_modtype id ty s =
-  { types = s.types;
-    modules = s.modules;
-    modtypes = Tbl.add id ty s.modtypes }
-@
 
 <<function Subst.remove_type>>=
 let remove_type id s =
@@ -2195,12 +2185,6 @@ let remove_module id s =
     modtypes = s.modtypes }
 @
 
-<<function Subst.remove_modtype>>=
-let remove_modtype id s =
-  { types = s.types;
-    modules = s.modules;
-    modtypes = Tbl.remove id s.modtypes }
-@
 
 <<function Subst.module_path>>=
 let rec module_path s = function
@@ -2330,13 +2314,9 @@ open Btype
 
 <<function Subst.add_module>>
 
-<<function Subst.add_modtype>>
-
 <<function Subst.remove_type>>
 
 <<function Subst.remove_module>>
-
-<<function Subst.remove_modtype>>
 
 <<function Subst.module_path>>
 
@@ -3719,20 +3699,6 @@ val subtype : Env.t -> type_expr -> type_expr -> unit -> unit
            constraints. *)
 @
 
-<<signature Ctype.nondep_type>>=
-val nondep_type: Env.t -> Ident.t -> type_expr -> type_expr
-        (* Return a type equivalent to the given type but without
-           references to the given module identifier. Raise [Not_found]
-           if no such type exists. *)
-@
-
-<<signature Ctype.nondep_type_decl>>=
-val nondep_type_decl:
-        Env.t -> Ident.t -> Ident.t -> bool -> type_declaration ->
-        type_declaration
-        (* Same for type declarations. *)
-@
-
 <<signature Ctype.correct_abbrev>>=
 val correct_abbrev: Env.t -> Ident.t -> type_expr list -> type_expr -> unit
 @
@@ -3818,9 +3784,6 @@ open Types
 
 <<signature Ctype.enlarge_type>>
 <<signature Ctype.subtype>>
-
-<<signature Ctype.nondep_type>>
-<<signature Ctype.nondep_type_decl>>
 
 <<signature Ctype.correct_abbrev>>
 <<signature Ctype.cyclic_abbrev>>
@@ -4634,125 +4597,6 @@ let rec cyclic_abbrev env id ty =
       false
 @
 
-<<function Ctype.nondep_type_rec>>=
-(*
-   Variables are left unchanged. Other type nodes are duplicated, with
-   levels set to generic level.
-   During copying, the description of a (non-variable) node is first
-   replaced by a link to a marked stub ([Tlink (newmarkedgenvar ())]).
-   The mark allows to differentiate the original type from the copy.
-   Once the copy is made, it replaces the stub.
-   After copying, the description of node, which was stored by
-   [save_desc], must be put back, using [cleanup_types], and the
-   marks on the copy must be removed.
-*)
-
-let rec nondep_type_rec env id ty =
-  let ty = repr ty in
-  if (ty.desc = Tvar) || (ty.level < lowest_level) then
-    ty
-  else begin
-    let desc = ty.desc in
-    save_desc ty desc;
-    let ty' = newmarkedgenvar () in        (* Stub *)
-    ty.desc <- Tlink ty';
-    ty'.desc <-
-      begin match desc with
-        Tvar ->
-          fatal_error "Ctype.nondep_type_rec"
-      | Tarrow(t1, t2) ->
-          Tarrow(nondep_type_rec env id t1, nondep_type_rec env id t2)
-      | Ttuple tl ->
-          Ttuple(List.map (nondep_type_rec env id) tl)
-      | Tconstr(p, tl, abbrev) ->
-          if Path.isfree id p then
-            begin try
-              Tlink (nondep_type_rec env id
-                       (expand_abbrev env p tl abbrev ty.level))
-              (*
-                 The [Tlink] is important. The expanded type may be a
-                 variable, or may not be completely copied yet
-                 (recursive type), so one cannot just take its
-                 description.
-               *)
-            with Cannot_expand ->
-              raise Not_found
-            end
-          else
-            Tconstr(p, List.map (nondep_type_rec env id) tl, ref Mnil)
-      | Tnil ->
-          Tnil
-      | Tlink ty ->                    (* Actually unused *)
-          Tlink(nondep_type_rec env id ty)
-      end;
-    ty'
-  end
-@
-
-<<function Ctype.nondep_type>>=
-let nondep_type env id ty =
-  try
-    let ty' = nondep_type_rec env id ty in
-    cleanup_types ();
-    unmark_type ty';
-    ty'
-  with Not_found ->
-    cleanup_types ();
-    raise Not_found
-@
-
-<<function Ctype.nondep_type_decl>>=
-(* Preserve sharing inside type declarations. *)
-let nondep_type_decl env mid id is_covariant decl =
-  try
-    let params = List.map (nondep_type_rec env mid) decl.type_params in
-    let decl =
-      { type_params = params;
-        type_arity = decl.type_arity;
-        type_kind =
-          begin try
-            match decl.type_kind with
-              Type_abstract ->
-                Type_abstract
-            | Type_variant cstrs ->
-                Type_variant(List.map
-                  (fun (c, tl) -> (c, List.map (nondep_type_rec env mid) tl))
-                  cstrs)
-            | Type_record lbls ->
-                Type_record(List.map
-                  (fun (c, mut, t) -> (c, mut, nondep_type_rec env mid t))
-                  lbls)
-          with Not_found when is_covariant ->
-            Type_abstract
-          end;
-        type_manifest =
-          begin try
-            match decl.type_manifest with
-              None -> None
-            | Some ty ->
-                Some (unroll_abbrev id params (nondep_type_rec env mid ty))
-          with Not_found when is_covariant ->
-            None
-          end }
-    in
-    cleanup_types ();
-    List.iter unmark_type decl.type_params;
-    begin match decl.type_kind with
-      Type_abstract -> ()
-    | Type_variant cstrs ->
-        List.iter (fun (c, tl) -> List.iter unmark_type tl) cstrs
-    | Type_record lbls ->
-        List.iter (fun (c, mut, t) -> unmark_type t) lbls
-    end;
-    begin match decl.type_manifest with
-      None    -> ()
-    | Some ty -> unmark_type ty
-    end;
-    decl
-  with Not_found ->
-    cleanup_types ();
-    raise Not_found
-@
 
 <<type Ctype.closed_schema_result (./typing/ctype.ml)>>=
 type closed_schema_result = Var of type_expr | Row_var of type_expr
@@ -5279,18 +5123,6 @@ and subtype_list env trace tl1 tl2 =
 <<function Ctype.arity>>
 
 <<function Ctype.cyclic_abbrev>>
-
-
-                              (*************************)
-                              (*  Remove dependencies  *)
-                              (*************************)
-
-
-<<function Ctype.nondep_type_rec>>
-
-<<function Ctype.nondep_type>>
-
-<<function Ctype.nondep_type_decl>>
 
 
                     (**************************************)
@@ -7102,16 +6934,6 @@ and signature_components env subst = function
       (pos, cc) :: signature_components env subst rem
   | _ ->
       fatal_error "Includemod.signature_components"
-
-(* Inclusion between module type specifications *)
-
-and check_modtype_equiv env mty1 mty2 =
-  match
-    (modtypes env Subst.identity mty1 mty2,
-     modtypes env Subst.identity mty2 mty1)
-  with
-    (Tcoerce_none, Tcoerce_none) -> ()
-  | (_, _) -> raise(Error [Modtype_permutation])
 
 <<function Includemod.check_modtype_inclusion>>
 

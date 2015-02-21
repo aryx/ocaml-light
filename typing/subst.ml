@@ -23,7 +23,7 @@ open Btype
 type t = 
   { types: (Ident.t, Path.t) Tbl.t;
     modules: (Ident.t, Path.t) Tbl.t;
-    modtypes: (Ident.t, module_type) Tbl.t }
+    modtypes: (Ident.t, Types.module_type) Tbl.t }
 (*e: type Subst.t *)
 
 (*s: constant Subst.identity *)
@@ -45,13 +45,6 @@ let add_module id p s =
     modtypes = s.modtypes }
 (*e: function Subst.add_module *)
 
-(*s: function Subst.add_modtype *)
-let add_modtype id ty s =
-  { types = s.types;
-    modules = s.modules;
-    modtypes = Tbl.add id ty s.modtypes }
-(*e: function Subst.add_modtype *)
-
 (*s: function Subst.remove_type *)
 let remove_type id s =
   { types = Tbl.remove id s.types;
@@ -65,13 +58,6 @@ let remove_module id s =
     modules = Tbl.remove id s.modules;
     modtypes = s.modtypes }
 (*e: function Subst.remove_module *)
-
-(*s: function Subst.remove_modtype *)
-let remove_modtype id s =
-  { types = s.types;
-    modules = s.modules;
-    modtypes = Tbl.remove id s.modtypes }
-(*e: function Subst.remove_modtype *)
 
 (*s: function Subst.module_path *)
 let rec module_path s = function

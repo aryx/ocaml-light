@@ -163,19 +163,6 @@ val subtype : Env.t -> type_expr -> type_expr -> unit -> unit
            constraints. *)
 (*e: signature Ctype.subtype *)
 
-(*s: signature Ctype.nondep_type *)
-val nondep_type: Env.t -> Ident.t -> type_expr -> type_expr
-        (* Return a type equivalent to the given type but without
-           references to the given module identifier. Raise [Not_found]
-           if no such type exists. *)
-(*e: signature Ctype.nondep_type *)
-(*s: signature Ctype.nondep_type_decl *)
-val nondep_type_decl:
-        Env.t -> Ident.t -> Ident.t -> bool -> type_declaration ->
-        type_declaration
-        (* Same for type declarations. *)
-(*e: signature Ctype.nondep_type_decl *)
-
 (*s: signature Ctype.correct_abbrev *)
 val correct_abbrev: Env.t -> Ident.t -> type_expr list -> type_expr -> unit
 (*e: signature Ctype.correct_abbrev *)
