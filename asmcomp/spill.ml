@@ -1,3 +1,4 @@
+(*s: asmcomp/spill.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -31,10 +32,13 @@ open Mach
    across the instruction that haven't been used for the longest time.
    These registers will be spilled and reloaded as described above. *)
 
+(*s: constant Spill.spill_env *)
 (* Association of spill registers to registers *)
 
 let spill_env = ref ((*Reg.*)Map.empty: (Reg.t , Reg.t) (*Reg.*)Map.t)
+(*e: constant Spill.spill_env *)
 
+(*s: function Spill.spill_reg *)
 let spill_reg r =
   try
     (*Reg.*)Map.find r !spill_env
@@ -44,12 +48,18 @@ let spill_reg r =
     if String.length r.name > 0 then spill_r.name <- "spilled-" ^ r.name;
     spill_env := (*Reg.*)Map.add r spill_r !spill_env;
     spill_r
+(*e: function Spill.spill_reg *)
 
+(*s: constant Spill.use_date *)
 (* Record the position of last use of registers *)
 
 let use_date = ref ((*Reg.*)Map.empty: (Reg.t, int) (*Reg.*)Map.t)
+(*e: constant Spill.use_date *)
+(*s: constant Spill.current_date *)
 let current_date = ref 0
+(*e: constant Spill.current_date *)
 
+(*s: function Spill.record_use *)
 let record_use regv =
   for i = 0 to Array.length regv - 1 do
     let r = regv.(i) in
@@ -57,7 +67,9 @@ let record_use regv =
     if !current_date > prev_date then
       use_date := (*Reg.*)Map.add r !current_date !use_date
   done
+(*e: function Spill.record_use *)
 
+(*s: function Spill.add_superpressure_regs *)
 (* Check if the register pressure overflows the maximum pressure allowed
    at that point. If so, spill enough registers to lower the pressure. *)
 
@@ -104,11 +116,15 @@ let add_superpressure_regs op live_regs res_regs spilled =
       check_pressure cl ((*Reg.*)Set.add !lru_reg spilled)
     end in
   check_pressure 0 spilled
+(*e: function Spill.add_superpressure_regs *)
 
+(*s: constant Spill.destroyed_at_fork *)
 (* A-list recording what is destroyed at if-then-else points. *)
 
 let destroyed_at_fork = ref ([] : (instruction * Reg.t Set.t) list)
+(*e: constant Spill.destroyed_at_fork *)
 
+(*s: function Spill.add_reloads *)
 (* First pass: insert reload instructions based on an approximation of
    what is destroyed at pressure points. *)
 
@@ -116,10 +132,16 @@ let add_reloads regset i =
   (*Reg.*)Set.fold
     (fun r i -> instr_cons (Iop Ireload) [|spill_reg r|] [|r|] i)
     regset i
+(*e: function Spill.add_reloads *)
 
+(*s: constant Spill.reload_at_exit *)
 let reload_at_exit = ref (*Reg.*)Set.empty
+(*e: constant Spill.reload_at_exit *)
+(*s: constant Spill.reload_at_break *)
 let reload_at_break = ref (*Reg.*)Set.empty
+(*e: constant Spill.reload_at_break *)
 
+(*s: function Spill.reload *)
 let rec reload i before =
   incr current_date;
   record_use i.arg;
@@ -228,11 +250,13 @@ let rec reload i before =
        finally)
   | Iraise ->
       (add_reloads (Reg.inter_set_array before i.arg) i, (*Reg.*)Set.empty)
+(*e: function Spill.reload *)
 
 (* Second pass: add spill instructions based on what we've decided to reload.
    That is, any register that may be reloaded in the future must be spilled
    just after its definition. *)
 
+(*s: constant Spill.spill_at_exit *)
 (* As an optimization, if a register needs to be spilled in one branch of
    a conditional but not in the other, then we spill it late on entrance
    in the branch that needs it spilled.
@@ -240,14 +264,22 @@ let rec reload i before =
    being lifted up all the way out of the loop. *)
 
 let spill_at_exit = ref (*Reg.*)Set.empty
+(*e: constant Spill.spill_at_exit *)
+(*s: constant Spill.spill_at_raise *)
 let spill_at_raise = ref (*Reg.*)Set.empty
+(*e: constant Spill.spill_at_raise *)
+(*s: constant Spill.inside_loop *)
 let inside_loop = ref false
+(*e: constant Spill.inside_loop *)
 
+(*s: function Spill.add_spills *)
 let add_spills regset i =
   (*Reg.*)Set.fold
     (fun r i -> instr_cons (Iop Ispill) [|r|] [|spill_reg r|] i)
     regset i
+(*e: function Spill.add_spills *)
 
+(*s: function Spill.spill *)
 let rec spill i finally =
   match i.desc with
     Iend ->
@@ -347,7 +379,9 @@ let rec spill i finally =
        before_body)
   | Iraise ->
       (i, !spill_at_raise)
+(*e: function Spill.spill *)
 
+(*s: function Spill.fundecl *)
 (* Entry point *)
 
 let fundecl f =
@@ -364,4 +398,6 @@ let fundecl f =
     fun_args = f.fun_args;
     fun_body = new_body;
     fun_fast = f.fun_fast }
+(*e: function Spill.fundecl *)
   
+(*e: asmcomp/spill.ml *)

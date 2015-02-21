@@ -1,3 +1,4 @@
+(*s: asmcomp/linearize.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -16,19 +17,28 @@
 open Reg
 open Mach
 
+(*s: type Linearize.label (asmcomp/linearize.ml) *)
 type label = int
+(*e: type Linearize.label (asmcomp/linearize.ml) *)
 
+(*s: constant Linearize.label_counter *)
 let label_counter = ref 99
+(*e: constant Linearize.label_counter *)
 
+(*s: function Linearize.new_label *)
 let new_label() = incr label_counter; !label_counter
+(*e: function Linearize.new_label *)
 
+(*s: type Linearize.instruction (asmcomp/linearize.ml) *)
 type instruction =
   { mutable desc: instruction_desc;
     next: instruction;
     arg: Reg.t array;
     res: Reg.t array;
     live: Reg.t Set.t }
+(*e: type Linearize.instruction (asmcomp/linearize.ml) *)
 
+(*s: type Linearize.instruction_desc (asmcomp/linearize.ml) *)
 and instruction_desc =
     Lend
   | Lop of operation
@@ -43,18 +53,24 @@ and instruction_desc =
   | Lpushtrap
   | Lpoptrap
   | Lraise
+(*e: type Linearize.instruction_desc (asmcomp/linearize.ml) *)
 
+(*s: type Linearize.fundecl (asmcomp/linearize.ml) *)
 type fundecl =
   { fun_name: string;
     fun_body: instruction;
     fun_fast: bool }
+(*e: type Linearize.fundecl (asmcomp/linearize.ml) *)
 
+(*s: function Linearize.invert_integer_test *)
 (* Invert a test *)
 
 let invert_integer_test = function
     Isigned cmp -> Isigned(Cmm.negate_comparison cmp)
   | Iunsigned cmp -> Iunsigned(Cmm.negate_comparison cmp)
+(*e: function Linearize.invert_integer_test *)
 
+(*s: function Linearize.invert_test *)
 let invert_test = function
     Itruetest -> Ifalsetest
   | Ifalsetest -> Itruetest
@@ -63,7 +79,9 @@ let invert_test = function
   | Ifloattest(cmp, neg) -> Ifloattest(cmp, not neg)
   | Ieventest -> Ioddtest
   | Ioddtest -> Ieventest
+(*e: function Linearize.invert_test *)
 
+(*s: constant Linearize.end_instr *)
 (* The "end" instruction *)
 
 let rec end_instr =
@@ -72,24 +90,32 @@ let rec end_instr =
     arg = [||];
     res = [||];
     live = (*Reg.*)Set.empty }
+(*e: constant Linearize.end_instr *)
 
+(*s: function Linearize.instr_cons *)
 (* Cons an instruction (live empty) *)
 
 let instr_cons d a r n =
   { desc = d; next = n; arg = a; res = r; live = (*Reg.*)Set.empty }
+(*e: function Linearize.instr_cons *)
 
+(*s: function Linearize.cons_instr *)
 (* Cons a simple instruction (arg, res, live empty) *)
 
 let cons_instr d n =
   { desc = d; next = n; arg = [||]; res = [||]; live = (*Reg.*)Set.empty }
+(*e: function Linearize.cons_instr *)
 
+(*s: function Linearize.copy_instr *)
 (* Build an instruction with arg, res, live taken from
    the given Mach.instruction *)
 
 let copy_instr d i n =
   { desc = d; next = n;
     arg = i.Mach.arg; res = i.Mach.res; live = i.Mach.live }
+(*e: function Linearize.copy_instr *)
 
+(*s: function Linearize.get_label *)
 (* Label the beginning of the given instruction sequence.
    If the sequence starts with a branch, jump over it. *)
 
@@ -98,7 +124,9 @@ let get_label n =
     Lbranch lbl -> (lbl, n)
   | Llabel lbl -> (lbl, n)
   | _ -> let lbl = new_label() in (lbl, cons_instr (Llabel lbl) n)
+(*e: function Linearize.get_label *)
 
+(*s: function Linearize.discard_dead_code *)
 (* Discard all instructions up to the next label.
    This function is to be called before adding a non-terminating 
    instruction. *)
@@ -112,7 +140,9 @@ let rec discard_dead_code n =
   | Lpoptrap -> n
   | Lop(Istackoffset _) -> n
   | _ -> discard_dead_code n.next
+(*e: function Linearize.discard_dead_code *)
 
+(*s: function Linearize.add_branch *)
 (* Add a branch in front of a continuation.
    Discard dead code in the continuation.
    Does not insert anything if we're just falling through. *)
@@ -122,11 +152,15 @@ let add_branch lbl n =
   match n1.desc with
     Llabel lbl1 when lbl1 = lbl -> n1
   | _ -> cons_instr (Lbranch lbl) n1
+(*e: function Linearize.add_branch *)
 
+(*s: constant Linearize.exit_label *)
 (* Current label for exit handler *)
 
 let exit_label = ref 99
+(*e: constant Linearize.exit_label *)
 
+(*s: function Linearize.linear *)
 (* Linearize an instruction [i]: add it in front of the continuation [n] *)
 
 let rec linear i n =
@@ -214,9 +248,13 @@ let rec linear i n =
         (linear handler (add_branch lbl_join n2))
   | Iraise ->
       copy_instr Lraise i (discard_dead_code n)
+(*e: function Linearize.linear *)
 
+(*s: function Linearize.fundecl *)
 let fundecl f =
   { fun_name = f.Mach.fun_name;
     fun_body = linear f.Mach.fun_body end_instr;
     fun_fast = f.Mach.fun_fast }
+(*e: function Linearize.fundecl *)
 
+(*e: asmcomp/linearize.ml *)

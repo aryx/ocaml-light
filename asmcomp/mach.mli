@@ -1,3 +1,4 @@
+(*s: asmcomp/mach.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -11,18 +12,23 @@
 
 (* $Id: mach.mli,v 1.14 1997/03/04 10:19:50 xleroy Exp $ *)
 
+(*s: type Mach.integer_comparison *)
 (* Representation of machine code by sequences of pseudoinstructions *)
 
 type integer_comparison =
     Isigned of Cmm.comparison
   | Iunsigned of Cmm.comparison
+(*e: type Mach.integer_comparison *)
 
+(*s: type Mach.integer_operation *)
 type integer_operation =
     Iadd | Isub | Imul | Idiv | Imod
   | Iand | Ior | Ixor | Ilsl | Ilsr | Iasr
   | Icomp of integer_comparison
   | Icheckbound
+(*e: type Mach.integer_operation *)
 
+(*s: type Mach.test *)
 type test =
     Itruetest
   | Ifalsetest
@@ -31,7 +37,9 @@ type test =
   | Ifloattest of Cmm.comparison * bool
   | Ioddtest
   | Ieventest
+(*e: type Mach.test *)
 
+(*s: type Mach.operation *)
 type operation =
     Imove
   | Ispill
@@ -53,14 +61,18 @@ type operation =
   | Inegf | Iabsf | Iaddf | Isubf | Imulf | Idivf
   | Ifloatofint | Iintoffloat
   | Ispecific of Arch.specific_operation
+(*e: type Mach.operation *)
 
+(*s: type Mach.instruction *)
 type instruction =
   { desc: instruction_desc;
     next: instruction;
     arg: Reg.t array;
     res: Reg.t array;
     mutable live: Reg.t Set.t }
+(*e: type Mach.instruction *)
 
+(*s: type Mach.instruction_desc *)
 and instruction_desc =
     Iend
   | Iop of operation
@@ -72,20 +84,34 @@ and instruction_desc =
   | Iexit
   | Itrywith of instruction * instruction
   | Iraise
+(*e: type Mach.instruction_desc *)
 
+(*s: type Mach.fundecl *)
 type fundecl =
   { fun_name: string;
     fun_args: Reg.t array;
     fun_body: instruction;
     fun_fast: bool }
+(*e: type Mach.fundecl *)
 
+(*s: signature Mach.dummy_instr *)
 val dummy_instr: instruction
+(*e: signature Mach.dummy_instr *)
+(*s: signature Mach.end_instr *)
 val end_instr: unit -> instruction
+(*e: signature Mach.end_instr *)
+(*s: signature Mach.instr_cons *)
 val instr_cons: 
       instruction_desc -> Reg.t array -> Reg.t array -> instruction ->
         instruction
+(*e: signature Mach.instr_cons *)
+(*s: signature Mach.instr_cons_live *)
 val instr_cons_live: 
       instruction_desc -> Reg.t array -> Reg.t array -> Reg.t Set.t ->
         instruction -> instruction
+(*e: signature Mach.instr_cons_live *)
+(*s: signature Mach.instr_iter *)
 val instr_iter: (instruction -> unit) -> instruction -> unit
+(*e: signature Mach.instr_iter *)
 
+(*e: asmcomp/mach.mli *)

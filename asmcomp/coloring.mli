@@ -1,3 +1,4 @@
+(*s: asmcomp/coloring.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -11,6 +12,9 @@
 
 (* $Id: coloring.mli,v 1.3 1996/04/30 14:42:22 xleroy Exp $ *)
 
+(*s: signature Coloring.allocate_registers *)
 (* Register allocation by coloring of the interference graph *)
 
 val allocate_registers: unit -> unit
+(*e: signature Coloring.allocate_registers *)
+(*e: asmcomp/coloring.mli *)

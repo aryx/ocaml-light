@@ -141,7 +141,6 @@ let selector () =
   let super = Selectgen.selector_generic () in
   { 
   (* todo: super with feature needed ... *)
-
   select_condition = super.select_condition;
   emit_fundecl = super.emit_fundecl;
   extract = super.extract;

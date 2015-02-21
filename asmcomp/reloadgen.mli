@@ -1,3 +1,4 @@
+(*s: asmcomp/reloadgen.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,6 +10,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(*s: type Reloadgen.reloader *)
 (* $Id: reloadgen.mli,v 1.2 1997/11/13 10:57:09 xleroy Exp $ *)
 
 type reloader = {
@@ -37,8 +39,11 @@ type reloader = {
    reloader -> Mach.instruction -> Mach.instruction;
  
 }
+(*e: type Reloadgen.reloader *)
 
+(*s: signature Reloadgen.reload_generic *)
 val reload_generic: unit -> reloader
+(*e: signature Reloadgen.reload_generic *)
 
 (*
  reload_operation = super.eload_operation;
@@ -48,3 +53,4 @@ val reload_generic: unit -> reloader
  makereg1 = super.akereg1;
  reload: = super.eload:;
 *)
+(*e: asmcomp/reloadgen.mli *)

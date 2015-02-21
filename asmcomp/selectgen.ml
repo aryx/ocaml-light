@@ -1,3 +1,4 @@
+(*s: asmcomp/selectgen.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -19,8 +20,11 @@ open Cmm
 open Reg
 open Mach
 
+(*s: type Selectgen.environment (asmcomp/selectgen.ml) *)
 type environment = (Ident.t, Reg.t array) Tbl.t
+(*e: type Selectgen.environment (asmcomp/selectgen.ml) *)
 
+(*s: type Selectgen.selector (asmcomp/selectgen.ml) *)
 type selector = {
   (* The following methods must or can be overriden by the processor
      description *)
@@ -152,10 +156,12 @@ type selector = {
    Cmm.expression -> Mach.operation * Cmm.expression;
 
 }
+(*e: type Selectgen.selector (asmcomp/selectgen.ml) *)
 
 
 
 
+(*s: function Selectgen.oper_result_type *)
 (* Infer the type of the result of an operation *)
 
 let oper_result_type = function
@@ -176,7 +182,9 @@ let oper_result_type = function
   | Craise -> typ_void
   | Ccheckbound -> typ_void
   | _ -> fatal_error "Selection.oper_result_type"
+(*e: function Selectgen.oper_result_type *)
 
+(*s: function Selectgen.size_expr *)
 (* Infer the size in bytes of the result of a simple expression *)
 
 let size_expr env exp =
@@ -203,7 +211,9 @@ let size_expr env exp =
     | _ ->
         fatal_error "Selection.size_expr"
   in size Tbl.empty exp
+(*e: function Selectgen.size_expr *)
 
+(*s: function Selectgen.is_simple_expr *)
 (* Says if an expression is "simple". A "simple" expression has no
    side-effects and its execution can be delayed until its value
    is really needed. In the case of e.g. an [alloc] instruction,
@@ -229,13 +239,17 @@ let rec is_simple_expr = function
       | _ -> List.for_all is_simple_expr args
       end
   | _ -> false
+(*e: function Selectgen.is_simple_expr *)
 
+(*s: function Selectgen.swap_intcomp *)
 (* Swap the two arguments of an integer comparison *)
 
 let swap_intcomp = function
     Isigned cmp -> Isigned(swap_comparison cmp)
   | Iunsigned cmp -> Iunsigned(swap_comparison cmp)
+(*e: function Selectgen.swap_intcomp *)
 
+(*s: function Selectgen.all_regs_anonymous *)
 (* Naming of registers *)
 
 let all_regs_anonymous rv =
@@ -246,7 +260,9 @@ let all_regs_anonymous rv =
     true
   with Exit ->
     false
+(*e: function Selectgen.all_regs_anonymous *)
 
+(*s: function Selectgen.name_regs *)
 let name_regs id rv =
   if Array.length rv = 1 then
     rv.(0).name <- Ident.name id
@@ -254,7 +270,9 @@ let name_regs id rv =
     for i = 0 to Array.length rv - 1 do
       rv.(i).name <- Ident.name id ^ "#" ^ string_of_int i
     done
+(*e: function Selectgen.name_regs *)
 
+(*s: function Selectgen.join *)
 (* "Join" two instruction sequences, making sure they return their results
    in the same registers. *)
 
@@ -279,7 +297,9 @@ let join r1 seq1 r2 seq2 =
     done;
     r
   end
+(*e: function Selectgen.join *)
 
+(*s: function Selectgen.join_array *)
 (* Same, for N branches *)
 
 let join_array rs =
@@ -300,7 +320,9 @@ let join_array rs =
     done;
     res
   end
+(*e: function Selectgen.join_array *)
 
+(*s: function Selectgen.selector_generic *)
 (* The default instruction selection class *)
 
 let selector_generic () =
@@ -861,4 +883,6 @@ let selector_generic () =
   select_floatarith = (fun _ -> failwith "select_floatarith");
   select_push = (fun _ -> failwith "select_floatarith");
  }
+(*e: function Selectgen.selector_generic *)
 
+(*e: asmcomp/selectgen.ml *)

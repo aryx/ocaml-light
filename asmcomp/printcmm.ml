@@ -1,3 +1,4 @@
+(*s: asmcomp/printcmm.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -16,11 +17,14 @@
 open Format
 open Cmm
 
+(*s: function Printcmm.machtype_component *)
 let machtype_component = function
     Addr -> print_string "addr"
   | Int -> print_string "int"
   | Float -> print_string "float"
+(*e: function Printcmm.machtype_component *)
 
+(*s: function Printcmm.machtype *)
 let machtype mty =
   match Array.length mty with
     0 -> print_string "unit"
@@ -28,7 +32,9 @@ let machtype mty =
          for i = 1 to n-1 do
            print_string "*"; machtype_component mty.(i)
          done
+(*e: function Printcmm.machtype *)
 
+(*s: function Printcmm.comparison *)
 let comparison = function
     Ceq -> print_string "=="
   | Cne -> print_string "!="
@@ -36,14 +42,18 @@ let comparison = function
   | Cle -> print_string "<="
   | Cgt -> print_string ">"
   | Cge -> print_string ">="
+(*e: function Printcmm.comparison *)
 
+(*s: function Printcmm.chunk *)
 let chunk = function
     Byte_unsigned -> print_string "unsigned byte"
   | Byte_signed -> print_string "signed byte"
   | Sixteen_unsigned -> print_string "unsigned half"
   | Sixteen_signed -> print_string "signed half"
   | Word -> ()
+(*e: function Printcmm.chunk *)
 
+(*s: function Printcmm.operation *)
 let operation = function
     Capply ty -> print_string "app"
   | Cextcall(lbl, ty, alloc) ->
@@ -82,6 +92,7 @@ let operation = function
   | Ccmpf c -> comparison c; print_string "f"
   | Craise -> print_string "raise"
   | Ccheckbound -> print_string "checkbound"
+(*e: function Printcmm.operation *)
 
 let rec expression = function
     Cconst_int n -> print_int n
@@ -205,6 +216,7 @@ and sequence = function
   | e ->
       expression e
 
+(*s: function Printcmm.fundecl *)
 let fundecl f =
   open_box 1;
   print_string "(function "; print_string f.fun_name; print_break 1 4;
@@ -221,7 +233,9 @@ let fundecl f =
   sequence f.fun_body;
   print_string ")";
   close_box(); close_box(); print_newline()
+(*e: function Printcmm.fundecl *)
 
+(*s: function Printcmm.data_item *)
 let data_item = function
     Cdefine_symbol s -> print_string "\""; print_string s; print_string "\":"
   | Cdefine_label l -> print_string "L"; print_int l; print_string ":"
@@ -235,13 +249,19 @@ let data_item = function
   | Cstring s -> print_string "string \""; print_string s; print_string "\""
   | Cskip n -> print_string "skip "; print_int n
   | Calign n -> print_string "align "; print_int n
+(*e: function Printcmm.data_item *)
 
+(*s: function Printcmm.data *)
 let data dl =
   open_hvbox 1;
   print_string "(data";
   List.iter (fun d -> print_space(); data_item d) dl;
   print_string ")"; close_box()
+(*e: function Printcmm.data *)
 
+(*s: function Printcmm.phrase *)
 let phrase = function
     Cfunction f -> fundecl f
   | Cdata dl -> data dl
+(*e: function Printcmm.phrase *)
+(*e: asmcomp/printcmm.ml *)

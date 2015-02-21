@@ -619,6 +619,7 @@ SRC_VIEWS= \
   ./utils/clflags.ml\
   ./utils/ccomp.mli\
   ./utils/ccomp.ml\
+  \
   ./parsing/asttypes.mli\
   ./parsing/linenum.mli\
   ./parsing/longident.mli\
@@ -631,6 +632,7 @@ SRC_VIEWS= \
   ./parsing/lexer.mli\
   ./parsing/parse.mli\
   ./parsing/parse.ml\
+  \
   ./typing/ident.mli\
   ./typing/ident.ml\
   ./typing/primitive.mli\
@@ -670,6 +672,7 @@ SRC_VIEWS= \
   ./typing/typecore.ml\
   ./typing/typemod.mli\
   ./typing/typemod.ml\
+  \
   ./bytecomp/lambda.mli\
   ./bytecomp/lambda.ml\
   ./bytecomp/printlambda.mli\
@@ -699,9 +702,72 @@ SRC_VIEWS= \
   ./bytecomp/symtable.ml\
   ./bytecomp/bytelink.mli\
   ./bytecomp/bytelink.ml\
+  \
   ./driver/compile.mli\
   ./driver/compile.ml\
   ./driver/errors.mli\
   ./driver/errors.ml\
   ./driver/main.ml\
-
+  \
+  asmcomp/arm/arch.ml\
+  asmcomp/clambda.mli\
+  asmcomp/clambda.ml\
+  asmcomp/emitaux.mli\
+  asmcomp/emitaux.ml\
+  asmcomp/scheduling.mli\
+  asmcomp/arm/scheduling.ml\
+  asmcomp/cmm.mli\
+  asmcomp/cmm.ml\
+  asmcomp/printcmm.mli\
+  asmcomp/printcmm.ml\
+  asmcomp/compilenv.mli\
+  asmcomp/compilenv.ml\
+  asmcomp/reg.mli\
+  asmcomp/reg.ml\
+  asmcomp/asmlibrarian.mli\
+  asmcomp/asmlibrarian.ml\
+  asmcomp/closure.mli\
+  asmcomp/closure.ml\
+  asmcomp/mach.mli\
+  asmcomp/mach.ml\
+  asmcomp/printmach.mli\
+  asmcomp/printmach.ml\
+  asmcomp/split.mli\
+  asmcomp/split.ml\
+  asmcomp/proc.mli\
+  asmcomp/arm/proc.ml\
+  asmcomp/reloadgen.mli\
+  asmcomp/reloadgen.ml\
+  asmcomp/interf.mli\
+  asmcomp/reload.mli\
+  asmcomp/arm/reload.ml\
+  asmcomp/interf.ml\
+  asmcomp/coloring.mli\
+  asmcomp/coloring.ml\
+  asmcomp/linearize.mli\
+  asmcomp/linearize.ml\
+  asmcomp/printlinear.mli\
+  asmcomp/printlinear.ml\
+  asmcomp/spill.mli\
+  asmcomp/spill.ml\
+  asmcomp/selectgen.mli\
+  asmcomp/selectgen.ml\
+  asmcomp/cmmgen.mli\
+  asmcomp/cmmgen.ml\
+  asmcomp/liveness.mli\
+  asmcomp/liveness.ml\
+  asmcomp/schedgen.mli\
+  asmcomp/selection.mli\
+  asmcomp/arm/selection.ml\
+  asmcomp/schedgen.ml\
+  asmcomp/emit.mli\
+  asmcomp/asmgen.mli\
+  asmcomp/asmgen.ml\
+  asmcomp/asmlink.mli\
+  asmcomp/asmlink.ml\
+  \
+  ./driver/optcompile.mli\
+  ./driver/optcompile.ml\
+  ./driver/opterrors.mli\
+  ./driver/opterrors.ml\
+  ./driver/optmain.ml\

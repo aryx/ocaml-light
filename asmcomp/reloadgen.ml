@@ -1,3 +1,4 @@
+(*s: asmcomp/reloadgen.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -17,20 +18,25 @@ open Misc
 open Reg
 open Mach
 
+(*s: function Reloadgen.insert_move *)
 let insert_move src dst next =
   if src.loc = dst.loc
   then next
   else instr_cons (Iop Imove) [|src|] [|dst|] next
+(*e: function Reloadgen.insert_move *)
 
+(*s: function Reloadgen.insert_moves *)
 let insert_moves src dst next =
   let rec insmoves i =
     if i >= Array.length src
     then next
     else insert_move src.(i) dst.(i) (insmoves (i+1))
   in insmoves 0
+(*e: function Reloadgen.insert_moves *)
 
 
 
+(*s: type Reloadgen.reloader (asmcomp/reloadgen.ml) *)
 type reloader = {
  reload_operation :
     reloader ->
@@ -57,8 +63,10 @@ type reloader = {
    reloader -> Mach.instruction -> Mach.instruction;
  
 }
+(*e: type Reloadgen.reloader (asmcomp/reloadgen.ml) *)
 
 
+(*s: function Reloadgen.reload_generic *)
 let reload_generic () =
   let redo_regalloc = ref false in
   {
@@ -162,3 +170,5 @@ let reload_generic () =
    !redo_regalloc)
  );
  }
+(*e: function Reloadgen.reload_generic *)
+(*e: asmcomp/reloadgen.ml *)

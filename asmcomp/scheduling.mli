@@ -1,3 +1,4 @@
+(*s: asmcomp/scheduling.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -11,6 +12,9 @@
 
 (* $Id: scheduling.mli,v 1.2 1996/04/30 14:42:59 xleroy Exp $ *)
 
+(*s: signature Scheduling.fundecl *)
 (* Instruction scheduling *)
 
 val fundecl: Linearize.fundecl -> Linearize.fundecl
+(*e: signature Scheduling.fundecl *)
+(*e: asmcomp/scheduling.mli *)

@@ -1,3 +1,4 @@
+(*s: asmcomp/schedgen.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -18,6 +19,7 @@ open Reg
 open Mach
 open Linearize
 
+(*s: type Schedgen.code_dag_node (asmcomp/schedgen.ml) *)
 (* Representation of the code DAG. *)
 
 type code_dag_node =
@@ -29,28 +31,40 @@ type code_dag_node =
     mutable length: int;                (* Length of longest path to result *)
     mutable ancestors: int;             (* Number of ancestors *)
     mutable emitted_ancestors: int }    (* Number of emitted ancestors *)
+(*e: type Schedgen.code_dag_node (asmcomp/schedgen.ml) *)
 
+(*s: constant Schedgen.dummy_node *)
 let dummy_node =
   { instr = end_instr; delay = 0; sons = []; date = 0;
     length = -1; ancestors = 0; emitted_ancestors = 0 }
+(*e: constant Schedgen.dummy_node *)
 
+(*s: constant Schedgen.code_results *)
 (* The code dag itself is represented by two tables from registers to nodes:
    - "results" maps registers to the instructions that produced them;
    - "uses" maps registers to the instructions that use them. *)
 
 let code_results = (Hashtbl.create 31 : (location, code_dag_node) Hashtbl.t)
+(*e: constant Schedgen.code_results *)
+(*s: constant Schedgen.code_uses *)
 let code_uses = (Hashtbl.create 31 : (location, code_dag_node) Hashtbl.t)
+(*e: constant Schedgen.code_uses *)
 
+(*s: function Schedgen.clear_code_dag *)
 let clear_code_dag () =
   Hashtbl.clear code_results;
   Hashtbl.clear code_uses
+(*e: function Schedgen.clear_code_dag *)
 
+(*s: function Schedgen.add_edge *)
 (* Add an edge to the code DAG *)
 
 let add_edge ancestor son delay =
   ancestor.sons <- (son, delay) :: ancestor.sons;
   son.ancestors <- son.ancestors + 1
+(*e: function Schedgen.add_edge *)
 
+(*s: function Schedgen.is_critical *)
 (* Compute length of longest path to a result.
    For leafs of the DAG, see whether their result is used in the instruction
    immediately following the basic block (a "critical" output). *)
@@ -66,7 +80,9 @@ let is_critical critical_outputs results =
     false
   with Exit ->
     true
+(*e: function Schedgen.is_critical *)
 
+(*s: function Schedgen.longest_path *)
 let rec longest_path critical_outputs node =
   if node.length < 0 then begin
     match node.sons with
@@ -84,18 +100,24 @@ let rec longest_path critical_outputs node =
             0 sons
   end;
   node.length
+(*e: function Schedgen.longest_path *)
 
+(*s: function Schedgen.remove_instr *)
 (* Remove an instruction from the ready queue *)
 
 let rec remove_instr node = function
     [] -> []
   | instr :: rem ->
       if instr == node then rem else instr :: remove_instr node rem
+(*e: function Schedgen.remove_instr *)
 
+(*s: constant Schedgen.some_load *)
 (* We treat Lreloadretaddr as a word-sized load *)
 
 let some_load = (Iload(Cmm.Word, Arch.identity_addressing))
+(*e: constant Schedgen.some_load *)
 
+(*s: type Schedgen.scheduler (asmcomp/schedgen.ml) *)
 type scheduler = {
   (* old: virtual *)
   (* Can be overriden by processor description *)
@@ -129,7 +151,9 @@ type scheduler = {
    code_dag_node list -> int -> Linearize.instruction -> Linearize.instruction;
  
 }
+(*e: type Schedgen.scheduler (asmcomp/schedgen.ml) *)
 
+(*s: function Schedgen.scheduler_generic *)
 (* The generic scheduler *)
 
 let scheduler_generic () =
@@ -326,4 +350,6 @@ let scheduler_generic () =
     f
  );
  }
+(*e: function Schedgen.scheduler_generic *)
 
+(*e: asmcomp/schedgen.ml *)
