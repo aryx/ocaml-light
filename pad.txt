@@ -87,6 +87,7 @@ Then I did many modifications, mostly removing stuff:
    they are used it's to use the regular default compare.
  - removed support for streams
  - I moved the debugger/ and toplevel/ under tools/
+ - I backported the arm port from ocaml 2.01
  - TODO go back to simpler typechecker with no Link, Nil and stuff
    introduced for the need of objects
 
