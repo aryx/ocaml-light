@@ -1,3 +1,4 @@
+(*s: asmcomp/printmach.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -18,6 +19,7 @@ open Cmm
 open Reg
 open Mach
 
+(*s: function Printmach.reg *)
 let reg r =
   if String.length r.name > 0 then
     print_string r.name
@@ -36,14 +38,18 @@ let reg r =
   | Stack(Outgoing s) ->
       print_string "[so"; print_int s; print_string "]"
   end
+(*e: function Printmach.reg *)
 
+(*s: function Printmach.regs *)
 let regs v =
   match Array.length v with
     0 -> ()
   | 1 -> reg v.(0)
   | n -> reg v.(0);
          for i = 1 to n-1 do print_string " "; reg v.(i) done
+(*e: function Printmach.regs *)
 
+(*s: function Printmach.regset *)
 let regset s =
   let first = ref true in
   (*Reg.*)Set.iter
@@ -51,7 +57,9 @@ let regset s =
       if !first then first := false else print_space();
       reg r)
     s
+(*e: function Printmach.regset *)
 
+(*s: function Printmach.regsetaddr *)
 let regsetaddr s =
   let first = ref true in
   (*Reg.*)Set.iter
@@ -60,14 +68,20 @@ let regsetaddr s =
       reg r;
       match r.typ with Addr -> print_string "*" | _ -> ())
     s
+(*e: function Printmach.regsetaddr *)
 
+(*s: function Printmach.intcomp *)
 let intcomp = function
     Isigned c -> print_string " "; Printcmm.comparison c; print_string "s "
   | Iunsigned c -> print_string " "; Printcmm.comparison c; print_string "u "
+(*e: function Printmach.intcomp *)
 
+(*s: function Printmach.floatcomp *)
 let floatcomp c =
     print_string " "; Printcmm.comparison c; print_string "f "
+(*e: function Printmach.floatcomp *)
 
+(*s: function Printmach.intop *)
 let intop = function
     Iadd -> print_string " + "
   | Isub -> print_string " - "
@@ -82,7 +96,9 @@ let intop = function
   | Iasr -> print_string " >>s "
   | Icomp cmp -> intcomp cmp
   | Icheckbound -> print_string " check > "
+(*e: function Printmach.intop *)
     
+(*s: function Printmach.test *)
 let test tst arg =
   match tst with
     Itruetest -> reg arg.(0)
@@ -94,9 +110,13 @@ let test tst arg =
       reg arg.(0); floatcomp cmp; reg arg.(1)
   | Ieventest -> reg arg.(0); print_string " & 1 == 0"
   | Ioddtest -> reg arg.(0); print_string " & 1 == 1"
+(*e: function Printmach.test *)
 
+(*s: constant Printmach.print_live *)
 let print_live = ref false
+(*e: constant Printmach.print_live *)
 
+(*s: function Printmach.operation *)
 let operation op arg res =
   if Array.length res > 0 then begin regs res; print_string " := " end;
   match op with
@@ -144,7 +164,9 @@ let operation op arg res =
   | Iintoffloat -> print_string "intoffloat "; reg arg.(0)
   | Ispecific op ->
       Arch.print_specific_operation reg op arg
+(*e: function Printmach.operation *)
 
+(*s: function Printmach.instr *)
 let rec instr i =
   if !print_live then begin
     open_box 1;
@@ -221,7 +243,9 @@ let rec instr i =
     Iend -> ()
   | _ -> print_cut(); instr i.next
   end
+(*e: function Printmach.instr *)
 
+(*s: function Printmach.fundecl *)
 let fundecl f =
   open_vbox 2;
   print_string f.fun_name;
@@ -229,11 +253,15 @@ let fundecl f =
   print_cut();
   instr f.fun_body;
   close_box()
+(*e: function Printmach.fundecl *)
 
+(*s: function Printmach.phase *)
 let phase msg f =
   print_string "*** "; print_string msg; print_newline(); 
   fundecl f; print_newline()
+(*e: function Printmach.phase *)
 
+(*s: function Printmach.interference *)
 let interference r =
   open_box 2;
   reg r; print_string ":";
@@ -242,11 +270,15 @@ let interference r =
     r.interf;
   close_box();
   print_newline()
+(*e: function Printmach.interference *)
 
+(*s: function Printmach.interferences *)
 let interferences () =
   print_string "*** Interferences"; print_newline();
   List.iter interference (Reg.all_registers())
+(*e: function Printmach.interferences *)
 
+(*s: function Printmach.preference *)
 let preference r =
   open_box 2;
   reg r; print_string ": ";
@@ -255,7 +287,11 @@ let preference r =
     r.prefer;
   close_box();
   print_newline()
+(*e: function Printmach.preference *)
 
+(*s: function Printmach.preferences *)
 let preferences () =
   print_string "*** Preferences"; print_newline();
   List.iter preference (Reg.all_registers())
+(*e: function Printmach.preferences *)
+(*e: asmcomp/printmach.ml *)

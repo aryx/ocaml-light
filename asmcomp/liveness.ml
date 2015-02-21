@@ -1,3 +1,4 @@
+(*s: asmcomp/liveness.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -16,10 +17,17 @@
 
 open Mach
 
+(*s: constant Liveness.live_at_exit *)
 let live_at_exit = ref (*Reg.*)Set.empty
+(*e: constant Liveness.live_at_exit *)
+(*s: constant Liveness.live_at_break *)
 let live_at_break = ref (*Reg.*)Set.empty
+(*e: constant Liveness.live_at_break *)
+(*s: constant Liveness.live_at_raise *)
 let live_at_raise = ref (*Reg.*)Set.empty
+(*e: constant Liveness.live_at_raise *)
 
+(*s: function Liveness.live *)
 let rec live i finally =
   (* finally is the set of registers live after execution of the
      instruction sequence.
@@ -99,7 +107,9 @@ let rec live i finally =
              across_after in
       i.live <- across;
       Reg.add_set_array across i.arg
+(*e: function Liveness.live *)
 
+(*s: function Liveness.fundecl *)
 let fundecl f =
   let initially_live = live f.fun_body (*Reg.*)Set.empty in
   (* Sanity check: only function parameters can be live at entrypoint *)
@@ -108,3 +118,5 @@ let fundecl f =
     Printmach.regset wrong_live; Format.print_newline();
     Misc.fatal_error "Liveness.fundecl"
   end
+(*e: function Liveness.fundecl *)
+(*e: asmcomp/liveness.ml *)

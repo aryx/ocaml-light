@@ -1,3 +1,4 @@
+(*s: asmcomp/selectgen.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -11,14 +12,19 @@
 
 (* $Id: selectgen.mli,v 1.2 1997/11/06 17:25:24 xleroy Exp $ *)
 
+(*s: type Selectgen.environment *)
 (* Selection of pseudo-instructions, assignment of pseudo-registers,
    sequentialization. *)
 
 type environment = (Ident.t, Reg.t array) Tbl.t
+(*e: type Selectgen.environment *)
 
+(*s: signature Selectgen.size_expr *)
 val size_expr : environment -> Cmm.expression -> int
+(*e: signature Selectgen.size_expr *)
 
 
+(*s: type Selectgen.selector *)
 type selector = {
   (* old: virtuals *)
 
@@ -155,8 +161,11 @@ type selector = {
    Cmm.expression -> Mach.operation * Cmm.expression;
 
 }
+(*e: type Selectgen.selector *)
 
+(*s: signature Selectgen.selector_generic *)
 val selector_generic: unit -> selector
+(*e: signature Selectgen.selector_generic *)
 
 
 (*
@@ -191,3 +200,4 @@ val selector_generic: unit -> selector
   select_floatarith = super.select_floatarith;
   select_push = super.select_push;
 *)
+(*e: asmcomp/selectgen.mli *)

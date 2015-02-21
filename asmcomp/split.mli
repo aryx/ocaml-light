@@ -1,3 +1,4 @@
+(*s: asmcomp/split.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -11,6 +12,9 @@
 
 (* $Id: split.mli,v 1.3 1996/04/30 14:43:05 xleroy Exp $ *)
 
+(*s: signature Split.fundecl *)
 (* Renaming of registers at reload points to split live ranges. *)
 
 val fundecl: Mach.fundecl -> Mach.fundecl
+(*e: signature Split.fundecl *)
+(*e: asmcomp/split.mli *)

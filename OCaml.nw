@@ -13,6 +13,9 @@
 %------------------------------------------------------------------------------
 
 %thx to LP, changed for the better a few things:
+% - found deadcode in ocaml itself :) 
+%   (all.ml, codegen.ml, a few functions)
+% 
 
 %thx to codemap/codegraph/scheck:
 % - use cg to to look at backward deps (but the ocaml linker enforce layers)

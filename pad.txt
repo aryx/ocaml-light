@@ -76,18 +76,18 @@ it is maybe also a better candidate in the end for a fork because it has:
 Then I did many modifications, mostly removing stuff:
  - removed support for Windows and Mac (the Makefile.nt, Makefile.Mac, etc)
  - removed native code compiler targets: alpha, hppa, m68k, power, and sparc,
-   (just kept i386 and mips (close to ARM))
+   mips (just kept i386) and I backported the arm port from ocaml 2.01
  - removed support for objects! reduce the code and the complexity
    of the typechecker. In the end they are not used in the compiler
-   (they are very ligtly used in asmcomp/ but the code can be rewritten)
+   (they are very ligtly used in asmcomp/ but the code can be rewritten using
+   plain records)
  - removed support for functor! I prefer defunctorized data structure
-   anyway, and removed support for include, with type signature, and
-   also module type.
+   anyway. I removed support for include, with type signature, and
+   also module types (I never understood them).
    In the end they are also not that used in the compiler, or when
-   they are used it's to use the regular default compare.
+   they are used it's to use the default compare.
  - removed support for streams
  - I moved the debugger/ and toplevel/ under tools/
- - I backported the arm port from ocaml 2.01
  - TODO go back to simpler typechecker with no Link, Nil and stuff
    introduced for the need of objects
 

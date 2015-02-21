@@ -1,3 +1,4 @@
+(*s: asmcomp/coloring.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -15,6 +16,7 @@
 
 open Reg
 
+(*s: function Coloring.allocate_spilled *)
 (* Preallocation of spilled registers in the stack. *)
 
 let allocate_spilled reg =
@@ -34,7 +36,9 @@ let allocate_spilled reg =
     reg.loc <- Stack(Local !slot);
     if !slot >= nslots then Proc.num_stack_slots.(cl) <- !slot + 1
   end
+(*e: function Coloring.allocate_spilled *)
 
+(*s: constant Coloring.unconstrained *)
 (* Compute the degree (= number of neighbours of the same type)
    of each register, and split them in two sets:
    unconstrained (degree < number of available registers)
@@ -42,8 +46,12 @@ let allocate_spilled reg =
    Spilled registers are ignored in the process. *)
 
 let unconstrained = ref (*Reg.*)Set.empty
+(*e: constant Coloring.unconstrained *)
+(*s: constant Coloring.constrained *)
 let constrained = ref (*Reg.*)Set.empty
+(*e: constant Coloring.constrained *)
 
+(*s: function Coloring.find_degree *)
 let find_degree reg =
   if reg.spill then () else begin
     let cl = Proc.register_class reg in
@@ -63,7 +71,9 @@ let find_degree reg =
       else unconstrained := (*Reg.*)Set.add reg !unconstrained
     end
   end
+(*e: function Coloring.find_degree *)
 
+(*s: function Coloring.remove_all_regs *)
 (* Remove all registers one by one, unconstrained if possible, otherwise
    constrained with lowest spill cost. Return the list of registers removed
    in reverse order.
@@ -94,7 +104,9 @@ let rec remove_all_regs stack =
     remove_all_regs (!r :: stack)
   end else
     stack                             (* All regs have been removed *)
+(*e: function Coloring.remove_all_regs *)
 
+(*s: function Coloring.iter_preferred *)
 (* Iterate over all registers preferred by the given register (transitively) *)
 
 let iter_preferred f reg =
@@ -111,13 +123,17 @@ let iter_preferred f reg =
   reg.visited <- true;
   List.iter (fun (r, w) -> walk r w) reg.prefer;
   reg.visited <- false
+(*e: function Coloring.iter_preferred *)
 
+(*s: constant Coloring.start_register *)
 (* Where to start the search for a suitable register. 
    Used to introduce some "randomness" in the choice between registers
    with equal scores. This offers more opportunities for scheduling. *)
 
 let start_register = Array.create Proc.num_register_classes 0
+(*e: constant Coloring.start_register *)
 
+(*s: function Coloring.assign_location *)
 (* Assign a location to a register, the best we can *)
 
 let assign_location reg =
@@ -265,7 +281,9 @@ let assign_location reg =
   (* Cancel the preferences of this register so that they don't influence
      transitively the allocation of registers that prefer this reg. *)
   reg.prefer <- []
+(*e: function Coloring.assign_location *)
 
+(*s: function Coloring.allocate_registers *)
 let allocate_registers() =
   (* First pass: preallocate spill registers
      Second pass: compute the degrees
@@ -278,3 +296,5 @@ let allocate_registers() =
   List.iter allocate_spilled (Reg.all_registers());
   List.iter find_degree (Reg.all_registers());
   List.iter assign_location (remove_all_regs [])
+(*e: function Coloring.allocate_registers *)
+(*e: asmcomp/coloring.ml *)

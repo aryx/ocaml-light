@@ -1,3 +1,4 @@
+(*s: asmcomp/arm/scheduling.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,19 +10,30 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 open Mach
 
+open Schedgen
+
+(*s: function Scheduling.scheduler *)
 (* Instruction scheduling for the Sparc *)
 
-class scheduler = object
+let scheduler () = 
 
-inherit Schedgen.scheduler_generic
+  let super = Schedgen.scheduler_generic () in
+  {
+
+  oper_in_basic_block = super.oper_in_basic_block;
+  schedule_fundecl = super.schedule_fundecl;
+  instr_in_basic_block = super.instr_in_basic_block;
+  instr_latency = super.instr_latency;
+  instr_issue_cycles = super.instr_issue_cycles;
+  add_instruction = super.add_instruction;
+  ready_instruction = super.ready_instruction;
+  reschedule = super.reschedule;
 
 (* Scheduling -- based roughly on the Strong ARM *)
 
-method oper_latency = function
+ oper_latency = (function
     Ireload -> 2
   | Iload(_, _) -> 2
   | Iconst_symbol _ -> 2                (* turned into a load *)
@@ -34,10 +46,11 @@ method oper_latency = function
   | Imulf -> 5
   | Idivf -> 15
   | _ -> 1
+ );
 
 (* Issue cycles.  Rough approximations *)
 
-method oper_issue_cycles = function
+ oper_issue_cycles = (function
     Ialloc _ -> 4
   | Iintop(Icomp _) -> 3
   | Iintop(Icheckbound) -> 2
@@ -46,7 +59,13 @@ method oper_issue_cycles = function
   | Iintop_imm(Icomp _, _) -> 3
   | Iintop_imm(Icheckbound, _) -> 2
   | _ -> 1
+ );
+  }
+(*e: function Scheduling.scheduler *)
 
-end
-
-let fundecl f = (new scheduler)#schedule_fundecl f
+(*s: function Scheduling.fundecl *)
+let fundecl f = 
+  let s = scheduler () in
+  s.schedule_fundecl s f
+(*e: function Scheduling.fundecl *)
+(*e: asmcomp/arm/scheduling.ml *)

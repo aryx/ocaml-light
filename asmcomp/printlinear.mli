@@ -1,3 +1,4 @@
+(*s: asmcomp/printlinear.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -15,5 +16,10 @@
 
 open Linearize
 
+(*s: signature Printlinear.instr *)
 val instr: instruction -> unit
+(*e: signature Printlinear.instr *)
+(*s: signature Printlinear.fundecl *)
 val fundecl: fundecl -> unit
+(*e: signature Printlinear.fundecl *)
+(*e: asmcomp/printlinear.mli *)

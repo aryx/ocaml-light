@@ -1,3 +1,4 @@
+(*s: ./driver/optmain.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -14,13 +15,18 @@
 open Config
 open Clflags
 
+(*s: function Optmain.process_interface_file *)
 let process_interface_file name =
   Optcompile.interface name
+(*e: function Optmain.process_interface_file *)
 
+(*s: function Optmain.process_implementation_file *)
 let process_implementation_file name =
   Optcompile.implementation name;
   objfiles := (Filename.chop_extension name ^ ".cmx") :: !objfiles
+(*e: function Optmain.process_implementation_file *)
 
+(*s: function Optmain.process_file *)
 let process_file name =
   if Filename.check_suffix name ".ml"
   or Filename.check_suffix name ".mlt" then begin
@@ -42,15 +48,21 @@ let process_file name =
   end
   else
     raise(Arg.Bad("don't know what to do with " ^ name))
+(*e: function Optmain.process_file *)
 
+(*s: function Optmain.print_version_number *)
 let print_version_number () =
   print_string "The Objective Caml native-code compiler, version ";
   print_string Config.version; print_newline();
   print_string "Standard library directory: ";
   print_string Config.standard_library; print_newline()
+(*e: function Optmain.print_version_number *)
 
+(*s: constant Optmain.usage *)
 let usage = "Usage: ocamlopt <options> <files>\nOptions are:"
+(*e: constant Optmain.usage *)
 
+(*s: function Optmain.main *)
 let main () =
   try
     native_code := true;
@@ -124,5 +136,9 @@ let main () =
     Format.set_formatter_out_channel stderr;
     Opterrors.report_error x;
     exit 2
+(*e: function Optmain.main *)
 
+(*s: toplevel Optmain._1 *)
 let _ = Printexc.catch main ()
+(*e: toplevel Optmain._1 *)
+(*e: ./driver/optmain.ml *)
