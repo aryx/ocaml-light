@@ -29,10 +29,8 @@ and ident_unit = Ident.create "unit"
 and ident_exn = Ident.create "exn"
 
 and ident_array = Ident.create "array"
-
 and ident_list = Ident.create "list"
-
-
+(*x: constants Predef.ident_xxx *)
 and ident_format = Ident.create "format"
 (*e: constants Predef.ident_xxx *)
 
@@ -46,9 +44,9 @@ and path_unit = Pident ident_unit
 
 and path_list = Pident ident_list
 and path_array = Pident ident_array
-
+(*x: constants Predef.path_xxx *)
 and path_exn = Pident ident_exn
-
+(*x: constants Predef.path_xxx *)
 and path_format = Pident ident_format
 (*e: constants Predef.path_xxx *)
 
@@ -59,9 +57,11 @@ and type_string  = newgenty (Tconstr(path_string, [], ref Mnil))
 and type_float   = newgenty (Tconstr(path_float, [], ref Mnil))
 and type_bool    = newgenty (Tconstr(path_bool, [], ref Mnil))
 and type_unit    = newgenty (Tconstr(path_unit, [], ref Mnil))
-and type_exn     = newgenty (Tconstr(path_exn, [], ref Mnil))
+
 and type_array t = newgenty (Tconstr(path_array, [t], ref Mnil))
 and type_list t  = newgenty (Tconstr(path_list, [t], ref Mnil))
+(*x: constants Predef.type_xxx *)
+and type_exn     = newgenty (Tconstr(path_exn, [], ref Mnil))
 (*e: constants Predef.type_xxx *)
 
 (*s: constants Predef.ident_exn_xxx *)
@@ -121,6 +121,7 @@ let build_initial_env add_type add_exception empty_env =
      type_kind = Type_abstract;
      type_manifest = None} in
 
+  (*s: [[Predef.build_initial_env()]] adding exceptions *)
   add_exception ident_match_failure
                          [newgenty (Ttuple[type_string; type_int; type_int])] (
   add_exception ident_out_of_memory [] (
@@ -131,6 +132,8 @@ let build_initial_env add_type add_exception empty_env =
   add_exception ident_sys_error [type_string] (
   add_exception ident_end_of_file [] (
   add_exception ident_division_by_zero [] (
+  (*e: [[Predef.build_initial_env()]] adding exceptions *)
+
   add_type ident_format decl_format (
   add_type ident_list decl_list (
   add_type ident_array decl_array (
@@ -141,7 +144,8 @@ let build_initial_env add_type add_exception empty_env =
   add_type ident_string decl_abstr (
   add_type ident_char decl_abstr (
   add_type ident_int decl_abstr (
-    empty_env)))))))))))))))))))
+  empty_env
+  )))))))))))))))))))
 (*e: function Predef.build_initial_env *)
 
 (*s: constant Predef.builtin_values *)

@@ -26,7 +26,7 @@ val type_unit: type_expr
 
 val type_list: type_expr -> type_expr
 val type_array: type_expr -> type_expr
-
+(*x: signatures Predef.type_xxx *)
 val type_exn: type_expr
 (*e: signatures Predef.type_xxx *)
 
@@ -40,9 +40,9 @@ val path_unit: Path.t
 
 val path_list: Path.t
 val path_array: Path.t
-
+(*x: signatures Predef.path_xxx *)
 val path_exn: Path.t
-
+(*x: signatures Predef.path_xxx *)
 val path_format: Path.t
 (*e: signatures Predef.path_xxx *)
 
