@@ -18,6 +18,7 @@ open Format
 open Longident
 open Path
 open Types
+open Typedtree
 
 (* Given an exception value, we cannot recover its type,
    hence we cannot print its arguments in general.
@@ -108,7 +109,7 @@ let find_printer env ty =
   let rec find = function
     [] -> raise Not_found
   | (name, sch, printer) :: remainder ->
-      if Ctype.moregeneral env false sch ty
+      if Ctype.moregeneral env (*false*) sch ty
       then printer
       else find remainder
   in find !printers
@@ -123,8 +124,8 @@ let print_qualified lookup_fun env ty_path name =
       print_string name
   | Pdot(p, s, pos) ->
       if try
-           match (lookup_fun (Lident name) env).desc with
-             Tconstr(ty_path', _, _) -> Path.same ty_path ty_path'
+           match (lookup_fun (Lident name) env)(*.desc*) with
+             Tconstr(ty_path', _) -> Path.same ty_path ty_path'
            | _ -> false
          with Not_found -> false
       then print_string name
@@ -140,7 +141,7 @@ and print_label =
 (* An abstract type *)
 
 let abstract_type =
-  Ctype.newty (Tconstr (Pident (Ident.create "abstract"), [], ref Mnil))
+  Ctype.newty (Tconstr (Pident (Ident.create "abstract"), [](*, ref Mnil*)))
 
 (* The main printing function *)
 
@@ -158,8 +159,8 @@ let print_value max_steps max_depth check_depth env obj ty =
     try
       find_printer env ty obj; ()
     with Not_found ->
-      match (Ctype.repr ty).desc with
-        Tvar ->
+      match (Ctype.repr ty) with
+        Tvar _ ->
           print_string "<poly>"
       | Tarrow(ty1, ty2) ->
           print_string "<fun>"
@@ -172,7 +173,7 @@ let print_value max_steps max_depth check_depth env obj ty =
             if prio > 0 then print_string ")";
             close_box()
           end
-      | Tconstr(path, [], _) when Path.same path Predef.path_exn ->
+      | Tconstr(path, []) when Path.same path Predef.path_exn ->
           if check_depth depth obj ty then begin
             if prio > 1
             then begin open_box 2; print_string "(" end
@@ -181,7 +182,7 @@ let print_value max_steps max_depth check_depth env obj ty =
             if prio > 1 then print_string ")";
             close_box()
           end
-      | Tconstr(path, [ty_arg], _) when Path.same path Predef.path_list ->
+      | Tconstr(path, [ty_arg]) when Path.same path Predef.path_list ->
           if Obj.is_block obj then begin
             if check_depth depth obj ty then begin
               let rec print_conses cons =
@@ -200,7 +201,7 @@ let print_value max_steps max_depth check_depth env obj ty =
             end
           end else
             print_string "[]"
-      | Tconstr(path, [ty_arg], _) when Path.same path Predef.path_array ->
+      | Tconstr(path, [ty_arg]) when Path.same path Predef.path_array ->
           let length = Obj.size obj in
           if length = 0 then
             print_string "[||]"
@@ -217,7 +218,7 @@ let print_value max_steps max_depth check_depth env obj ty =
             print_string "|]";
             close_box()
           end
-      | Tconstr(path, ty_list, _) ->
+      | Tconstr(path, ty_list) ->
           begin try
             let decl = Env.find_type path env in
             match decl with
@@ -225,8 +226,11 @@ let print_value max_steps max_depth check_depth env obj ty =
                 print_string "<abstr>"
             | {type_kind = Type_abstract; type_manifest = Some body} ->
                 print_val prio depth obj
+                          (Ctype.substitute decl.type_params ty_list body)
+(*
                   (try Ctype.apply env decl.type_params body ty_list with
                      Ctype.Cannot_apply -> abstract_type)
+*)
             | {type_kind = Type_variant constr_list} ->
                 let tag =
                   if Obj.is_block obj
@@ -235,11 +239,14 @@ let print_value max_steps max_depth check_depth env obj ty =
                 let (constr_name, constr_args) =
                   find_constr tag 0 0 constr_list in
                 let ty_args =
-                  List.map
+                  List.map (Ctype.substitute decl.type_params ty_list)
+                      constr_args in
+(*                  List.map
                     (function ty ->
                        try Ctype.apply env decl.type_params ty ty_list with
                          Ctype.Cannot_apply -> abstract_type)
                     constr_args in
+*)
                 begin match ty_args with
                   [] ->
                     print_constr env path constr_name
@@ -282,12 +289,16 @@ let print_value max_steps max_depth check_depth env obj ty =
                       open_box 1;
                       print_label env path lbl_name;
                       print_string "="; print_cut();
+(*
                       let ty_arg =
                         try
                           Ctype.apply env decl.type_params lbl_arg ty_list
                         with
                           Ctype.Cannot_apply -> abstract_type
                       in
+*)
+                    let ty_arg =
+                      Ctype.substitute decl.type_params ty_list lbl_arg in
                       cautious (print_val 0 (depth - 1)
                                   (Obj.field obj pos)) ty_arg;
                       close_box();
@@ -304,8 +315,6 @@ let print_value max_steps max_depth check_depth env obj ty =
           | Constr_not_found ->         (* raised by find_constr *)
               print_string "<unknown constructor>"
           end
-      | Tnil | Tlink _ ->
-          fatal_error "Printval.print_value"
 
   and print_val_list prio depth obj ty_list =
     let rec print_list i = function

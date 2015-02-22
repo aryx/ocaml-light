@@ -71,8 +71,8 @@ let load_lambda lam =
 let rec print_items env = function
     Tsig_value(id, decl)::rem ->
       open_box 2;
-      begin match decl.val_kind with
-        Val_prim p ->
+      begin match decl.val_prim with
+        Some p ->
           print_string "external "; Printtyp.ident id;
           print_string " :"; print_space();
           Printtyp.type_scheme decl.val_type; print_space();
