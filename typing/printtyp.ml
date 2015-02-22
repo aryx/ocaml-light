@@ -25,8 +25,6 @@ open Typedtree
 let rec longident = function
     Lident s -> print_string s
   | Ldot(p, s) -> longident p; print_string "."; print_string s
-  | Lapply(p1, p2) ->
-      longident p1; print_string "("; longident p2; print_string ")"
 
 (* Print an identifier *)
 
@@ -35,7 +33,7 @@ let ident id =
 
 (* Print a path *)
 
-let ident_pervasive = Ident.new_persistent "Pervasives"
+let ident_pervasive = Ident.create_persistent "Pervasives"
 
 let rec path = function
     Pident id ->

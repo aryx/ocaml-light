@@ -17,16 +17,16 @@ open Path
 open Typedtree
 
 
-let ident_int = Ident.new "int"
-and ident_char = Ident.new "char"
-and ident_string = Ident.new "string"
-and ident_float = Ident.new "float"
-and ident_bool = Ident.new "bool"
-and ident_unit = Ident.new "unit"
-and ident_exn = Ident.new "exn"
-and ident_array = Ident.new "array"
-and ident_list = Ident.new "list"
-and ident_format = Ident.new "format"
+let ident_int = Ident.create "int"
+and ident_char = Ident.create "char"
+and ident_string = Ident.create "string"
+and ident_float = Ident.create "float"
+and ident_bool = Ident.create "bool"
+and ident_unit = Ident.create "unit"
+and ident_exn = Ident.create "exn"
+and ident_array = Ident.create "array"
+and ident_list = Ident.create "list"
+and ident_format = Ident.create "format"
 
 let path_int = Pident ident_int
 and path_char = Pident ident_char
@@ -49,14 +49,15 @@ and type_exn = Tconstr(path_exn, [])
 and type_array t = Tconstr(path_array, [t])
 and type_list t = Tconstr(path_list, [t])
 
-let ident_match_failure = Ident.new "Match_failure"
-and ident_out_of_memory = Ident.new "Out_of_memory"
-and ident_invalid_argument = Ident.new "Invalid_argument"
-and ident_failure = Ident.new "Failure"
-and ident_not_found = Ident.new "Not_found"
-and ident_sys_error = Ident.new "Sys_error"
-and ident_end_of_file = Ident.new "End_of_file"
-and ident_division_by_zero = Ident.new "Division_by_zero"
+let ident_match_failure = Ident.create "Match_failure"
+and ident_out_of_memory = Ident.create "Out_of_memory"
+and ident_invalid_argument = Ident.create "Invalid_argument"
+and ident_failure = Ident.create "Failure"
+and ident_not_found = Ident.create "Not_found"
+and ident_sys_error = Ident.create "Sys_error"
+and ident_end_of_file = Ident.create "End_of_file"
+and ident_division_by_zero = Ident.create "Division_by_zero"
+and ident_stack_overflow = Ident.create "Stack_overflow"
 
 let path_match_failure = Pident ident_match_failure
 
@@ -105,6 +106,7 @@ let build_initial_env add_type add_exception empty_env =
 
   add_exception ident_match_failure [Ttuple[type_string; type_int; type_int]] (
   add_exception ident_out_of_memory [] (
+  add_exception ident_stack_overflow [] (
   add_exception ident_invalid_argument [type_string] (
   add_exception ident_failure [type_string] (
   add_exception ident_not_found [] (
@@ -121,10 +123,11 @@ let build_initial_env add_type add_exception empty_env =
   add_type ident_string decl_abstr (
   add_type ident_char decl_abstr (
   add_type ident_int decl_abstr (
-    empty_env))))))))))))))))))
+    empty_env)))))))))))))))))))
 
 let builtin_values =
   List.map (fun id -> Ident.make_global id; (Ident.name id, id))
-      [ident_match_failure; ident_out_of_memory; ident_invalid_argument;
+      [ident_match_failure; ident_out_of_memory; ident_stack_overflow;
+       ident_invalid_argument;
        ident_failure; ident_not_found; ident_sys_error; ident_end_of_file;
        ident_division_by_zero]

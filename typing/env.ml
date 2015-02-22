@@ -74,7 +74,7 @@ type pers_struct =
     ps_comps: module_components }
 
 let persistent_structures =
-  (Hashtbl.new 17 : (string, pers_struct) Hashtbl.t)
+  (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
 let imported_units = ref ([] : (string * Digest.t) list)
 
@@ -103,7 +103,7 @@ let find_pers_struct name =
   with Not_found ->
     let (ps, crc) =
       read_pers_struct name
-        (find_in_path !load_path (lowercase name ^ ".cmi")) in
+        (find_in_path !load_path (String.lowercase name ^ ".cmi")) in
     Hashtbl.add persistent_structures name ps;
     imported_units := (name, crc) :: !imported_units;
     ps
@@ -179,7 +179,7 @@ let rec lookup_module_descr lid env =
       begin try
         Ident.find_name s env.components
       with Not_found ->
-        (Pident(Ident.new_persistent s), (find_pers_struct s).ps_comps)
+        (Pident(Ident.create_persistent s), (find_pers_struct s).ps_comps)
       end
   | Ldot(l, s) ->
       let (p, descr) = lookup_module_descr l env in
@@ -190,16 +190,6 @@ let rec lookup_module_descr lid env =
       | Functor_comps f ->
       	  raise Not_found
       end
-  | Lapply(l1, l2) ->
-      let (p1, desc1) = lookup_module_descr l1 env in
-      let (p2, mty2) = lookup_module l2 env in
-      begin match desc1 with
-      	Functor_comps f ->
-          !check_modtype_inclusion env mty2 f.fcomp_arg;
-          (Papply(p1, p2), !components_of_functor_appl f p1 p2)
-      | Structure_comps c ->
-      	  raise Not_found
-      end
 
 and lookup_module lid env =
   match lid with
@@ -207,7 +197,7 @@ and lookup_module lid env =
       begin try
         Ident.find_name s env.modules
       with Not_found ->
-        (Pident(Ident.new_persistent s), 
+        (Pident(Ident.create_persistent s), 
          Tmty_signature(find_pers_struct s).ps_sig)
       end
   | Ldot(l, s) ->
@@ -217,18 +207,6 @@ and lookup_module lid env =
           let (data, pos) = Tbl.find s c.comp_modules in
           (Pdot(p, s, pos), data)
       | Functor_comps f ->
-      	  raise Not_found
-      end
-  | Lapply(l1, l2) ->
-      let (p1, desc1) = lookup_module_descr l1 env in
-      let (p2, mty2) = lookup_module l2 env in
-      let p = Papply(p1, p2) in
-      begin match desc1 with
-      	Functor_comps f ->
-          !check_modtype_inclusion env mty2 f.fcomp_arg;
-          (p, Subst.modtype (Subst.add_module f.fcomp_param p2 Subst.identity)
-      	                    f.fcomp_res)
-      | Structure_comps c ->
       	  raise Not_found
       end
 
@@ -244,8 +222,6 @@ let lookup proj1 proj2 lid env =
       | (p, Functor_comps f) ->
       	  raise Not_found
       end
-  | Lapply(l1, l2) ->
-      raise Not_found
 
 let lookup_simple proj1 proj2 lid env =
   match lid with
@@ -259,8 +235,6 @@ let lookup_simple proj1 proj2 lid env =
       | (p, Functor_comps f) ->
       	  raise Not_found
       end
-  | Lapply(l1, l2) ->
-      raise Not_found
 
 let lookup_value =
   lookup (fun env -> env.values) (fun sc -> sc.comp_values)
@@ -416,13 +390,13 @@ and store_type id path info env =
     constrs =
       List.fold_right
         (fun (name, descr) constrs ->
-          Ident.add (Ident.new name) descr constrs)
+          Ident.add (Ident.create name) descr constrs)
         (constructors_of_type path info)
         env.constrs;
     labels =
       List.fold_right
         (fun (name, descr) labels ->
-          Ident.add (Ident.new name) descr labels)
+          Ident.add (Ident.create name) descr labels)
         (labels_of_type path info)
         env.labels;
     types = Ident.add id (path, info) env.types;
@@ -472,7 +446,7 @@ and store_components id path comps env =
    in a path. *)
 
 let funappl_memo =
-  (Hashtbl.new 17 : (Path.t, module_components) Hashtbl.t)
+  (Hashtbl.create 17 : (Path.t, module_components) Hashtbl.t)
 
 let _ =
   components_of_functor_appl :=
@@ -508,7 +482,7 @@ and add_modtype id info env =
 (* Insertion of bindings by name *)
 
 let enter store_fun name data env =
-  let id = Ident.new name in (id, store_fun id (Pident id) data env)
+  let id = Ident.create name in (id, store_fun id (Pident id) data env)
 
 let enter_value = enter store_value
 and enter_type = enter store_type
@@ -558,7 +532,7 @@ let open_signature root sg env =
 
 let open_pers_signature name env =
   let ps = find_pers_struct name in
-  open_signature (Pident(Ident.new_persistent name)) ps.ps_sig env
+  open_signature (Pident(Ident.create_persistent name)) ps.ps_sig env
 
 (* Read a signature from a file *)
 
@@ -573,7 +547,7 @@ let save_signature sg modname filename =
       ps_sig = sg;
       ps_comps =
         components_of_module empty Subst.identity
-            (Pident(Ident.new_persistent modname)) (Tmty_signature sg) } in
+            (Pident(Ident.create_persistent modname)) (Tmty_signature sg) } in
   let oc = open_out_bin filename in
   output_string oc cmi_magic_number;
   output_value oc ps;
@@ -606,3 +580,7 @@ let report_error = function
       print_string "contains the compiled interface for"; print_space();
       print_string modname
 
+
+type summary = unit
+
+let summary _ = ()

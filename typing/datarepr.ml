@@ -63,7 +63,7 @@ let rec is_float = function
   | _ -> false
 
 let label_descrs ty_res lbls =
-  let all_labels = Array.new (List.length lbls) dummy_label in
+  let all_labels = Array.create (List.length lbls) dummy_label in
   let repres =
     if List.for_all (fun (name, flag, ty) -> is_float ty) lbls
     then Record_float
