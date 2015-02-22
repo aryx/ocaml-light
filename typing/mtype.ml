@@ -1,5 +1,3 @@
-(*s: ./typing/mtype.ml *)
-(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -10,7 +8,6 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-(*e: copyright header *)
 
 (* Operations on module types *)
 
@@ -18,7 +15,6 @@ open Path
 open Types
 
 
-(*s: function Mtype.scrape *)
 let rec scrape env mty =
   match mty with
     Tmty_ident p ->
@@ -31,7 +27,6 @@ let rec scrape env mty =
       end
 *)
   | _ -> mty
-(*e: function Mtype.scrape *)
 
 let rec strengthen env mty p =
   match scrape env mty with
@@ -64,4 +59,3 @@ and strengthen_sig env sg p =
       Tsig_module(id, strengthen env mty (Pdot(p, Ident.name id, nopos))) ::
       strengthen_sig (Env.add_module id mty env) rem p
       (* Need to add the module in case it defines manifest module types *)
-(*e: ./typing/mtype.ml *)

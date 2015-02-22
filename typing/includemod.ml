@@ -1,5 +1,3 @@
-(*s: ./typing/includemod.ml *)
-(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -10,7 +8,6 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-(*e: copyright header *)
 
 (* Inclusion checks for the module language *)
 
@@ -19,7 +16,6 @@ open Path
 open Types
 open Typedtree
 
-(*s: type Includemod.error *)
 type error =
     Missing_field of Ident.t
   | Value_descriptions of Ident.t * value_description * value_description
@@ -29,17 +25,13 @@ type error =
   | Module_types of module_type * module_type
   | Modtype_permutation
   | Interface_mismatch of string * string
-(*e: type Includemod.error *)
 
-(*s: exception Includemod.Error *)
 exception Error of error list
-(*e: exception Includemod.Error *)
 
 (* All functions "blah env x1 x2" check that x1 is included in x2,
    i.e. that x1 is the type of an implementation that fulfills the
    specification x2. If not, Error is raised with a backtrace of the error. *)
 
-(*s: function Includemod.value_descriptions *)
 (* Inclusion between value descriptions *)
 
 let value_descriptions env subst id vd1 vd2 =
@@ -48,9 +40,7 @@ let value_descriptions env subst id vd1 vd2 =
     Includecore.value_descriptions env vd1 vd2
   with Includecore.Dont_match ->
     raise(Error[Value_descriptions(id, vd1, vd2)])
-(*e: function Includemod.value_descriptions *)
 
-(*s: function Includemod.type_declarations *)
 (* Inclusion between type declarations *)
 
 let type_declarations env subst id decl1 decl2 =
@@ -58,9 +48,7 @@ let type_declarations env subst id decl1 decl2 =
   if Includecore.type_declarations env id decl1 decl2
   then ()
   else raise(Error[Type_declarations(id, decl1, decl2)])
-(*e: function Includemod.type_declarations *)
 
-(*s: function Includemod.exception_declarations *)
 (* Inclusion between exception declarations *)
 
 let exception_declarations env subst id decl1 decl2 =
@@ -68,24 +56,18 @@ let exception_declarations env subst id decl1 decl2 =
   if Includecore.exception_declarations env decl1 decl2
   then ()
   else raise(Error[Exception_declarations(id, decl1, decl2)])
-(*e: function Includemod.exception_declarations *)
 
-(*s: exception Includemod.Dont_match *)
 (* Expand a module type identifier when possible *)
 
 exception Dont_match
-(*e: exception Includemod.Dont_match *)
 
-(*s: function Includemod.expand_module_path *)
 let expand_module_path env path =
   try
     failwith "TODO: find_modtype_expansion"
 (*    Env.find_modtype_expansion path env *)
   with Not_found ->
     raise Dont_match
-(*e: function Includemod.expand_module_path *)
 
-(*s: type Includemod.field_desc *)
 (* Extract name, kind and ident from a signature item *)
 
 type field_desc =
@@ -94,17 +76,13 @@ type field_desc =
   | Field_exception of string
   | Field_module of string
   | Field_modtype of string
-(*e: type Includemod.field_desc *)
 
-(*s: constant Includemod.item_ident_name *)
 let item_ident_name = function
     Tsig_value(id, _) -> (id, Field_value(Ident.name id))
   | Tsig_type(id, _) -> (id, Field_type(Ident.name id))
   | Tsig_exception(id, _) -> (id, Field_exception(Ident.name id))
   | Tsig_module(id, _) -> (id, Field_module(Ident.name id))
-(*e: constant Includemod.item_ident_name *)
 
-(*s: function Includemod.simplify_structure_coercion *)
 (* Simplify a structure coercion *)
 
 let simplify_structure_coercion cc =
@@ -118,7 +96,6 @@ let simplify_structure_coercion cc =
     Tcoerce_none
   with Exit ->
     Tcoerce_structure cc
-(*e: function Includemod.simplify_structure_coercion *)
 
 (* Inclusion between module types. 
    Return the restriction that transforms a value of the smaller type
@@ -237,7 +214,6 @@ and signature_components env subst = function
   | _ ->
       fatal_error "Includemod.signature_components"
 
-(*s: function Includemod.check_modtype_inclusion *)
 (* Simplified inclusion check between module types *)
 
 let check_modtype_inclusion env mty1 mty2 =
@@ -245,13 +221,9 @@ let check_modtype_inclusion env mty1 mty2 =
     modtypes env Subst.identity mty1 mty2; ()
   with Error reasons ->
     raise Not_found
-(*e: function Includemod.check_modtype_inclusion *)
 
-(*s: toplevel Includemod._1 *)
 let _ = Env.check_modtype_inclusion := check_modtype_inclusion
-(*e: toplevel Includemod._1 *)
 
-(*s: function Includemod.compunit *)
 (* Check that an implementation of a compilation unit meets its
    interface. *)
 
@@ -260,27 +232,19 @@ let compunit impl_name impl_sig intf_name intf_sig =
     signatures Env.initial Subst.identity impl_sig intf_sig
   with Error reasons ->
     raise(Error(Interface_mismatch(impl_name, intf_name) :: reasons))
-(*e: function Includemod.compunit *)
 
-(*s: function Includemod.modtypes *)
 (* Hide the substitution parameter to the outside world *)
 
 let modtypes env mty1 mty2 = modtypes env Subst.identity mty1 mty2
-(*e: function Includemod.modtypes *)
-(*s: function Includemod.signatures *)
 let signatures env sig1 sig2 = signatures env Subst.identity sig1 sig2
-(*e: function Includemod.signatures *)
-(*s: function Includemod.type_declarations (./typing/includemod.ml) *)
 let type_declarations env id decl1 decl2 =
   type_declarations env Subst.identity id decl1 decl2
-(*e: function Includemod.type_declarations (./typing/includemod.ml) *)
 
 (* Error report *)
 
 open Format
 open Printtyp
 
-(*s: constant Includemod.include_err *)
 let include_err = function
     Missing_field id ->
       print_string "The field `"; ident id; 
@@ -326,9 +290,7 @@ let include_err = function
       print_string intf_name;
       print_string ":";
       close_box()
-(*e: constant Includemod.include_err *)
 
-(*s: function Includemod.report_error *)
 let report_error errlist =
   match errlist with
     [] -> ()
@@ -337,5 +299,3 @@ let report_error errlist =
       include_err err;
       List.iter (fun err -> print_space(); include_err err) rem;
       close_box()
-(*e: function Includemod.report_error *)
-(*e: ./typing/includemod.ml *)

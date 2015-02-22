@@ -1,5 +1,3 @@
-(*s: ./typing/subst.ml *)
-(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -10,7 +8,6 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-(*e: copyright header *)
 
 (* Substitutions *)
 
@@ -19,63 +16,46 @@ open Path
 open Types
 open Btype
 
-(*s: type Subst.t *)
 type t = 
   { types: (Ident.t, Path.t) Tbl.t;
     modules: (Ident.t, Path.t) Tbl.t;
     modtypes: (Ident.t, Types.module_type) Tbl.t }
-(*e: type Subst.t *)
 
-(*s: constant Subst.identity *)
 let identity =
   { types = Tbl.empty; modules = Tbl.empty; modtypes = Tbl.empty }
-(*e: constant Subst.identity *)
 
-(*s: function Subst.add_type *)
 let add_type id p s =
   { types = Tbl.add id p s.types;
     modules = s.modules;
     modtypes = s.modtypes }
-(*e: function Subst.add_type *)
 
-(*s: function Subst.add_module *)
 let add_module id p s =
   { types = s.types;
     modules = Tbl.add id p s.modules;
     modtypes = s.modtypes }
-(*e: function Subst.add_module *)
 
-(*s: function Subst.remove_type *)
 let remove_type id s =
   { types = Tbl.remove id s.types;
     modules = s.modules;
     modtypes = s.modtypes }
-(*e: function Subst.remove_type *)
 
-(*s: function Subst.remove_module *)
 let remove_module id s =
   { types = s.types;
     modules = Tbl.remove id s.modules;
     modtypes = s.modtypes }
-(*e: function Subst.remove_module *)
 
-(*s: function Subst.module_path *)
 let rec module_path s = function
     Pident id as p ->
       begin try Tbl.find id s.modules with Not_found -> p end
   | Pdot(p, n, pos) ->
       Pdot(module_path s p, n, pos)
-(*e: function Subst.module_path *)
 
-(*s: function Subst.type_path *)
 let type_path s = function
     Pident id as p ->
       begin try Tbl.find id s.types with Not_found -> p end
   | Pdot(p, n, pos) ->
       Pdot(module_path s p, n, pos)
-(*e: function Subst.type_path *)
 
-(*s: function Subst.typexp *)
 (* Similar to [Ctype.nondep_type_rec]. *)
 let rec typexp s ty =
   let ty = repr ty in
@@ -101,9 +81,7 @@ let rec typexp s ty =
       end;
     ty'
   end
-(*e: function Subst.typexp *)
 
-(*s: function Subst.type_expr *)
 (*
    Always make a copy of the type. If this is not done, type levels
    might not be correct.
@@ -113,9 +91,7 @@ let type_expr s ty =
   cleanup_types ();
   unmark_type ty';
   ty'
-(*e: function Subst.type_expr *)
 
-(*s: function Subst.type_declaration *)
 let type_declaration s decl =
   let decl =
     { type_params = List.map (typexp s) decl.type_params;
@@ -153,19 +129,14 @@ let type_declaration s decl =
   | Some ty -> unmark_type ty
   end;
   decl
-(*e: function Subst.type_declaration *)
 
 
-(*s: function Subst.value_description *)
 let value_description s descr =
   { val_type = type_expr s descr.val_type;
     val_kind = descr.val_kind }
-(*e: function Subst.value_description *)
 
-(*s: function Subst.exception_declaration *)
 let exception_declaration s tyl =
   List.map (type_expr s) tyl
-(*e: function Subst.exception_declaration *)
 
 let rec modtype s = function
     Tmty_ident p as mty ->
@@ -189,4 +160,3 @@ and signature s = function
   | Tsig_module(id, mty) :: sg ->
       Tsig_module(id, modtype s mty) :: signature (remove_module id s) sg
 
-(*e: ./typing/subst.ml *)

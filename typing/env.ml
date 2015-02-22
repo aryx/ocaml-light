@@ -1,5 +1,3 @@
-(*s: ./typing/env.ml *)
-(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -10,7 +8,6 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-(*e: copyright header *)
 
 (* Environment handling *)
 
@@ -23,7 +20,6 @@ open Path
 open Types
 
 
-(*s: type Env.error *)
 (* Error report *)
 
 type error =
@@ -31,13 +27,9 @@ type error =
   | Corrupted_interface of string
   | Illegal_renaming of string * string
   | Inconsistent_import of string * string * string
-(*e: type Env.error *)
 
-(*s: exception Env.Error *)
 exception Error of error
-(*e: exception Env.Error *)
 
-(*s: type Env.summary *)
 (* Summaries -- compact representation of an environment, to be
    exported in debugging information. *)
 
@@ -48,9 +40,7 @@ type summary =
   | Env_exception of summary * Ident.t * exception_declaration
   | Env_module of summary * Ident.t * module_type
   | Env_open of summary * Path.t
-(*e: type Env.summary *)
 
-(*s: type Env.t *)
 type t = {
   values     : (Path.t * Types.value_description)   Ident.tbl;
   constrs    : Types.constructor_description        Ident.tbl;
@@ -60,15 +50,11 @@ type t = {
   components : (Path.t * module_components)   Ident.tbl;
   summary: summary
 }
-(*e: type Env.t *)
 
-(*s: type Env.module_components *)
 and module_components =
     Structure_comps of structure_components
-(*e: type Env.module_components *)
 
 
-(*s: type Env.structure_components *)
 and structure_components = {
   mutable comp_values     : (string, (value_description * int))       Tbl.t;
   mutable comp_constrs    : (string, (constructor_description * int)) Tbl.t;
@@ -77,10 +63,8 @@ and structure_components = {
   mutable comp_modules    : (string, (module_type * int))             Tbl.t;
   mutable comp_components : (string, (module_components * int))       Tbl.t;
 }
-(*e: type Env.structure_components *)
 
 
-(*s: constant Env.empty *)
 let empty = {
   values = Ident.empty; 
   constrs = Ident.empty;
@@ -89,9 +73,7 @@ let empty = {
   modules = Ident.empty;
   components = Ident.empty; 
   summary = Env_empty }
-(*e: constant Env.empty *)
 
-(*s: type Env.pers_struct *)
 (* Persistent structure descriptions *)
 
 type pers_struct =
@@ -99,14 +81,10 @@ type pers_struct =
     ps_sig: signature;
     ps_comps: module_components;
     ps_crcs: (string * Digest.t) list }
-(*e: type Env.pers_struct *)
 
-(*s: constant Env.persistent_structures *)
 let persistent_structures =
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
-(*e: constant Env.persistent_structures *)
 
-(*s: function Env.read_pers_struct *)
 let read_pers_struct modname filename =
   let ic = open_in_bin filename in
   try
@@ -130,32 +108,24 @@ let read_pers_struct modname filename =
   with End_of_file | Failure _ ->
     close_in ic;
     raise(Error(Corrupted_interface(filename)))
-(*e: function Env.read_pers_struct *)
 
-(*s: function Env.find_pers_struct *)
 let find_pers_struct name =
   try
     Hashtbl.find persistent_structures name
   with Not_found ->
     read_pers_struct name
       (find_in_path !load_path (String.uncapitalize name ^ ".cmi"))
-(*e: function Env.find_pers_struct *)
 
-(*s: function Env.reset_cache *)
 let reset_cache() =
   Hashtbl.clear persistent_structures
-(*e: function Env.reset_cache *)
 
-(*s: constant Env.check_modtype_inclusion *)
 (* Forward declarations *)
 
 let check_modtype_inclusion =
   (* to be filled with includemod.check_modtype_inclusion *)
   ref ((fun env mty1 mty2 -> fatal_error "Env.include_modtypes") :
        t -> module_type -> module_type -> unit)
-(*e: constant Env.check_modtype_inclusion *)
 
-(*s: function Env.find_module_descr *)
 (* Lookup by identifier *)
 
 let rec find_module_descr path env =
@@ -175,9 +145,7 @@ let rec find_module_descr path env =
           let (descr, pos) = Tbl.find s c.comp_components in
           descr
       end
-(*e: function Env.find_module_descr *)
 
-(*s: function Env.find *)
 let find proj1 proj2 path env =
   match path with
     Pident id ->
@@ -188,25 +156,19 @@ let find proj1 proj2 path env =
         Structure_comps c ->
           let (data, pos) = Tbl.find s (proj2 c) in data
       end
-(*e: function Env.find *)
 
 let find_value =
   find (fun env -> env.values) (fun sc -> sc.comp_values)
 let find_type =
   find (fun env -> env.types) (fun sc -> sc.comp_types)
 
-(*s: function Env.find_type_expansion *)
 let find_type_expansion path env =
   let decl = find_type path env in
   match decl.type_manifest with
     None      -> raise Not_found
   | Some body -> (decl.type_params, body)
-(*e: function Env.find_type_expansion *)
 
-(*s: function Env.find_modtype_expansion *)
-(*e: function Env.find_modtype_expansion *)
 
-(*s: function Env.find_module *)
 (* @Scheck: used by the debugger *)
 let find_module path env =
   match path with
@@ -225,7 +187,6 @@ let find_module path env =
         Structure_comps c ->
           let (data, pos) = Tbl.find s c.comp_modules in data
       end
-(*e: function Env.find_module *)
 
 (* Lookup by name *)
 
@@ -263,7 +224,6 @@ and lookup_module lid env =
           (Pdot(p, s, pos), data)
       end
 
-(*s: function Env.lookup *)
 let lookup proj1 proj2 lid env =
   match lid with
     Lident s ->
@@ -274,9 +234,7 @@ let lookup proj1 proj2 lid env =
           let (data, pos) = Tbl.find s (proj2 c) in
           (Pdot(p, s, pos), data)
       end
-(*e: function Env.lookup *)
 
-(*s: function Env.lookup_simple *)
 let lookup_simple proj1 proj2 lid env =
   match lid with
     Lident s ->
@@ -287,7 +245,6 @@ let lookup_simple proj1 proj2 lid env =
           let (data, pos) = Tbl.find s (proj2 c) in
           data
       end
-(*e: function Env.lookup_simple *)
 
 let lookup_value =
   lookup (fun env -> env.values) (fun sc -> sc.comp_values)
@@ -298,7 +255,6 @@ let lookup_label =
 let lookup_type =
   lookup (fun env -> env.types) (fun sc -> sc.comp_types)
   
-(*s: function Env.scrape_modtype *)
 (* Scrape a module type *)
 
 let rec scrape_modtype mty env =
@@ -313,9 +269,7 @@ let rec scrape_modtype mty env =
       end
 *)
   | _ -> mty
-(*e: function Env.scrape_modtype *)
 
-(*s: function Env.constructors_of_type *)
 (* Compute constructor descriptions *)
 
 let constructors_of_type ty_path decl =
@@ -325,9 +279,7 @@ let constructors_of_type ty_path decl =
         (Btype.newgenty (Tconstr(ty_path, decl.type_params, ref Mnil)))
         cstrs
   | _ -> []
-(*e: function Env.constructors_of_type *)
 
-(*s: function Env.labels_of_type *)
 (* Compute label descriptions *)
 
 let labels_of_type ty_path decl =
@@ -337,9 +289,7 @@ let labels_of_type ty_path decl =
         (Btype.newgenty (Tconstr(ty_path, decl.type_params, ref Mnil)))
         labels
   | _ -> []
-(*e: function Env.labels_of_type *)
 
-(*s: function Env.prefix_idents *)
 (* Given a signature and a root path, prefix all idents in the signature
    by the root path and build the corresponding substitution. *)
 
@@ -364,7 +314,6 @@ let rec prefix_idents root pos sub = function
       let (pl, final_sub) =
         prefix_idents root (pos+1) (Subst.add_module id p sub) rem in
       (p::pl, final_sub)
-(*e: function Env.prefix_idents *)
 
 (* Compute structure descriptions *)
 
@@ -486,12 +435,10 @@ and store_components id path comps env =
     summary = env.summary }
 
 
-(*s: constant Env.funappl_memo *)
 (* Memoized function to compute the components of a functor application
    in a path. *)
 
 let funappl_memo =
-(*e: constant Env.funappl_memo *)
   (Hashtbl.create 17 : (Path.t, module_components) Hashtbl.t)
 
 (* Insertion of bindings by identifier *)
@@ -508,18 +455,15 @@ let add_exception id decl env =
 let add_module id mty env =
   store_module id (Pident id) mty env
 
-(*s: function Env.enter *)
 (* Insertion of bindings by name *)
 
 let enter store_fun name data env =
   let id = Ident.create name in (id, store_fun id (Pident id) data env)
-(*e: function Env.enter *)
 
 let enter_value = enter store_value
 and enter_exception = enter store_exception
 and enter_module = enter store_module
 
-(*s: function Env.add_item *)
 (* Insertion of all components of a signature *)
 
 let add_item comp env =
@@ -528,16 +472,12 @@ let add_item comp env =
   | Tsig_type(id, decl) -> add_type id decl env
   | Tsig_exception(id, decl) -> add_exception id decl env
   | Tsig_module(id, mty) -> add_module id mty env
-(*e: function Env.add_item *)
 
-(*s: function Env.add_signature *)
 let rec add_signature sg env =
   match sg with
     [] -> env
   | comp :: rem -> add_signature rem (add_item comp env)
-(*e: function Env.add_signature *)
 
-(*s: function Env.open_signature *)
 (* Open a signature path *)
 
 let open_signature root sg env =
@@ -568,24 +508,18 @@ let open_signature root sg env =
     modules = newenv.modules;
     components = newenv.components;
     summary = Env_open(env.summary, root) }
-(*e: function Env.open_signature *)
   
-(*s: function Env.open_pers_signature *)
 (* Open a signature from a file *)
 
 let open_pers_signature name env =
   let ps = find_pers_struct name in
   open_signature (Pident(Ident.create_persistent name)) ps.ps_sig env
-(*e: function Env.open_pers_signature *)
 
-(*s: function Env.read_signature *)
 (* Read a signature from a file *)
 
 let read_signature modname filename =
   let ps = read_pers_struct modname filename in ps.ps_sig
-(*e: function Env.read_signature *)
 
-(*s: function Env.imported_units *)
 (* Return the list of imported interfaces with their CRCs *)
 
 let imported_units() =
@@ -605,9 +539,7 @@ let imported_units() =
     (fun name ps -> List.iter (add_unit ps.ps_name) ps.ps_crcs)
     persistent_structures;
   !imported_units
-(*e: function Env.imported_units *)
 
-(*s: function Env.save_signature *)
 (* Save a signature to a file *)
 
 let save_signature sg modname filename =
@@ -628,21 +560,15 @@ let save_signature sg modname filename =
   let ps =
     { ps_name = modname; ps_sig = sg; ps_comps = comps; ps_crcs = crcs } in
   Hashtbl.add persistent_structures modname ps
-(*e: function Env.save_signature *)
 
-(*s: constant Env.initial *)
 (* Make the initial environment *)
 
 let initial = Predef.build_initial_env add_type add_exception empty
-(*e: constant Env.initial *)
 
-(*s: function Env.summary *)
 (* Return the environment summary *)
 
 let summary env = env.summary
-(*e: function Env.summary *)
 
-(*s: function Env.report_error *)
 (* Error report *)
 
 let report_error = function
@@ -664,5 +590,3 @@ let report_error = function
       print_string "make inconsistent assumptions over interface ";
       print_string name;
       close_box()
-(*e: function Env.report_error *)
-(*e: ./typing/env.ml *)
