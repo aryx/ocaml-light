@@ -18,6 +18,7 @@ open Misc
 open Longident
 open Path
 open Types
+open Typedtree
 open Emitcode
 open Printval
 open Trace
@@ -127,7 +128,7 @@ let find_printer_type lid =
     Not_found ->
       print_string "Unbound value "; Printtyp.longident lid;
       print_newline(); raise Exit
-  | Ctype.Unify _ ->
+  | Ctype.Unify ->
       Printtyp.longident lid;
       print_string " has the wrong type for a printing function";
       print_newline(); raise Exit
@@ -165,8 +166,8 @@ let dir_trace lid =
   try
     let (path, desc) = Env.lookup_value lid !toplevel_env in
     (* Check if this is a primitive *)
-    match desc.val_kind with
-      Val_prim p ->
+    match desc.val_prim with
+      Some p ->
         Printtyp.longident lid;
         print_string " is an external function and cannot be traced.";
         print_newline()

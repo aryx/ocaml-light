@@ -17,6 +17,7 @@ open Format
 open Misc
 open Longident
 open Types
+open Typedtree
 open Printval
 open Toploop
 
@@ -53,7 +54,7 @@ let overwrite_closure dst src =
    traces its execution. *)
 
 let rec instrument_closure env name clos_typ =
-  match (Ctype.repr(Ctype.expand_head env clos_typ)).desc with
+  match (Ctype.repr clos_typ) (*(Ctype.expand_head env clos_typ)).desc *) with
     Tarrow(t1, t2) ->
       let starred_name =
         match name with
