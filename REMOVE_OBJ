@@ -20,21 +20,6 @@ index 56c3192..1c119ab 100644
  (* Check if an action has a "when" guard *)
 diff --git a/bytecomp/lambda.mli b/bytecomp/lambda.mli
 index b12ed97..6ea5baf 100644
---- a/bytecomp/lambda.mli
-+++ b/bytecomp/lambda.mli
-@@ -69,7 +69,9 @@ type structured_constant =
-   | Const_block of int * structured_constant list
-   | Const_float_array of string list
- 
--type let_kind = Strict | Alias
-+type let_kind = Strict | Alias | StrictOpt
-+
-+type shared_code = (int * int) list     (* stack size -> code label *)
- 
- type lambda =
-     Lvar of Ident.t
-diff --git a/bytecomp/matching.ml b/bytecomp/matching.ml
-index c521790..7123e41 100644
 --- a/bytecomp/matching.ml
 +++ b/bytecomp/matching.ml
 @@ -166,7 +166,7 @@ let make_record_matching all_labels = function
@@ -70,37 +55,8 @@ index d89ec8f..07ad56c 100644
 --- a/bytecomp/translcore.ml
 +++ b/bytecomp/translcore.ml
 @@ -20,11 +20,12 @@ open Primitive
-@@ -139,8 +140,8 @@ let primitives_table = create_hashtable 31 [
- ]
- 
- let same_base_type ty1 ty2 =
--  match (Ctype.repr ty1, Ctype.repr ty2) with
--    (Tconstr(p1, []), Tconstr(p2, [])) -> Path.same p1 p2
-+  match ((Ctype.repr ty1).desc, (Ctype.repr ty2).desc) with
-+    (Tconstr(p1, [], _), Tconstr(p2, [], _)) -> Path.same p1 p2
-   | (_, _) -> false
- 
- let maybe_pointer arg =
-@@ -148,11 +149,11 @@ let maybe_pointer arg =
+@@ -148,7 +149,7 @@ let maybe_pointer arg =
        same_base_type arg.exp_type Predef.type_char)
- 
- let array_kind arg =
--  match Ctype.repr arg.exp_type with
--    Tconstr(p, [ty]) when Path.same p Predef.path_array ->
--      begin match Ctype.repr ty with
--        Tvar v -> Pgenarray
--      | Tconstr(p, _) ->
-+  match (Ctype.repr arg.exp_type).desc with
-+    Tconstr(p, [ty], _) when Path.same p Predef.path_array ->
-+      begin match (Ctype.repr ty).desc with
-+        Tvar -> Pgenarray
-+      | Tconstr(p, _, _) ->
-           if Path.same p Predef.path_int or Path.same p Predef.path_char then
-             Pintarray
-           else if Path.same p Predef.path_float then
-@@ -263,8 +264,10 @@ let rec name_pattern default = function
- 
- let rec transl_exp e =
    match e.exp_desc with
 -    Texp_ident(path, {val_prim = Some p}) ->
 +    Texp_ident(path, {val_kind = Val_prim p}) ->
@@ -130,18 +86,6 @@ index d89ec8f..07ad56c 100644
        Matching.for_multiple_match e.exp_loc
          (transl_list argl) (transl_cases pat_expr_list)
 @@ -379,6 +389,23 @@ let rec transl_exp e =
-       Lfor(param, transl_exp low, transl_exp high, dir, transl_exp body)
-   | Texp_when(cond, body) ->
-       Lifthenelse(transl_exp cond, transl_exp body, Lstaticfail)
-   | _ ->
-       fatal_error "Translcore.transl"
- 
-@@ -419,6 +446,10 @@ and transl_let rec_flag pat_expr_list body =
-         (id, lam) in
-       Lletrec(List.map transl_case pat_expr_list, body)
- 
-
- let transl_exception id decl =
 diff --git a/bytecomp/translcore.mli b/bytecomp/translcore.mli
 index fbaa50a..20ffd18 100644
 --- a/bytecomp/translcore.mli
@@ -396,71 +340,7 @@ diff --git a/toplevel/printval.ml b/toplevel/printval.ml
 index 0048ec5..b6c02b4 100644
 --- a/toplevel/printval.ml
 +++ b/toplevel/printval.ml
-@@ -13,6 +13,7 @@
- 
- (* To print values *)
- 
-+open Misc
- open Obj
- open Format
- open Longident
-@@ -100,8 +101,8 @@ let print_qualified lookup_fun env ty_path name =
-       print_string name
-   | Pdot(p, s, pos) ->
-       if try
--           match lookup_fun (Lident name) env with
--             Tconstr(ty_path', _) -> Path.same ty_path ty_path'
-+           match (lookup_fun (Lident name) env).desc with
-+             Tconstr(ty_path', _, _) -> Path.same ty_path ty_path'
-            | _ -> false
-          with Not_found -> false
-       then print_string name
-@@ -132,8 +133,8 @@ let print_value env obj ty =
-     try
-       find_printer env ty obj; ()
-     with Not_found ->
--      match Ctype.repr ty with
--        Tvar _ ->
-+      match (Ctype.repr ty).desc with
-+        Tvar ->
-           print_string "<poly>"
-       | Tarrow(ty1, ty2) ->
-           print_string "<fun>"
-@@ -144,14 +145,14 @@ let print_value env obj ty =
-           print_val_list 1 depth obj ty_list;
-           if prio > 0 then print_string ")";
-           close_box()
--      | Tconstr(path, []) when Path.same path Predef.path_exn ->
-+      | Tconstr(path, [], _) when Path.same path Predef.path_exn ->
-           if prio > 1
-           then begin open_hovbox 2; print_string "(" end
-           else open_hovbox 1;
-           print_exception obj;
-           if prio > 1 then print_string ")";
-           close_box()
--      | Tconstr(path, [ty_arg]) when Path.same path Predef.path_list ->
-+      | Tconstr(path, [ty_arg], _) when Path.same path Predef.path_list ->
-           let rec print_conses depth cons =
-             if Obj.is_block cons then begin
-               print_val 0 (depth - 1) (Obj.field cons 0) ty_arg;
-@@ -166,7 +167,7 @@ let print_value env obj ty =
-           cautious (print_conses depth) obj;
-           print_string "]";
-           close_box()
--      | Tconstr(path, [ty_arg]) when Path.same path Predef.path_array ->
-+      | Tconstr(path, [ty_arg], _) when Path.same path Predef.path_array ->
-           let rec print_items depth i =
-             if i < Obj.size obj then begin
-               if i > 0 then begin print_string ";"; print_space() end;
-@@ -178,7 +179,7 @@ let print_value env obj ty =
-           cautious (print_items depth) 0;
-           print_string "|]";
-           close_box()
--      | Tconstr(path, ty_list) ->
-+      | Tconstr(path, ty_list, _) ->
-           begin try
-             let decl = Env.find_type path env in
-             match decl with
+@@ -13,2 +13,2 @@
 @@ -186,7 +187,7 @@ let print_value env obj ty =
                  print_string "<abstr>"
              | {type_kind = Type_abstract; type_manifest = Some body} ->
@@ -501,17 +381,7 @@ diff --git a/toplevel/topdirs.ml b/toplevel/topdirs.ml
 index f72a4da..8b862ca 100644
 --- a/toplevel/topdirs.ml
 +++ b/toplevel/topdirs.ml
-@@ -149,8 +149,8 @@ let find_printer_type lid =
-     let (path, desc) = Env.lookup_value lid !toplevel_env in
-     Ctype.begin_def();
-     let ty_arg = Ctype.newvar() in
--    Ctype.unify !toplevel_env (Tarrow(ty_arg, Predef.type_unit))
--                               (Ctype.instance desc.val_type);
-+    Ctype.unify !toplevel_env (Ctype.newty (Tarrow(ty_arg, Predef.type_unit)))
-+                              (Ctype.instance desc.val_type);
-     Ctype.end_def();
-     Ctype.generalize ty_arg;
-     (ty_arg, path)
+@@ -149,3 +149,3 @@ let find_printer_type lid =
 @@ -218,16 +218,16 @@ let dir_trace lid =
          overwrite_closure clos
           (Obj.repr (fun arg -> Trace.print_trace (current_environment()) arg));
@@ -569,13 +439,6 @@ index e019abf..4fdfb54 100644
        end;
        close_box()
    | Tsig_type(id, decl) ->
-@@ -87,6 +89,9 @@ let print_item env = function
-       print_string " :"; print_space(); Printtyp.modtype mty; close_box()
-   | Tsig_modtype(id, decl) ->
-       Printtyp.modtype_declaration id decl
- 
- (* Print an exception produced by an evaluation *)
- 
 @@ -132,7 +137,12 @@ let execute_phrase phr =
                print_newline()
            | _ ->
@@ -594,16 +457,8 @@ diff --git a/toplevel/trace.ml b/toplevel/trace.ml
 index c677b57..f9d9ed1 100644
 --- a/toplevel/trace.ml
 +++ b/toplevel/trace.ml
-@@ -53,7 +53,7 @@ let overwrite_closure dst src =
+@@ -53,1 +53,1 @@ let overwrite_closure dst src =
     traces its execution. *)
- 
- let rec instrument_closure name clos_typ =
--  match Ctype.repr clos_typ with
-+  match (Ctype.repr clos_typ).desc with
-     Tarrow(t1, t2) ->
-       let starred_name =
-         match name with
-
 
 ** typing (BIG)
 
@@ -611,7 +466,7 @@ diff --git a/typing/ctype.ml b/typing/ctype.ml
 index 4870cd0..549e2db 100644
 --- a/typing/ctype.ml
 +++ b/typing/ctype.ml
-@@ -14,85 +14,242 @@
+@@ -14,21 +14,21 @@
  (* Operations on core types *)
  
  open Misc
@@ -640,6 +495,7 @@ index 4870cd0..549e2db 100644
 +let newty desc         = { desc = desc; level = !current_level }
 +let new_global_ty desc = { desc = desc; level = !global_level }
 +let newgenty desc      = { desc = desc; level = generic_level }
+
 +let newvar ()          = { desc = Tvar; level = !current_level }
 +let new_global_var ()  = new_global_ty Tvar
 +let new_gen_var ()     = newgenty Tvar
@@ -1910,7 +1766,7 @@ index 0afa11e..03a3b4f 100644
  	Structure_comps c
  let add_signature sg env =
    List.fold_left add_signature_component env sg
-@@ -551,14 +594,17 @@ let open_signature root sg env =
+@@ -551,6 +594,6 @@ let open_signature root sg env =
            store_module (Ident.hide id) p (Subst.modtype sub mty) env
        | Tsig_modtype(id, decl) ->
            store_modtype (Ident.hide id) p
@@ -1918,26 +1774,7 @@ index 0afa11e..03a3b4f 100644
 +                        (Subst.modtype_declaration sub decl) env
      env sg pl
  
- (* Open a signature from a file *)
- 
- let open_pers_signature name env =
-   let ps = find_pers_struct name in
--  open_signature (Pident(Ident.new_persistent name)) ps.ps_sig env
-+  open_signature (Pident(Ident.create_persistent name)) ps.ps_sig env
- 
- (* Read a signature from a file *)
- 
 @@ -573,7 +619,7 @@ let save_signature sg modname filename =
-       ps_sig = sg;
-       ps_comps =
-         components_of_module empty Subst.identity
--            (Pident(Ident.new_persistent modname)) (Tmty_signature sg) } in
-+	    (Pident(Ident.create_persistent modname)) (Tmty_signature sg) } in
-   let oc = open_out_bin filename in
-   output_string oc cmi_magic_number;
-   output_value oc ps;
-diff --git a/typing/ident.ml b/typing/ident.ml
-index 759a974..0ecd1cd 100644
 diff --git a/typing/includecore.ml b/typing/includecore.ml
 index 83c9b3f..d355a60 100644
 --- a/typing/includecore.ml
@@ -2558,18 +2395,21 @@ index 5f14a94..2a73ea9 100644
  let rec modtype s = function
      Tmty_ident p as mty ->
        begin match p with
-@@ -115,6 +226,7 @@ and signature_item s = function
+@@ -115,6 +226,6 @@ and signature_item s = function
    | Tsig_exception(id, d) -> Tsig_exception(id, exception_declaration s d)
    | Tsig_module(id, mty) -> Tsig_module(id, modtype s mty)
    | Tsig_modtype(id, d) -> Tsig_modtype(id, modtype_declaration s d)
  
  and modtype_declaration s = function
      Tmodtype_abstract -> Tmodtype_abstract
+
+* typexxx.ml
+
 diff --git a/typing/typecore.ml b/typing/typecore.ml
 index 89937df..ea77828 100644
 --- a/typing/typecore.ml
 +++ b/typing/typecore.ml
-@@ -35,6 +35,14 @@ type error =
+@@ -35,7 +35,8 @@ type error =
    | Label_missing
    | Label_not_mutable of Longident.t
    | Bad_format of string
@@ -2578,16 +2418,7 @@ index 89937df..ea77828 100644
  exception Error of Location.t * error
  
  
-@@ -89,7 +97,7 @@ let rec type_pat env sp =
-       let pl = List.map (type_pat env) spl in
-       { pat_desc = Tpat_tuple pl;
-         pat_loc = sp.ppat_loc;
--        pat_type = Ttuple(List.map (fun p -> p.pat_type) pl) }
-+        pat_type = newty (Ttuple(List.map (fun p -> p.pat_type) pl)) }
-   | Ppat_construct(lid, sarg) ->
-       let constr =
-         try
-@@ -154,7 +162,7 @@ let add_pattern_variables env =
+@@ -154,6 +162,6 @@ let add_pattern_variables env =
    pattern_variables := [];
    List.fold_right
      (fun (id, ty) env ->
@@ -2595,55 +2426,7 @@ index 89937df..ea77828 100644
 +      Env.add_value id {val_type = ty; val_kind = Val_reg} env)
      pv env
  
- let type_pattern env spat =
-@@ -188,6 +196,7 @@ let rec is_nonexpansive exp =
-               lbl_exp_list
-   | Texp_field(exp, lbl) -> is_nonexpansive exp
-   | Texp_array [] -> true
-+  | Texp_new _ -> true
-   | _ -> false
- 
- (* Typing of printf formats *)
-@@ -212,26 +221,29 @@ let type_format loc fmt =
-           '%' ->
-             scan_format (j+1)
-         | 's' ->
--            Tarrow(Predef.type_string, scan_format (j+1))
-+            newty (Tarrow(Predef.type_string, scan_format (j+1)))
-         | 'c' ->
--            Tarrow(Predef.type_char, scan_format (j+1))
-+            newty (Tarrow(Predef.type_char, scan_format (j+1)))
-         | 'd' | 'o' | 'x' | 'X' | 'u' ->
--            Tarrow(Predef.type_int, scan_format (j+1))
-+            newty (Tarrow(Predef.type_int, scan_format (j+1)))
-         | 'f' | 'e' | 'E' | 'g' | 'G' ->
--            Tarrow(Predef.type_float, scan_format (j+1))
-+            newty (Tarrow(Predef.type_float, scan_format (j+1)))
-         | 'b' ->
--            Tarrow(Predef.type_bool, scan_format (j+1))
-+            newty (Tarrow(Predef.type_bool, scan_format (j+1)))
-         | 'a' ->
-             let ty_arg = newvar() in
--            Tarrow (Tarrow(ty_input, Tarrow (ty_arg, ty_result)),
--                    Tarrow (ty_arg, scan_format (j+1)))
-+            newty (Tarrow (newty (Tarrow(ty_input,
-+      	       	       	       	       	 newty (Tarrow (ty_arg, ty_result)))),
-+                           newty (Tarrow (ty_arg, scan_format (j+1)))))
-         | 't' ->
--            Tarrow(Tarrow(ty_input, ty_result), scan_format (j+1))
-+            newty (Tarrow(newty (Tarrow(ty_input, ty_result)),
-+      	       	       	  scan_format (j+1)))
-         | c ->
-             raise(Error(loc, Bad_format(String.sub fmt i (j-i))))
-         end
-     | _ -> scan_format (i+1) in
--  Tconstr(Predef.path_format, [scan_format 0; ty_input; ty_result])
-+  newty
-+    (Tconstr(Predef.path_format, [scan_format 0; ty_input; ty_result], ref []))
- 
- (* Typing of expressions *)
- 
-@@ -246,7 +258,16 @@ let rec type_exp env sexp =
+@@ -246,7 +258,11 @@ let rec type_exp env sexp =
      Pexp_ident lid ->
        begin try
          let (path, desc) = Env.lookup_value lid env in
@@ -2656,25 +2439,7 @@ index 89937df..ea77828 100644
            exp_loc = sexp.pexp_loc;
            exp_type = instance desc.val_type }
        with Not_found ->
-@@ -269,7 +290,7 @@ let rec type_exp env sexp =
-       Parmatch.check_partial sexp.pexp_loc cases;
-       { exp_desc = Texp_function cases;
-         exp_loc = sexp.pexp_loc;
--        exp_type = Tarrow(ty_arg, ty_res) }
-+        exp_type = newty (Tarrow(ty_arg, ty_res)) }
-   | Pexp_apply(sfunct, sargs) ->
-       let funct = type_exp env sfunct in
-       let rec type_args ty_fun = function
-@@ -309,7 +330,7 @@ let rec type_exp env sexp =
-       let expl = List.map (type_exp env) sexpl in
-       { exp_desc = Texp_tuple expl;
-         exp_loc = sexp.pexp_loc;
--        exp_type = Ttuple(List.map (fun exp -> exp.exp_type) expl) }
-+        exp_type = newty (Ttuple(List.map (fun exp -> exp.exp_type) expl)) }
-   | Pexp_construct(lid, sarg) ->
-       let constr =
-         try
-@@ -425,24 +446,140 @@ let rec type_exp env sexp =
+@@ -425,23 +446,40 @@ let rec type_exp env sexp =
        let high = type_expect env shigh Predef.type_int in
        let (id, new_env) =
          Env.enter_value param {val_type = Predef.type_int;
@@ -2720,36 +2485,6 @@ index 89937df..ea77828 100644
  (* Typing of an expression with an expected type.
     Some constructs are treated specially to provide better error messages. *)
  
-@@ -454,8 +591,8 @@ and type_expect env sexp ty_expected =
-           exp_loc = sexp.pexp_loc;
-           exp_type =
-             (* Terrible hack for format strings *)
--            match Ctype.repr ty_expected with
--              Tconstr(path, _) when Path.same path Predef.path_format ->
-+            match (repr ty_expected).desc with
-+              Tconstr(path, _, _) when Path.same path Predef.path_format ->
-                 type_format sexp.pexp_loc s
-             | _ -> Predef.type_string } in
-       unify_exp env exp ty_expected;
-@@ -481,7 +618,7 @@ and type_expect env sexp ty_expected =
- 
- and type_statement env sexp =
-     let exp = type_exp env sexp in
--    match Ctype.repr exp.exp_type with
-+    match (repr exp.exp_type).desc with
-       Tarrow(_, _) ->
-         Location.print_warning sexp.pexp_loc
-           "this function application is partial,\n\
-@@ -505,7 +642,8 @@ and type_cases env ty_arg ty_res caselist =
- and type_let env rec_flag spat_sexp_list =
-   begin_def();
-   let (pat_list, new_env) =
--    type_pattern_list env (List.map (fun (spat, sexp) -> spat) spat_sexp_list) in
-+    type_pattern_list env (List.map (fun (spat, sexp) -> spat) spat_sexp_list)
-+  in
-   let exp_env =
-     match rec_flag with Nonrecursive -> env | Recursive -> new_env in
-   let exp_list =
 @@ -527,14 +665,12 @@ and type_let env rec_flag spat_sexp_list =
  (* Typing of toplevel bindings *)
  
@@ -2799,16 +2534,10 @@ index 89937df..ea77828 100644
        open_hovbox 0;
        print_string "This expression has type"; print_space();
        type_expr inferred; print_space();
-@@ -589,7 +761,7 @@ let report_error = function
+@@ -589,2 +761,2 @@ let report_error = function
        type_expr expected;
        close_box()
-   | Apply_non_function typ ->
--      begin match Ctype.repr typ with
-+      begin match (repr typ).desc with
-         Tarrow(_, _) ->
-           print_string "This function is applied to too many arguments"
-       | _ ->
-@@ -605,3 +777,30 @@ let report_error = function
+@@ -605,3 +777,11 @@ let report_error = function
        print_string " is not mutable"
    | Bad_format s ->
        print_string "Bad format `"; print_string s; print_string "'"
@@ -2824,16 +2553,9 @@ diff --git a/typing/typecore.mli b/typing/typecore.mli
 index 54d31ad..d527ae4 100644
 --- a/typing/typecore.mli
 +++ b/typing/typecore.mli
-@@ -19,10 +19,20 @@ open Typedtree
+@@ -19,5 +19,13 @@ open Typedtree
  val type_binding:
          Env.t -> rec_flag ->
-           (Parsetree.pattern * Parsetree.expression) list -> 
--            (Typedtree.pattern * Typedtree.expression) list * Env.t
-+            (pattern * expression) list * Env.t
- val type_expression:
--        Env.t -> Parsetree.expression -> Typedtree.expression
--        
-+        Env.t -> Parsetree.expression -> expression
 +val type_pattern_list:
 +        Env.t -> Parsetree.pattern list -> Typedtree.pattern list * Env.t
 +val type_expect:
@@ -3009,15 +2731,7 @@ index 6f963a0..bd76c03 100644
 --- a/typing/typemod.ml
 +++ b/typing/typemod.ml
 @@ -31,6 +31,7 @@ type error =
-   | With_no_component of Longident.t
-   | Repeated_name of string * string
-   | Non_generalizable of type_expr
- 
- exception Error of Location.t * error
- 
- and transl_modtype_info env sinfo =
-   match sinfo with
-@@ -188,12 +197,14 @@ let check_unique_names sg =
+@@ -188,11 +197,13 @@ let check_unique_names sg =
          check "module" item.pstr_loc module_names name
      | Pstr_modtype(name, decl) ->
          check "module type" item.pstr_loc modtype_names name
@@ -3034,14 +2748,6 @@ index 6f963a0..bd76c03 100644
 +let check_nongen_schemes env str =
    List.iter 
      (function
-         Tstr_value(rec_flag, pat_exp_list) ->
-@@ -202,8 +213,24 @@ let check_nongen_schemes str =
-               if not (Ctype.closed_schema exp.exp_type) then
-                 raise(Error(exp.exp_loc, Non_generalizable exp.exp_type)))
-             pat_exp_list
- 
- (* Type a module value expression *)
- 
 @@ -215,8 +242,8 @@ let rec type_module env smod =
          mod_type = Mtype.strengthen env mty path;
          mod_loc = smod.pmod_loc }
@@ -3053,14 +2759,7 @@ index 6f963a0..bd76c03 100644
        { mod_desc = Tmod_structure str;
          mod_type = Tmty_signature sg;
          mod_loc = smod.pmod_loc }
-@@ -326,6 +353,19 @@ and type_struct env = function
-       let (path, mty) = type_module_path env loc lid in
-       let sg = extract_sig_open env loc mty in
-       type_struct (Env.open_signature path sg env) srem
- 
- (* Error report *)
- 
-@@ -376,4 +416,11 @@ let report_error = function
+@@ -376,4 +416,5 @@ let report_error = function
        open_hovbox 0;
        print_string "The type of this expression,"; print_space();
        type_scheme typ; print_string ","; print_space();

@@ -569,7 +569,7 @@ and type_expect env sexp ty_expected =
           exp_loc = sexp.pexp_loc;
           exp_type =
             (* Terrible hack for format strings *)
-            begin match (repr ty_expected).desc with
+            begin match (Ctype.repr ty_expected).desc with
               Tconstr(path, _, _) when Path.same path Predef.path_format ->
                 type_format sexp.pexp_loc s
             | _ -> instance Predef.type_string
@@ -600,7 +600,7 @@ and type_expect env sexp ty_expected =
 
 and type_statement env sexp =
     let exp = type_exp env sexp in
-    match (repr exp.exp_type).desc with
+    match (Ctype.repr exp.exp_type).desc with
       Tarrow(_, _) ->
         Location.print_warning sexp.pexp_loc
           "this function application is partial,\n\
@@ -669,32 +669,6 @@ let type_expression env sexp =
 (*e: function Typecore.type_expression *)
 
 (*s: function Typecore.type_expect_fun *)
-(* Typing of methods *)
-
-let rec type_expect_fun env sexp ty_expected =
-  match sexp.pexp_desc with
-    Pexp_function caselist ->
-      let (ty_arg, ty_res) =
-        try filter_arrow env ty_expected with Unify _ ->
-          raise(Error(sexp.pexp_loc, Too_many_arguments))
-      in
-      let cases =
-        List.map
-          (fun (spat, sexp) ->
-             let (pat, ext_env) = type_pattern env spat in
-             unify_pat env pat ty_arg;
-             let exp = type_expect_fun ext_env sexp ty_res in
-             (pat, exp))
-          caselist
-      in
-      Parmatch.check_unused cases;
-      Parmatch.check_partial sexp.pexp_loc cases;
-      { exp_desc = Texp_function cases;
-        exp_loc = sexp.pexp_loc;
-        exp_type = newty (Tarrow(ty_arg, ty_res));
-        exp_env = env }
-  | _ ->
-      type_expect env sexp ty_expected
 (*e: function Typecore.type_expect_fun *)
 
 
