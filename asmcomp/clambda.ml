@@ -43,7 +43,6 @@ type ulambda =
   | Uwhile of ulambda * ulambda
   | Ufor of Ident.t * ulambda * ulambda * direction_flag * ulambda
   | Uassign of Ident.t * ulambda
-  | Usend of ulambda * ulambda * ulambda list
 (*e: type Clambda.ulambda (asmcomp/clambda.ml) *)
 
 (*s: type Clambda.ulambda_switch (asmcomp/clambda.ml) *)

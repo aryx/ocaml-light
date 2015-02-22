@@ -2926,96 +2926,7 @@ index 14505b6..c1dd2d0 100644
 
 
 * asmcomp/
-
-diff --git a/asmcomp/clambda.ml b/asmcomp/clambda.ml
-index ae5cf62..d640aeb 100644
---- a/asmcomp/clambda.ml
-+++ b/asmcomp/clambda.ml
-@@ -39,6 +39,7 @@ type ulambda =
-   | Uwhile of ulambda * ulambda
-   | Ufor of Ident.t * ulambda * ulambda * direction_flag * ulambda
-   | Uassign of Ident.t * ulambda
-+  | Usend of ulambda * ulambda * ulambda list
  
- and ulambda_switch =
-   { us_index_consts: int array;
-diff --git a/asmcomp/clambda.mli b/asmcomp/clambda.mli
-index ae5cf62..d640aeb 100644
---- a/asmcomp/clambda.mli
-+++ b/asmcomp/clambda.mli
-@@ -39,6 +39,7 @@ type ulambda =
-   | Uwhile of ulambda * ulambda
-   | Ufor of Ident.t * ulambda * ulambda * direction_flag * ulambda
-   | Uassign of Ident.t * ulambda
-+  | Usend of ulambda * ulambda * ulambda list
- 
- and ulambda_switch =
-   { us_index_consts: int array;
-diff --git a/asmcomp/closure.ml b/asmcomp/closure.ml
-index f06844e..8dfdad2 100644
---- a/asmcomp/closure.ml
-+++ b/asmcomp/closure.ml
-@@ -59,6 +59,7 @@ let occurs_var var u =
-     | Uwhile(cond, body) -> occurs cond or occurs body
-     | Ufor(id, lo, hi, dir, body) -> occurs lo or occurs hi or occurs body
-     | Uassign(id, u) -> id = var or occurs u
-+    | Usend(met, obj, args) -> List.exists occurs (met::obj::args)
-   and occurs_array a =
-     try
-       for i = 0 to Array.length a - 1 do
-@@ -127,6 +128,10 @@ let rec close fenv cenv = function
-       | (ufunct, _) ->
-           (Ugeneric_apply(ufunct, close_list fenv cenv args), Value_unknown)
-       end
-+  | Lsend(met, obj, args) ->
-+      let (umet, _) = close fenv cenv met in
-+      let (uobj, _) = close fenv cenv obj in
-+      (Usend(umet, uobj, close_list fenv cenv args), Value_unknown)
-   | Llet(str, id, lam, body) ->
-       let (ulam, alam) = close_named fenv cenv id lam in
-       let (ubody, abody) = close (Tbl.add id alam fenv) cenv body in
-@@ -276,6 +276,16 @@ let string_length exp =
-               Cop(Cloadchunk Byte_unsigned,
-                   [Cop(Cadda, [str; Cvar tmp_var])])])))
- 
-+(* Message sending *)
-+
-+let lookup_label obj lab =
-+  bind "lab" lab (fun lab ->
-+    let table = Cop (Cload typ_addr, [obj]) in
-+    let buck_index = Cop(Clsr, [lab; Cconst_int 16]) in
-+    let bucket = Cop (Cload typ_addr, [Cop (Cadda, [table; buck_index])]) in
-+    let item_index = Cop (Cand, [lab; Cconst_int (255 * size_addr)]) in
-+    Cop (Cload typ_addr, [Cop (Cadda, [bucket; item_index])]))
-+
- (* To compile "let rec" over values *)
- 
- let fundecls_size fundecls =
-@@ -397,9 +407,20 @@ let rec transl = function
-       Cop(Capply typ_addr,
-           Cconst_symbol(apply_function arity) ::
-           List.map transl (args @ [clos]))
-+  | Usend(met, obj, []) ->
-+      bind "obj" (transl obj) (fun obj ->
-+      bind "met" (lookup_label obj (transl met)) (fun clos ->
-+        Cop(Capply typ_addr, [get_field clos 0; obj; clos])))
-+  | Usend(met, obj, args) ->
-+      let arity = List.length args + 1 in
-+      bind "obj" (transl obj) (fun obj ->
-+      bind "met" (lookup_label obj (transl met)) (fun clos ->
-+        Cop(Capply typ_addr,
-+            Cconst_symbol(apply_function arity) ::
-+	    obj :: (List.map transl args) @ [clos])))
-   | Ulet(id, exp, body) ->
-       if is_unboxed_float exp then begin
--        let unboxed_id = Ident.new (Ident.name id) in
-+        let unboxed_id = Ident.create (Ident.name id) in
-         let (tr_body, need_boxed, is_assigned) =
-           subst_boxed_float id unboxed_id (transl body) in
-         if need_boxed & is_assigned then
-@@ -817,6 +838,52 @@ let rec transl_all_functions already_translated cont =
-   with Queue.Empty ->
-     cont
  
 +(* Translate a toplevel structure definition *)
 +
@@ -3065,6 +2976,3 @@ index f06844e..8dfdad2 100644
 +
  (* Emit structured constants *)
  
- let rec emit_constant symb cst cont =
-
-

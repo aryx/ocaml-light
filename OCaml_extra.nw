@@ -6931,32 +6931,6 @@ let type_expression env sexp =
 @
 
 <<function Typecore.type_expect_fun>>=
-(* Typing of methods *)
-
-let rec type_expect_fun env sexp ty_expected =
-  match sexp.pexp_desc with
-    Pexp_function caselist ->
-      let (ty_arg, ty_res) =
-        try filter_arrow env ty_expected with Unify _ ->
-          raise(Error(sexp.pexp_loc, Too_many_arguments))
-      in
-      let cases =
-        List.map
-          (fun (spat, sexp) ->
-             let (pat, ext_env) = type_pattern env spat in
-             unify_pat env pat ty_arg;
-             let exp = type_expect_fun ext_env sexp ty_res in
-             (pat, exp))
-          caselist
-      in
-      Parmatch.check_unused cases;
-      Parmatch.check_partial sexp.pexp_loc cases;
-      { exp_desc = Texp_function cases;
-        exp_loc = sexp.pexp_loc;
-        exp_type = newty (Tarrow(ty_arg, ty_res));
-        exp_env = env }
-  | _ ->
-      type_expect env sexp ty_expected
 @
 
 %-------------------------------------------------------------
@@ -12068,7 +12042,6 @@ type ulambda =
   | Uwhile of ulambda * ulambda
   | Ufor of Ident.t * ulambda * ulambda * direction_flag * ulambda
   | Uassign of Ident.t * ulambda
-  | Usend of ulambda * ulambda * ulambda list
 @
 
 <<type Clambda.ulambda_switch>>=
@@ -12150,7 +12123,6 @@ type ulambda =
   | Uwhile of ulambda * ulambda
   | Ufor of Ident.t * ulambda * ulambda * direction_flag * ulambda
   | Uassign of Ident.t * ulambda
-  | Usend of ulambda * ulambda * ulambda list
 @
 
 <<type Clambda.ulambda_switch (asmcomp/clambda.ml)>>=
@@ -14034,8 +14006,6 @@ let occurs_var var u =
     | Uwhile(cond, body) -> occurs cond or occurs body
     | Ufor(id, lo, hi, dir, body) -> occurs lo or occurs hi or occurs body
     | Uassign(id, u) -> id = var or occurs u
-    | Usend(met, obj, args) -> 
-        occurs met or occurs obj or List.exists occurs args
   and occurs_array a =
     try
       for i = 0 to Array.length a - 1 do
@@ -14124,9 +14094,6 @@ let lambda_smaller lam threshold =
         size := !size + 4; lambda_size low; lambda_size high; lambda_size body
     | Uassign(id, lam) ->
         incr size;  lambda_size lam
-    | Usend(met, obj, args) ->
-        size := !size + 8;
-        lambda_size met; lambda_size obj; lambda_list_size args
   and lambda_list_size l = List.iter lambda_size l
   and lambda_array_size a = Array.iter lambda_size a in
   try
@@ -19281,18 +19248,6 @@ let string_length exp =
                   [Cop(Cadda, [str; Cvar tmp_var])])])))
 @
 
-<<function Cmmgen.lookup_label>>=
-(* Message sending *)
-
-let lookup_label obj lab =
-  bind "lab" lab (fun lab ->
-    let table = Cop (Cload typ_addr, [obj]) in
-    let buck_index = Cop(Clsr, [lab; Cconst_int 16]) in
-    let bucket = Cop (Cload typ_addr, [Cop (Cadda, [table; buck_index])]) in
-    let item_index = Cop (Cand, [lab; Cconst_int (255 * size_addr)]) in
-    Cop (Cload typ_addr, [Cop (Cadda, [bucket; item_index])]))
-@
-
 <<function Cmmgen.fundecls_size>>=
 (* To compile "let rec" over values *)
 
@@ -19754,8 +19709,6 @@ open Cmm
 
 <<function Cmmgen.string_length>>
 
-<<function Cmmgen.lookup_label>>
-
 <<function Cmmgen.fundecls_size>>
 
 <<function Cmmgen.expr_size_and_tag>>
@@ -19842,17 +19795,6 @@ let rec transl = function
       Cop(Capply typ_addr,
           Cconst_symbol(apply_function arity) ::
           List.map transl (args @ [clos]))
-  | Usend(met, obj, []) ->
-      bind "obj" (transl obj) (fun obj ->
-      bind "met" (lookup_label obj (transl met)) (fun clos ->
-        Cop(Capply typ_addr, [get_field clos 0; obj; clos])))
-  | Usend(met, obj, args) ->
-      let arity = List.length args + 1 in
-      bind "obj" (transl obj) (fun obj ->
-      bind "met" (lookup_label obj (transl met)) (fun clos ->
-        Cop(Capply typ_addr,
-            Cconst_symbol(apply_function arity) ::
-            obj :: (List.map transl args) @ [clos])))
   | Ulet(id, exp, body) ->
       if is_unboxed_float exp then begin
         let unboxed_id = Ident.create (Ident.name id) in
