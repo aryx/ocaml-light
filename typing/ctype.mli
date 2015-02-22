@@ -55,9 +55,6 @@ val reset_global_level: unit -> unit
 (*s: signature Ctype.newty *)
 val newty: type_desc -> type_expr
 (*e: signature Ctype.newty *)
-(*s: signature Ctype.newgenty *)
-val newgenty: type_desc -> type_expr
-(*e: signature Ctype.newgenty *)
 (*s: signature Ctype.newvar *)
 val newvar: unit -> type_expr
         (* Return a fresh variable *)

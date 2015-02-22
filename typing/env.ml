@@ -70,12 +70,12 @@ and module_components =
 
 (*s: type Env.structure_components *)
 and structure_components = {
-  mutable comp_values: (string, (value_description * int)) Tbl.t;
-  mutable comp_constrs: (string, (constructor_description * int)) Tbl.t;
-  mutable comp_labels: (string, (label_description * int)) Tbl.t;
-  mutable comp_types: (string, (type_declaration * int)) Tbl.t;
-  mutable comp_modules: (string, (module_type * int)) Tbl.t;
-  mutable comp_components: (string, (module_components * int)) Tbl.t;
+  mutable comp_values     : (string, (value_description * int))       Tbl.t;
+  mutable comp_constrs    : (string, (constructor_description * int)) Tbl.t;
+  mutable comp_labels     : (string, (label_description * int))       Tbl.t;
+  mutable comp_types      : (string, (type_declaration * int))        Tbl.t;
+  mutable comp_modules    : (string, (module_type * int))             Tbl.t;
+  mutable comp_components : (string, (module_components * int))       Tbl.t;
 }
 (*e: type Env.structure_components *)
 
@@ -190,7 +190,7 @@ let find proj1 proj2 path env =
 
 let find_value =
   find (fun env -> env.values) (fun sc -> sc.comp_values)
-and find_type =
+let find_type =
   find (fun env -> env.types) (fun sc -> sc.comp_types)
 
 (*s: function Env.find_type_expansion *)
@@ -289,11 +289,11 @@ let lookup_simple proj1 proj2 lid env =
 
 let lookup_value =
   lookup (fun env -> env.values) (fun sc -> sc.comp_values)
-and lookup_constructor =
+let lookup_constructor =
   lookup_simple (fun env -> env.constrs) (fun sc -> sc.comp_constrs)
-and lookup_label =
+let lookup_label =
   lookup_simple (fun env -> env.labels) (fun sc -> sc.comp_labels)
-and lookup_type =
+let lookup_type =
   lookup (fun env -> env.types) (fun sc -> sc.comp_types)
   
 (*s: function Env.scrape_modtype *)
@@ -497,13 +497,13 @@ let funappl_memo =
 let add_value id desc env =
   store_value id (Pident id) desc env
 
-and add_type id info env =
+let add_type id info env =
   store_type id (Pident id) info env
 
-and add_exception id decl env =
+let add_exception id decl env =
   store_exception id (Pident id) decl env
 
-and add_module id mty env =
+let add_module id mty env =
   store_module id (Pident id) mty env
 
 (*s: function Env.enter *)

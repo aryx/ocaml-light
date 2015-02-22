@@ -1,4 +1,5 @@
 (*s: ./typing/btype.ml *)
+(*s: copyright header2 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,7 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright header2 *)
 
 (* Basic operations on core types *)
 
@@ -62,7 +63,6 @@ let rec repr =
                   (*  Utilities for type traversal  *)
                   (**********************************)
 
-
 (*s: function Btype.iter_type_expr *)
 let iter_type_expr f ty =
   match ty.desc with
@@ -100,7 +100,6 @@ let rec unmark_type ty =
     iter_type_expr unmark_type ty
   end
 (*e: function Btype.unmark_type *)
-
 
                   (*******************************************)
                   (*  Memorization of abbreviation expansion *)

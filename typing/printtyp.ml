@@ -1,4 +1,5 @@
 (*s: ./typing/printtyp.ml *)
+(*s: copyright header2 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,7 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright header2 *)
 
 (* Printing functions *)
 
@@ -140,6 +141,7 @@ let reset () =
   reset_names (); reset_loop_marks ()
 (*e: function Printtyp.reset *)
 
+(*s: function Printtyp.typeexp *)
 let rec typexp sch prio0 ty =
   let ty = repr ty in
   try
@@ -239,9 +241,13 @@ and typfields sch rest =
       typexp sch 0 t;
       print_string ";"; print_space ();
       typfields sch rest l
+(*e: function Printtyp.typeexp *)
 
+(*s: function Printtyp.type_expr *)
 let type_expr ty =
   typexp false 0 ty
+(*e: function Printtyp.type_expr *)
+
 
 and type_sch ty =
   typexp true 0 ty
@@ -266,6 +272,7 @@ let constrain ty =
   end
 (*e: function Printtyp.constrain *)
 
+(*s: function Printtyp.type_declaration *)
 let rec type_declaration id decl =
   reset();
 
@@ -334,6 +341,8 @@ and label (name, mut, arg) =
   print_string ": ";
   type_expr arg
 
+(*e: function Printtyp.type_declaration *)
+
 (*s: function Printtyp.exception_declaration *)
 (* Print an exception declaration *)
 
@@ -359,7 +368,7 @@ let value_description id decl =
 
 
 (* Print a module type *)
-
+(*s: function Printtyp.modtype *)
 let rec modtype = function
     Tmty_ident p ->
       path p
@@ -385,7 +394,7 @@ and signature_body spc = function
             open_box 2; print_string "module "; ident id; print_string " :";
             print_space(); modtype mty; close_box(); rem
       in signature_body true cont
-
+(*e: function Printtyp.modtype *)
 (*s: function Printtyp.signature *)
 (* Print a signature body (used when compiling a .mli and printing results
    in interactive use). *)
