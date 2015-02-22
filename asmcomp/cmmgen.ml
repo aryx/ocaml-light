@@ -1,4 +1,5 @@
 (*s: asmcomp/cmmgen.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: cmmgen.ml,v 1.41 1997/10/15 09:20:42 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Translation from closed lambda to C-- *)
 

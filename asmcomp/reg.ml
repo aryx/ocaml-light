@@ -1,4 +1,5 @@
 (*s: asmcomp/reg.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: reg.ml,v 1.8 1996/09/18 14:16:15 xleroy Exp $ *)
+(*e: copyright header *)
 
 open Cmm
 

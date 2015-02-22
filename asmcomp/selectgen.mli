@@ -1,4 +1,5 @@
 (*s: asmcomp/selectgen.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: selectgen.mli,v 1.2 1997/11/06 17:25:24 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: type Selectgen.environment *)
 (* Selection of pseudo-instructions, assignment of pseudo-registers,

@@ -1,4 +1,5 @@
 (*s: asmcomp/printcmm.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: printcmm.ml,v 1.12 1997/03/04 10:19:50 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Pretty-printing of C-- code *)
 

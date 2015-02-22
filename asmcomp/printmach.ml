@@ -1,4 +1,5 @@
 (*s: asmcomp/printmach.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: printmach.ml,v 1.16 1997/03/04 10:19:50 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Pretty-printing of pseudo machine code *)
 

@@ -1,4 +1,5 @@
 (*s: asmcomp/closure.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: closure.ml,v 1.22 1997/07/30 12:27:45 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Introduction of closures, uncurrying, recognition of direct calls *)
 

@@ -1,4 +1,5 @@
 (*s: asmcomp/cmm.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: cmm.mli,v 1.11 1997/03/04 10:19:44 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: type Cmm.machtype_component *)
 (* Second intermediate language (machine independent) *)

@@ -1,4 +1,5 @@
 (*s: asmcomp/asmlink.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: asmlink.mli,v 1.4 1996/04/30 14:42:11 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Asmlink.link *)
 (* Link a set of .cmx/.o files and produce an executable *)

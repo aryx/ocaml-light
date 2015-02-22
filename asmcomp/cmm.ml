@@ -1,4 +1,5 @@
 (*s: asmcomp/cmm.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,9 +10,8 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright header *)
 (*s: type Cmm.machtype_component (asmcomp/cmm.ml) *)
-(* $Id: cmm.ml,v 1.11 1997/03/04 10:19:43 xleroy Exp $ *)
 
 type machtype_component =
     Addr

@@ -1,4 +1,5 @@
 (*s: asmcomp/emitaux.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: emitaux.mli,v 1.7 1997/03/04 10:19:49 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Emitaux.output_channel *)
 (* Common functions for emitting assembly code *)

@@ -1,4 +1,5 @@
 (*s: asmcomp/printmach.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: printmach.mli,v 1.4 1996/04/30 14:42:46 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Printmach.reg *)
 (* Pretty-printing of pseudo machine code *)

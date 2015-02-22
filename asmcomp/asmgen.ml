@@ -1,4 +1,5 @@
 (*s: asmcomp/asmgen.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: asmgen.ml,v 1.12 1997/07/24 11:48:46 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* From lambda to assembly code *)
 

@@ -214,6 +214,19 @@ The prose is mine and is licensed under the GNU Free Documentation
 License.
 
 
+<<copyright header2>>=
+(***********************************************************************)
+(*                                                                     *)
+(*                           Objective Caml                            *)
+(*                                                                     *)
+(* Xavier Leroy and Jerome Vouillon, projet Cristal, INRIA Rocquencourt*)
+(*                                                                     *)
+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Automatique.  Distributed only by permission.                      *)
+(*                                                                     *)
+(***********************************************************************)
+@
+
 \section{Acknowledgments}
 
 I would like to thank of course Xavier Leroy and Damien Doligez,
@@ -258,6 +271,21 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 \section{Input OCaml Light language}
 
 \section{Code organization}
+
+% btype.ml: 
+%  "basic operations on core types"
+% datarepr.ml:  
+%  "Compute constructor and label descriptions from type declarations, determining their representation"
+% ctype.ml: 
+%  "Operations on core types"
+
+% typedecl.ml: typing of the type declarations
+%  "Typing of type definitions and primitive definitions"
+
+% matching.ml: 
+%  "Compilation of pattern matching"
+% emitcode.ml:
+%  "Generation of bytecode for .cmo files"
 
 %https://github.com/ocamllabs/ocaml-internals/wiki/Source-layout
 
@@ -920,9 +948,63 @@ type direction_flag = Upto | Downto
 % note that this phase build a global environment,
 % and will load .cmi of other files!
 
+% see types.mli, Link
+
+<<signature Btype.newgenty>>=
+val newgenty: type_desc -> type_expr
+        (* Create a generic type *)
+@
+
+<<signature Btype.newgenvar>>=
+val newgenvar: unit -> type_expr
+        (* Return a fresh generic variable *)
+@
+
+<<signature Ctype.newvar>>=
+val newvar: unit -> type_expr
+        (* Return a fresh variable *)
+@
+
+% in ctype.ml before unify
+
+%   1. When unifying two non-abbreviated types, one type is made a link
+%      to the other. When unifying an abbreviated type with a
+%      non-abbreviated type, the non-abbreviated type is made a link to
+%      the other one. When unifying to abbreviated types, these two
+%      types are kept distincts, but they are made to (temporally)
+%      expand to the same type.
+%   2. Abbreviations with at least one parameter are systematically
+%      expanded. The overhead does not seem to high, and that way
+%      abbreviations where some parameters does not appear in the
+%      expansion, such as ['a t = int], are correctly handled. In
+%      particular, for this example, unifying ['a t] with ['b t] keeps
+%      ['a] and ['b] distincts. (Is it really important ?)
+%   3. Unifying an abbreviation ['a t = 'a] with ['a] should not yield
+%      ['a t as 'a]. Indeed, the type variable would otherwise be lost.
+%      This problem occurs for abbreviations expanding to a type
+%      variable, but also to many other constrained abbreviations (for
+%      instance, [(< x : 'a > -> unit) t = <x : 'a>]). The solution is
+%      that, if an abbreviation is unified with some subpart of its
+%      parameters, then the parameter actually does not get
+%      abbreviated.  It would be possible to check whether some
+%      information is indeed lost, but it probably does not worth it.
+
+
+<<constant Typecore.type_constant>>=
+(* Typing of constants *)
+
+let type_constant = function
+    Const_int _ -> instance Predef.type_int
+  | Const_char _ -> instance Predef.type_char
+  | Const_string _ -> instance Predef.type_string
+  | Const_float _ -> instance Predef.type_float
+@
+
 \section{Resolving names, [[Ident]] and [[Path]]}
 
 % resolving? fully qualifying every idents?
+
+\subsection{[[Ident]]}
 
 <<signature type t>>=
 type t
@@ -931,8 +1013,16 @@ type t
 type t = { stamp: int; name: string; mutable global: bool }
 @
 
+<<signature Ident.create>>=
+val create: string -> t
+@
+
+<<signature Ident.name>>=
+val name: t -> string
+@
 
 
+\subsection{[[Path]]}
 
 <<type Path.t>>=
 (* Access paths *)
@@ -944,6 +1034,9 @@ type t =
 % int?
 
 \section{Types}
+
+%todo? put earlier? in header of the chapter?
+%todo? the code of the dumper helps to understand things?
 
 <<type Types.type_expr>>=
 type type_expr =
@@ -1274,6 +1367,47 @@ let builtin_values =
 
 
 
+\section{Primitives}
+
+<<type Primitive.description>>=
+(* Description of primitive functions *)
+
+type description =
+  { prim_name: string;         (* Name of primitive  or C function *)
+    prim_arity: int;           (* Number of arguments *)
+    prim_alloc: bool;          (* Does it allocates or raise? *)
+    prim_native_name: string;  (* Name of C function for the nat. code gen. *)
+    prim_native_float: bool }  (* Does the above operate on unboxed floats? *)
+@
+
+<<signature Primitive.parse_declaration>>=
+val parse_declaration: int -> string list -> description
+@
+
+<<function Primitive.parse_declaration>>=
+let parse_declaration arity decl =
+  match decl with
+    name :: "noalloc" :: name2 :: "float" :: _ ->
+      {prim_name = name; prim_arity = arity; prim_alloc = false;
+       prim_native_name = name2; prim_native_float = true}
+  | name :: "noalloc" :: name2 :: _ ->
+      {prim_name = name; prim_arity = arity; prim_alloc = false;
+       prim_native_name = name2; prim_native_float = false}
+  | name :: name2 :: "float" :: _ ->
+      {prim_name = name; prim_arity = arity; prim_alloc = true;
+       prim_native_name = name2; prim_native_float = true}
+  | name :: "noalloc" :: _ ->
+      {prim_name = name; prim_arity = arity; prim_alloc = false;
+       prim_native_name = ""; prim_native_float = false}
+  | name :: name2 :: _ ->
+      {prim_name = name; prim_arity = arity; prim_alloc = true;
+       prim_native_name = name2; prim_native_float = false}
+  | name :: _ ->
+      {prim_name = name; prim_arity = arity; prim_alloc = true;
+       prim_native_name = ""; prim_native_float = false}
+  | [] ->
+      fatal_error "Primitive.parse_declaration"
+@
 
 
 \section{The (typed, resolved) symbol table, [[Env.t]]}
@@ -1437,6 +1571,358 @@ val type_exp:
         Env.t -> Parsetree.expression -> Typedtree.expression
 @
 
+
+
+<<function Typecore.type_exp>>=
+let rec type_exp env sexp =
+  match sexp.pexp_desc with
+    Pexp_ident lid ->
+      begin try
+        let (path, desc) = Env.lookup_value lid env in
+        { exp_desc =
+            begin match (desc.val_kind, lid) with
+            | _ ->
+                Texp_ident(path, desc)
+            end;
+          exp_loc = sexp.pexp_loc;
+          exp_type = instance desc.val_type;
+          exp_env = env }
+      with Not_found ->
+        raise(Error(sexp.pexp_loc, Unbound_value lid))
+      end
+  | Pexp_constant cst ->
+      { exp_desc = Texp_constant cst;
+        exp_loc = sexp.pexp_loc;
+        exp_type = type_constant cst;
+        exp_env = env }
+  | Pexp_let(rec_flag, spat_sexp_list, sbody) ->
+      let (pat_exp_list, new_env) = type_let env rec_flag spat_sexp_list in
+      let body = type_exp new_env sbody in
+      { exp_desc = Texp_let(rec_flag, pat_exp_list, body);
+        exp_loc = sexp.pexp_loc;
+        exp_type = body.exp_type;
+        exp_env = env }
+  | Pexp_function caselist ->
+      let ty_arg = newvar() and ty_res = newvar() in
+      let cases = type_cases env ty_arg ty_res caselist in
+      Parmatch.check_unused cases;
+      Parmatch.check_partial sexp.pexp_loc cases;
+      { exp_desc = Texp_function cases;
+        exp_loc = sexp.pexp_loc;
+        exp_type = newty (Tarrow(ty_arg, ty_res));
+        exp_env = env }
+  | Pexp_apply(sfunct, sargs) ->
+      let funct = type_exp env sfunct in
+      let rec type_args ty_fun = function
+        [] ->
+          ([], ty_fun)
+      | sarg1 :: sargl ->
+          let (ty1, ty2) =
+            try
+              filter_arrow env ty_fun
+            with Unify _ ->
+              raise(Error(sfunct.pexp_loc,
+                          Apply_non_function funct.exp_type)) in
+          let arg1 = type_expect env sarg1 ty1 in
+          let (argl, ty_res) = type_args ty2 sargl in
+          (arg1 :: argl, ty_res) in
+      let (args, ty_res) = type_args funct.exp_type sargs in
+      { exp_desc = Texp_apply(funct, args);
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty_res;
+        exp_env = env }
+  | Pexp_match(sarg, caselist) ->
+      let arg = type_exp env sarg in
+      let ty_res = newvar() in
+      let cases = type_cases env arg.exp_type ty_res caselist in
+      Parmatch.check_unused cases;
+      Parmatch.check_partial sexp.pexp_loc cases;
+      { exp_desc = Texp_match(arg, cases);
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty_res;
+        exp_env = env }
+  | Pexp_try(sbody, caselist) ->
+      let body = type_exp env sbody in
+      let cases =
+        type_cases env (instance Predef.type_exn) body.exp_type caselist in
+      Parmatch.check_unused cases;
+      { exp_desc = Texp_try(body, cases);
+        exp_loc = sexp.pexp_loc;
+        exp_type = body.exp_type;
+        exp_env = env }
+  | Pexp_tuple sexpl ->
+      let expl = List.map (type_exp env) sexpl in
+      { exp_desc = Texp_tuple expl;
+        exp_loc = sexp.pexp_loc;
+        exp_type = newty (Ttuple(List.map (fun exp -> exp.exp_type) expl));
+        exp_env = env }
+  | Pexp_construct(lid, sarg, explicit_arity) ->
+      let constr =
+        try
+          Env.lookup_constructor lid env
+        with Not_found ->
+          raise(Error(sexp.pexp_loc, Unbound_constructor lid)) in
+      let sargs =
+        match sarg with
+          None -> []
+        | Some {pexp_desc = Pexp_tuple sel} when explicit_arity -> sel
+        | Some {pexp_desc = Pexp_tuple sel} when constr.cstr_arity > 1 -> sel
+        | Some se -> [se] in
+      if List.length sargs <> constr.cstr_arity then
+        raise(Error(sexp.pexp_loc, Constructor_arity_mismatch(lid,
+                                       constr.cstr_arity, List.length sargs)));
+      let (ty_args, ty_res) = instance_constructor constr in
+      let args = List.map2 (type_expect env) sargs ty_args in
+      { exp_desc = Texp_construct(constr, args);
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty_res;
+        exp_env = env }
+  | Pexp_record lid_sexp_list ->
+      let ty = newvar() in
+      let num_fields = ref 0 in
+      let type_label_exp (lid, sarg) =
+        let label =
+          try
+            Env.lookup_label lid env
+          with Not_found ->
+            raise(Error(sexp.pexp_loc, Unbound_label lid)) in
+        let (ty_arg, ty_res) = instance_label label in
+        begin try
+          unify env ty_res ty
+        with Unify trace ->
+          raise(Error(sexp.pexp_loc, Label_mismatch(lid, trace)))
+        end;
+        let arg = type_expect env sarg ty_arg in
+        num_fields := Array.length label.lbl_all;
+        (label, arg) in
+      let lbl_exp_list = List.map type_label_exp lid_sexp_list in
+      let rec check_duplicates = function
+        [] -> ()
+      | (lid, sarg) :: remainder ->
+          if List.mem_assoc lid remainder
+          then raise(Error(sexp.pexp_loc, Label_multiply_defined lid))
+          else check_duplicates remainder in
+      check_duplicates lid_sexp_list;
+      if List.length lid_sexp_list <> !num_fields then
+        raise(Error(sexp.pexp_loc, Label_missing));
+      { exp_desc = Texp_record lbl_exp_list;
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty;
+        exp_env = env }
+  | Pexp_field(sarg, lid) ->
+      let arg = type_exp env sarg in
+      let label =
+        try
+          Env.lookup_label lid env
+        with Not_found ->
+          raise(Error(sexp.pexp_loc, Unbound_label lid)) in
+      let (ty_arg, ty_res) = instance_label label in
+      unify_exp env arg ty_res;
+      { exp_desc = Texp_field(arg, label);
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty_arg;
+        exp_env = env }
+  | Pexp_setfield(srecord, lid, snewval) ->
+      let record = type_exp env srecord in
+      let label =
+        try
+          Env.lookup_label lid env
+        with Not_found ->
+          raise(Error(sexp.pexp_loc, Unbound_label lid)) in
+      if label.lbl_mut = Immutable then
+        raise(Error(sexp.pexp_loc, Label_not_mutable lid));
+      let (ty_arg, ty_res) = instance_label label in
+      unify_exp env record ty_res;
+      let newval = type_expect env snewval ty_arg in
+      { exp_desc = Texp_setfield(record, label, newval);
+        exp_loc = sexp.pexp_loc;
+        exp_type = instance Predef.type_unit;
+        exp_env = env }
+  | Pexp_array(sargl) ->
+      let ty = newvar() in
+      let argl = List.map (fun sarg -> type_expect env sarg ty) sargl in
+      { exp_desc = Texp_array argl;
+        exp_loc = sexp.pexp_loc;
+        exp_type = instance (Predef.type_array ty);
+        exp_env = env }
+  | Pexp_ifthenelse(scond, sifso, sifnot) ->
+      let cond = type_expect env scond (instance Predef.type_bool) in
+      begin match sifnot with
+        None ->
+          let ifso = type_expect env sifso (instance Predef.type_unit) in
+          { exp_desc = Texp_ifthenelse(cond, ifso, None);
+            exp_loc = sexp.pexp_loc;
+            exp_type = instance Predef.type_unit;
+            exp_env = env }
+      | Some sifnot ->
+          let ifso = type_exp env sifso in
+          let ifnot = type_expect env sifnot ifso.exp_type in
+          { exp_desc = Texp_ifthenelse(cond, ifso, Some ifnot);
+            exp_loc = sexp.pexp_loc;
+            exp_type = ifso.exp_type;
+            exp_env = env }
+      end
+  | Pexp_sequence(sexp1, sexp2) ->
+      let exp1 = type_statement env sexp1 in
+      let exp2 = type_exp env sexp2 in
+      { exp_desc = Texp_sequence(exp1, exp2);
+        exp_loc = sexp.pexp_loc;
+        exp_type = exp2.exp_type;
+        exp_env = env }
+  | Pexp_while(scond, sbody) ->
+      let cond = type_expect env scond (instance Predef.type_bool) in
+      let body = type_statement env sbody in
+      { exp_desc = Texp_while(cond, body);
+        exp_loc = sexp.pexp_loc;
+        exp_type = instance Predef.type_unit;
+        exp_env = env }
+  | Pexp_for(param, slow, shigh, dir, sbody) ->
+      let low = type_expect env slow (instance Predef.type_int) in
+      let high = type_expect env shigh (instance Predef.type_int) in
+      let (id, new_env) =
+        Env.enter_value param {val_type = instance Predef.type_int;
+                                val_kind = Val_reg} env in
+      let body = type_statement new_env sbody in
+      { exp_desc = Texp_for(id, low, high, dir, body);
+        exp_loc = sexp.pexp_loc;
+        exp_type = instance Predef.type_unit;
+        exp_env = env }
+  | Pexp_constraint(sarg, sty, sty') ->
+      let (arg, ty') =
+        match (sty, sty') with
+          (None, None) ->               (* Case actually unused *)
+            let arg = type_exp env sarg in
+            (arg, arg.exp_type)
+        | (Some sty, None) ->
+            let ty = Typetexp.transl_simple_type env false sty in
+            (type_expect env sarg ty, ty)
+        | (None, Some sty') ->
+            let (ty', force) =
+              Typetexp.transl_simple_type_delayed env sty'
+            in
+            let ty = enlarge_type env ty' in
+            force ();
+            let arg = type_exp env sarg in
+            begin try Ctype.unify env arg.exp_type ty with Unify trace ->
+              raise(Error(sarg.pexp_loc,
+                    Coercion_failure(ty', full_expand env ty', trace)))
+            end;
+            (arg, ty')
+        | (Some sty, Some sty') ->
+            let (ty, force) =
+              Typetexp.transl_simple_type_delayed env sty
+            and (ty', force') =
+              Typetexp.transl_simple_type_delayed env sty'
+            in
+            begin try
+              let force'' = subtype env ty ty' in
+              force (); force' (); force'' ()
+            with Subtype (tr1, tr2) ->
+              raise(Error(sexp.pexp_loc, Not_subtype(tr1, tr2)))
+            end;
+            (type_expect env sarg ty, ty')
+      in
+      { exp_desc = arg.exp_desc;
+        exp_loc = arg.exp_loc;
+        exp_type = ty';
+        exp_env = env }
+  | Pexp_when(scond, sbody) ->
+      let cond = type_expect env scond (instance Predef.type_bool) in
+      let body = type_exp env sbody in
+      { exp_desc = Texp_when(cond, body);
+        exp_loc = sexp.pexp_loc;
+        exp_type = body.exp_type;
+        exp_env = env }
+
+(* Typing of an expression with an expected type.
+   Some constructs are treated specially to provide better error messages. *)
+
+and type_expect env sexp ty_expected =
+  match sexp.pexp_desc with
+    Pexp_constant(Const_string s as cst) ->
+      let exp =
+        { exp_desc = Texp_constant cst;
+          exp_loc = sexp.pexp_loc;
+          exp_type =
+            (* Terrible hack for format strings *)
+            begin match (repr ty_expected).desc with
+              Tconstr(path, _, _) when Path.same path Predef.path_format ->
+                type_format sexp.pexp_loc s
+            | _ -> instance Predef.type_string
+            end;
+          exp_env = env } in
+      unify_exp env exp ty_expected;
+      exp
+  | Pexp_let(rec_flag, spat_sexp_list, sbody) ->
+      let (pat_exp_list, new_env) = type_let env rec_flag spat_sexp_list in
+      let body = type_expect new_env sbody ty_expected in
+      { exp_desc = Texp_let(rec_flag, pat_exp_list, body);
+        exp_loc = sexp.pexp_loc;
+        exp_type = body.exp_type;
+        exp_env = env }
+  | Pexp_sequence(sexp1, sexp2) ->
+      let exp1 = type_statement env sexp1 in
+      let exp2 = type_expect env sexp2 ty_expected in
+      { exp_desc = Texp_sequence(exp1, exp2);
+        exp_loc = sexp.pexp_loc;
+        exp_type = exp2.exp_type;
+        exp_env = env }
+  | _ ->
+      let exp = type_exp env sexp in
+      unify_exp env exp ty_expected;
+      exp
+
+(* Typing of statements (expressions whose values are discarded) *)
+
+and type_statement env sexp =
+    let exp = type_exp env sexp in
+    match (repr exp.exp_type).desc with
+      Tarrow(_, _) ->
+        Location.print_warning sexp.pexp_loc
+          "this function application is partial,\n\
+           maybe some arguments are missing.";
+        exp
+    | _ -> exp
+
+(* Typing of match cases *)
+
+and type_cases env ty_arg ty_res caselist =
+  List.map
+    (fun (spat, sexp) ->
+      let (pat, ext_env) = type_pattern env spat in
+      unify_pat env pat ty_arg;
+      let exp = type_expect ext_env sexp ty_res in
+      (pat, exp))
+    caselist
+
+(* Typing of let bindings *)
+
+and type_let env rec_flag spat_sexp_list =
+  begin_def();
+  let (pat_list, new_env) =
+    type_pattern_list env (List.map (fun (spat, sexp) -> spat) spat_sexp_list)
+  in
+  let exp_env =
+    match rec_flag with Nonrecursive -> env | Recursive -> new_env in
+  let exp_list =
+    List.map2
+      (fun (spat, sexp) pat -> type_expect exp_env sexp pat.pat_type)
+      spat_sexp_list pat_list in
+  List.iter2
+    (fun pat exp -> Parmatch.check_partial pat.pat_loc [pat, exp])
+    pat_list exp_list;
+  end_def();
+  List.iter2
+    (fun pat exp ->
+       if not (is_nonexpansive exp) then
+         iter_pattern (fun pat ->make_nongen pat.pat_type) pat)
+    pat_list exp_list;
+  List.iter
+    (fun pat -> iter_pattern (fun pat -> generalize pat.pat_type) pat)
+    pat_list;
+  (List.combine pat_list exp_list, new_env)
+@
+
 \subsection{Modules}
 
 <<signature Typemod.transl_signature>>=
@@ -1453,20 +1939,25 @@ val type_structure:
 
 \section{Advanced typing Issues}
 
-% type aliases
+% type aliases? abstract types?
+% those are the reasons the typechecker got so complicated?
 
 % _a
 
 \chapter{Checking}
 
-\section{Partial matches}
+\section{Interface/Implementation consistency}
+%includemod.ml
+
+\section{Partial pattern matches}
+% parmatch.ml
 
 <<signature Parmatch.check_partial>>=
 val check_partial: 
       Location.t -> (Typedtree.pattern * Typedtree.expression) list -> unit
 @
 
-\section{Unused matches}
+\section{Unused pattern matches}
 
 <<signature Parmatch.check_unused>>=
 val check_unused: (Typedtree.pattern * Typedtree.expression) list -> unit
@@ -2003,6 +2494,16 @@ let link_everything = ref false         (* -linkall *)
 let custom_runtime = ref false          (* -custom *)
 @
 
+
+
+<<type Bytelink.link_action>>=
+type link_action =
+    Link_object of string * compilation_unit
+      (* Name of .cmo file and descriptor of the unit *)
+  | Link_archive of string * compilation_unit list
+      (* Name of .cma file and descriptors of the units to be linked. *)
+@
+
 \section{Basic linking}
 
 <<signature Bytelink.link>>=
@@ -2018,6 +2519,32 @@ val link: string list -> unit
 
 <<signature Bytelink.check_consistency>>=
 val check_consistency: string -> Emitcode.compilation_unit -> unit
+@
+
+<<constant Bytelink.crc_interfaces>>=
+(* Consistency check between interfaces *)
+
+let crc_interfaces =
+  (Hashtbl.create 17 : (string, string * Digest.t) Hashtbl.t)
+@
+
+<<function Bytelink.check_consistency>>=
+let check_consistency file_name cu =
+  List.iter
+    (fun (name, crc) ->
+      if name = cu.cu_name then begin
+        Hashtbl.add crc_interfaces name (file_name, crc)
+      end else begin
+        try
+          let (auth_name, auth_crc) = Hashtbl.find crc_interfaces name in
+          if crc <> auth_crc then
+            raise(Error(Inconsistent_import(name, file_name, auth_name)))
+        with Not_found ->
+          (* Can only happen for unit for which only a .cmi file was used,
+             but no .cmo is provided *)
+          Hashtbl.add crc_interfaces name (file_name, crc)
+      end)
+    cu.cu_imports
 @
 
 \section{Archives}
@@ -2053,6 +2580,11 @@ val create_archive: string list -> string -> unit
 
 <<signature Compile.c_file>>=
 val c_file: string -> unit
+@
+
+<<function Compile.c_file>>=
+let c_file name =
+  if Ccomp.compile_file_bytecode name <> 0 then exit 2
 @
 
 \subsection{Foreign function interface}
@@ -2178,6 +2710,35 @@ let debug = ref false                   (* -g *)
 
 \section{Events}
 
+<<constant Bytelink.debug_info>>=
+(* Second pass: link in the required units *)
+
+let debug_info = ref ([] : debug_event list list)
+@
+
+
+
+<<constant Bytelink.debug_info (./bytecomp/bytelink.ml)>>=
+(* Relocate and record compilation events *)
+
+let debug_info = ref ([] : debug_event list list)
+@
+
+<<function Bytelink.record_events>>=
+let record_events orig evl =
+  if evl <> [] then begin
+    List.iter
+      (fun ev ->
+         ev.ev_pos <- orig + ev.ev_pos;
+         begin match ev.ev_repr with
+           Event_parent repr -> repr := ev.ev_pos
+         | _                 -> ()
+         end)
+      evl;
+    debug_info := evl :: !debug_info
+  end
+@
+
 \subsection{Lambda events}
 
 <<type Lambda.lambda_event>>=
@@ -2196,6 +2757,12 @@ and lambda_event_kind =
 @
 
 \subsection{Instruction events}
+
+%(* The ce_stack component gives locations of variables residing 
+%   in the stack. The locations are offsets w.r.t. the origin of the
+%   stack frame.
+%   The ce_heap component gives the positions of variables residing in the
+%   heap-allocated environment. *)
 
 <<type Instruct.compilation_env>>=
 (* Structure of compilation environments *)
@@ -2239,6 +2806,20 @@ and debug_event_repr =
   | Event_child of int ref
 @
 
+\subsection{Bytecode events}
+
+<<constant Emitcode.events>>=
+(* Debugging events *)
+
+let events = ref ([] : debug_event list)
+@
+
+<<function Emitcode.record_event>>=
+let record_event ev =
+  ev.ev_pos <- !out_position;
+  events := ev :: !events
+@
+
 
 \chapter{Profiling Support}
 
@@ -2256,9 +2837,57 @@ and array_kind =
     Pgenarray | Paddrarray | Pintarray | Pfloatarray
 @
 
-\section{Printf}
+\section{Printf typechecking}
 
 % special format typechecking
+
+<<function Typecore.type_format>>=
+(* Typing of printf formats *)
+
+let type_format loc fmt =
+  let len = String.length fmt in
+  let ty_input = newvar()
+  and ty_result = newvar() in
+  let rec skip_args j =
+    if j >= len then j else
+      match fmt.[j] with
+        '0' .. '9' | ' ' | '.' | '-' -> skip_args (j+1)
+      | _ -> j in
+  let rec scan_format i =
+    if i >= len then ty_result else
+    match fmt.[i] with
+      '%' ->
+        let j = skip_args(i+1) in
+        begin match String.unsafe_get fmt j with
+        (* We're using unsafe_get here so that if j = String.length fmt,
+           we'll fall in the catch-all case of the match *)
+          '%' ->
+            scan_format (j+1)
+        | 's' ->
+            newty (Tarrow(instance Predef.type_string, scan_format (j+1)))
+        | 'c' ->
+            newty (Tarrow(instance Predef.type_char, scan_format (j+1)))
+        | 'd' | 'o' | 'x' | 'X' | 'u' ->
+            newty (Tarrow(instance Predef.type_int, scan_format (j+1)))
+        | 'f' | 'e' | 'E' | 'g' | 'G' ->
+            newty (Tarrow(instance Predef.type_float, scan_format (j+1)))
+        | 'b' ->
+            newty (Tarrow(instance Predef.type_bool, scan_format (j+1)))
+        | 'a' ->
+            let ty_arg = newvar() in
+            newty (Tarrow (newty (Tarrow(ty_input,
+                                         newty (Tarrow (ty_arg, ty_result)))),
+                           newty (Tarrow (ty_arg, scan_format (j+1)))))
+        | 't' ->
+            newty (Tarrow(newty (Tarrow(ty_input, ty_result)),
+                          scan_format (j+1)))
+        | c ->
+            raise(Error(loc, Bad_format(String.sub fmt i (j-i+1))))
+        end
+    | _ -> scan_format (i+1) in
+  newty
+    (Tconstr(Predef.path_format, [scan_format 0; ty_input; ty_result], ref Mnil))
+@
 
 
 \chapter{Advanced Topics}
@@ -2296,6 +2925,30 @@ let thread_safe = ref false             (* -thread *)
 <<constant Clflags.preprocessor>>=
 let preprocessor = ref(None : string option) (* -pp *)
 @
+
+<<function Compile.preprocess>>=
+(* Optionally preprocess a source file *)
+
+let preprocess sourcefile tmpfile =
+  match !Clflags.preprocessor with
+    None -> sourcefile
+  | Some pp ->
+      let comm = pp ^ " " ^ sourcefile ^ " > " ^ tmpfile in
+      if Ccomp.command comm <> 0 then begin
+        Printf.eprintf "Preprocessing error\n";
+        flush stderr;
+        exit 2
+      end;
+      tmpfile
+@
+
+<<function Compile.remove_preprocessed>>=
+let remove_preprocessed inputfile =
+  match !Clflags.preprocessor with
+    None -> ()
+  | Some _ -> remove_file inputfile
+@
+
 
 \subsection{[[#line]]}
 
@@ -2384,7 +3037,559 @@ let command cmdline =
 
 \section{Dumpers, [[-dxxx]]}
 
-%laater: could be autogenerated! and save lots of boilerplate code!
+%later: could be autogenerated! and save lots of boilerplate code?
+
+\subsection{Typed structures}
+
+\subsubsection{Primitives}
+
+% primitives
+<<signature Primitive.print_description>>=
+val print_description: description -> unit
+@
+
+<<function Primitive.print_quoted>>=
+let print_quoted s = print_char '"'; print_string s; print_char '"'
+@
+
+<<function Primitive.print_description>>=
+let print_description p =
+  print_quoted p.prim_name;
+  if not p.prim_alloc then
+    (print_space(); print_quoted "noalloc");
+  if p.prim_native_name <> "" then
+    (print_space(); print_quoted p.prim_native_name);
+  if p.prim_native_float then
+    (print_space(); print_quoted "float")
+@
+
+\subsubsection{Names}
+
+<<signature Printtyp.longident>>=
+val longident: Longident.t -> unit
+@
+
+<<signature Printtyp.ident>>=
+val ident: Ident.t -> unit
+@
+
+<<signature Printtyp.path>>=
+val path: Path.t -> unit
+@
+
+
+
+
+
+
+<<constant Printtyp.longident>>=
+(* Print a long identifier *)
+
+let rec longident = function
+    Lident s -> print_string s
+  | Ldot(p, s) -> longident p; print_string "."; print_string s
+@
+
+<<function Printtyp.ident>>=
+(* Print an identifier *)
+
+let ident id =
+  print_string(Ident.name id)
+@
+
+<<constant Printtyp.ident_pervasive>>=
+(* Print a path *)
+
+let ident_pervasive = Ident.create_persistent "Pervasives"
+@
+
+<<constant Printtyp.path>>=
+let rec path = function
+    Pident id ->
+      ident id
+  | Pdot(Pident id, s, pos) when Ident.same id ident_pervasive ->
+      print_string s
+  | Pdot(p, s, pos) ->
+      path p; print_string "."; print_string s
+@
+
+
+\subsubsection{Types}
+
+<<signature Printtyp.type_expr>>=
+val type_expr: type_expr -> unit
+@
+
+<<function Printtyp.type_expr>>=
+let type_expr ty =
+  typexp false 0 ty
+@
+
+
+<<function Printtyp.typeexp>>=
+let rec typexp sch prio0 ty =
+  let ty = repr ty in
+  try
+    List.assq ty !names;
+    if (ty.desc = Tvar) && sch && (ty.level <> generic_level)
+    then print_string "'_"
+    else print_string "'";
+    print_string (name_of_type ty)
+  with Not_found ->
+    let alias = List.memq ty !aliased in
+    if alias then begin
+      name_of_type ty;
+      if prio0 >= 1 then begin open_box 1; print_string "(" end
+      else open_box 0
+    end;
+    let prio = if alias then 0 else prio0 in
+    begin match ty.desc with
+      Tvar ->
+        if (not sch) or ty.level = generic_level
+        then print_string "'"
+        else print_string "'_";
+        print_string(name_of_type ty)
+    | Tarrow(ty1, ty2) ->
+        if prio >= 2 then begin open_box 1; print_string "(" end
+                     else open_box 0;
+        typexp sch 2 ty1;
+        print_string " ->"; print_space();
+        typexp sch 1 ty2;
+        if prio >= 2 then print_string ")";
+        close_box()
+    | Ttuple tyl ->
+        if prio >= 3 then begin open_box 1; print_string "(" end
+                     else open_box 0;
+        typlist sch 3 " *" tyl;
+        if prio >= 3 then print_string ")";
+        close_box()
+    | Tconstr(p, tyl, abbrev) ->
+        open_box 0;
+        begin match tyl with
+          [] -> ()
+        | [ty1] ->
+            typexp sch 3 ty1; print_space()
+        | tyl ->
+            open_box 1; print_string "("; typlist sch 0 "," tyl;
+            print_string ")"; close_box(); print_space()
+        end;
+        path p;
+        close_box()
+(*
+| Tfield _ -> typobject sch ty ty (ref None)
+| Tnil -> typobject sch ty ty (ref None)
+*)
+    | _ ->
+        fatal_error "Printtyp.typexp"
+    end;
+    if alias then begin
+      print_string " as ";
+      print_string "'";
+      print_string (name_of_type ty);
+      (* if not (opened_object ty) then *)
+      remove_name_of_type ty;
+      if prio0 >= 1 then print_string ")";
+      close_box()
+    end
+(* ; print_string "["; print_int ty.level; print_string "]" *)
+
+and typlist sch prio sep = function
+    [] -> ()
+  | [ty] -> typexp sch prio ty
+  | ty::tyl ->
+      typexp sch prio ty; print_string sep; print_space();
+      typlist sch prio sep tyl
+
+and typfields sch rest =
+  function
+    [] ->
+      begin match rest.desc with
+        Tvar -> if sch & rest.level <> generic_level then
+                  print_string "_";
+                print_string ".."
+      | Tnil -> ()
+      | _    -> fatal_error "typfields (1)"
+      end
+  | [(s, t)] ->
+      print_string s;
+      print_string " : ";
+      typexp sch 0 t;
+      begin match rest.desc with
+        Tvar -> print_string ";"; print_space ()
+      | Tnil -> ()
+      | _    -> fatal_error "typfields (2)"
+      end;
+      typfields sch rest []
+  | (s, t)::l ->
+      print_string s;
+      print_string " : ";
+      typexp sch 0 t;
+      print_string ";"; print_space ();
+      typfields sch rest l
+@
+
+
+%\subsubsection{Helpers}
+
+<<signature Printtyp.reset>>=
+val reset: unit -> unit
+@
+
+
+<<signature Printtyp.mark_loops>>=
+val mark_loops: type_expr -> unit
+@
+
+<<signature Printtyp.type_scheme>>=
+val type_scheme: type_expr -> unit
+@
+
+
+<<signature Printtyp.type_expansion>>=
+val type_expansion: type_expr -> type_expr -> unit
+@
+
+
+<<signature Printtyp.trace>>=
+val trace: bool -> (unit -> unit) -> (type_expr * type_expr) list -> unit
+@
+
+<<signature Printtyp.unification_error>>=
+val unification_error:
+        (type_expr * type_expr) list -> (unit -> unit) -> (unit -> unit) ->
+        unit
+@
+
+
+
+
+
+
+
+
+<<constant Printtyp.names>>=
+(* Print a type expression *)
+
+let names = ref ([] : (type_expr * string) list)
+@
+
+<<constant Printtyp.name_counter>>=
+let name_counter = ref 0
+@
+
+<<function Printtyp.reset_names>>=
+let reset_names () = names := []; name_counter := 0
+@
+
+<<function Printtyp.new_name>>=
+let new_name () =
+  let name =
+    if !name_counter < 26
+    then String.make 1 (Char.chr(97 + !name_counter)) 
+    else String.make 1 (Char.chr(97 + !name_counter mod 26)) ^
+           string_of_int(!name_counter / 26)
+  in
+    incr name_counter;
+    name
+@
+
+<<function Printtyp.name_of_type>>=
+let name_of_type t =
+  try List.assq t !names with Not_found ->
+    let name = new_name () in
+    names := (t, name) :: !names;
+    name
+@
+
+<<function Printtyp.list_removeq>>=
+let rec list_removeq a =
+  function
+    [] ->
+      []
+  | (b, _) as e::l ->
+      if a == b then l else e::list_removeq a l
+@
+
+<<function Printtyp.remove_name_of_type>>=
+let remove_name_of_type t =
+  names := list_removeq t !names
+@
+
+<<constant Printtyp.visited_objects>>=
+let visited_objects = ref ([] : type_expr list)
+@
+
+<<constant Printtyp.aliased>>=
+let aliased = ref ([] : type_expr list)
+@
+
+<<function Printtyp.mark_loops_rec>>=
+let rec mark_loops_rec visited ty =
+  let ty = repr ty in
+  if List.memq ty visited then begin
+    if not (List.memq ty !aliased) then
+      aliased := ty :: !aliased
+  end else
+    let visited = ty :: visited in
+    match ty.desc with
+      Tvar                -> ()
+    | Tarrow(ty1, ty2)    ->
+        mark_loops_rec visited ty1; mark_loops_rec visited ty2
+    | Ttuple tyl          -> List.iter (mark_loops_rec visited) tyl
+    | Tconstr(_, tyl, _)  ->
+        List.iter (mark_loops_rec visited) tyl
+    | Tnil                -> ()
+    | Tlink _             -> fatal_error "Printtyp.mark_loops_rec (2)"
+@
+
+<<function Printtyp.mark_loops>>=
+let mark_loops ty = mark_loops_rec [] ty
+@
+
+<<function Printtyp.reset_loop_marks>>=
+let reset_loop_marks () =
+  visited_objects := []; aliased := []
+@
+
+<<function Printtyp.reset>>=
+let reset () =
+  reset_names (); reset_loop_marks ()
+@
+
+<<function Printtyp.constrain>>=
+(* Print one type declaration *)
+
+let constrain ty =
+  let ty' = unalias ty in
+  if ty != ty' then begin
+    print_space ();
+    open_box 2;
+    print_string "constraint ";
+    type_sch ty;
+    print_string " =";
+    print_space();
+    type_sch ty';
+    close_box()
+  end
+@
+
+
+<<function Printtyp.type_expansion>>=
+(* Print an unification error *)
+
+let type_expansion t t' =
+  if t == t' then
+    type_expr t
+  else begin
+    open_box 2;
+    type_expr t;
+    print_space (); print_string "="; print_space ();
+    type_expr t';
+    close_box ()
+  end
+@
+
+<<function Printtyp.trace>>=
+let rec trace fst txt =
+  function
+    (t1, t1')::(t2, t2')::rem ->
+      if not fst then
+        print_cut ();
+      open_box 0;
+      print_string "Type"; print_break 1 2;
+      type_expansion t1 t1'; print_space ();
+      txt (); print_break 1 2;
+      type_expansion t2 t2';
+      close_box ();
+      trace false txt rem
+  | _ ->
+      ()
+@
+
+<<function Printtyp.unification_error>>=
+let unification_error tr txt1 txt2 =
+  reset ();
+  List.iter
+    (function (t, t') -> mark_loops t; if t != t' then mark_loops t')
+    tr;
+  open_box 0;
+  let (t1, t1') = List.hd tr in
+  let (t2, t2') = List.hd (List.tl tr) in
+  txt1 (); print_break 1 2;
+  type_expansion t1 t1'; print_space();
+  txt2 (); print_break 1 2;
+  type_expansion t2 t2';
+  close_box();
+  trace false (fun _ -> print_string "is not compatible with type")
+        (List.tl (List.tl tr))
+@
+
+
+\subsubsection{Expressions}
+
+<<signature Printtyp.value_description>>=
+val value_description: Ident.t -> value_description -> unit
+@
+
+<<function Printtyp.value_description>>=
+(* Print a value declaration *)
+
+let value_description id decl =
+  open_box 2;
+  print_string (if decl.val_kind = Val_reg then "val " else "external ");
+  ident id; print_string " :"; print_space();
+  type_scheme decl.val_type;
+  begin match decl.val_kind with
+    Val_prim p ->
+      print_space(); print_string "= "; Primitive.print_description p
+  | _ -> ()
+  end;
+  close_box()
+@
+
+\subsubsection{Type declarations}
+
+<<signature Printtyp.type_declaration>>=
+val type_declaration: Ident.t -> type_declaration -> unit
+@
+
+<<signature Printtyp.exception_declaration>>=
+val exception_declaration: Ident.t -> exception_declaration -> unit
+@
+
+
+<<function Printtyp.type_declaration>>=
+let rec type_declaration id decl =
+  reset();
+
+  let params = List.map repr decl.type_params in
+
+  aliased := params @ !aliased;
+  List.iter mark_loops params;
+  List.iter (fun x -> name_of_type x; ()) params;
+  begin match decl.type_manifest with
+    None    -> ()
+  | Some ty -> mark_loops ty
+  end;
+  begin match decl.type_kind with
+    Type_abstract -> ()
+  | Type_variant [] -> ()
+  | Type_variant cstrs ->
+      List.iter (fun (_, args) -> List.iter mark_loops args) cstrs
+  | Type_record (lbl1 :: lbls as l) ->
+      List.iter (fun (_, _, ty) -> mark_loops ty) l
+  | _ -> assert false
+  end;
+
+  open_hvbox 2;
+  print_string "type ";
+  type_expr {desc = Tconstr(Pident id, params, ref Mnil);
+             level = generic_level};
+  begin match decl.type_manifest with
+    None -> ()
+  | Some ty ->
+      print_string " ="; print_space(); type_expr ty
+  end;
+  begin match decl.type_kind with
+    Type_abstract -> ()
+  | Type_variant [] -> ()
+      (* A fatal error actually, except when printing type exn... *)
+  | Type_variant cstrs ->
+      print_string " =";
+      List.iter
+        (fun cstr -> print_space(); print_string "| "; constructor cstr)
+        cstrs
+  | Type_record (lbl1 :: lbls as l) ->
+      print_string " ="; print_space();
+      print_string "{ "; label lbl1;
+      List.iter
+        (fun lbl -> print_string ";"; print_break 1 2; label lbl)
+        lbls;
+      print_string " }"
+  | _ -> assert false
+  end;
+  List.iter constrain params;
+  close_box()
+
+and constructor (name, args) =
+  print_string name;
+  match args with
+    [] -> ()
+  | _  -> print_string " of ";
+          open_box 2; typlist false 3 " *" args; close_box()
+
+and label (name, mut, arg) =
+  begin match mut with
+      Immutable -> ()
+    | Mutable -> print_string "mutable "
+  end;
+  print_string name;
+  print_string ": ";
+  type_expr arg
+
+@
+
+
+<<function Printtyp.exception_declaration>>=
+(* Print an exception declaration *)
+
+let exception_declaration id decl =
+  print_string "exception "; constructor (Ident.name id, decl)
+@
+
+\subsubsection{Modules}
+
+<<signature Printtyp.modtype>>=
+val modtype: module_type -> unit
+@
+
+<<signature Printtyp.signature>>=
+val signature: signature -> unit
+@
+
+<<signature Printtyp.signature_body>>=
+val signature_body: bool -> signature -> unit
+@
+
+
+<<function Printtyp.modtype>>=
+let rec modtype = function
+    Tmty_ident p ->
+      path p
+  | Tmty_signature sg ->
+      open_hvbox 2;
+      print_string "sig"; signature_body true sg; 
+      print_break 1 (-2); print_string "end";
+      close_box()
+
+and signature_body spc = function
+    [] -> ()
+  | item :: rem ->
+      if spc then print_space();
+      let cont =
+        match item with
+          Tsig_value(id, decl) ->
+            value_description id decl; rem
+        | Tsig_type(id, decl)  ->
+            type_declaration id decl; rem
+        | Tsig_exception(id, decl)  ->
+            exception_declaration id decl; rem
+        | Tsig_module(id, mty)  ->
+            open_box 2; print_string "module "; ident id; print_string " :";
+            print_space(); modtype mty; close_box(); rem
+      in signature_body true cont
+@
+
+
+<<function Printtyp.signature>>=
+(* Print a signature body (used when compiling a .mli and printing results
+   in interactive use). *)
+
+let signature sg =
+  open_vbox 0;
+  signature_body false sg;
+  close_box()
+@
 
 \subsection{Bytecode data structures}
 

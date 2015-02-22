@@ -1,4 +1,5 @@
 (*s: asmcomp/selection.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: selection.mli,v 1.5 1996/04/30 14:43:01 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Selection.fundecl *)
 (* Selection of pseudo-instructions, assignment of pseudo-registers,

@@ -1,4 +1,5 @@
 (*s: asmcomp/printlinear.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: printlinear.ml,v 1.8 1997/02/04 08:01:12 weis Exp $ *)
+(*e: copyright header *)
 
 (* Pretty-printing of linearized machine code *)
 

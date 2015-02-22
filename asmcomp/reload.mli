@@ -1,4 +1,5 @@
 (*s: asmcomp/reload.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: reload.mli,v 1.5 1997/07/24 11:48:54 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Reload.fundecl *)
 (* Insert load/stores for pseudoregs that got assigned to stack locations. *)

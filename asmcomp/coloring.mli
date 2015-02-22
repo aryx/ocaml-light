@@ -1,4 +1,5 @@
 (*s: asmcomp/coloring.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: coloring.mli,v 1.3 1996/04/30 14:42:22 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Coloring.allocate_registers *)
 (* Register allocation by coloring of the interference graph *)

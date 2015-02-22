@@ -1,4 +1,5 @@
 (*s: asmcomp/schedgen.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: schedgen.ml,v 1.4 1997/11/13 10:57:09 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Instruction scheduling *)
 

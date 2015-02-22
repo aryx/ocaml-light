@@ -1,4 +1,5 @@
 (*s: asmcomp/spill.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: spill.mli,v 1.3 1996/04/30 14:43:03 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Spill.fundecl *)
 (* Insertion of moves to suggest possible spilling / reloading points 
