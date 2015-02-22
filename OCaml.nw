@@ -214,7 +214,7 @@ those parts are copyright by INRIA.
 The prose is mine and is licensed under the GNU Free Documentation
 License.
 
-
+\ifallcode
 <<copyright header2>>=
 (***********************************************************************)
 (*                                                                     *)
@@ -227,6 +227,7 @@ License.
 (*                                                                     *)
 (***********************************************************************)
 @
+\fi
 
 \section{Acknowledgments}
 
@@ -1395,8 +1396,10 @@ val empty: t
 
 <<constant Env.empty>>=
 let empty = {
-  values = Ident.empty; constrs = Ident.empty;
-  labels = Ident.empty; types = Ident.empty;
+  values = Ident.empty; 
+  constrs = Ident.empty;
+  labels = Ident.empty; 
+  types = Ident.empty;
   modules = Ident.empty;
   components = Ident.empty; 
   summary = Env_empty }

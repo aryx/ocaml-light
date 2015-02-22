@@ -82,8 +82,10 @@ and structure_components = {
 
 (*s: constant Env.empty *)
 let empty = {
-  values = Ident.empty; constrs = Ident.empty;
-  labels = Ident.empty; types = Ident.empty;
+  values = Ident.empty; 
+  constrs = Ident.empty;
+  labels = Ident.empty; 
+  types = Ident.empty;
   modules = Ident.empty;
   components = Ident.empty; 
   summary = Env_empty }
