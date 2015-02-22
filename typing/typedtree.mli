@@ -113,6 +113,7 @@ and module_coercion =
 
 val let_bound_idents: (pattern * expression) list -> Ident.t list
 (*e: signature Typedtree.let_bound_idents *)
+
 (*s: signature Typedtree.rev_let_bound_idents *)
 val rev_let_bound_idents: (pattern * expression) list -> Ident.t list
 (*e: signature Typedtree.rev_let_bound_idents *)

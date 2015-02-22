@@ -1,4 +1,5 @@
 (*s: ./driver/optcompile.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: optcompile.mli,v 1.5 1996/04/30 14:45:57 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Optcompile.interface *)
 (* Compile a .ml or .mli file *)

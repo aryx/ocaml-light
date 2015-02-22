@@ -1,4 +1,5 @@
 (*s: ./typing/ctype.ml *)
+(*s: copyright header2 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,7 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright header2 *)
 
 (* Operations on core types *)
 
@@ -133,9 +134,6 @@ let reset_global_level () =
 
 let newty desc         = { desc = desc; level = !current_level }
 (*e: function Ctype.newty *)
-(*s: constant Ctype.newgenty *)
-let newgenty           = newgenty
-(*e: constant Ctype.newgenty *)
 (*s: function Ctype.new_global_ty *)
 let new_global_ty desc = { desc = desc; level = !global_level }
 (*e: function Ctype.new_global_ty *)

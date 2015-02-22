@@ -297,6 +297,7 @@ let unify_exp env exp expected_ty =
     raise(Error(exp.exp_loc, Expr_type_clash(trace)))
 (*e: function Typecore.unify_exp *)
 
+(*s: function Typecore.type_exp *)
 let rec type_exp env sexp =
   match sexp.pexp_desc with
     Pexp_ident lid ->
@@ -644,6 +645,7 @@ and type_let env rec_flag spat_sexp_list =
     (fun pat -> iter_pattern (fun pat -> generalize pat.pat_type) pat)
     pat_list;
   (List.combine pat_list exp_list, new_env)
+(*e: function Typecore.type_exp *)
 
 (*s: function Typecore.type_binding *)
 (* Typing of toplevel bindings *)

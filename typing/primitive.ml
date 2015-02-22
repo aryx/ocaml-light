@@ -17,14 +17,16 @@
 open Misc
 open Format
 
-(*s: type Primitive.description (./typing/primitive.ml) *)
+(*s: type Primitive.description *)
+(* Description of primitive functions *)
+
 type description =
   { prim_name: string;         (* Name of primitive  or C function *)
     prim_arity: int;           (* Number of arguments *)
     prim_alloc: bool;          (* Does it allocates or raise? *)
     prim_native_name: string;  (* Name of C function for the nat. code gen. *)
     prim_native_float: bool }  (* Does the above operate on unboxed floats? *)
-(*e: type Primitive.description (./typing/primitive.ml) *)
+(*e: type Primitive.description *)
 
 (*s: function Primitive.parse_declaration *)
 let parse_declaration arity decl =

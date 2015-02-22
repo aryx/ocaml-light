@@ -24,28 +24,11 @@ open Translcore
 
 (*s: function Translmod.reset_labels *)
 let reset_labels () =
- (*  used_methods := [] *)
   ()
 (*e: function Translmod.reset_labels *)
 
 (*s: function Translmod.transl_label_init *)
 let transl_label_init expr =
-(*
-  if !used_methods = [] then
-    expr
-  else
-    let init = Ident.create "new_method" in
-    let expr' =
-      Llet(StrictOpt, init, oo_prim "new_method",
-      List.fold_right
-        (fun (lab, id) expr ->
-           Llet(StrictOpt, id, Lapply(Lvar init, [string lab]), expr))
-        !used_methods
-        expr)
-    in
-    reset_labels ();
-    expr'
-*)
   expr
 (*e: function Translmod.transl_label_init *)
 

@@ -1,4 +1,5 @@
 (*s: ./driver/opterrors.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: opterrors.mli,v 1.3 1996/04/30 14:45:59 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Opterrors.report_error *)
 (* Error report *)

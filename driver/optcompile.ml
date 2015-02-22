@@ -1,4 +1,5 @@
 (*s: ./driver/optcompile.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: optcompile.ml,v 1.23 1997/11/18 17:14:53 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* The batch compiler *)
 

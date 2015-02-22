@@ -1,4 +1,5 @@
 (*s: ./driver/optmain.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: optmain.ml,v 1.30 1997/11/18 17:14:54 xleroy Exp $ *)
+(*e: copyright header *)
 
 open Config
 open Clflags

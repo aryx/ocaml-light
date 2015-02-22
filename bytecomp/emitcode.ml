@@ -111,8 +111,8 @@ let backpatch (pos, orig) =
   !out_buffer.[pos] <- Char.unsafe_chr displ;
   !out_buffer.[pos+1] <- Char.unsafe_chr (displ asr 8);
   !out_buffer.[pos+2] <- Char.unsafe_chr (displ asr 16);
-(*e: function Emitcode.backpatch *)
   !out_buffer.[pos+3] <- Char.unsafe_chr (displ asr 24)
+(*e: function Emitcode.backpatch *)
 
 (*s: function Emitcode.define_label *)
 let define_label lbl =
@@ -122,8 +122,8 @@ let define_label lbl =
       fatal_error "Emitcode.define_label"
   | Label_undefined patchlist ->
       List.iter backpatch patchlist;
-(*e: function Emitcode.define_label *)
       (!label_table).(lbl) <- Label_defined !out_position
+(*e: function Emitcode.define_label *)
 
 (*s: function Emitcode.out_label_with_orig *)
 let out_label_with_orig orig lbl =
