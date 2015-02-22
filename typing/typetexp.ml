@@ -1,19 +1,20 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                           Objective Caml                            *)
+(*                         Caml Special Light                          *)
 (*                                                                     *)
 (*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
 (*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
 
+(* $Id$ *)
+
 (* Typechecking of type expressions for the core language *)
 
-open Misc
 open Parsetree
-open Types
+open Typedtree
 open Ctype
 
 exception Already_bound
@@ -22,85 +23,43 @@ type error =
     Unbound_type_variable of string
   | Unbound_type_constructor of Longident.t
   | Type_arity_mismatch of Longident.t * int * int
-  | Bound_type_variable of string
-  | Type_mismatch of (Types.type_expr * Types.type_expr) list
-  | Alias_type_mismatch of (Types.type_expr * Types.type_expr) list
 
 exception Error of Location.t * error
 
 (* Translation of type expressions *)
 
 let type_variables = ref (Tbl.empty : (string, type_expr) Tbl.t)
-let aliases        = ref (Tbl.empty : (string, type_expr) Tbl.t)
-
-let used_variables = ref (Tbl.empty : (string, type_expr) Tbl.t)
-let bindings       = ref ([] : (type_expr * type_expr) list)
-        (* These two variables are used for the "delayed" policy. *)
 
 let reset_type_variables () =
-  reset_global_level ();
   type_variables := Tbl.empty
 
-let enter_type_variable strict name =
+let enter_type_variable name =
   try
-    let v = Tbl.find name !type_variables in
-    if strict then raise Already_bound;
-    v
+    Tbl.find name !type_variables; raise Already_bound
   with Not_found ->
     let v = new_global_var() in
     type_variables := Tbl.add name v !type_variables;
     v
 
-let type_variable loc name =
-  try
-    Tbl.find name !type_variables
-  with Not_found ->
-    raise(Error(loc, Unbound_type_variable name))
-
-type policy = Fixed | Extensible | Delayed
-
-let rec transl_type env policy styp =
+let rec transl_simple_type env fixed styp =
   match styp.ptyp_desc with
-    Ptyp_any -> new_global_var()
-  | Ptyp_var name ->
-      begin try Tbl.find name !aliases with Not_found ->
-        match policy with
-          Fixed ->
-            begin try
-              Tbl.find name !type_variables
-            with Not_found ->
-              raise(Error(styp.ptyp_loc, Unbound_type_variable name))
-            end
-        | Extensible ->
-            begin try
-              Tbl.find name !type_variables
-            with Not_found ->
-              let v = new_global_var () in
-              type_variables := Tbl.add name v !type_variables;
-              v
-            end
-        | Delayed ->
-            begin try
-              Tbl.find name !used_variables
-            with Not_found -> try
-              let v1 = Tbl.find name !type_variables in
-              let v2 = new_global_var () in
-              used_variables := Tbl.add name v2 !used_variables;
-              bindings := (v1, v2)::!bindings;
-              v2
-            with Not_found ->
-              let v = new_global_var () in
-              type_variables := Tbl.add name v !type_variables;
-              used_variables := Tbl.add name v !used_variables;
-              v
-            end
+    Ptyp_var name ->
+      begin try
+        Tbl.find name !type_variables
+      with Not_found ->
+        if fixed then
+          raise(Error(styp.ptyp_loc, Unbound_type_variable name))
+        else begin
+          let v = new_global_var() in
+          type_variables := Tbl.add name v !type_variables;
+          v
+        end
       end
   | Ptyp_arrow(st1, st2) ->
-      let ty1 = transl_type env policy st1 in
-      let ty2 = transl_type env policy st2 in
-      newty (Tarrow(ty1, ty2))
+      Tarrow(transl_simple_type env fixed st1,
+             transl_simple_type env fixed st2)
   | Ptyp_tuple stl ->
-      newty (Ttuple(List.map (transl_type env policy) stl))
+      Ttuple(List.map (transl_simple_type env fixed) stl)
   | Ptyp_constr(lid, stl) ->
       let (path, decl) =
         try
@@ -110,50 +69,7 @@ let rec transl_type env policy styp =
       if List.length stl <> decl.type_arity then
         raise(Error(styp.ptyp_loc, Type_arity_mismatch(lid, decl.type_arity,
                                                            List.length stl)));
-      let args = List.map (transl_type env policy) stl in
-      let cstr = newty (Tconstr(path, args, ref Mnil)) in
-      let params = Ctype.instance_list decl.type_params in
-      List.iter2
-        (fun (sty, ty) ty' ->
-           try unify env ty ty' with Unify trace ->
-             raise (Error(sty.ptyp_loc, Type_mismatch trace)))
-        (List.combine stl args) params;
-      cstr
-
-  | Ptyp_alias(st, alias) ->
-      begin try
-        Tbl.find alias !type_variables;
-        raise(Error(styp.ptyp_loc, Bound_type_variable alias))
-      with Not_found -> try
-        Tbl.find alias !aliases;
-        raise(Error(styp.ptyp_loc, Bound_type_variable alias))
-      with Not_found ->
-        let ty' = newvar () in
-        aliases := Tbl.add alias ty' !aliases;
-        let ty = transl_type env policy st in
-        begin try unify env ty ty' with Unify trace ->
-          raise(Error(styp.ptyp_loc, Alias_type_mismatch trace))
-        end;
-        ty
-      end 
-
-let transl_simple_type env fixed styp =
-  aliases := Tbl.empty;
-  let typ = transl_type env (if fixed then Fixed else Extensible) styp in
-  aliases := Tbl.empty;
-  typ
-
-let transl_simple_type_delayed env styp =
-  aliases := Tbl.empty;
-  used_variables := Tbl.empty;
-  bindings := [];
-  let typ = transl_type env Delayed styp in
-  let b = !bindings in
-  aliases := Tbl.empty;
-  used_variables := Tbl.empty;
-  bindings := [];
-  (typ,
-   function () -> List.iter (function (t1, t2) -> unify env t1 t2) b)
+      Tconstr(path, List.map (transl_simple_type env fixed) stl)
 
 let transl_type_scheme env styp =
   reset_type_variables();
@@ -174,24 +90,10 @@ let report_error = function
   | Unbound_type_constructor lid ->
       print_string "Unbound type constructor "; longident lid
   | Type_arity_mismatch(lid, expected, provided) ->
-      open_box 0;
+      open_hovbox 0;
       print_string "The type constructor "; longident lid;
       print_space(); print_string "expects "; print_int expected;
       print_string " argument(s),"; print_space();
       print_string "but is here applied to "; print_int provided;
       print_string " argument(s)";
       close_box()
-  | Bound_type_variable name ->
-      print_string "Already bound type parameter "; print_string name
-  | Type_mismatch trace ->
-      Printtyp.unification_error trace
-        (function () ->
-           print_string "This type parameter")
-        (function () ->
-           print_string "should be an instance of type")
-  | Alias_type_mismatch trace ->
-      Printtyp.unification_error trace
-        (function () ->
-           print_string "This alias is bound to type")
-        (function () ->
-           print_string "but is used as an instance of type")

@@ -1,27 +1,29 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                           Objective Caml                            *)
+(*                         Caml Special Light                          *)
 (*                                                                     *)
 (*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
 (*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
 
+(* $Id$ *)
+
 open Format
 
-type t = { stamp: int; name: string; mutable global: bool }
+type t = { mutable stamp: int; mutable name: string; mutable global: bool }
 
 (* A stamp of 0 denotes a persistent identifier *)
 
 let currentstamp = ref 0
 
-let create s =
+let new s =
   incr currentstamp;
   { name = s; stamp = !currentstamp; global = false }
 
-let create_persistent s =
+let new_persistent s =
   { name = s; stamp = 0; global = true }
 
 let name i = i.name
@@ -30,7 +32,6 @@ let unique_name i = i.name ^ "_" ^ string_of_int i.stamp
 
 let persistent i = (i.stamp = 0)
 
-(* @Scheck: dead but should be used? TODO? *)
 let equal i1 i2 = i1.name = i2.name
 
 let same i1 i2 = i1 = i2
@@ -39,9 +40,19 @@ let same i1 i2 = i1 = i2
        then i1.stamp = i2.stamp
        else i2.stamp = 0 & i1.name = i2.name *)
 
-let binding_time i = i.stamp
-
-let current_time() = !currentstamp
+let identify i1 i2 f =
+  let name1 = i1.name and stamp1 = i1.stamp in
+  try
+    i1.name <- i2.name;
+    i1.stamp <- i2.stamp;
+    let res = f () in
+    i1.name <- name1;
+    i1.stamp <- stamp1;
+    res
+  with x ->
+    i1.name <- name1;
+    i1.stamp <- stamp1;
+    raise x
 
 let hide i =
   { stamp = -1; name = i.name; global = i.global }
@@ -85,23 +96,21 @@ let balance l d r =
   let hl = match l with Empty -> 0 | Node(_,_,_,h) -> h
   and hr = match r with Empty -> 0 | Node(_,_,_,h) -> h in
   if hl > hr + 1 then
-    match l with
-    | Node (ll, ld, lr, _)
-      when (match ll with Empty -> 0 | Node(_,_,_,h) -> h) >=
-           (match lr with Empty -> 0 | Node(_,_,_,h) -> h) ->
-        mknode ll ld (mknode lr d r)
-    | Node (ll, ld, Node(lrl, lrd, lrr, _), _) ->
-        mknode (mknode ll ld lrl) lrd (mknode lrr d r)
-    | _ -> assert false
+    let (Node(ll, ld, lr, _)) = l in
+    if (match ll with Empty -> 0 | Node(_,_,_,h) -> h) >=
+       (match lr with Empty -> 0 | Node(_,_,_,h) -> h) then
+      mknode ll ld (mknode lr d r)
+    else
+      let (Node(lrl, lrd, lrr, _)) = lr in
+      mknode (mknode ll ld lrl) lrd (mknode lrr d r)
   else if hr > hl + 1 then
-    match r with
-    | Node (rl, rd, rr, _)
-      when (match rr with Empty -> 0 | Node(_,_,_,h) -> h) >=
-           (match rl with Empty -> 0 | Node(_,_,_,h) -> h) ->
-        mknode (mknode l d rl) rd rr
-    | Node (Node (rll, rld, rlr, _), rd, rr, _) ->
-        mknode (mknode l d rll) rld (mknode rlr rd rr)
-    | _ -> assert false
+    let (Node(rl, rd, rr, _)) = r in
+    if (match rr with Empty -> 0 | Node(_,_,_,h) -> h) >=
+       (match rl with Empty -> 0 | Node(_,_,_,h) -> h) then
+      mknode (mknode l d rl) rd rr
+    else
+      let (Node(rll, rld, rlr, _)) = rl in
+      mknode (mknode l d rll) rld (mknode rlr rd rr)
   else
     mknode l d r
 
@@ -145,23 +154,21 @@ let rec find_name name = function
       else
         find_name name (if c < 0 then l else r)
 
-let rec iter fn = function
-    Empty -> ()
-  | Node(l, k, r, _) ->
-      iter fn l; iter_node fn k; iter fn r
-and iter_node fn k =
-  fn k.ident k.data;
-  match k.previous with None -> () | Some prev_k -> iter_node fn prev_k
-
-(* @Scheck: dumper *)
 let print_tbl print_elt tbl =
-  open_box 2;
+  open_hovbox 2;
   print_string "[[";
-  iter (fun id data -> 
-          open_box 2;
-          print id; print_string " ->"; print_space(); print_elt data;
-          print_string ";"; close_box(); print_space())
-       tbl;
+  let rec print_tbl = function
+      Empty -> ()
+    | Node(l, k, r, _) ->
+        print_tbl l;
+        print_entry k;
+        print_tbl r
+  and print_entry k =
+    open_hovbox 2;
+    print k.ident; print_string " ->"; print_space(); print_elt k.data;
+    print_string ";"; close_box(); print_space();
+    match k.previous with None -> () | Some k -> print_entry k in
+  print_tbl tbl;
   print_string "]]";
   close_box()
 

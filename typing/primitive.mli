@@ -1,13 +1,15 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                           Objective Caml                            *)
+(*                         Caml Special Light                          *)
 (*                                                                     *)
 (*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
 (*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
+
+(* $Id$ *)
 
 (* Description of primitive functions *)
 
@@ -18,5 +20,5 @@ type description =
     prim_native_name: string;  (* Name of C function for the nat. code gen. *)
     prim_native_float: bool }  (* Does the above operate on unboxed floats? *)
 
-val parse_declaration: int -> string list -> description
+val parse_declaration: int -> string list -> description option
 val print_description: description -> unit
