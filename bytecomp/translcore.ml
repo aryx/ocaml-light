@@ -147,21 +147,56 @@ let primitives_table = create_hashtable 31 [
 ]
 (*e: constant Translcore.primitives_table *)
 
+let same_base_type ty1 ty2 =
+  match (Ctype.repr ty1, Ctype.repr ty2) with
+    (Tconstr(p1, []), Tconstr(p2, [])) -> Path.same p1 p2
+  | (_, _) -> false
+
+let maybe_pointer arg =
+  not(same_base_type arg.exp_type Predef.type_int or
+      same_base_type arg.exp_type Predef.type_char)
+
+
+let array_kind arg =
+  match Ctype.repr arg.exp_type with
+    Tconstr(p, [ty]) when Path.same p Predef.path_array ->
+      begin match Ctype.repr ty with
+        Tvar v -> Pgenarray
+      | Tconstr(p, _) ->
+          if Path.same p Predef.path_int or Path.same p Predef.path_char then
+            Pintarray
+          else if Path.same p Predef.path_float then
+            Pfloatarray
+          else
+            Paddrarray
+      | _ -> Paddrarray
+      end
+  | _ -> Pgenarray (* This can happen with abbreviations that we can't expand
+                      here because the typing environment is lost *)
+
+let has_base_type exp base_ty = 
+  same_base_type exp.exp_type base_ty
+
 (*s: function Translcore.has_base_type *)
+(*
 let has_base_type exp base_ty =
   let exp_ty =
     Ctype.expand_head exp.exp_env (Ctype.correct_levels exp.exp_type) in
   match (Ctype.repr exp_ty, Ctype.repr base_ty) with
     {desc = Tconstr(p1, _, _)}, {desc = Tconstr(p2, _, _)} -> Path.same p1 p2
   | (_, _) -> false
+*)
 (*e: function Translcore.has_base_type *)
 
 (*s: function Translcore.maybe_pointer *)
+(*
 let maybe_pointer arg =
   not(has_base_type arg Predef.type_int or has_base_type arg Predef.type_char)
+*)
 (*e: function Translcore.maybe_pointer *)
 
 (*s: function Translcore.array_element_kind *)
+(*
 let array_element_kind env ty =
   let ty = Ctype.repr (Ctype.expand_head env ty) in
   match ty.desc with
@@ -193,9 +228,11 @@ let array_element_kind env ty =
       end
   | _ ->
       Paddrarray
+*)
 (*e: function Translcore.array_element_kind *)
 
 (*s: function Translcore.array_kind *)
+(*
 let array_kind arg =
   let ty = Ctype.correct_levels arg.exp_type in
   let array_ty = Ctype.expand_head arg.exp_env ty in
@@ -204,6 +241,7 @@ let array_kind arg =
       array_element_kind arg.exp_env elt_ty
   | _ ->
     fatal_error "Translcore.array_kind"
+*)
 (*e: function Translcore.array_kind *)
 
 (*s: constant Translcore.prim_makearray *)
@@ -338,7 +376,7 @@ let event_before exp lam =
   then Levent(lam, {lev_loc = exp.exp_loc.Location.loc_start;
                     lev_kind = Lev_before;
                     lev_repr = None;
-                    lev_env = Env.summary exp.exp_env})
+                    lev_env = Env.summary ()(*exp.exp_env*)})
   else lam
 (*e: function Translcore.event_before *)
 
@@ -348,7 +386,7 @@ let event_after exp lam =
   then Levent(lam, {lev_loc = exp.exp_loc.Location.loc_end;
                     lev_kind = Lev_after exp.exp_type;
                     lev_repr = None;
-                    lev_env = Env.summary exp.exp_env})
+                    lev_env = Env.summary () (* exp.exp_env*)})
   else lam
 (*e: function Translcore.event_after *)
 
@@ -361,7 +399,7 @@ let event_function exp lam =
      Levent(body, {lev_loc = exp.exp_loc.Location.loc_start;
                    lev_kind = Lev_function;
                    lev_repr = repr;
-                   lev_env = Env.summary exp.exp_env}))
+                   lev_env = Env.summary () (* exp.exp_env*)}))
   else
     lam None
 (*e: function Translcore.event_function *)
@@ -370,7 +408,7 @@ let event_function exp lam =
 
 let rec transl_exp e =
   match e.exp_desc with
-    Texp_ident(path, {val_kind = Val_prim p}) ->
+    Texp_ident(path, {val_prim = Some p}) ->
       transl_primitive p
   | Texp_ident(path, desc) ->
       transl_path path
@@ -385,7 +423,7 @@ let rec transl_exp e =
              transl_function e.exp_loc !Clflags.native_code repr pat_expr_list)
       in
       Lfunction(kind, params, body)
-  | Texp_apply({exp_desc = Texp_ident(path, {val_kind = Val_prim p})}, args)
+  | Texp_apply({exp_desc = Texp_ident(path, {val_prim = Some p})}, args)
     when List.length args = p.prim_arity ->
       let prim = transl_prim p args in
       let lam = Lprim(prim, transl_list args) in

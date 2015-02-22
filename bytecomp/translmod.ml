@@ -110,8 +110,8 @@ and transl_structure fields cc = function
       let ext_fields = rev_let_bound_idents pat_expr_list @ fields in
       transl_let rec_flag pat_expr_list (transl_structure ext_fields cc rem)
   | Tstr_primitive(id, descr) :: rem ->
-      begin match descr.val_kind with
-        Val_prim p -> primitive_declarations :=
+      begin match descr.val_prim with
+        Some p -> primitive_declarations :=
                         p.Primitive.prim_name :: !primitive_declarations
       | _ -> ()
       end;
@@ -156,8 +156,8 @@ let transl_store_structure glob map prims str =
         (store_idents glob map (let_bound_idents pat_expr_list)
           (transl_store rem))
   | Tstr_primitive(id, descr) :: rem ->
-      begin match descr.val_kind with
-        Val_prim p -> primitive_declarations :=
+      begin match descr.val_prim with
+        Some p -> primitive_declarations :=
                         p.Primitive.prim_name :: !primitive_declarations
       | _ -> ()
       end;
