@@ -1,4 +1,5 @@
 (*s: asmcomp/compilenv.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: compilenv.mli,v 1.8 1997/05/15 13:22:05 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Compilation environments for compilation units *)
 

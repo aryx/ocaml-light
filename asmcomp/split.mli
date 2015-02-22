@@ -1,4 +1,5 @@
 (*s: asmcomp/split.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: split.mli,v 1.3 1996/04/30 14:43:05 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Split.fundecl *)
 (* Renaming of registers at reload points to split live ranges. *)

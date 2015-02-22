@@ -1,4 +1,5 @@
 (*s: asmcomp/emit.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: emit.mli,v 1.4 1996/04/30 14:42:24 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Emit.fundecl *)
 (* Generation of assembly code *)

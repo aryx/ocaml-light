@@ -1,4 +1,5 @@
 (*s: asmcomp/interf.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: interf.ml,v 1.8 1996/09/18 14:16:12 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Construction of the interference graph.
    Annotate pseudoregs with interference lists and preference lists. *)

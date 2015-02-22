@@ -1,4 +1,5 @@
 (*s: asmcomp/reg.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: reg.mli,v 1.6 1996/04/30 14:42:56 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Pseudo-registers *)
 

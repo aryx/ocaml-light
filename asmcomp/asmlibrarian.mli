@@ -1,4 +1,5 @@
 (*s: asmcomp/asmlibrarian.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: asmlibrarian.mli,v 1.4 1996/04/30 14:42:09 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Asmlibrarian.create_archive *)
 (* Build libraries of .cmx files *)

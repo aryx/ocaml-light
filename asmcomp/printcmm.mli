@@ -1,4 +1,5 @@
 (*s: asmcomp/printcmm.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: printcmm.mli,v 1.4 1996/04/30 14:42:43 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Printcmm.machtype_component *)
 (* Pretty-printing of C-- code *)

@@ -11,7 +11,6 @@
 (***********************************************************************)
 
 (*s: type Reloadgen.reloader *)
-(* $Id: reloadgen.mli,v 1.2 1997/11/13 10:57:09 xleroy Exp $ *)
 
 type reloader = {
  reload_operation :

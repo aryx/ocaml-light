@@ -1,4 +1,5 @@
 (*s: asmcomp/linearize.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: linearize.mli,v 1.9 1997/03/07 15:32:26 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: type Linearize.label *)
 (* Transformation of Mach code into a list of pseudo-instructions. *)

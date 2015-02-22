@@ -1,4 +1,5 @@
 (*s: asmcomp/scheduling.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: scheduling.mli,v 1.2 1996/04/30 14:42:59 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Scheduling.fundecl *)
 (* Instruction scheduling *)

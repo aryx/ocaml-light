@@ -937,22 +937,6 @@ open Format
 \subsection*{[[./parsing/parsetree.mli]]}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 %-------------------------------------------------------------
 
 <<./parsing/parsetree.mli>>=
@@ -1086,17 +1070,11 @@ open Location
 
 \subsection*{[[./typing/ident.mli]]}
 
-<<signature Ident.create>>=
-val create: string -> t
-@
 
 <<signature Ident.create_persistent>>=
 val create_persistent: string -> t
 @
 
-<<signature Ident.name>>=
-val name: t -> string
-@
 
 <<signature Ident.unique_name>>=
 val unique_name: t -> string
@@ -1147,6 +1125,10 @@ val current_time: unit -> int
 <<signature Ident.print>>=
 val print: t -> unit
 @
+
+
+
+
 
 <<signature Ident.empty>>=
 val empty: 'a tbl
@@ -1478,24 +1460,8 @@ and iter_node fn k =
 
 \subsection*{[[./typing/primitive.mli]]}
 
-<<type Primitive.description>>=
-(* Description of primitive functions *)
 
-type description =
-  { prim_name: string;         (* Name of primitive  or C function *)
-    prim_arity: int;           (* Number of arguments *)
-    prim_alloc: bool;          (* Does it allocates or raise? *)
-    prim_native_name: string;  (* Name of C function for the nat. code gen. *)
-    prim_native_float: bool }  (* Does the above operate on unboxed floats? *)
-@
 
-<<signature Primitive.parse_declaration>>=
-val parse_declaration: int -> string list -> description
-@
-
-<<signature Primitive.print_description>>=
-val print_description: description -> unit
-@
 
 
 %-------------------------------------------------------------
@@ -1512,55 +1478,6 @@ val print_description: description -> unit
 
 \subsection*{[[./typing/primitive.ml]]}
 
-<<type Primitive.description (./typing/primitive.ml)>>=
-type description =
-  { prim_name: string;         (* Name of primitive  or C function *)
-    prim_arity: int;           (* Number of arguments *)
-    prim_alloc: bool;          (* Does it allocates or raise? *)
-    prim_native_name: string;  (* Name of C function for the nat. code gen. *)
-    prim_native_float: bool }  (* Does the above operate on unboxed floats? *)
-@
-
-<<function Primitive.parse_declaration>>=
-let parse_declaration arity decl =
-  match decl with
-    name :: "noalloc" :: name2 :: "float" :: _ ->
-      {prim_name = name; prim_arity = arity; prim_alloc = false;
-       prim_native_name = name2; prim_native_float = true}
-  | name :: "noalloc" :: name2 :: _ ->
-      {prim_name = name; prim_arity = arity; prim_alloc = false;
-       prim_native_name = name2; prim_native_float = false}
-  | name :: name2 :: "float" :: _ ->
-      {prim_name = name; prim_arity = arity; prim_alloc = true;
-       prim_native_name = name2; prim_native_float = true}
-  | name :: "noalloc" :: _ ->
-      {prim_name = name; prim_arity = arity; prim_alloc = false;
-       prim_native_name = ""; prim_native_float = false}
-  | name :: name2 :: _ ->
-      {prim_name = name; prim_arity = arity; prim_alloc = true;
-       prim_native_name = name2; prim_native_float = false}
-  | name :: _ ->
-      {prim_name = name; prim_arity = arity; prim_alloc = true;
-       prim_native_name = ""; prim_native_float = false}
-  | [] ->
-      fatal_error "Primitive.parse_declaration"
-@
-
-<<function Primitive.print_quoted>>=
-let print_quoted s = print_char '"'; print_string s; print_char '"'
-@
-
-<<function Primitive.print_description>>=
-let print_description p =
-  print_quoted p.prim_name;
-  if not p.prim_alloc then
-    (print_space(); print_quoted "noalloc");
-  if p.prim_native_name <> "" then
-    (print_space(); print_quoted p.prim_native_name);
-  if p.prim_native_float then
-    (print_space(); print_quoted "float")
-@
-
 
 %-------------------------------------------------------------
 
@@ -1572,7 +1489,7 @@ let print_description p =
 open Misc
 open Format
 
-<<type Primitive.description (./typing/primitive.ml)>>
+<<type Primitive.description>>
 
 <<function Primitive.parse_declaration>>
 
@@ -1661,7 +1578,6 @@ let rec binding_time = function
 
 
 \subsection*{[[./typing/types.mli]]}
-
 
 
 <<type Types.value_description>>=
@@ -1806,15 +1722,6 @@ open Asttypes
 val generic_level: int
 @
 
-<<signature Btype.newgenty>>=
-val newgenty: type_desc -> type_expr
-        (* Create a generic type *)
-@
-
-<<signature Btype.newgenvar>>=
-val newgenvar: unit -> type_expr
-        (* Return a fresh generic variable *)
-@
 
 <<signature Btype.newmarkedgenvar>>=
 val newmarkedgenvar: unit -> type_expr
@@ -2014,17 +1921,7 @@ let memorize_abbrev mem path v =
 %-------------------------------------------------------------
 
 <<./typing/btype.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(* Xavier Leroy and Jerome Vouillon, projet Cristal, INRIA Rocquencourt*)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header2>>
 
 (* Basic operations on core types *)
 
@@ -2045,7 +1942,6 @@ open Types
                   (*  Utilities for type traversal  *)
                   (**********************************)
 
-
 <<function Btype.iter_type_expr>>
 
 <<constant Btype.saved_desc>>
@@ -2055,7 +1951,6 @@ open Types
 <<function Btype.cleanup_types>>
 
 <<function Btype.unmark_type>>
-
 
                   (*******************************************)
                   (*  Memorization of abbreviation expansion *)
@@ -2758,12 +2653,12 @@ and module_components =
 
 <<type Env.structure_components>>=
 and structure_components = {
-  mutable comp_values: (string, (value_description * int)) Tbl.t;
-  mutable comp_constrs: (string, (constructor_description * int)) Tbl.t;
-  mutable comp_labels: (string, (label_description * int)) Tbl.t;
-  mutable comp_types: (string, (type_declaration * int)) Tbl.t;
-  mutable comp_modules: (string, (module_type * int)) Tbl.t;
-  mutable comp_components: (string, (module_components * int)) Tbl.t;
+  mutable comp_values     : (string, (value_description * int))       Tbl.t;
+  mutable comp_constrs    : (string, (constructor_description * int)) Tbl.t;
+  mutable comp_labels     : (string, (label_description * int))       Tbl.t;
+  mutable comp_types      : (string, (type_declaration * int))        Tbl.t;
+  mutable comp_modules    : (string, (module_type * int))             Tbl.t;
+  mutable comp_components : (string, (module_components * int))       Tbl.t;
 }
 @
 
@@ -3182,7 +3077,7 @@ open Types
 
 let find_value =
   find (fun env -> env.values) (fun sc -> sc.comp_values)
-and find_type =
+let find_type =
   find (fun env -> env.types) (fun sc -> sc.comp_types)
 
 <<function Env.find_type_expansion>>
@@ -3233,11 +3128,11 @@ and lookup_module lid env =
 
 let lookup_value =
   lookup (fun env -> env.values) (fun sc -> sc.comp_values)
-and lookup_constructor =
+let lookup_constructor =
   lookup_simple (fun env -> env.constrs) (fun sc -> sc.comp_constrs)
-and lookup_label =
+let lookup_label =
   lookup_simple (fun env -> env.labels) (fun sc -> sc.comp_labels)
-and lookup_type =
+let lookup_type =
   lookup (fun env -> env.types) (fun sc -> sc.comp_types)
   
 <<function Env.scrape_modtype>>
@@ -3376,13 +3271,13 @@ and store_components id path comps env =
 let add_value id desc env =
   store_value id (Pident id) desc env
 
-and add_type id info env =
+let add_type id info env =
   store_type id (Pident id) info env
 
-and add_exception id decl env =
+let add_exception id decl env =
   store_exception id (Pident id) decl env
 
-and add_module id mty env =
+let add_module id mty env =
   store_module id (Pident id) mty env
 
 <<function Env.enter>>
@@ -3460,6 +3355,7 @@ open Types
 <<type Typedtree.module_coercion>>
 
 <<signature Typedtree.let_bound_idents>>
+
 <<signature Typedtree.rev_let_bound_idents>>
 @
 
@@ -3581,14 +3477,6 @@ val reset_global_level: unit -> unit
 val newty: type_desc -> type_expr
 @
 
-<<signature Ctype.newgenty>>=
-val newgenty: type_desc -> type_expr
-@
-
-<<signature Ctype.newvar>>=
-val newvar: unit -> type_expr
-        (* Return a fresh variable *)
-@
 
 <<signature Ctype.new_global_var>>=
 val new_global_var: unit -> type_expr
@@ -3751,7 +3639,6 @@ open Types
 <<signature Ctype.reset_global_level>>
 
 <<signature Ctype.newty>>
-<<signature Ctype.newgenty>>
 <<signature Ctype.newvar>>
 <<signature Ctype.new_global_var>>
 <<signature Ctype.none>>
@@ -3832,10 +3719,6 @@ let reset_global_level () =
 (* Re-export generic type creators *)
 
 let newty desc         = { desc = desc; level = !current_level }
-@
-
-<<constant Ctype.newgenty>>=
-let newgenty           = newgenty
 @
 
 <<function Ctype.new_global_ty>>=
@@ -4636,17 +4519,7 @@ let closed_schema ty =
 %-------------------------------------------------------------
 
 <<./typing/ctype.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(* Xavier Leroy and Jerome Vouillon, projet Cristal, INRIA Rocquencourt*)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header2>>
 
 (* Operations on core types *)
 
@@ -4738,7 +4611,6 @@ open Btype
 (**** Some type creators ****)
 
 <<function Ctype.newty>>
-<<constant Ctype.newgenty>>
 <<function Ctype.new_global_ty>>
 
 <<function Ctype.newvar>>
@@ -5353,7 +5225,7 @@ and strengthen_sig env sg p =
             { type_params = decl.type_params;
               type_arity = decl.type_arity;
               type_kind = decl.type_kind;
-              type_manifest = Some(Ctype.newgenty(
+              type_manifest = Some(Btype.newgenty(
                                    Tconstr(Pdot(p, Ident.name id, nopos),
                                            decl.type_params,
                                            ref Mnil))) }
@@ -5369,73 +5241,6 @@ and strengthen_sig env sg p =
 
 
 \subsection*{[[./typing/printtyp.mli]]}
-
-<<signature Printtyp.longident>>=
-val longident: Longident.t -> unit
-@
-
-<<signature Printtyp.ident>>=
-val ident: Ident.t -> unit
-@
-
-<<signature Printtyp.path>>=
-val path: Path.t -> unit
-@
-
-<<signature Printtyp.reset>>=
-val reset: unit -> unit
-@
-
-<<signature Printtyp.mark_loops>>=
-val mark_loops: type_expr -> unit
-@
-
-<<signature Printtyp.type_expr>>=
-val type_expr: type_expr -> unit
-@
-
-<<signature Printtyp.type_scheme>>=
-val type_scheme: type_expr -> unit
-@
-
-<<signature Printtyp.value_description>>=
-val value_description: Ident.t -> value_description -> unit
-@
-
-<<signature Printtyp.type_declaration>>=
-val type_declaration: Ident.t -> type_declaration -> unit
-@
-
-<<signature Printtyp.exception_declaration>>=
-val exception_declaration: Ident.t -> exception_declaration -> unit
-@
-
-<<signature Printtyp.modtype>>=
-val modtype: module_type -> unit
-@
-
-<<signature Printtyp.signature>>=
-val signature: signature -> unit
-@
-
-<<signature Printtyp.signature_body>>=
-val signature_body: bool -> signature -> unit
-@
-
-<<signature Printtyp.type_expansion>>=
-val type_expansion: type_expr -> type_expr -> unit
-@
-
-<<signature Printtyp.trace>>=
-val trace: bool -> (unit -> unit) -> (type_expr * type_expr) list -> unit
-@
-
-<<signature Printtyp.unification_error>>=
-val unification_error:
-        (type_expr * type_expr) list -> (unit -> unit) -> (unit -> unit) ->
-        unit
-@
-
 
 %-------------------------------------------------------------
 
@@ -5467,241 +5272,12 @@ open Types
 
 \subsection*{[[./typing/printtyp.ml]]}
 
-<<constant Printtyp.longident>>=
-(* Print a long identifier *)
-
-let rec longident = function
-    Lident s -> print_string s
-  | Ldot(p, s) -> longident p; print_string "."; print_string s
-@
-
-<<function Printtyp.ident>>=
-(* Print an identifier *)
-
-let ident id =
-  print_string(Ident.name id)
-@
-
-<<constant Printtyp.ident_pervasive>>=
-(* Print a path *)
-
-let ident_pervasive = Ident.create_persistent "Pervasives"
-@
-
-<<constant Printtyp.path>>=
-let rec path = function
-    Pident id ->
-      ident id
-  | Pdot(Pident id, s, pos) when Ident.same id ident_pervasive ->
-      print_string s
-  | Pdot(p, s, pos) ->
-      path p; print_string "."; print_string s
-@
-
-<<constant Printtyp.names>>=
-(* Print a type expression *)
-
-let names = ref ([] : (type_expr * string) list)
-@
-
-<<constant Printtyp.name_counter>>=
-let name_counter = ref 0
-@
-
-<<function Printtyp.reset_names>>=
-let reset_names () = names := []; name_counter := 0
-@
-
-<<function Printtyp.new_name>>=
-let new_name () =
-  let name =
-    if !name_counter < 26
-    then String.make 1 (Char.chr(97 + !name_counter)) 
-    else String.make 1 (Char.chr(97 + !name_counter mod 26)) ^
-           string_of_int(!name_counter / 26)
-  in
-    incr name_counter;
-    name
-@
-
-<<function Printtyp.name_of_type>>=
-let name_of_type t =
-  try List.assq t !names with Not_found ->
-    let name = new_name () in
-    names := (t, name) :: !names;
-    name
-@
-
-<<function Printtyp.list_removeq>>=
-let rec list_removeq a =
-  function
-    [] ->
-      []
-  | (b, _) as e::l ->
-      if a == b then l else e::list_removeq a l
-@
-
-<<function Printtyp.remove_name_of_type>>=
-let remove_name_of_type t =
-  names := list_removeq t !names
-@
-
-<<constant Printtyp.visited_objects>>=
-let visited_objects = ref ([] : type_expr list)
-@
-
-<<constant Printtyp.aliased>>=
-let aliased = ref ([] : type_expr list)
-@
-
-<<function Printtyp.mark_loops_rec>>=
-let rec mark_loops_rec visited ty =
-  let ty = repr ty in
-  if List.memq ty visited then begin
-    if not (List.memq ty !aliased) then
-      aliased := ty :: !aliased
-  end else
-    let visited = ty :: visited in
-    match ty.desc with
-      Tvar                -> ()
-    | Tarrow(ty1, ty2)    ->
-        mark_loops_rec visited ty1; mark_loops_rec visited ty2
-    | Ttuple tyl          -> List.iter (mark_loops_rec visited) tyl
-    | Tconstr(_, tyl, _)  ->
-        List.iter (mark_loops_rec visited) tyl
-    | Tnil                -> ()
-    | Tlink _             -> fatal_error "Printtyp.mark_loops_rec (2)"
-@
-
-<<function Printtyp.mark_loops>>=
-let mark_loops ty = mark_loops_rec [] ty
-@
-
-<<function Printtyp.reset_loop_marks>>=
-let reset_loop_marks () =
-  visited_objects := []; aliased := []
-@
-
-<<function Printtyp.reset>>=
-let reset () =
-  reset_names (); reset_loop_marks ()
-@
-
-<<function Printtyp.constrain>>=
-(* Print one type declaration *)
-
-let constrain ty =
-  let ty' = unalias ty in
-  if ty != ty' then begin
-    print_space ();
-    open_box 2;
-    print_string "constraint ";
-    type_sch ty;
-    print_string " =";
-    print_space();
-    type_sch ty';
-    close_box()
-  end
-@
-
-<<function Printtyp.exception_declaration>>=
-(* Print an exception declaration *)
-
-let exception_declaration id decl =
-  print_string "exception "; constructor (Ident.name id, decl)
-@
-
-<<function Printtyp.value_description>>=
-(* Print a value declaration *)
-
-let value_description id decl =
-  open_box 2;
-  print_string (if decl.val_kind = Val_reg then "val " else "external ");
-  ident id; print_string " :"; print_space();
-  type_scheme decl.val_type;
-  begin match decl.val_kind with
-    Val_prim p ->
-      print_space(); print_string "= "; Primitive.print_description p
-  | _ -> ()
-  end;
-  close_box()
-@
-
-<<function Printtyp.signature>>=
-(* Print a signature body (used when compiling a .mli and printing results
-   in interactive use). *)
-
-let signature sg =
-  open_vbox 0;
-  signature_body false sg;
-  close_box()
-@
-
-<<function Printtyp.type_expansion>>=
-(* Print an unification error *)
-
-let type_expansion t t' =
-  if t == t' then
-    type_expr t
-  else begin
-    open_box 2;
-    type_expr t;
-    print_space (); print_string "="; print_space ();
-    type_expr t';
-    close_box ()
-  end
-@
-
-<<function Printtyp.trace>>=
-let rec trace fst txt =
-  function
-    (t1, t1')::(t2, t2')::rem ->
-      if not fst then
-        print_cut ();
-      open_box 0;
-      print_string "Type"; print_break 1 2;
-      type_expansion t1 t1'; print_space ();
-      txt (); print_break 1 2;
-      type_expansion t2 t2';
-      close_box ();
-      trace false txt rem
-  | _ ->
-      ()
-@
-
-<<function Printtyp.unification_error>>=
-let unification_error tr txt1 txt2 =
-  reset ();
-  List.iter
-    (function (t, t') -> mark_loops t; if t != t' then mark_loops t')
-    tr;
-  open_box 0;
-  let (t1, t1') = List.hd tr in
-  let (t2, t2') = List.hd (List.tl tr) in
-  txt1 (); print_break 1 2;
-  type_expansion t1 t1'; print_space();
-  txt2 (); print_break 1 2;
-  type_expansion t2 t2';
-  close_box();
-  trace false (fun _ -> print_string "is not compatible with type")
-        (List.tl (List.tl tr))
-@
 
 
 %-------------------------------------------------------------
 
 <<./typing/printtyp.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(* Xavier Leroy and Jerome Vouillon, projet Cristal, INRIA Rocquencourt*)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header2>>
 
 (* Printing functions *)
 
@@ -5746,108 +5322,10 @@ open Btype
 
 <<function Printtyp.reset>>
 
-let rec typexp sch prio0 ty =
-  let ty = repr ty in
-  try
-    List.assq ty !names;
-    if (ty.desc = Tvar) && sch && (ty.level <> generic_level)
-    then print_string "'_"
-    else print_string "'";
-    print_string (name_of_type ty)
-  with Not_found ->
-    let alias = List.memq ty !aliased in
-    if alias then begin
-      name_of_type ty;
-      if prio0 >= 1 then begin open_box 1; print_string "(" end
-      else open_box 0
-    end;
-    let prio = if alias then 0 else prio0 in
-    begin match ty.desc with
-      Tvar ->
-        if (not sch) or ty.level = generic_level
-        then print_string "'"
-        else print_string "'_";
-        print_string(name_of_type ty)
-    | Tarrow(ty1, ty2) ->
-        if prio >= 2 then begin open_box 1; print_string "(" end
-                     else open_box 0;
-        typexp sch 2 ty1;
-        print_string " ->"; print_space();
-        typexp sch 1 ty2;
-        if prio >= 2 then print_string ")";
-        close_box()
-    | Ttuple tyl ->
-        if prio >= 3 then begin open_box 1; print_string "(" end
-                     else open_box 0;
-        typlist sch 3 " *" tyl;
-        if prio >= 3 then print_string ")";
-        close_box()
-    | Tconstr(p, tyl, abbrev) ->
-        open_box 0;
-        begin match tyl with
-          [] -> ()
-        | [ty1] ->
-            typexp sch 3 ty1; print_space()
-        | tyl ->
-            open_box 1; print_string "("; typlist sch 0 "," tyl;
-            print_string ")"; close_box(); print_space()
-        end;
-        path p;
-        close_box()
-(*
-| Tfield _ -> typobject sch ty ty (ref None)
-| Tnil -> typobject sch ty ty (ref None)
-*)
-    | _ ->
-        fatal_error "Printtyp.typexp"
-    end;
-    if alias then begin
-      print_string " as ";
-      print_string "'";
-      print_string (name_of_type ty);
-      (* if not (opened_object ty) then *)
-      remove_name_of_type ty;
-      if prio0 >= 1 then print_string ")";
-      close_box()
-    end
-(* ; print_string "["; print_int ty.level; print_string "]" *)
+<<function Printtyp.typeexp>>
 
-and typlist sch prio sep = function
-    [] -> ()
-  | [ty] -> typexp sch prio ty
-  | ty::tyl ->
-      typexp sch prio ty; print_string sep; print_space();
-      typlist sch prio sep tyl
+<<function Printtyp.type_expr>>
 
-and typfields sch rest =
-  function
-    [] ->
-      begin match rest.desc with
-        Tvar -> if sch & rest.level <> generic_level then
-                  print_string "_";
-                print_string ".."
-      | Tnil -> ()
-      | _    -> fatal_error "typfields (1)"
-      end
-  | [(s, t)] ->
-      print_string s;
-      print_string " : ";
-      typexp sch 0 t;
-      begin match rest.desc with
-        Tvar -> print_string ";"; print_space ()
-      | Tnil -> ()
-      | _    -> fatal_error "typfields (2)"
-      end;
-      typfields sch rest []
-  | (s, t)::l ->
-      print_string s;
-      print_string " : ";
-      typexp sch 0 t;
-      print_string ";"; print_space ();
-      typfields sch rest l
-
-let type_expr ty =
-  typexp false 0 ty
 
 and type_sch ty =
   typexp true 0 ty
@@ -5857,73 +5335,7 @@ and type_scheme ty =
 
 <<function Printtyp.constrain>>
 
-let rec type_declaration id decl =
-  reset();
-
-  let params = List.map repr decl.type_params in
-
-  aliased := params @ !aliased;
-  List.iter mark_loops params;
-  List.iter (fun x -> name_of_type x; ()) params;
-  begin match decl.type_manifest with
-    None    -> ()
-  | Some ty -> mark_loops ty
-  end;
-  begin match decl.type_kind with
-    Type_abstract -> ()
-  | Type_variant [] -> ()
-  | Type_variant cstrs ->
-      List.iter (fun (_, args) -> List.iter mark_loops args) cstrs
-  | Type_record (lbl1 :: lbls as l) ->
-      List.iter (fun (_, _, ty) -> mark_loops ty) l
-  | _ -> assert false
-  end;
-
-  open_hvbox 2;
-  print_string "type ";
-  type_expr {desc = Tconstr(Pident id, params, ref Mnil);
-             level = generic_level};
-  begin match decl.type_manifest with
-    None -> ()
-  | Some ty ->
-      print_string " ="; print_space(); type_expr ty
-  end;
-  begin match decl.type_kind with
-    Type_abstract -> ()
-  | Type_variant [] -> ()
-      (* A fatal error actually, except when printing type exn... *)
-  | Type_variant cstrs ->
-      print_string " =";
-      List.iter
-        (fun cstr -> print_space(); print_string "| "; constructor cstr)
-        cstrs
-  | Type_record (lbl1 :: lbls as l) ->
-      print_string " ="; print_space();
-      print_string "{ "; label lbl1;
-      List.iter
-        (fun lbl -> print_string ";"; print_break 1 2; label lbl)
-        lbls;
-      print_string " }"
-  | _ -> assert false
-  end;
-  List.iter constrain params;
-  close_box()
-
-and constructor (name, args) =
-  print_string name;
-  match args with
-    [] -> ()
-  | _  -> print_string " of ";
-          open_box 2; typlist false 3 " *" args; close_box()
-
-and label (name, mut, arg) =
-  begin match mut with
-      Immutable -> ()
-    | Mutable -> print_string "mutable "
-  end;
-  print_string name;
-  print_string ": ";
-  type_expr arg
+<<function Printtyp.type_declaration>>
 
 <<function Printtyp.exception_declaration>>
 
@@ -5931,33 +5343,7 @@ and label (name, mut, arg) =
 
 
 (* Print a module type *)
-
-let rec modtype = function
-    Tmty_ident p ->
-      path p
-  | Tmty_signature sg ->
-      open_hvbox 2;
-      print_string "sig"; signature_body true sg; 
-      print_break 1 (-2); print_string "end";
-      close_box()
-
-and signature_body spc = function
-    [] -> ()
-  | item :: rem ->
-      if spc then print_space();
-      let cont =
-        match item with
-          Tsig_value(id, decl) ->
-            value_description id decl; rem
-        | Tsig_type(id, decl)  ->
-            type_declaration id decl; rem
-        | Tsig_exception(id, decl)  ->
-            exception_declaration id decl; rem
-        | Tsig_module(id, mty)  ->
-            open_box 2; print_string "module "; ident id; print_string " :";
-            print_space(); modtype mty; close_box(); rem
-      in signature_body true cont
-
+<<function Printtyp.modtype>>
 <<function Printtyp.signature>>
 
 <<function Printtyp.type_expansion>>
@@ -6959,8 +6345,6 @@ open Printtyp
 \subsection*{[[./typing/typedecl.mli]]}
 
 
-
-
 %-------------------------------------------------------------
 
 <<./typing/typedecl.mli>>=
@@ -7256,17 +6640,7 @@ let transl_value_decl env valdecl =
 %-------------------------------------------------------------
 
 <<./typing/typedecl.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(* Xavier Leroy and Jerome Vouillon, projet Cristal, INRIA Rocquencourt*)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header2>>
 
 (**** Typing of type definitions ****)
 
@@ -7342,15 +6716,6 @@ open Types
 \subsection*{[[./typing/typecore.ml]]}
 
 
-<<constant Typecore.type_constant>>=
-(* Typing of constants *)
-
-let type_constant = function
-    Const_int _ -> instance Predef.type_int
-  | Const_char _ -> instance Predef.type_char
-  | Const_string _ -> instance Predef.type_string
-  | Const_float _ -> instance Predef.type_float
-@
 
 <<function Typecore.unify_pat>>=
 (* Typing of patterns *)
@@ -7533,53 +6898,6 @@ let rec is_nonexpansive exp =
   | _ -> false
 @
 
-<<function Typecore.type_format>>=
-(* Typing of printf formats *)
-
-let type_format loc fmt =
-  let len = String.length fmt in
-  let ty_input = newvar()
-  and ty_result = newvar() in
-  let rec skip_args j =
-    if j >= len then j else
-      match fmt.[j] with
-        '0' .. '9' | ' ' | '.' | '-' -> skip_args (j+1)
-      | _ -> j in
-  let rec scan_format i =
-    if i >= len then ty_result else
-    match fmt.[i] with
-      '%' ->
-        let j = skip_args(i+1) in
-        begin match String.unsafe_get fmt j with
-        (* We're using unsafe_get here so that if j = String.length fmt,
-           we'll fall in the catch-all case of the match *)
-          '%' ->
-            scan_format (j+1)
-        | 's' ->
-            newty (Tarrow(instance Predef.type_string, scan_format (j+1)))
-        | 'c' ->
-            newty (Tarrow(instance Predef.type_char, scan_format (j+1)))
-        | 'd' | 'o' | 'x' | 'X' | 'u' ->
-            newty (Tarrow(instance Predef.type_int, scan_format (j+1)))
-        | 'f' | 'e' | 'E' | 'g' | 'G' ->
-            newty (Tarrow(instance Predef.type_float, scan_format (j+1)))
-        | 'b' ->
-            newty (Tarrow(instance Predef.type_bool, scan_format (j+1)))
-        | 'a' ->
-            let ty_arg = newvar() in
-            newty (Tarrow (newty (Tarrow(ty_input,
-                                         newty (Tarrow (ty_arg, ty_result)))),
-                           newty (Tarrow (ty_arg, scan_format (j+1)))))
-        | 't' ->
-            newty (Tarrow(newty (Tarrow(ty_input, ty_result)),
-                          scan_format (j+1)))
-        | c ->
-            raise(Error(loc, Bad_format(String.sub fmt i (j-i+1))))
-        end
-    | _ -> scan_format (i+1) in
-  newty
-    (Tconstr(Predef.path_format, [scan_format 0; ty_input; ty_result], ref Mnil))
-@
 
 <<function Typecore.unify_exp>>=
 (* Typing of expressions *)
@@ -7685,353 +7003,7 @@ open Ctype
 
 <<function Typecore.unify_exp>>
 
-let rec type_exp env sexp =
-  match sexp.pexp_desc with
-    Pexp_ident lid ->
-      begin try
-        let (path, desc) = Env.lookup_value lid env in
-        { exp_desc =
-            begin match (desc.val_kind, lid) with
-            | _ ->
-                Texp_ident(path, desc)
-            end;
-          exp_loc = sexp.pexp_loc;
-          exp_type = instance desc.val_type;
-          exp_env = env }
-      with Not_found ->
-        raise(Error(sexp.pexp_loc, Unbound_value lid))
-      end
-  | Pexp_constant cst ->
-      { exp_desc = Texp_constant cst;
-        exp_loc = sexp.pexp_loc;
-        exp_type = type_constant cst;
-        exp_env = env }
-  | Pexp_let(rec_flag, spat_sexp_list, sbody) ->
-      let (pat_exp_list, new_env) = type_let env rec_flag spat_sexp_list in
-      let body = type_exp new_env sbody in
-      { exp_desc = Texp_let(rec_flag, pat_exp_list, body);
-        exp_loc = sexp.pexp_loc;
-        exp_type = body.exp_type;
-        exp_env = env }
-  | Pexp_function caselist ->
-      let ty_arg = newvar() and ty_res = newvar() in
-      let cases = type_cases env ty_arg ty_res caselist in
-      Parmatch.check_unused cases;
-      Parmatch.check_partial sexp.pexp_loc cases;
-      { exp_desc = Texp_function cases;
-        exp_loc = sexp.pexp_loc;
-        exp_type = newty (Tarrow(ty_arg, ty_res));
-        exp_env = env }
-  | Pexp_apply(sfunct, sargs) ->
-      let funct = type_exp env sfunct in
-      let rec type_args ty_fun = function
-        [] ->
-          ([], ty_fun)
-      | sarg1 :: sargl ->
-          let (ty1, ty2) =
-            try
-              filter_arrow env ty_fun
-            with Unify _ ->
-              raise(Error(sfunct.pexp_loc,
-                          Apply_non_function funct.exp_type)) in
-          let arg1 = type_expect env sarg1 ty1 in
-          let (argl, ty_res) = type_args ty2 sargl in
-          (arg1 :: argl, ty_res) in
-      let (args, ty_res) = type_args funct.exp_type sargs in
-      { exp_desc = Texp_apply(funct, args);
-        exp_loc = sexp.pexp_loc;
-        exp_type = ty_res;
-        exp_env = env }
-  | Pexp_match(sarg, caselist) ->
-      let arg = type_exp env sarg in
-      let ty_res = newvar() in
-      let cases = type_cases env arg.exp_type ty_res caselist in
-      Parmatch.check_unused cases;
-      Parmatch.check_partial sexp.pexp_loc cases;
-      { exp_desc = Texp_match(arg, cases);
-        exp_loc = sexp.pexp_loc;
-        exp_type = ty_res;
-        exp_env = env }
-  | Pexp_try(sbody, caselist) ->
-      let body = type_exp env sbody in
-      let cases =
-        type_cases env (instance Predef.type_exn) body.exp_type caselist in
-      Parmatch.check_unused cases;
-      { exp_desc = Texp_try(body, cases);
-        exp_loc = sexp.pexp_loc;
-        exp_type = body.exp_type;
-        exp_env = env }
-  | Pexp_tuple sexpl ->
-      let expl = List.map (type_exp env) sexpl in
-      { exp_desc = Texp_tuple expl;
-        exp_loc = sexp.pexp_loc;
-        exp_type = newty (Ttuple(List.map (fun exp -> exp.exp_type) expl));
-        exp_env = env }
-  | Pexp_construct(lid, sarg, explicit_arity) ->
-      let constr =
-        try
-          Env.lookup_constructor lid env
-        with Not_found ->
-          raise(Error(sexp.pexp_loc, Unbound_constructor lid)) in
-      let sargs =
-        match sarg with
-          None -> []
-        | Some {pexp_desc = Pexp_tuple sel} when explicit_arity -> sel
-        | Some {pexp_desc = Pexp_tuple sel} when constr.cstr_arity > 1 -> sel
-        | Some se -> [se] in
-      if List.length sargs <> constr.cstr_arity then
-        raise(Error(sexp.pexp_loc, Constructor_arity_mismatch(lid,
-                                       constr.cstr_arity, List.length sargs)));
-      let (ty_args, ty_res) = instance_constructor constr in
-      let args = List.map2 (type_expect env) sargs ty_args in
-      { exp_desc = Texp_construct(constr, args);
-        exp_loc = sexp.pexp_loc;
-        exp_type = ty_res;
-        exp_env = env }
-  | Pexp_record lid_sexp_list ->
-      let ty = newvar() in
-      let num_fields = ref 0 in
-      let type_label_exp (lid, sarg) =
-        let label =
-          try
-            Env.lookup_label lid env
-          with Not_found ->
-            raise(Error(sexp.pexp_loc, Unbound_label lid)) in
-        let (ty_arg, ty_res) = instance_label label in
-        begin try
-          unify env ty_res ty
-        with Unify trace ->
-          raise(Error(sexp.pexp_loc, Label_mismatch(lid, trace)))
-        end;
-        let arg = type_expect env sarg ty_arg in
-        num_fields := Array.length label.lbl_all;
-        (label, arg) in
-      let lbl_exp_list = List.map type_label_exp lid_sexp_list in
-      let rec check_duplicates = function
-        [] -> ()
-      | (lid, sarg) :: remainder ->
-          if List.mem_assoc lid remainder
-          then raise(Error(sexp.pexp_loc, Label_multiply_defined lid))
-          else check_duplicates remainder in
-      check_duplicates lid_sexp_list;
-      if List.length lid_sexp_list <> !num_fields then
-        raise(Error(sexp.pexp_loc, Label_missing));
-      { exp_desc = Texp_record lbl_exp_list;
-        exp_loc = sexp.pexp_loc;
-        exp_type = ty;
-        exp_env = env }
-  | Pexp_field(sarg, lid) ->
-      let arg = type_exp env sarg in
-      let label =
-        try
-          Env.lookup_label lid env
-        with Not_found ->
-          raise(Error(sexp.pexp_loc, Unbound_label lid)) in
-      let (ty_arg, ty_res) = instance_label label in
-      unify_exp env arg ty_res;
-      { exp_desc = Texp_field(arg, label);
-        exp_loc = sexp.pexp_loc;
-        exp_type = ty_arg;
-        exp_env = env }
-  | Pexp_setfield(srecord, lid, snewval) ->
-      let record = type_exp env srecord in
-      let label =
-        try
-          Env.lookup_label lid env
-        with Not_found ->
-          raise(Error(sexp.pexp_loc, Unbound_label lid)) in
-      if label.lbl_mut = Immutable then
-        raise(Error(sexp.pexp_loc, Label_not_mutable lid));
-      let (ty_arg, ty_res) = instance_label label in
-      unify_exp env record ty_res;
-      let newval = type_expect env snewval ty_arg in
-      { exp_desc = Texp_setfield(record, label, newval);
-        exp_loc = sexp.pexp_loc;
-        exp_type = instance Predef.type_unit;
-        exp_env = env }
-  | Pexp_array(sargl) ->
-      let ty = newvar() in
-      let argl = List.map (fun sarg -> type_expect env sarg ty) sargl in
-      { exp_desc = Texp_array argl;
-        exp_loc = sexp.pexp_loc;
-        exp_type = instance (Predef.type_array ty);
-        exp_env = env }
-  | Pexp_ifthenelse(scond, sifso, sifnot) ->
-      let cond = type_expect env scond (instance Predef.type_bool) in
-      begin match sifnot with
-        None ->
-          let ifso = type_expect env sifso (instance Predef.type_unit) in
-          { exp_desc = Texp_ifthenelse(cond, ifso, None);
-            exp_loc = sexp.pexp_loc;
-            exp_type = instance Predef.type_unit;
-            exp_env = env }
-      | Some sifnot ->
-          let ifso = type_exp env sifso in
-          let ifnot = type_expect env sifnot ifso.exp_type in
-          { exp_desc = Texp_ifthenelse(cond, ifso, Some ifnot);
-            exp_loc = sexp.pexp_loc;
-            exp_type = ifso.exp_type;
-            exp_env = env }
-      end
-  | Pexp_sequence(sexp1, sexp2) ->
-      let exp1 = type_statement env sexp1 in
-      let exp2 = type_exp env sexp2 in
-      { exp_desc = Texp_sequence(exp1, exp2);
-        exp_loc = sexp.pexp_loc;
-        exp_type = exp2.exp_type;
-        exp_env = env }
-  | Pexp_while(scond, sbody) ->
-      let cond = type_expect env scond (instance Predef.type_bool) in
-      let body = type_statement env sbody in
-      { exp_desc = Texp_while(cond, body);
-        exp_loc = sexp.pexp_loc;
-        exp_type = instance Predef.type_unit;
-        exp_env = env }
-  | Pexp_for(param, slow, shigh, dir, sbody) ->
-      let low = type_expect env slow (instance Predef.type_int) in
-      let high = type_expect env shigh (instance Predef.type_int) in
-      let (id, new_env) =
-        Env.enter_value param {val_type = instance Predef.type_int;
-                                val_kind = Val_reg} env in
-      let body = type_statement new_env sbody in
-      { exp_desc = Texp_for(id, low, high, dir, body);
-        exp_loc = sexp.pexp_loc;
-        exp_type = instance Predef.type_unit;
-        exp_env = env }
-  | Pexp_constraint(sarg, sty, sty') ->
-      let (arg, ty') =
-        match (sty, sty') with
-          (None, None) ->               (* Case actually unused *)
-            let arg = type_exp env sarg in
-            (arg, arg.exp_type)
-        | (Some sty, None) ->
-            let ty = Typetexp.transl_simple_type env false sty in
-            (type_expect env sarg ty, ty)
-        | (None, Some sty') ->
-            let (ty', force) =
-              Typetexp.transl_simple_type_delayed env sty'
-            in
-            let ty = enlarge_type env ty' in
-            force ();
-            let arg = type_exp env sarg in
-            begin try Ctype.unify env arg.exp_type ty with Unify trace ->
-              raise(Error(sarg.pexp_loc,
-                    Coercion_failure(ty', full_expand env ty', trace)))
-            end;
-            (arg, ty')
-        | (Some sty, Some sty') ->
-            let (ty, force) =
-              Typetexp.transl_simple_type_delayed env sty
-            and (ty', force') =
-              Typetexp.transl_simple_type_delayed env sty'
-            in
-            begin try
-              let force'' = subtype env ty ty' in
-              force (); force' (); force'' ()
-            with Subtype (tr1, tr2) ->
-              raise(Error(sexp.pexp_loc, Not_subtype(tr1, tr2)))
-            end;
-            (type_expect env sarg ty, ty')
-      in
-      { exp_desc = arg.exp_desc;
-        exp_loc = arg.exp_loc;
-        exp_type = ty';
-        exp_env = env }
-  | Pexp_when(scond, sbody) ->
-      let cond = type_expect env scond (instance Predef.type_bool) in
-      let body = type_exp env sbody in
-      { exp_desc = Texp_when(cond, body);
-        exp_loc = sexp.pexp_loc;
-        exp_type = body.exp_type;
-        exp_env = env }
-
-(* Typing of an expression with an expected type.
-   Some constructs are treated specially to provide better error messages. *)
-
-and type_expect env sexp ty_expected =
-  match sexp.pexp_desc with
-    Pexp_constant(Const_string s as cst) ->
-      let exp =
-        { exp_desc = Texp_constant cst;
-          exp_loc = sexp.pexp_loc;
-          exp_type =
-            (* Terrible hack for format strings *)
-            begin match (repr ty_expected).desc with
-              Tconstr(path, _, _) when Path.same path Predef.path_format ->
-                type_format sexp.pexp_loc s
-            | _ -> instance Predef.type_string
-            end;
-          exp_env = env } in
-      unify_exp env exp ty_expected;
-      exp
-  | Pexp_let(rec_flag, spat_sexp_list, sbody) ->
-      let (pat_exp_list, new_env) = type_let env rec_flag spat_sexp_list in
-      let body = type_expect new_env sbody ty_expected in
-      { exp_desc = Texp_let(rec_flag, pat_exp_list, body);
-        exp_loc = sexp.pexp_loc;
-        exp_type = body.exp_type;
-        exp_env = env }
-  | Pexp_sequence(sexp1, sexp2) ->
-      let exp1 = type_statement env sexp1 in
-      let exp2 = type_expect env sexp2 ty_expected in
-      { exp_desc = Texp_sequence(exp1, exp2);
-        exp_loc = sexp.pexp_loc;
-        exp_type = exp2.exp_type;
-        exp_env = env }
-  | _ ->
-      let exp = type_exp env sexp in
-      unify_exp env exp ty_expected;
-      exp
-
-(* Typing of statements (expressions whose values are discarded) *)
-
-and type_statement env sexp =
-    let exp = type_exp env sexp in
-    match (repr exp.exp_type).desc with
-      Tarrow(_, _) ->
-        Location.print_warning sexp.pexp_loc
-          "this function application is partial,\n\
-           maybe some arguments are missing.";
-        exp
-    | _ -> exp
-
-(* Typing of match cases *)
-
-and type_cases env ty_arg ty_res caselist =
-  List.map
-    (fun (spat, sexp) ->
-      let (pat, ext_env) = type_pattern env spat in
-      unify_pat env pat ty_arg;
-      let exp = type_expect ext_env sexp ty_res in
-      (pat, exp))
-    caselist
-
-(* Typing of let bindings *)
-
-and type_let env rec_flag spat_sexp_list =
-  begin_def();
-  let (pat_list, new_env) =
-    type_pattern_list env (List.map (fun (spat, sexp) -> spat) spat_sexp_list)
-  in
-  let exp_env =
-    match rec_flag with Nonrecursive -> env | Recursive -> new_env in
-  let exp_list =
-    List.map2
-      (fun (spat, sexp) pat -> type_expect exp_env sexp pat.pat_type)
-      spat_sexp_list pat_list in
-  List.iter2
-    (fun pat exp -> Parmatch.check_partial pat.pat_loc [pat, exp])
-    pat_list exp_list;
-  end_def();
-  List.iter2
-    (fun pat exp ->
-       if not (is_nonexpansive exp) then
-         iter_pattern (fun pat ->make_nongen pat.pat_type) pat)
-    pat_list exp_list;
-  List.iter
-    (fun pat -> iter_pattern (fun pat -> generalize pat.pat_type) pat)
-    pat_list;
-  (List.combine pat_list exp_list, new_env)
+<<function Typecore.type_exp>>
 
 <<function Typecore.type_binding>>
 
@@ -10902,30 +9874,30 @@ open Lambda
 
 <<function Translmod.reset_labels>>=
 let reset_labels () =
- (*  used_methods := [] *)
   ()
 @
+% (*  used_methods := [] *)
 
 <<function Translmod.transl_label_init>>=
 let transl_label_init expr =
-(*
-  if !used_methods = [] then
-    expr
-  else
-    let init = Ident.create "new_method" in
-    let expr' =
-      Llet(StrictOpt, init, oo_prim "new_method",
-      List.fold_right
-        (fun (lab, id) expr ->
-           Llet(StrictOpt, id, Lapply(Lvar init, [string lab]), expr))
-        !used_methods
-        expr)
-    in
-    reset_labels ();
-    expr'
-*)
   expr
 @
+%(*
+%  if !used_methods = [] then
+%    expr
+%  else
+%    let init = Ident.create "new_method" in
+%    let expr' =
+%      Llet(StrictOpt, init, oo_prim "new_method",
+%      List.fold_right
+%        (fun (lab, id) expr ->
+%           Llet(StrictOpt, id, Lapply(Lvar init, [string lab]), expr))
+%        !used_methods
+%        expr)
+%    in
+%    reset_labels ();
+%    expr'
+%*)
 
 <<function Translmod.compose_coercions>>=
 (* Compose two coercions
@@ -11329,6 +10301,7 @@ let backpatch (pos, orig) =
   !out_buffer.[pos] <- Char.unsafe_chr displ;
   !out_buffer.[pos+1] <- Char.unsafe_chr (displ asr 8);
   !out_buffer.[pos+2] <- Char.unsafe_chr (displ asr 16);
+  !out_buffer.[pos+3] <- Char.unsafe_chr (displ asr 24)
 @
 
 <<function Emitcode.define_label>>=
@@ -11339,6 +10312,7 @@ let define_label lbl =
       fatal_error "Emitcode.define_label"
   | Label_undefined patchlist ->
       List.iter backpatch patchlist;
+      (!label_table).(lbl) <- Label_defined !out_position
 @
 
 <<function Emitcode.out_label_with_orig>>=
@@ -11368,17 +10342,6 @@ let enter info =
   reloc_info := (info, !out_position) :: !reloc_info
 @
 
-<<constant Emitcode.events>>=
-(* Debugging events *)
-
-let events = ref ([] : debug_event list)
-@
-
-<<function Emitcode.record_event>>=
-let record_event ev =
-  ev.ev_pos <- !out_position;
-  events := ev :: !events
-@
 
 <<function Emitcode.init>>=
 (* Initialization *)
@@ -11595,10 +10558,8 @@ and out_position = ref 0
 <<function Emitcode.extend_label_table>>
 
 <<function Emitcode.backpatch>>
-  !out_buffer.[pos+3] <- Char.unsafe_chr (displ asr 24)
 
 <<function Emitcode.define_label>>
-      (!label_table).(lbl) <- Label_defined !out_position
 
 <<function Emitcode.out_label_with_orig>>
 
@@ -12281,13 +11242,6 @@ open Format
 
 \subsection*{[[./bytecomp/bytelink.ml]]}
 
-<<type Bytelink.link_action>>=
-type link_action =
-    Link_object of string * compilation_unit
-      (* Name of .cmo file and descriptor of the unit *)
-  | Link_archive of string * compilation_unit list
-      (* Name of .cma file and descriptors of the units to be linked. *)
-@
 
 <<constant Bytelink.missing_globals>>=
 let missing_globals = ref IdentSet.empty
@@ -12366,58 +11320,6 @@ let scan_file obj_name tolink =
     close_in ic; raise x
 @
 
-<<constant Bytelink.debug_info>>=
-(* Second pass: link in the required units *)
-
-let debug_info = ref ([] : debug_event list list)
-@
-
-<<constant Bytelink.crc_interfaces>>=
-(* Consistency check between interfaces *)
-
-let crc_interfaces =
-  (Hashtbl.create 17 : (string, string * Digest.t) Hashtbl.t)
-@
-
-<<function Bytelink.check_consistency>>=
-let check_consistency file_name cu =
-  List.iter
-    (fun (name, crc) ->
-      if name = cu.cu_name then begin
-        Hashtbl.add crc_interfaces name (file_name, crc)
-      end else begin
-        try
-          let (auth_name, auth_crc) = Hashtbl.find crc_interfaces name in
-          if crc <> auth_crc then
-            raise(Error(Inconsistent_import(name, file_name, auth_name)))
-        with Not_found ->
-          (* Can only happen for unit for which only a .cmi file was used,
-             but no .cmo is provided *)
-          Hashtbl.add crc_interfaces name (file_name, crc)
-      end)
-    cu.cu_imports
-@
-
-<<constant Bytelink.debug_info (./bytecomp/bytelink.ml)>>=
-(* Relocate and record compilation events *)
-
-let debug_info = ref ([] : debug_event list list)
-@
-
-<<function Bytelink.record_events>>=
-let record_events orig evl =
-  if evl <> [] then begin
-    List.iter
-      (fun ev ->
-         ev.ev_pos <- orig + ev.ev_pos;
-         begin match ev.ev_repr with
-           Event_parent repr -> repr := ev.ev_pos
-         | _                 -> ()
-         end)
-      evl;
-    debug_info := evl :: !debug_info
-  end
-@
 
 <<function Bytelink.link_compunit>>=
 (* Link in a compilation unit *)
@@ -12846,28 +11748,6 @@ let initial_env () =
     fatal_error "cannot open Pervasives.cmi"
 @
 
-<<function Compile.preprocess>>=
-(* Optionally preprocess a source file *)
-
-let preprocess sourcefile tmpfile =
-  match !Clflags.preprocessor with
-    None -> sourcefile
-  | Some pp ->
-      let comm = pp ^ " " ^ sourcefile ^ " > " ^ tmpfile in
-      if Ccomp.command comm <> 0 then begin
-        Printf.eprintf "Preprocessing error\n";
-        flush stderr;
-        exit 2
-      end;
-      tmpfile
-@
-
-<<function Compile.remove_preprocessed>>=
-let remove_preprocessed inputfile =
-  match !Clflags.preprocessor with
-    None -> ()
-  | Some _ -> remove_file inputfile
-@
 
 <<exception Compile.Outdated_version>>=
 (* Parse a file or get a dumped syntax tree in it *)
@@ -12917,10 +11797,6 @@ let print_if flag printer arg =
 @
 
 
-<<function Compile.c_file>>=
-let c_file name =
-  if Ccomp.compile_file_bytecode name <> 0 then exit 2
-@
 
 
 %-------------------------------------------------------------
@@ -13011,6 +11887,9 @@ open Clflags
 
 <<toplevel Main._1>>
 @
+
+
+\section{NATIVE CODE START}
 
 \section{[[asmcomp/arm/]]}
 
@@ -13121,7 +12000,6 @@ let print_specific_operation printreg op arg =
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
 
 (* Specific operations for the ARM processor *)
 
@@ -13225,18 +12103,7 @@ type value_approximation =
 %-------------------------------------------------------------
 
 <<asmcomp/clambda.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: clambda.mli,v 1.9 1997/02/16 17:20:08 xleroy Exp $ *)
+<<copyright header>>
 
 (* A variant of the "lambda" code with direct / indirect calls explicit
    and closures explicit too *)
@@ -13318,18 +12185,7 @@ type value_approximation =
 %-------------------------------------------------------------
 
 <<asmcomp/clambda.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: clambda.ml,v 1.9 1997/02/16 17:20:08 xleroy Exp $ *)
+<<copyright header>>
 
 (* A variant of the "lambda" code with direct / indirect calls explicit
    and closures explicit too *)
@@ -13397,18 +12253,7 @@ val emit_bytes_directive: string -> string -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/emitaux.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: emitaux.mli,v 1.7 1997/03/04 10:19:49 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Emitaux.output_channel>>
 <<signature Emitaux.emit_string>>
@@ -13524,18 +12369,7 @@ let emit_bytes_directive directive s =
 %-------------------------------------------------------------
 
 <<asmcomp/emitaux.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: emitaux.ml,v 1.10 1997/07/30 12:27:44 xleroy Exp $ *)
+<<copyright header>>
 
 <<constant Emitaux.output_channel>>
 
@@ -13572,18 +12406,7 @@ val fundecl: Linearize.fundecl -> Linearize.fundecl
 %-------------------------------------------------------------
 
 <<asmcomp/scheduling.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: scheduling.mli,v 1.2 1996/04/30 14:42:59 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Scheduling.fundecl>>
 @
@@ -13652,17 +12475,7 @@ let fundecl f =
 %-------------------------------------------------------------
 
 <<asmcomp/arm/scheduling.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header>>
 open Mach
 
 open Schedgen
@@ -13818,18 +12631,7 @@ type phrase =
 %-------------------------------------------------------------
 
 <<asmcomp/cmm.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: cmm.mli,v 1.11 1997/03/04 10:19:44 xleroy Exp $ *)
+<<copyright header>>
 
 <<type Cmm.machtype_component>>
 
@@ -13866,7 +12668,6 @@ type phrase =
 \subsection*{[[asmcomp/cmm.ml]]}
 
 <<type Cmm.machtype_component (asmcomp/cmm.ml)>>=
-(* $Id: cmm.ml,v 1.11 1997/03/04 10:19:43 xleroy Exp $ *)
 
 type machtype_component =
     Addr
@@ -14020,17 +12821,7 @@ type phrase =
 %-------------------------------------------------------------
 
 <<asmcomp/cmm.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header>>
 <<type Cmm.machtype_component (asmcomp/cmm.ml)>>
 
 <<type Cmm.machtype (asmcomp/cmm.ml)>>
@@ -14109,18 +12900,7 @@ val phrase : Cmm.phrase -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/printcmm.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: printcmm.mli,v 1.4 1996/04/30 14:42:43 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Printcmm.machtype_component>>
 <<signature Printcmm.machtype>>
@@ -14266,18 +13046,7 @@ let phrase = function
 %-------------------------------------------------------------
 
 <<asmcomp/printcmm.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: printcmm.ml,v 1.12 1997/03/04 10:19:50 xleroy Exp $ *)
+<<copyright header>>
 
 (* Pretty-printing of C-- code *)
 
@@ -14505,18 +13274,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/compilenv.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: compilenv.mli,v 1.8 1997/05/15 13:22:05 xleroy Exp $ *)
+<<copyright header>>
 
 (* Compilation environments for compilation units *)
 
@@ -14713,18 +13471,7 @@ let report_error = function
 %-------------------------------------------------------------
 
 <<asmcomp/compilenv.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: compilenv.ml,v 1.10 1997/05/15 13:22:05 xleroy Exp $ *)
+<<copyright header>>
 
 (* Compilation environments for compilation units *)
 
@@ -14856,18 +13603,7 @@ val reinit: unit -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/reg.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: reg.mli,v 1.6 1996/04/30 14:42:56 xleroy Exp $ *)
+<<copyright header>>
 
 (* Pseudo-registers *)
 
@@ -15066,18 +13802,7 @@ let set_of_array v =
 %-------------------------------------------------------------
 
 <<asmcomp/reg.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: reg.ml,v 1.8 1996/09/18 14:16:15 xleroy Exp $ *)
+<<copyright header>>
 
 open Cmm
 
@@ -15146,18 +13871,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/asmlibrarian.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: asmlibrarian.mli,v 1.4 1996/04/30 14:42:09 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Asmlibrarian.create_archive>>
 
@@ -15230,18 +13944,7 @@ let report_error = function
 %-------------------------------------------------------------
 
 <<asmcomp/asmlibrarian.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: asmlibrarian.ml,v 1.7 1996/11/07 10:55:00 xleroy Exp $ *)
+<<copyright header>>
 
 (* Build libraries of .cmx files *)
 
@@ -15276,18 +13979,7 @@ val intro: int -> Lambda.lambda -> Clambda.ulambda
 %-------------------------------------------------------------
 
 <<asmcomp/closure.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: closure.mli,v 1.4 1996/04/30 14:42:14 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Closure.intro>>
 
@@ -15508,18 +14200,7 @@ let intro size lam =
 %-------------------------------------------------------------
 
 <<asmcomp/closure.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: closure.ml,v 1.22 1997/07/30 12:27:45 xleroy Exp $ *)
+<<copyright header>>
 
 (* Introduction of closures, uncurrying, recognition of direct calls *)
 
@@ -15914,18 +14595,7 @@ val instr_iter: (instruction -> unit) -> instruction -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/mach.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: mach.mli,v 1.14 1997/03/04 10:19:50 xleroy Exp $ *)
+<<copyright header>>
 
 <<type Mach.integer_comparison>>
 
@@ -16094,18 +14764,7 @@ let rec instr_iter f i =
 %-------------------------------------------------------------
 
 <<asmcomp/mach.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: mach.ml,v 1.14 1997/03/04 10:19:49 xleroy Exp $ *)
+<<copyright header>>
 
 <<type Mach.integer_comparison (asmcomp/mach.ml)>>
 
@@ -16190,18 +14849,7 @@ val print_live: bool ref
 %-------------------------------------------------------------
 
 <<asmcomp/printmach.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: printmach.mli,v 1.4 1996/04/30 14:42:46 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Printmach.reg>>
 <<signature Printmach.regs>>
@@ -16501,18 +15149,7 @@ let preferences () =
 %-------------------------------------------------------------
 
 <<asmcomp/printmach.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: printmach.ml,v 1.16 1997/03/04 10:19:50 xleroy Exp $ *)
+<<copyright header>>
 
 (* Pretty-printing of pseudo machine code *)
 
@@ -16569,18 +15206,7 @@ val fundecl: Mach.fundecl -> Mach.fundecl
 %-------------------------------------------------------------
 
 <<asmcomp/split.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: split.mli,v 1.3 1996/04/30 14:43:05 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Split.fundecl>>
 @
@@ -16806,18 +15432,7 @@ let fundecl f =
 %-------------------------------------------------------------
 
 <<asmcomp/split.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: split.ml,v 1.7 1996/04/30 14:43:04 xleroy Exp $ *)
+<<copyright header>>
 
 (* Renaming of registers at reload points to split live ranges. *)
 
@@ -16951,18 +15566,7 @@ val assemble_file: string -> string -> int
 %-------------------------------------------------------------
 
 <<asmcomp/proc.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: proc.mli,v 1.15 1997/07/24 11:48:52 xleroy Exp $ *)
+<<copyright header>>
 
 (* Processor descriptions *)
 
@@ -17250,7 +15854,6 @@ let assemble_file infile outfile =
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
 
 (* Description of the ARM processor *)
 
@@ -17332,7 +15935,6 @@ open Mach
 \subsection*{[[asmcomp/reloadgen.mli]]}
 
 <<type Reloadgen.reloader>>=
-(* $Id: reloadgen.mli,v 1.2 1997/11/13 10:57:09 xleroy Exp $ *)
 
 type reloader = {
  reload_operation :
@@ -17553,18 +16155,7 @@ let reload_generic () =
 %-------------------------------------------------------------
 
 <<asmcomp/reloadgen.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: reloadgen.ml,v 1.2 1997/11/13 10:57:09 xleroy Exp $ *)
+<<copyright header>>
 
 (* Insert load/stores for pseudoregs that got assigned to stack locations. *)
 
@@ -17598,18 +16189,7 @@ val build_graph: Mach.fundecl -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/interf.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: interf.mli,v 1.3 1996/04/30 14:42:35 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Interf.build_graph>>
 @
@@ -17627,18 +16207,7 @@ val fundecl: Mach.fundecl -> Mach.fundecl * bool
 %-------------------------------------------------------------
 
 <<asmcomp/reload.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: reload.mli,v 1.5 1997/07/24 11:48:54 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Reload.fundecl>>
 
@@ -17673,7 +16242,6 @@ let fundecl f =
 (***********************************************************************)
 open Reloadgen
 
-(* $Id$ *)
 
 <<function Reload.fundecl>>
 @
@@ -17853,18 +16421,7 @@ let build_graph fundecl =
 %-------------------------------------------------------------
 
 <<asmcomp/interf.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: interf.ml,v 1.8 1996/09/18 14:16:12 xleroy Exp $ *)
+<<copyright header>>
 
 (* Construction of the interference graph.
    Annotate pseudoregs with interference lists and preference lists. *)
@@ -17889,18 +16446,7 @@ val allocate_registers: unit -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/coloring.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: coloring.mli,v 1.3 1996/04/30 14:42:22 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Coloring.allocate_registers>>
 @
@@ -18195,18 +16741,7 @@ let allocate_registers() =
 %-------------------------------------------------------------
 
 <<asmcomp/coloring.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: coloring.ml,v 1.10 1996/05/16 19:39:18 xleroy Exp $ *)
+<<copyright header>>
 
 (* Register allocation by coloring of the interference graph *)
 
@@ -18293,18 +16828,7 @@ val fundecl: Mach.fundecl -> fundecl
 %-------------------------------------------------------------
 
 <<asmcomp/linearize.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: linearize.mli,v 1.9 1997/03/07 15:32:26 xleroy Exp $ *)
+<<copyright header>>
 
 <<type Linearize.label>>
 <<signature Linearize.new_label>>
@@ -18569,18 +17093,7 @@ let fundecl f =
 %-------------------------------------------------------------
 
 <<asmcomp/linearize.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: linearize.ml,v 1.16 1997/03/07 15:32:25 xleroy Exp $ *)
+<<copyright header>>
 
 (* Transformation of Mach code into a list of pseudo-instructions. *)
 
@@ -18640,18 +17153,7 @@ val fundecl: fundecl -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/printlinear.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: printlinear.mli,v 1.3 1996/04/30 14:42:44 xleroy Exp $ *)
+<<copyright header>>
 
 (* Pretty-printing of linearized machine code *)
 
@@ -18742,18 +17244,7 @@ let fundecl f =
 %-------------------------------------------------------------
 
 <<asmcomp/printlinear.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: printlinear.ml,v 1.8 1997/02/04 08:01:12 weis Exp $ *)
+<<copyright header>>
 
 (* Pretty-printing of linearized machine code *)
 
@@ -18785,18 +17276,7 @@ val fundecl: Mach.fundecl -> Mach.fundecl
 %-------------------------------------------------------------
 
 <<asmcomp/spill.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: spill.mli,v 1.3 1996/04/30 14:43:03 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Spill.fundecl>>
 @
@@ -19176,18 +17656,7 @@ let fundecl f =
 %-------------------------------------------------------------
 
 <<asmcomp/spill.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: spill.ml,v 1.11 1996/04/30 14:43:02 xleroy Exp $ *)
+<<copyright header>>
 
 (* Insertion of moves to suggest possible spilling / reloading points 
    before register allocation. *)
@@ -19406,18 +17875,7 @@ val selector_generic: unit -> selector
 %-------------------------------------------------------------
 
 <<asmcomp/selectgen.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: selectgen.mli,v 1.2 1997/11/06 17:25:24 xleroy Exp $ *)
+<<copyright header>>
 
 <<type Selectgen.environment>>
 
@@ -20332,18 +18790,7 @@ let selector_generic () =
 %-------------------------------------------------------------
 
 <<asmcomp/selectgen.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: selectgen.ml,v 1.3 1997/11/13 10:57:10 xleroy Exp $ *)
+<<copyright header>>
 
 (* Selection of pseudo-instructions, assignment of pseudo-registers,
    sequentialization. *)
@@ -20425,18 +18872,7 @@ val predef_exception: string -> Cmm.phrase
 %-------------------------------------------------------------
 
 <<asmcomp/cmmgen.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: cmmgen.mli,v 1.7 1997/07/02 18:14:37 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Cmmgen.compunit>>
 
@@ -21215,18 +19651,7 @@ let predef_exception name =
 %-------------------------------------------------------------
 
 <<asmcomp/cmmgen.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: cmmgen.ml,v 1.41 1997/10/15 09:20:42 xleroy Exp $ *)
+<<copyright header>>
 
 (* Translation from closed lambda to C-- *)
 
@@ -21958,18 +20383,7 @@ val fundecl: Mach.fundecl -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/liveness.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: liveness.mli,v 1.3 1996/04/30 14:42:39 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Liveness.fundecl>>
 @
@@ -22086,18 +20500,7 @@ let fundecl f =
 %-------------------------------------------------------------
 
 <<asmcomp/liveness.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: liveness.ml,v 1.9 1996/07/25 13:15:15 xleroy Exp $ *)
+<<copyright header>>
 
 (* Liveness analysis.
    Annotate mach code with the set of regs live at each point. *)
@@ -22184,7 +20587,6 @@ val scheduler_generic: unit -> scheduler
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: schedgen.mli,v 1.2 1997/11/13 10:57:09 xleroy Exp $ *)
 
 <<type Schedgen.code_dag_node>>
 
@@ -22220,18 +20622,7 @@ val fundecl: Cmm.fundecl -> Mach.fundecl
 %-------------------------------------------------------------
 
 <<asmcomp/selection.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: selection.mli,v 1.5 1996/04/30 14:43:01 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Selection.fundecl>>
 @
@@ -22415,7 +20806,6 @@ let fundecl f =
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
 
 (* Instruction selection for the ARM processor *)
 
@@ -22789,18 +21179,7 @@ let scheduler_generic () =
 %-------------------------------------------------------------
 
 <<asmcomp/schedgen.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: schedgen.ml,v 1.4 1997/11/13 10:57:09 xleroy Exp $ *)
+<<copyright header>>
 
 (* Instruction scheduling *)
 
@@ -22859,18 +21238,7 @@ val end_assembly: unit -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/emit.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: emit.mli,v 1.4 1996/04/30 14:42:24 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Emit.fundecl>>
 <<signature Emit.data>>
@@ -22907,18 +21275,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/asmgen.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: asmgen.mli,v 1.4 1996/04/30 14:42:06 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Asmgen.compile_implementation>>
 <<signature Asmgen.compile_phrase>>
@@ -23049,18 +21406,7 @@ let report_error = function
 %-------------------------------------------------------------
 
 <<asmcomp/asmgen.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: asmgen.ml,v 1.12 1997/07/24 11:48:46 xleroy Exp $ *)
+<<copyright header>>
 
 (* From lambda to assembly code *)
 
@@ -23125,18 +21471,7 @@ val report_error: error -> unit
 %-------------------------------------------------------------
 
 <<asmcomp/asmlink.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: asmlink.mli,v 1.4 1996/04/30 14:42:11 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Asmlink.link>>
 
@@ -23432,18 +21767,7 @@ let report_error = function
 %-------------------------------------------------------------
 
 <<asmcomp/asmlink.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: asmlink.ml,v 1.25 1997/07/02 18:14:34 xleroy Exp $ *)
+<<copyright header>>
 
 (* Link a set of .cmx/.o files and produce an executable *)
 
@@ -23527,18 +21851,7 @@ val init_path: unit -> unit
 %-------------------------------------------------------------
 
 <<./driver/optcompile.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: optcompile.mli,v 1.5 1996/04/30 14:45:57 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Optcompile.interface>>
 <<signature Optcompile.implementation>>
@@ -23703,18 +22016,7 @@ let c_file name =
 %-------------------------------------------------------------
 
 <<./driver/optcompile.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: optcompile.ml,v 1.23 1997/11/18 17:14:53 xleroy Exp $ *)
+<<copyright header>>
 
 (* The batch compiler *)
 
@@ -23757,18 +22059,7 @@ val report_error: exn -> unit
 %-------------------------------------------------------------
 
 <<./driver/opterrors.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: opterrors.mli,v 1.3 1996/04/30 14:45:59 xleroy Exp $ *)
+<<copyright header>>
 
 <<signature Opterrors.report_error>>
 @
@@ -23821,18 +22112,7 @@ let report_error exn =
 %-------------------------------------------------------------
 
 <<./driver/opterrors.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: opterrors.ml,v 1.7 1997/08/22 08:55:38 xleroy Exp $ *)
+<<copyright header>>
 
 (* Error report *)
 
@@ -23976,18 +22256,7 @@ let _ = Printexc.catch main ()
 %-------------------------------------------------------------
 
 <<./driver/optmain.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: optmain.ml,v 1.30 1997/11/18 17:14:54 xleroy Exp $ *)
+<<copyright header>>
 
 open Config
 open Clflags

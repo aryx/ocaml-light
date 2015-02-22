@@ -1,4 +1,5 @@
 (*s: asmcomp/selectgen.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: selectgen.ml,v 1.3 1997/11/13 10:57:10 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Selection of pseudo-instructions, assignment of pseudo-registers,
    sequentialization. *)

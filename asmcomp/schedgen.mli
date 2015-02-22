@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: schedgen.mli,v 1.2 1997/11/13 10:57:09 xleroy Exp $ *)
 
 (*s: type Schedgen.code_dag_node *)
 (* Instruction scheduling *)

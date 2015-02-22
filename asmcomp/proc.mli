@@ -1,4 +1,5 @@
 (*s: asmcomp/proc.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: proc.mli,v 1.15 1997/07/24 11:48:52 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Processor descriptions *)
 

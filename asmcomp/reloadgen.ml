@@ -1,4 +1,5 @@
 (*s: asmcomp/reloadgen.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: reloadgen.ml,v 1.2 1997/11/13 10:57:09 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Insert load/stores for pseudoregs that got assigned to stack locations. *)
 

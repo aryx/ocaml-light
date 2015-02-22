@@ -1,4 +1,5 @@
 (*s: asmcomp/clambda.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: clambda.mli,v 1.9 1997/02/16 17:20:08 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* A variant of the "lambda" code with direct / indirect calls explicit
    and closures explicit too *)

@@ -1,4 +1,5 @@
 (*s: asmcomp/spill.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: spill.ml,v 1.11 1996/04/30 14:43:02 xleroy Exp $ *)
+(*e: copyright header *)
 
 (* Insertion of moves to suggest possible spilling / reloading points 
    before register allocation. *)

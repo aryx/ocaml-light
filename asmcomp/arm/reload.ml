@@ -11,7 +11,6 @@
 (***********************************************************************)
 open Reloadgen
 
-(* $Id$ *)
 
 (*s: function Reload.fundecl *)
 (* Reloading for the ARM *)

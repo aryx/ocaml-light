@@ -1,4 +1,5 @@
 (*s: asmcomp/interf.mli *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: interf.mli,v 1.3 1996/04/30 14:42:35 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: signature Interf.build_graph *)
 (* Construction of the interference graph.

@@ -1,4 +1,5 @@
 (*s: asmcomp/mach.ml *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: mach.ml,v 1.14 1997/03/04 10:19:49 xleroy Exp $ *)
+(*e: copyright header *)
 
 (*s: type Mach.integer_comparison (asmcomp/mach.ml) *)
 (* Representation of machine code by sequences of pseudoinstructions *)
