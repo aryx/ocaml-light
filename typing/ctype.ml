@@ -406,3 +406,6 @@ let rec arity ty =
   match repr ty with
     Tarrow(t1, t2) -> 1 + arity t2
   | _ -> 0
+
+let newty x = x
+let init_def _ = ()

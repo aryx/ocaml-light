@@ -93,3 +93,8 @@ val report_error: error -> unit
 (* Forward declaration to break mutual recursion with includemod. *)
 
 val check_modtype_inclusion: (t -> module_type -> module_type -> unit) ref
+
+
+type summary = unit
+
+val summary: 'a -> summary

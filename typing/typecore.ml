@@ -59,7 +59,7 @@ let pattern_variables = ref ([]: (Ident.t * type_expr) list)
 let enter_variable loc name ty =
   if List.exists (fun (id, ty) -> Ident.name id = name) !pattern_variables
   then raise(Error(loc, Multiply_bound_variable));
-  let id = Ident.new name in
+  let id = Ident.create name in
   pattern_variables := (id, ty) :: !pattern_variables;
   id
 
@@ -90,7 +90,7 @@ let rec type_pat env sp =
       { pat_desc = Tpat_tuple pl;
         pat_loc = sp.ppat_loc;
         pat_type = Ttuple(List.map (fun p -> p.pat_type) pl) }
-  | Ppat_construct(lid, sarg) ->
+  | Ppat_construct(lid, sarg, _bool) ->
       let constr =
         try
           Env.lookup_constructor lid env
@@ -310,7 +310,7 @@ let rec type_exp env sexp =
       { exp_desc = Texp_tuple expl;
         exp_loc = sexp.pexp_loc;
         exp_type = Ttuple(List.map (fun exp -> exp.exp_type) expl) }
-  | Pexp_construct(lid, sarg) ->
+  | Pexp_construct(lid, sarg, _bool) ->
       let constr =
         try
           Env.lookup_constructor lid env
@@ -430,7 +430,7 @@ let rec type_exp env sexp =
       { exp_desc = Texp_for(id, low, high, dir, body);
         exp_loc = sexp.pexp_loc;
         exp_type = Predef.type_unit }
-  | Pexp_constraint(sarg, sty) ->
+  | Pexp_constraint(sarg, Some sty, _) ->
       let ty = Typetexp.transl_simple_type env false sty in
       let arg = type_expect env sarg ty in
       { exp_desc = arg.exp_desc;

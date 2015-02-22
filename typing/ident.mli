@@ -15,8 +15,8 @@
 
 type t
 
-val new: string -> t
-val new_persistent: string -> t
+val create: string -> t
+val create_persistent: string -> t
 val name: t -> string
 val unique_name: t -> string
 val persistent: t -> bool
@@ -51,3 +51,5 @@ val find_same: t -> 'a tbl -> 'a
 val find_name: string -> 'a tbl -> 'a
 
 val print_tbl: ('a -> unit) -> 'a tbl -> unit
+
+val current_time: unit -> int

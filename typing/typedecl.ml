@@ -45,11 +45,7 @@ let rec enter_types env = function
 
 (* Translate one type declaration *)
 
-module StringSet =
-  Set.Make(struct
-    type t = string
-    let compare = compare
-  end)
+module StringSet = Set
 
 let transl_declaration env (name, sdecl) id =
   Ctype.begin_def();
@@ -138,7 +134,7 @@ let transl_type_decl env name_sdecl_list =
     match name_sdecl_list with
       [(name, {ptype_kind = Ptype_abstract}) as name_sdecl] ->
         (* No recursion involved, use original env for translation *)
-        let id = Ident.new name in
+        let id = Ident.create name in
         [transl_declaration env name_sdecl id]
     | _ ->
         (* Enter the types as abstract *)

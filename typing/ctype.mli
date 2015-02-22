@@ -74,3 +74,5 @@ val substitute:
 
 exception Unify
 
+val newty: 'a -> 'a
+val init_def: 'a -> unit

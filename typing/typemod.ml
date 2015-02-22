@@ -54,28 +54,6 @@ let type_module_path env loc lid =
   with Not_found ->
     raise(Error(loc, Unbound_module lid))
 
-(* Merge one "with" constraint in a signature *)
-
-let merge_constraint env loc sg lid constr =
-  let rec merge sg namelist =
-    match (sg, namelist, constr) with
-      ([], _, _) ->
-        raise(Error(loc, With_no_component lid))
-    | (Tsig_type(id, decl) :: rem, [s], Pwith_type sdecl)
-      when Ident.name id = s ->
-        let newdecl = Typedecl.transl_with_constraint env sdecl in
-        Tsig_type(id, newdecl) :: rem
-    | (Tsig_module(id, mty) :: rem, [s], Pwith_module lid)
-      when Ident.name id = s ->
-        let (path, mty') = type_module_path env loc lid in
-        Tsig_module(id, Mtype.strengthen env mty' path) :: rem
-    | (Tsig_module(id, mty) :: rem, s :: namelist, _) when Ident.name id = s ->
-        let newsg = merge (extract_sig env loc mty) namelist in
-        Tsig_module(id, Tmty_signature newsg) :: rem
-    | (item :: rem, _, _) ->
-        item :: merge rem namelist in
-  merge sg (Longident.flatten lid)
-
 (* Check and translate a module type expression *)
 
 let rec transl_modtype env smty =
@@ -89,20 +67,6 @@ let rec transl_modtype env smty =
       end
   | Pmty_signature ssg ->
       Tmty_signature(transl_signature env ssg)
-  | Pmty_functor(param, sarg, sres) ->
-      let arg = transl_modtype env sarg in
-      let (id, newenv) = Env.enter_module param arg env in
-      let res = transl_modtype newenv sres in
-      Tmty_functor(id, arg, res)
-  | Pmty_with(sbody, constraints) ->
-      let body = transl_modtype env sbody in
-      let init_sg = extract_sig env sbody.pmty_loc body in
-      let final_sg =
-        List.fold_left
-          (fun sg (lid, sdecl) ->
-            merge_constraint env smty.pmty_loc sg lid sdecl)
-          init_sg constraints in
-      Tmty_signature final_sg
       
 and transl_signature env sg =
   match sg with
@@ -126,29 +90,11 @@ and transl_signature env sg =
       let (id, newenv) = Env.enter_module name mty env in
       let rem = transl_signature newenv srem in
       Tsig_module(id, mty) :: rem
-  | {psig_desc = Psig_modtype(name, sinfo)} :: srem ->
-      let info = transl_modtype_info env sinfo in
-      let (id, newenv) = Env.enter_modtype name info env in
-      let rem = transl_signature newenv srem in
-      Tsig_modtype(id, info) :: rem
   | {psig_desc = Psig_open lid; psig_loc = loc} :: srem ->
       let (path, mty) = type_module_path env loc lid in
       let sg = extract_sig_open env loc mty in
       let newenv = Env.open_signature path sg env in
       transl_signature newenv srem
-  | {psig_desc = Psig_include smty} :: srem ->
-      let mty = transl_modtype env smty in
-      let sg = extract_sig env smty.pmty_loc mty in
-      let newenv = Env.add_signature sg env in
-      let rem = transl_signature newenv srem in
-      sg @ rem
-
-and transl_modtype_info env sinfo =
-  match sinfo with
-    Pmodtype_abstract ->
-      Tmodtype_abstract
-  | Pmodtype_manifest smty ->
-      Tmodtype_manifest(transl_modtype env smty)
 
 (* Try to convert a module expression to a module path. *)
 
@@ -164,7 +110,7 @@ let rec path_of_module mexp =
 (* Check that all type and module identifiers in a structure have
    distinct names (so that access by named paths is unambiguous). *)
 
-module StringSet = Set.Make(struct type t = string let compare = compare end)
+module StringSet = Set
 
 let check_unique_names sg =
   let type_names = ref StringSet.empty
@@ -186,8 +132,6 @@ let check_unique_names sg =
     | Pstr_exception(name, decl) -> ()
     | Pstr_module(name, smod) ->
         check "module" item.pstr_loc module_names name
-    | Pstr_modtype(name, decl) ->
-        check "module type" item.pstr_loc modtype_names name
     | Pstr_open lid -> () in
   List.iter check_item sg
 
@@ -220,41 +164,6 @@ let rec type_module env smod =
       { mod_desc = Tmod_structure str;
         mod_type = Tmty_signature sg;
         mod_loc = smod.pmod_loc }
-  | Pmod_functor(name, smty, sbody) ->
-      let mty = transl_modtype env smty in
-      let (id, newenv) = Env.enter_module name mty env in
-      let body = type_module newenv sbody in
-      { mod_desc = Tmod_functor(id, mty, body);
-        mod_type = Tmty_functor(id, mty, body.mod_type);
-        mod_loc = smod.pmod_loc }
-  | Pmod_apply(sfunct, sarg) ->
-      let funct = type_module env sfunct in
-      let arg = type_module env sarg in
-      begin match Mtype.scrape env funct.mod_type with
-        Tmty_functor(param, mty_param, mty_res) as mty_functor ->
-          let coercion =
-            try
-              Includemod.modtypes env arg.mod_type mty_param
-            with Includemod.Error msg ->
-              raise(Error(sarg.pmod_loc, Not_included msg)) in
-          let mty_appl =
-	    try
-	      let path = path_of_module arg in
-              Subst.modtype (Subst.add_module param path Subst.identity)
-      	       	       	    mty_res
-	    with Not_a_path ->
-              try
-                Mtype.nondep_supertype
-                  (Env.add_module param arg.mod_type env) param mty_res
-              with Not_found ->
-                raise(Error(smod.pmod_loc,
-                            Cannot_eliminate_dependency mty_functor)) in
-          { mod_desc = Tmod_apply(funct, arg, coercion);
-            mod_type = mty_appl;
-            mod_loc = smod.pmod_loc }
-      | _ ->
-          raise(Error(sfunct.pmod_loc, Cannot_apply funct.mod_type))
-      end        
   | Pmod_constraint(sarg, smty) ->
       let arg = type_module env sarg in
       let mty = transl_modtype env smty in
@@ -314,13 +223,6 @@ and type_struct env = function
       let (str_rem, sig_rem, final_env) = type_struct newenv srem in
       (Tstr_module(id, modl) :: str_rem,
        Tsig_module(id, modl.mod_type) :: sig_rem,
-       final_env)
-  | {pstr_desc = Pstr_modtype(name, smty)} :: srem ->
-      let mty = transl_modtype env smty in
-      let (id, newenv) = Env.enter_modtype name (Tmodtype_manifest mty) env in
-      let (str_rem, sig_rem, final_env) = type_struct newenv srem in
-      (Tstr_modtype(id, mty) :: str_rem,
-       Tsig_modtype(id, Tmodtype_manifest mty) :: sig_rem,
        final_env)
   | {pstr_desc = Pstr_open lid; pstr_loc = loc} :: srem ->
       let (path, mty) = type_module_path env loc lid in
