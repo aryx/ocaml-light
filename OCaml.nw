@@ -106,10 +106,11 @@
 
 \title{
 {\Huge 
-Principia Softwarica: The OCaml Light Compiler
+Principia Softwarica: The OCaml Light Compilers
 }\\
 {version 0.1}
 }
+% compilers, with an s
 
 \author{
 Yoann Padioleau\\
@@ -856,7 +857,21 @@ val token: Lexing.lexbuf -> Parser.token
 @
 
 
+\section{Comments}
 
+\section{Keywords and identifiers}
+
+\section{Operators}
+
+\section{Numbers}
+
+\subsection{Integers}
+
+\subsection{Floats}
+
+\section{Characters}
+
+\section{Strings}
 
 \chapter{Parsing}
 
@@ -1000,7 +1015,8 @@ let type_constant = function
   | Const_float _ -> instance Predef.type_float
 @
 
-\section{Resolving names, [[Ident]] and [[Path]]}
+\section{Resolving names}
+%Naming? A special section? nast
 
 % resolving? fully qualifying every idents?
 
@@ -1067,114 +1083,7 @@ and abbrev_memo =
 @
 % ???
 
-\section{Builtin types and exceptions}
-
-%(* Predefined type constructors (with special typing rules in typecore) *)
-
-<<signatures Predef.type_xxx>>=
-val type_int: type_expr
-val type_char: type_expr
-val type_string: type_expr
-val type_float: type_expr
-val type_bool: type_expr
-val type_unit: type_expr
-
-val type_list: type_expr -> type_expr
-val type_array: type_expr -> type_expr
-
-val type_exn: type_expr
-@
-
-<<signatures Predef.path_xxx>>=
-val path_int: Path.t
-val path_char: Path.t
-val path_string: Path.t
-val path_float: Path.t
-val path_bool: Path.t
-val path_unit: Path.t
-
-val path_list: Path.t
-val path_array: Path.t
-
-val path_exn: Path.t
-
-val path_format: Path.t
-@
-
-
-<<constants Predef.ident_xxx>>=
-let ident_int = Ident.create "int"
-and ident_char = Ident.create "char"
-and ident_string = Ident.create "string"
-and ident_float = Ident.create "float"
-and ident_bool = Ident.create "bool"
-and ident_unit = Ident.create "unit"
-
-and ident_exn = Ident.create "exn"
-
-and ident_array = Ident.create "array"
-
-and ident_list = Ident.create "list"
-
-
-and ident_format = Ident.create "format"
-@
-% no module
-% subtle: don't change the order here, otherwise you may
-%  have problem in otherlibs/unix, and get error like
-%  "type exn is used where expect exn"
-
-<<constants Predef.path_xxx>>=
-let path_int = Pident ident_int
-and path_char = Pident ident_char
-and path_string = Pident ident_string
-and path_float = Pident ident_float
-and path_bool = Pident ident_bool
-and path_unit = Pident ident_unit
-
-and path_list = Pident ident_list
-and path_array = Pident ident_array
-
-and path_exn = Pident ident_exn
-
-and path_format = Pident ident_format
-@
-
-<<constants Predef.type_xxx>>=
-let type_int     = newgenty (Tconstr(path_int, [], ref Mnil))
-and type_char    = newgenty (Tconstr(path_char, [], ref Mnil))
-and type_string  = newgenty (Tconstr(path_string, [], ref Mnil))
-and type_float   = newgenty (Tconstr(path_float, [], ref Mnil))
-and type_bool    = newgenty (Tconstr(path_bool, [], ref Mnil))
-and type_unit    = newgenty (Tconstr(path_unit, [], ref Mnil))
-and type_exn     = newgenty (Tconstr(path_exn, [], ref Mnil))
-and type_array t = newgenty (Tconstr(path_array, [t], ref Mnil))
-and type_list t  = newgenty (Tconstr(path_list, [t], ref Mnil))
-@
-
-<<signature Predef.path_match_failure>>=
-val path_match_failure: Path.t
-@
-% why a path for this one?
-
-<<constant Predef.path_match_failure>>=
-let path_match_failure = Pident ident_match_failure
-@
-
-<<constants Predef.ident_exn_xxx>>=
-let ident_match_failure = Ident.create "Match_failure"
-and ident_out_of_memory = Ident.create "Out_of_memory"
-and ident_invalid_argument = Ident.create "Invalid_argument"
-and ident_failure = Ident.create "Failure"
-and ident_not_found = Ident.create "Not_found"
-and ident_sys_error = Ident.create "Sys_error"
-and ident_end_of_file = Ident.create "End_of_file"
-and ident_division_by_zero = Ident.create "Division_by_zero"
-and ident_stack_overflow = Ident.create "Stack_overflow"
-@
-
-
-\section{Typed tree}
+\section{The typed AST}
 
 % could factorize?
 
@@ -1268,6 +1177,79 @@ and module_coercion =
 @
 
 
+\section{Builtin types}
+% and exceptions
+
+%(* Predefined type constructors (with special typing rules in typecore) *)
+
+<<signatures Predef.type_xxx>>=
+val type_int: type_expr
+val type_char: type_expr
+val type_string: type_expr
+val type_float: type_expr
+val type_bool: type_expr
+val type_unit: type_expr
+
+val type_list: type_expr -> type_expr
+val type_array: type_expr -> type_expr
+@
+
+
+<<signatures Predef.path_xxx>>=
+val path_int: Path.t
+val path_char: Path.t
+val path_string: Path.t
+val path_float: Path.t
+val path_bool: Path.t
+val path_unit: Path.t
+
+val path_list: Path.t
+val path_array: Path.t
+@
+
+
+<<constants Predef.ident_xxx>>=
+let ident_int = Ident.create "int"
+and ident_char = Ident.create "char"
+and ident_string = Ident.create "string"
+and ident_float = Ident.create "float"
+and ident_bool = Ident.create "bool"
+and ident_unit = Ident.create "unit"
+
+and ident_exn = Ident.create "exn"
+
+and ident_array = Ident.create "array"
+and ident_list = Ident.create "list"
+@
+% no module
+% subtle: don't change the order here, otherwise you may
+%  have problem in otherlibs/unix, and get error like
+%  "type exn is used where expect exn"
+
+<<constants Predef.path_xxx>>=
+let path_int = Pident ident_int
+and path_char = Pident ident_char
+and path_string = Pident ident_string
+and path_float = Pident ident_float
+and path_bool = Pident ident_bool
+and path_unit = Pident ident_unit
+
+and path_list = Pident ident_list
+and path_array = Pident ident_array
+@
+
+<<constants Predef.type_xxx>>=
+let type_int     = newgenty (Tconstr(path_int, [], ref Mnil))
+and type_char    = newgenty (Tconstr(path_char, [], ref Mnil))
+and type_string  = newgenty (Tconstr(path_string, [], ref Mnil))
+and type_float   = newgenty (Tconstr(path_float, [], ref Mnil))
+and type_bool    = newgenty (Tconstr(path_bool, [], ref Mnil))
+and type_unit    = newgenty (Tconstr(path_unit, [], ref Mnil))
+
+and type_array t = newgenty (Tconstr(path_array, [t], ref Mnil))
+and type_list t  = newgenty (Tconstr(path_list, [t], ref Mnil))
+@
+
 \section{Builtin values}
 % different from primitives
 % different from pervasives
@@ -1282,13 +1264,6 @@ val build_initial_env:
   (Ident.t -> Types.exception_declaration -> 'a -> 'a) ->
   'a -> 'a
 @
-
-<<signature Predef.builtin_values>>=
-(* To initialize linker tables *)
-
-val builtin_values: (string * Ident.t) list
-@
-
 
 
 
@@ -1333,16 +1308,8 @@ let build_initial_env add_type add_exception empty_env =
      type_kind = Type_abstract;
      type_manifest = None} in
 
-  add_exception ident_match_failure
-                         [newgenty (Ttuple[type_string; type_int; type_int])] (
-  add_exception ident_out_of_memory [] (
-  add_exception ident_stack_overflow [] (
-  add_exception ident_invalid_argument [type_string] (
-  add_exception ident_failure [type_string] (
-  add_exception ident_not_found [] (
-  add_exception ident_sys_error [type_string] (
-  add_exception ident_end_of_file [] (
-  add_exception ident_division_by_zero [] (
+  <<[[Predef.build_initial_env()]] adding exceptions>>
+
   add_type ident_format decl_format (
   add_type ident_list decl_list (
   add_type ident_array decl_array (
@@ -1353,18 +1320,9 @@ let build_initial_env add_type add_exception empty_env =
   add_type ident_string decl_abstr (
   add_type ident_char decl_abstr (
   add_type ident_int decl_abstr (
-    empty_env)))))))))))))))))))
+  empty_env
+  )))))))))))))))))))
 @
-
-<<constant Predef.builtin_values>>=
-let builtin_values =
-  List.map (fun id -> Ident.make_global id; (Ident.name id, id))
-      [ident_match_failure; ident_out_of_memory; ident_stack_overflow;
-       ident_invalid_argument;
-       ident_failure; ident_not_found; ident_sys_error; ident_end_of_file;
-       ident_division_by_zero]
-@
-
 
 
 \section{Primitives}
@@ -1410,8 +1368,8 @@ let parse_declaration arity decl =
 @
 
 
-\section{The (typed, resolved) symbol table, [[Env.t]]}
-% The typed symbol table
+\section{The (typed, named) symbol table, [[Env.t]]}
+% The typed, resolved symbol table
 
 <<signature type Env.t>>=
 type t
@@ -1937,12 +1895,152 @@ val type_structure:
 @
 
 
-\section{Advanced typing Issues}
+\section{Advanced typing issues}
 
-% type aliases? abstract types?
 % those are the reasons the typechecker got so complicated?
 
+\subsection{References}
 % _a
+
+\subsection{Exceptions}
+
+% builtin exceptions
+
+<<signatures Predef.type_xxx>>=
+val type_exn: type_expr
+@
+
+<<signatures Predef.path_xxx>>=
+val path_exn: Path.t
+@
+
+<<constants Predef.path_xxx>>=
+and path_exn = Pident ident_exn
+@
+
+<<constants Predef.type_xxx>>=
+and type_exn     = newgenty (Tconstr(path_exn, [], ref Mnil))
+@
+
+
+<<signature Predef.path_match_failure>>=
+val path_match_failure: Path.t
+@
+% why a path for this one?
+<<constant Predef.path_match_failure>>=
+let path_match_failure = Pident ident_match_failure
+@
+
+<<constants Predef.ident_exn_xxx>>=
+let ident_match_failure = Ident.create "Match_failure"
+and ident_out_of_memory = Ident.create "Out_of_memory"
+and ident_invalid_argument = Ident.create "Invalid_argument"
+and ident_failure = Ident.create "Failure"
+and ident_not_found = Ident.create "Not_found"
+and ident_sys_error = Ident.create "Sys_error"
+and ident_end_of_file = Ident.create "End_of_file"
+and ident_division_by_zero = Ident.create "Division_by_zero"
+and ident_stack_overflow = Ident.create "Stack_overflow"
+@
+
+
+<<[[Predef.build_initial_env()]] adding exceptions>>=
+add_exception ident_match_failure
+                       [newgenty (Ttuple[type_string; type_int; type_int])] (
+add_exception ident_out_of_memory [] (
+add_exception ident_stack_overflow [] (
+add_exception ident_invalid_argument [type_string] (
+add_exception ident_failure [type_string] (
+add_exception ident_not_found [] (
+add_exception ident_sys_error [type_string] (
+add_exception ident_end_of_file [] (
+add_exception ident_division_by_zero [] (
+@
+
+<<signature Predef.builtin_values>>=
+(* To initialize linker tables *)
+
+val builtin_values: (string * Ident.t) list
+@
+
+<<constant Predef.builtin_values>>=
+let builtin_values =
+  List.map (fun id -> Ident.make_global id; (Ident.name id, id))
+      [ident_match_failure; ident_out_of_memory; ident_stack_overflow;
+       ident_invalid_argument;
+       ident_failure; ident_not_found; ident_sys_error; ident_end_of_file;
+       ident_division_by_zero]
+@
+
+\subsection{Abstract types}
+
+\subsection{Type aliases}
+
+\subsection{Printf}
+
+<<constants Predef.ident_xxx>>=
+and ident_format = Ident.create "format"
+@
+
+<<signatures Predef.path_xxx>>=
+val path_format: Path.t
+@
+
+<<constants Predef.path_xxx>>=
+and path_format = Pident ident_format
+@
+
+% special format typechecking
+
+<<function Typecore.type_format>>=
+(* Typing of printf formats *)
+
+let type_format loc fmt =
+  let len = String.length fmt in
+  let ty_input = newvar()
+  and ty_result = newvar() in
+  let rec skip_args j =
+    if j >= len then j else
+      match fmt.[j] with
+        '0' .. '9' | ' ' | '.' | '-' -> skip_args (j+1)
+      | _ -> j in
+  let rec scan_format i =
+    if i >= len then ty_result else
+    match fmt.[i] with
+      '%' ->
+        let j = skip_args(i+1) in
+        begin match String.unsafe_get fmt j with
+        (* We're using unsafe_get here so that if j = String.length fmt,
+           we'll fall in the catch-all case of the match *)
+          '%' ->
+            scan_format (j+1)
+        | 's' ->
+            newty (Tarrow(instance Predef.type_string, scan_format (j+1)))
+        | 'c' ->
+            newty (Tarrow(instance Predef.type_char, scan_format (j+1)))
+        | 'd' | 'o' | 'x' | 'X' | 'u' ->
+            newty (Tarrow(instance Predef.type_int, scan_format (j+1)))
+        | 'f' | 'e' | 'E' | 'g' | 'G' ->
+            newty (Tarrow(instance Predef.type_float, scan_format (j+1)))
+        | 'b' ->
+            newty (Tarrow(instance Predef.type_bool, scan_format (j+1)))
+        | 'a' ->
+            let ty_arg = newvar() in
+            newty (Tarrow (newty (Tarrow(ty_input,
+                                         newty (Tarrow (ty_arg, ty_result)))),
+                           newty (Tarrow (ty_arg, scan_format (j+1)))))
+        | 't' ->
+            newty (Tarrow(newty (Tarrow(ty_input, ty_result)),
+                          scan_format (j+1)))
+        | c ->
+            raise(Error(loc, Bad_format(String.sub fmt i (j-i+1))))
+        end
+    | _ -> scan_format (i+1) in
+  newty
+    (Tconstr(Predef.path_format, [scan_format 0; ty_input; ty_result], ref Mnil))
+@
+
+
 
 \chapter{Checking}
 
@@ -2304,7 +2402,7 @@ val for_tupled_function:
 %    languages", chapter 5. *)
 
 
-\section{[[Lambda]] calcul to bytecode [[Instruction]]}
+\section{[[Lambda]] calcul to bytecode}
 
 
 \subsection{[[Instruction]]}
@@ -2658,9 +2756,6 @@ let create_archive archive file_list =
 \chapter{Interpreting}
 % Running
 
-\chapter{Running}
-
-
 \section{Startup}
 
 <<constant Clflags.keep_startup_file>>=
@@ -2670,7 +2765,7 @@ let keep_startup_file = ref false       (* -dstartup *)
 \section{Primitives}
 
 
-\chapter{Collecting}
+\chapter{Garbage Collection}
 
 \chapter{Native Code Generation}
 
@@ -2835,58 +2930,6 @@ let record_event ev =
 <<type Lambda.array_kind>>=
 and array_kind =
     Pgenarray | Paddrarray | Pintarray | Pfloatarray
-@
-
-\section{Printf typechecking}
-
-% special format typechecking
-
-<<function Typecore.type_format>>=
-(* Typing of printf formats *)
-
-let type_format loc fmt =
-  let len = String.length fmt in
-  let ty_input = newvar()
-  and ty_result = newvar() in
-  let rec skip_args j =
-    if j >= len then j else
-      match fmt.[j] with
-        '0' .. '9' | ' ' | '.' | '-' -> skip_args (j+1)
-      | _ -> j in
-  let rec scan_format i =
-    if i >= len then ty_result else
-    match fmt.[i] with
-      '%' ->
-        let j = skip_args(i+1) in
-        begin match String.unsafe_get fmt j with
-        (* We're using unsafe_get here so that if j = String.length fmt,
-           we'll fall in the catch-all case of the match *)
-          '%' ->
-            scan_format (j+1)
-        | 's' ->
-            newty (Tarrow(instance Predef.type_string, scan_format (j+1)))
-        | 'c' ->
-            newty (Tarrow(instance Predef.type_char, scan_format (j+1)))
-        | 'd' | 'o' | 'x' | 'X' | 'u' ->
-            newty (Tarrow(instance Predef.type_int, scan_format (j+1)))
-        | 'f' | 'e' | 'E' | 'g' | 'G' ->
-            newty (Tarrow(instance Predef.type_float, scan_format (j+1)))
-        | 'b' ->
-            newty (Tarrow(instance Predef.type_bool, scan_format (j+1)))
-        | 'a' ->
-            let ty_arg = newvar() in
-            newty (Tarrow (newty (Tarrow(ty_input,
-                                         newty (Tarrow (ty_arg, ty_result)))),
-                           newty (Tarrow (ty_arg, scan_format (j+1)))))
-        | 't' ->
-            newty (Tarrow(newty (Tarrow(ty_input, ty_result)),
-                          scan_format (j+1)))
-        | c ->
-            raise(Error(loc, Bad_format(String.sub fmt i (j-i+1))))
-        end
-    | _ -> scan_format (i+1) in
-  newty
-    (Tconstr(Predef.path_format, [scan_format 0; ty_input; ty_result], ref Mnil))
 @
 
 
@@ -4258,7 +4301,7 @@ let report_error = function
 @
 
 
-\section{Symbol table errors}
+\section{Naming errors}
 
 <<type Env.error>>=
 (* Error report *)
