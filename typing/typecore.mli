@@ -1,50 +1,43 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                           Objective Caml                            *)
+(*                         Caml Special Light                          *)
 (*                                                                     *)
 (*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
 (*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
 
+(* $Id$ *)
+
 (* Type inference for the core language *)
 
 open Asttypes
-open Types
+open Typedtree
 
 val type_binding:
         Env.t -> rec_flag ->
           (Parsetree.pattern * Parsetree.expression) list -> 
-          (Typedtree.pattern * Typedtree.expression) list * Env.t
+            (Typedtree.pattern * Typedtree.expression) list * Env.t
 val type_expression:
         Env.t -> Parsetree.expression -> Typedtree.expression
-val type_pattern_list:
-        Env.t -> Parsetree.pattern list -> Typedtree.pattern list * Env.t
-val type_expect:
-        Env.t -> Parsetree.expression -> type_expr -> Typedtree.expression
-val type_exp:
-        Env.t -> Parsetree.expression -> Typedtree.expression
-
+        
 type error =
     Unbound_value of Longident.t
   | Unbound_constructor of Longident.t
   | Unbound_label of Longident.t
   | Constructor_arity_mismatch of Longident.t * int * int
-  | Label_mismatch of Longident.t * (type_expr * type_expr) list
-  | Pattern_type_clash of (type_expr * type_expr) list
+  | Label_mismatch of Longident.t * type_expr * type_expr
+  | Pattern_type_clash of type_expr * type_expr
   | Multiply_bound_variable
   | Orpat_not_closed
-  | Expr_type_clash of (type_expr * type_expr) list
+  | Expr_type_clash of type_expr * type_expr
   | Apply_non_function of type_expr
   | Label_multiply_defined of Longident.t
   | Label_missing
   | Label_not_mutable of Longident.t
   | Bad_format of string
-  | Not_subtype of (type_expr * type_expr) list * (type_expr * type_expr) list
-  | Coercion_failure of type_expr * type_expr * (type_expr * type_expr) list
-  | Too_many_arguments
 
 exception Error of Location.t * error
 

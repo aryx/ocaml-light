@@ -1,20 +1,19 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                           Objective Caml                            *)
+(*                         Caml Special Light                          *)
 (*                                                                     *)
 (*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
 (*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
 
+(* $Id$ *)
+
 (* Description of primitive functions *)
 
-open Misc
 open Format
-
-(* Description of primitive functions *)
 
 type description =
   { prim_name: string;         (* Name of primitive  or C function *)
@@ -26,25 +25,25 @@ type description =
 let parse_declaration arity decl =
   match decl with
     name :: "noalloc" :: name2 :: "float" :: _ ->
-      {prim_name = name; prim_arity = arity; prim_alloc = false;
-       prim_native_name = name2; prim_native_float = true}
+      Some{prim_name = name; prim_arity = arity; prim_alloc = false;
+           prim_native_name = name2; prim_native_float = true}
   | name :: "noalloc" :: name2 :: _ ->
-      {prim_name = name; prim_arity = arity; prim_alloc = false;
-       prim_native_name = name2; prim_native_float = false}
+      Some{prim_name = name; prim_arity = arity; prim_alloc = false;
+           prim_native_name = name2; prim_native_float = false}
   | name :: name2 :: "float" :: _ ->
-      {prim_name = name; prim_arity = arity; prim_alloc = true;
-       prim_native_name = name2; prim_native_float = true}
+      Some{prim_name = name; prim_arity = arity; prim_alloc = true;
+           prim_native_name = name2; prim_native_float = true}
   | name :: "noalloc" :: _ ->
-      {prim_name = name; prim_arity = arity; prim_alloc = false;
-       prim_native_name = ""; prim_native_float = false}
+      Some{prim_name = name; prim_arity = arity; prim_alloc = false;
+           prim_native_name = ""; prim_native_float = false}
   | name :: name2 :: _ ->
-      {prim_name = name; prim_arity = arity; prim_alloc = true;
-       prim_native_name = name2; prim_native_float = false}
+      Some{prim_name = name; prim_arity = arity; prim_alloc = true;
+           prim_native_name = name2; prim_native_float = false}
   | name :: _ ->
-      {prim_name = name; prim_arity = arity; prim_alloc = true;
-       prim_native_name = ""; prim_native_float = false}
+      Some{prim_name = name; prim_arity = arity; prim_alloc = true;
+           prim_native_name = ""; prim_native_float = false}
   | [] ->
-      fatal_error "Primitive.parse_declaration"
+      None
 
 let print_quoted s = print_char '"'; print_string s; print_char '"'
 

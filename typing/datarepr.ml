@@ -1,20 +1,22 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                           Objective Caml                            *)
+(*                         Caml Special Light                          *)
 (*                                                                     *)
 (*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
 (*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
+
+(* $Id$ *)
 
 (* Compute constructor and label descriptions from type declarations,
    determining their representation. *)
 
 open Misc
 open Asttypes
-open Types
+open Typedtree
 
 let constructor_descrs ty_res cstrs =
   let num_consts = ref 0 and num_nonconsts = ref 0 in
@@ -49,22 +51,19 @@ let exception_descr path_exc decl =
     cstr_consts = -1;
     cstr_nonconsts = -1 }
 
-let none = {desc = Ttuple []; level = -1}
-                                        (* Clearly ill-formed type *)
 let dummy_label =
-  { lbl_res = none; lbl_arg = none; lbl_mut = Immutable;
+  { lbl_res = Ttuple []; lbl_arg = Ttuple []; lbl_mut = Immutable;
     lbl_pos = (-1); lbl_all = [||]; lbl_repres = Record_regular }
 
 (* Cannot call ctype.repres here *)
 
-let rec is_float = 
-  function
-    {desc = Tlink ty} -> is_float ty
-  | {desc = Tconstr(p, _, _)} -> Path.same p Predef.path_float
+let rec is_float = function
+    Tvar{tvar_link = Some ty} -> is_float ty
+  | Tconstr(p, _) -> Path.same p Predef.path_float
   | _ -> false
 
 let label_descrs ty_res lbls =
-  let all_labels = Array.create (List.length lbls) dummy_label in
+  let all_labels = Array.new (List.length lbls) dummy_label in
   let repres =
     if List.for_all (fun (name, flag, ty) -> is_float ty) lbls
     then Record_float

@@ -1,20 +1,22 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                           Objective Caml                            *)
+(*                         Caml Special Light                          *)
 (*                                                                     *)
 (*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
 (*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
+
+(* $Id$ *)
 
 (* Inclusion checks for the module language *)
 
 open Misc
 open Path
-open Types
 open Typedtree
+
 
 type error =
     Missing_field of Ident.t
@@ -23,6 +25,7 @@ type error =
   | Exception_declarations of
       Ident.t * exception_declaration * exception_declaration
   | Module_types of module_type * module_type
+  | Modtype_infos of Ident.t * modtype_declaration * modtype_declaration
   | Modtype_permutation
   | Interface_mismatch of string * string
 
@@ -34,8 +37,7 @@ exception Error of error list
 
 (* Inclusion between value descriptions *)
 
-let value_descriptions env subst id vd1 vd2 =
-  let vd2 = Subst.value_description subst vd2 in
+let value_descriptions env id vd1 vd2 =
   try
     Includecore.value_descriptions env vd1 vd2
   with Includecore.Dont_match ->
@@ -43,16 +45,14 @@ let value_descriptions env subst id vd1 vd2 =
 
 (* Inclusion between type declarations *)
 
-let type_declarations env subst id decl1 decl2 =
-  let decl2 = Subst.type_declaration subst decl2 in
+let type_declarations env id decl1 decl2 =
   if Includecore.type_declarations env id decl1 decl2
   then ()
   else raise(Error[Type_declarations(id, decl1, decl2)])
 
 (* Inclusion between exception declarations *)
 
-let exception_declarations env subst id decl1 decl2 =
-  let decl2 = Subst.exception_declaration subst decl2 in
+let exception_declarations env id decl1 decl2 =
   if Includecore.exception_declarations env decl1 decl2
   then ()
   else raise(Error[Exception_declarations(id, decl1, decl2)])
@@ -63,8 +63,9 @@ exception Dont_match
 
 let expand_module_path env path =
   try
-    failwith "TODO: find_modtype_expansion"
-(*    Env.find_modtype_expansion path env *)
+    match Env.find_modtype path env with
+      Tmodtype_abstract -> raise Dont_match
+    | Tmodtype_manifest mty -> mty
   with Not_found ->
     raise Dont_match
 
@@ -82,6 +83,7 @@ let item_ident_name = function
   | Tsig_type(id, _) -> (id, Field_type(Ident.name id))
   | Tsig_exception(id, _) -> (id, Field_exception(Ident.name id))
   | Tsig_module(id, _) -> (id, Field_module(Ident.name id))
+  | Tsig_modtype(id, _) -> (id, Field_modtype(Ident.name id))
 
 (* Simplify a structure coercion *)
 
@@ -101,41 +103,41 @@ let simplify_structure_coercion cc =
    Return the restriction that transforms a value of the smaller type
    into a value of the bigger type. *)
 
-let rec modtypes env subst mty1 mty2 =
+let rec modtypes env mty1 mty2 =
   try
-    try_modtypes env subst mty1 mty2
+    try_modtypes env mty1 mty2
   with 
     Dont_match ->
-      raise(Error[Module_types(mty1, Subst.modtype subst mty2)])
+      raise(Error[Module_types(mty1, mty2)])
   | Error reasons ->
-      raise(Error(Module_types(mty1, Subst.modtype subst mty2) :: reasons))
+      raise(Error(Module_types(mty1, mty2) :: reasons))
 
-and try_modtypes env subst mty1 mty2 =
-  match (mty1, mty2) with
-    (_, Tmty_ident p2) ->
-      try_modtypes2 env mty1 (Subst.modtype subst mty2)
-  | (Tmty_ident p1, _) ->
-      try_modtypes env subst (expand_module_path env p1) mty2
-  | (Tmty_signature sig1, Tmty_signature sig2) ->
-      signatures env subst sig1 sig2
-(*
-  | (_, _) ->
-      raise Dont_match
-*)
-
-and try_modtypes2 env mty1 mty2 =
-  (* mty2 is an identifier *)
+and try_modtypes env mty1 mty2 =
   match (mty1, mty2) with
     (Tmty_ident p1, Tmty_ident p2) when Path.same p1 p2 ->
       Tcoerce_none
+  | (Tmty_ident p1, _) ->
+      try_modtypes env (expand_module_path env p1) mty2
   | (_, Tmty_ident p2) ->
-      try_modtypes env Subst.identity mty1 (expand_module_path env p2)
+      try_modtypes env mty1 (expand_module_path env p2)
+  | (Tmty_signature sig1, Tmty_signature sig2) ->
+      signatures env sig1 sig2
+  | (Tmty_functor(param1, arg1, res1), Tmty_functor(param2, arg2, res2)) ->
+      let cc_arg =
+        modtypes env arg2 arg1 in
+      let cc_res =
+        Ident.identify param2 param1
+          (fun () -> modtypes (Env.add_module param1 arg1 env) res1 res2) in
+      begin match (cc_arg, cc_res) with
+          (Tcoerce_none, Tcoerce_none) -> Tcoerce_none
+        | _ -> Tcoerce_functor(cc_arg, cc_res)
+      end
   | (_, _) ->
-      fatal_error "Includemod.try_modtypes2"
+      raise Dont_match
 
 (* Inclusion between signatures *)
 
-and signatures env subst sig1 sig2 =
+and signatures env sig1 sig2 =
   (* Environment used to check inclusion of components *)
   let new_env =
     Env.add_signature sig1 env in
@@ -147,14 +149,12 @@ and signatures env subst sig1 sig2 =
         let (id, name) = item_ident_name item in
         let nextpos =
           match item with
-            Tsig_value(_,{val_kind = Val_prim _})
-          | Tsig_type(_,_)
-           -> pos
-          | Tsig_value(_,_)
+            Tsig_value(_,{val_prim = None})
           | Tsig_exception(_,_)
-          | Tsig_module(_,_)
-           -> pos+1 
-        in
+          | Tsig_module(_,_) -> pos+1
+          | Tsig_value(_,{val_prim = Some _})
+          | Tsig_type(_,_)
+          | Tsig_modtype(_,_) -> pos in
         build_component_table nextpos
                               (Tbl.add name (id, item, pos) tbl) rem in
   let comps1 =
@@ -164,61 +164,75 @@ and signatures env subst sig1 sig2 =
      Return a coercion list indicating, for all run-time components
      of sig2, the position of the matching run-time components of sig1
      and the coercion to be applied to it. *)
-  let rec pair_components subst paired unpaired = function
+  let rec pair_components paired unpaired = function
       [] ->
         begin match unpaired with
-            [] -> signature_components new_env subst (List.rev paired)
+            [] -> signature_components new_env (List.rev paired)
           | _  -> raise(Error unpaired)
         end
     | item2 :: rem ->
         let (id2, name2) = item_ident_name item2 in
         begin try
           let (id1, item1, pos1) = Tbl.find name2 comps1 in
-          let new_subst =
-            match item2 with
-              Tsig_type _ ->
-                Subst.add_type id2 (Pident id1) subst
-            | Tsig_module _ ->
-                Subst.add_module id2 (Pident id1) subst
-            | Tsig_value _ | Tsig_exception _  ->
-                subst
-          in
-          pair_components new_subst
-            ((item1, item2, pos1) :: paired) unpaired rem
+          Ident.identify id1 id2
+            (fun () ->
+              pair_components ((item1, item2, pos1) :: paired) unpaired rem)
         with Not_found ->
-          pair_components subst paired (Missing_field id2 :: unpaired) rem
+          pair_components paired (Missing_field id2 :: unpaired) rem
         end in
   (* Do the pairing and checking, and return the final coercion *)
-  simplify_structure_coercion(pair_components subst [] [] sig2)
+  simplify_structure_coercion(pair_components [] [] sig2)
 
 (* Inclusion between signature components *)
 
-and signature_components env subst = function
+and signature_components env = function
     [] -> []
   | (Tsig_value(id1, valdecl1), Tsig_value(id2, valdecl2), pos) :: rem ->
-      let cc = value_descriptions env subst id1 valdecl1 valdecl2 in
-      begin match valdecl2.val_kind with
-        Val_prim p -> signature_components env subst rem
-      | _ -> (pos, cc) :: signature_components env subst rem
+      let cc = value_descriptions env id1 valdecl1 valdecl2 in
+      begin match valdecl2.val_prim with
+        None -> (pos, cc) :: signature_components env rem
+      | Some p -> signature_components env rem
       end
   | (Tsig_type(id1, tydecl1), Tsig_type(id2, tydecl2), pos) :: rem ->
-      type_declarations env subst id1 tydecl1 tydecl2;
-      signature_components env subst rem
+      type_declarations env id1 tydecl1 tydecl2;
+      signature_components env rem
   | (Tsig_exception(id1, excdecl1), Tsig_exception(id2, excdecl2), pos)
     :: rem ->
-      exception_declarations env subst id1 excdecl1 excdecl2;
-      (pos, Tcoerce_none) :: signature_components env subst rem
+      exception_declarations env id1 excdecl1 excdecl2;
+      (pos, Tcoerce_none) :: signature_components env rem
   | (Tsig_module(id1, mty1), Tsig_module(id2, mty2), pos) :: rem ->
-      let cc = modtypes env subst mty1 mty2 in
-      (pos, cc) :: signature_components env subst rem
+      let cc = modtypes env mty1 mty2 in
+      (pos, cc) :: signature_components env rem
+  | (Tsig_modtype(id1, info1), Tsig_modtype(id2, info2), pos) :: rem ->
+      modtype_infos env id1 info1 info2;
+      signature_components env rem
   | _ ->
       fatal_error "Includemod.signature_components"
+
+(* Inclusion between module type specifications *)
+
+and modtype_infos env id info1 info2 =
+  try
+    match (info1, info2) with
+      (Tmodtype_abstract, Tmodtype_abstract) -> ()
+    | (Tmodtype_manifest mty1, Tmodtype_abstract) -> ()
+    | (Tmodtype_manifest mty1, Tmodtype_manifest mty2) ->
+        check_modtype_equiv env mty1 mty2
+    | (Tmodtype_abstract, Tmodtype_manifest mty2) ->
+        check_modtype_equiv env (Tmty_ident(Pident id)) mty2
+  with Error reasons ->
+    raise(Error(Modtype_infos(id, info1, info2) :: reasons))
+
+and check_modtype_equiv env mty1 mty2 =
+  match (modtypes env mty1 mty2, modtypes env mty2 mty1) with
+    (Tcoerce_none, Tcoerce_none) -> ()
+  | (_, _) -> raise(Error [Modtype_permutation])
 
 (* Simplified inclusion check between module types *)
 
 let check_modtype_inclusion env mty1 mty2 =
   try
-    modtypes env Subst.identity mty1 mty2; ()
+    modtypes env mty1 mty2; ()
   with Error reasons ->
     raise Not_found
 
@@ -229,16 +243,9 @@ let _ = Env.check_modtype_inclusion := check_modtype_inclusion
 
 let compunit impl_name impl_sig intf_name intf_sig =
   try
-    signatures Env.initial Subst.identity impl_sig intf_sig
+    signatures Env.initial impl_sig intf_sig
   with Error reasons ->
     raise(Error(Interface_mismatch(impl_name, intf_name) :: reasons))
-
-(* Hide the substitution parameter to the outside world *)
-
-let modtypes env mty1 mty2 = modtypes env Subst.identity mty1 mty2
-let signatures env sig1 sig2 = signatures env Subst.identity sig1 sig2
-let type_declarations env id decl1 decl2 =
-  type_declarations env Subst.identity id decl1 decl2
 
 (* Error report *)
 
@@ -281,10 +288,18 @@ let include_err = function
       print_string "is not included in"; print_space();
       modtype mty2;
       close_box()
+  | Modtype_infos(id, d1, d2) ->
+      open_hvbox 2;
+      print_string "Module type declarations do not match:"; print_space();
+      modtype_declaration id d1; 
+      print_break 1 (-2);
+      print_string "is not included in"; print_space();
+      modtype_declaration id d2;
+      close_box()
   | Modtype_permutation ->
       print_string "Illegal permutation of structure fields"
   | Interface_mismatch(impl_name, intf_name) ->
-      open_box 0;
+      open_hovbox 0;
       print_string "The implementation "; print_string impl_name;
       print_space(); print_string "does not match the interface ";
       print_string intf_name;
@@ -299,3 +314,4 @@ let report_error errlist =
       include_err err;
       List.iter (fun err -> print_space(); include_err err) rem;
       close_box()
+

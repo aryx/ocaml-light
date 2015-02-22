@@ -1,20 +1,22 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                           Objective Caml                            *)
+(*                         Caml Special Light                          *)
 (*                                                                     *)
 (*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
 (*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
+
+(* $Id$ *)
 
 (* Detection of partial matches and unused match cases. *)
 
 open Misc
 open Asttypes
-open Types
 open Typedtree
+
 
 let make_pat desc ty =
   {pat_desc = desc; pat_loc = Location.none; pat_type = ty}
@@ -55,7 +57,7 @@ let record_num_fields p =
   | _ -> fatal_error "Parmatch.record_num_fields"
 
 let set_fields size l =
-  let v = Array.create size omega in
+  let v = Array.new size omega in
   let rec change_rec l = match l with
     (lbl,p)::l ->  v.(lbl.lbl_pos) <- p ;  change_rec l 
   | [] -> () in
@@ -249,7 +251,7 @@ let get_mins ps =
 let check_partial loc casel =
   let pss = get_mins (initial_matrix casel) in
   if match pss with
-      []     -> if casel = [] then false else true
+      []     -> true
     | ps::_  -> satisfiable pss (List.map (fun _ -> omega) ps)
   then Location.print_warning loc "this pattern-matching is not exhaustive"
 

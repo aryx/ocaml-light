@@ -1,20 +1,22 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                           Objective Caml                            *)
+(*                         Caml Special Light                          *)
 (*                                                                     *)
 (*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
 (*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
+
+(* $Id$ *)
 
 (* Identifiers (unique names) *)
 
 type t
 
-val create: string -> t
-val create_persistent: string -> t
+val new: string -> t
+val new_persistent: string -> t
 val name: t -> string
 val unique_name: t -> string
 val persistent: t -> bool
@@ -26,6 +28,9 @@ val same: t -> t -> bool
            non-persistent and have been created by the same call to
            [new], or if they are both persistent and have the same
            name. *)
+val identify: t -> t -> (unit -> 'a) -> 'a
+        (* [identify id1 id2 f] temporarily makes [id1] and [id2] the same
+           during the evaluation of [f ()]. *)
 val hide: t -> t
         (* Return an identifier with same name as the given identifier,
            but stamp different from any stamp returns by new.
@@ -34,9 +39,6 @@ val hide: t -> t
 
 val make_global: t -> unit
 val global: t -> bool
-
-val binding_time: t -> int
-val current_time: unit -> int
 
 val print: t -> unit
 
@@ -48,5 +50,4 @@ val add: t -> 'a -> 'a tbl -> 'a tbl
 val find_same: t -> 'a tbl -> 'a
 val find_name: string -> 'a tbl -> 'a
 
-val iter: (t -> 'a -> unit) -> 'a tbl -> unit
 val print_tbl: ('a -> unit) -> 'a tbl -> unit

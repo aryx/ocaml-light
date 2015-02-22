@@ -1,19 +1,21 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                           Objective Caml                            *)
+(*                         Caml Special Light                          *)
 (*                                                                     *)
 (*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
 (*                                                                     *)
-(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
+
+(* $Id$ *)
 
 (* Compute constructor and label descriptions from type declarations,
    determining their representation. *)
 
 open Asttypes
-open Types
+open Typedtree
 
 val constructor_descrs:
   type_expr -> (string * type_expr list) list ->
