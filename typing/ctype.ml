@@ -1,5 +1,3 @@
-(*s: ./typing/ctype.ml *)
-(*s: copyright header2 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -10,7 +8,6 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-(*e: copyright header2 *)
 
 (* Operations on core types *)
 
@@ -80,84 +77,48 @@ open Btype
      [unify].
 *)
 
-(*s: exception Ctype.Unify *)
 (**** Errors ****)
 
 exception Unify of (type_expr * type_expr) list
-(*e: exception Ctype.Unify *)
 
-(*s: exception Ctype.Subtype *)
 exception Subtype of
         (type_expr * type_expr) list * (type_expr * type_expr) list
-(*e: exception Ctype.Subtype *)
 
-(*s: exception Ctype.Cannot_expand *)
 exception Cannot_expand
-(*e: exception Ctype.Cannot_expand *)
 
-(*s: exception Ctype.Cannot_apply *)
 exception Cannot_apply
-(*e: exception Ctype.Cannot_apply *)
 
-(*s: exception Ctype.Recursive_abbrev *)
 exception Recursive_abbrev
-(*e: exception Ctype.Recursive_abbrev *)
 
-(*s: constant Ctype.current_level *)
 (**** Type level management ****)
 
 let current_level = ref 0
-(*e: constant Ctype.current_level *)
-(*s: constant Ctype.global_level *)
 let global_level = ref 1
-(*e: constant Ctype.global_level *)
 
-(*s: function Ctype.init_def *)
 let init_def level = current_level := level
-(*e: function Ctype.init_def *)
-(*s: function Ctype.begin_def *)
 let begin_def () = incr current_level
-(*e: function Ctype.begin_def *)
-(*s: function Ctype.end_def *)
 let end_def () = decr current_level
-(*e: function Ctype.end_def *)
 
-(*s: function Ctype.reset_global_level *)
 let reset_global_level () =
   global_level := !current_level + 1
-(*e: function Ctype.reset_global_level *)
 
 (**** Some type creators ****)
 
-(*s: function Ctype.newty *)
 (* Re-export generic type creators *)
 
 let newty desc         = { desc = desc; level = !current_level }
-(*e: function Ctype.newty *)
-(*s: function Ctype.new_global_ty *)
 let new_global_ty desc = { desc = desc; level = !global_level }
-(*e: function Ctype.new_global_ty *)
 
-(*s: function Ctype.newvar *)
 let newvar ()          = { desc = Tvar; level = !current_level }
-(*e: function Ctype.newvar *)
-(*s: function Ctype.newmarkedvar *)
 let newmarkedvar () = { desc = Tvar; level = pivot_level - !current_level }
-(*e: function Ctype.newmarkedvar *)
-(*s: function Ctype.new_global_var *)
 let new_global_var ()  = new_global_ty Tvar
-(*e: function Ctype.new_global_var *)
 
-(*s: constant Ctype.none *)
 let none = newty (Ttuple [])                (* Clearly ill-formed type *)
-(*e: constant Ctype.none *)
 
 (**** Representative of a type ****)
 
-(*s: constant Ctype.repr *)
 (* Re-export repr *)
 let repr = repr
-(*e: constant Ctype.repr *)
 
 
                          (*****************************)
@@ -189,16 +150,13 @@ and generalize_expans =
   | Mcons(_, ty, rem) ->  generalize ty; generalize_expans rem
   | Mlink rem         ->  generalize_expans !rem
 
-(*s: constant Ctype.try_expand_head' *)
 let try_expand_head' = (* Forward declaration *)
   ref (fun env ty -> raise Cannot_expand)
-(*e: constant Ctype.try_expand_head' *)
 
 (*
    Lower the levels of a type (assume [level] is not
    [generic_level]).
 *)
-(*s: function Ctype.update_level *)
 (*
     The level of a type constructor must be greater than its binding
     time. That way, a type constructor cannot escape the scope of its
@@ -225,9 +183,7 @@ let rec update_level env level ty =
         iter_type_expr (update_level env level) ty
     end
   end
-(*e: function Ctype.update_level *)
 
-(*s: function Ctype.make_nongen *)
 (* 
    Function [update_level] will never try to expand an abbreviation in
    this case ([current_level] is greater than the binding time of any
@@ -235,13 +191,10 @@ let rec update_level env level ty =
    environnement.
 *)
 let make_nongen ty = update_level Env.empty !current_level ty
-(*e: function Ctype.make_nongen *)
 
-(*s: function Ctype.correct_levels *)
 (* Correct the levels of type [ty]. *)
 let correct_levels ty =
   Subst.type_expr Subst.identity ty
-(*e: function Ctype.correct_levels *)
 
 
                               (*******************)
@@ -249,7 +202,6 @@ let correct_levels ty =
                               (*******************)
 
 
-(*s: constant Ctype.abbreviations *)
 (*
    Generic nodes are duplicated, while non-generic nodes are left
    as-is.
@@ -263,9 +215,7 @@ let correct_levels ty =
 
 let abbreviations = ref (ref Mnil)
   (* Abbreviation memorized. *)
-(*e: constant Ctype.abbreviations *)
 
-(*s: function Ctype.copy *)
 let rec copy ty =
   let ty = repr ty in
   if ty.level <> generic_level then
@@ -304,9 +254,7 @@ let rec copy ty =
       end;
     t
   end
-(*e: function Ctype.copy *)
 
-(*s: function Ctype.instance *)
 (**** Variants of instantiations ****)
 
 let instance sch =
@@ -314,51 +262,39 @@ let instance sch =
   cleanup_types ();
   unmark_type ty;
   ty
-(*e: function Ctype.instance *)
 
-(*s: function Ctype.instance_list *)
 let instance_list schl =
   let tyl = List.map copy schl in
   cleanup_types ();
   List.iter unmark_type tyl;
   tyl
-(*e: function Ctype.instance_list *)
 
-(*s: function Ctype.instance_constructor *)
 let instance_constructor cstr =
   let ty_res = copy cstr.cstr_res in
   let ty_args = List.map copy cstr.cstr_args in
   cleanup_types ();
   List.iter unmark_type ty_args; unmark_type ty_res;
   (ty_args, ty_res)
-(*e: function Ctype.instance_constructor *)
 
-(*s: function Ctype.instance_label *)
 let instance_label lbl =
   let ty_res = copy lbl.lbl_res in
   let ty_arg = copy lbl.lbl_arg in
   cleanup_types ();
   unmark_type ty_arg; unmark_type ty_res;
   (ty_arg, ty_res)
-(*e: function Ctype.instance_label *)
 
-(*s: function Ctype.instance_parameterized_type *)
 let instance_parameterized_type sch_args sch =
   let ty_args = List.map copy sch_args in
   let ty = copy sch in
   cleanup_types ();
   List.iter unmark_type ty_args; unmark_type ty;
   (ty_args, ty)
-(*e: function Ctype.instance_parameterized_type *)
 
-(*s: constant Ctype.unify' *)
 (**** Instantiation with parameter substitution ****)
 
 let unify' = (* Forward declaration *)
   ref (fun env ty1 ty2 -> raise (Unify []))
-(*e: constant Ctype.unify' *)
 
-(*s: function Ctype.subst *)
 let rec subst env level abbrev path params args body =
   let old_level = !current_level in
   current_level := level;
@@ -378,9 +314,7 @@ let rec subst env level abbrev path params args body =
   with Unify _ as exn ->
     current_level := old_level;
     raise exn
-(*e: function Ctype.subst *)
 
-(*s: function Ctype.apply *)
 (*
    Only the shape of the type matters, not whether is is generic or
    not. [generic_level] might be somewhat slower, but it ensures
@@ -392,7 +326,6 @@ let apply env params body args =
     subst env generic_level (ref Mnil) None params args body
   with
     Unify _ -> raise Cannot_apply
-(*e: function Ctype.apply *)
 
 
                               (****************************)
@@ -400,7 +333,6 @@ let apply env params body args =
                               (****************************)
 
 
-(*s: function Ctype.find_expans *)
 (* Search whether the expansion has been memorized. *)
 let rec find_expans p1 =
   function
@@ -412,18 +344,14 @@ let rec find_expans p1 =
       find_expans p1 rem
   | Mlink {contents = rem} ->
       find_expans p1 rem
-(*e: function Ctype.find_expans *)
 
-(*s: constant Ctype.previous_env *)
 let previous_env = ref Env.empty
-(*e: constant Ctype.previous_env *)
 
 (* Expand an abbreviation. The expansion is memorized. *)
 (* 
    Assume the level is greater than the path binding time of the
    expanded abbreviation.
 *)
-(*s: function Ctype.expand_abbrev *)
 (*
    An abbreviation expansion will fail in either of these cases:
    1. The type constructor does not correspond to a manifest type.
@@ -462,9 +390,7 @@ let expand_abbrev env path args abbrev level =
       try
         subst env level abbrev (Some path) params args body
       with Unify _ -> raise Cannot_expand
-(*e: function Ctype.expand_abbrev *)
 
-(*s: function Ctype.try_expand_head *)
 (* Fully expand the head of a type. Raise an exception if the type
    cannot be expanded. *)
 let rec try_expand_head env ty =
@@ -479,19 +405,13 @@ let rec try_expand_head env ty =
       end
   | _ ->
       raise Cannot_expand
-(*e: function Ctype.try_expand_head *)
 
-(*s: toplevel Ctype._1 *)
 let _ = try_expand_head' := try_expand_head
-(*e: toplevel Ctype._1 *)
 
-(*s: function Ctype.expand_head *)
 (* Fully expand the head of a type. *)
 let rec expand_head env ty =
   try try_expand_head env ty with Cannot_expand -> repr ty
-(*e: function Ctype.expand_head *)
 
-(*s: function Ctype.full_expand *)
 (* Recursively expand the head of a type.
    Also expand #-types. *)
 let rec full_expand env ty =
@@ -499,9 +419,7 @@ let rec full_expand env ty =
   match ty.desc with
   | _ ->
       ty
-(*e: function Ctype.full_expand *)
 
-(*s: function Ctype.generic_abbrev *)
 (*
    Check whether the abbreviation expands to a well-defined type.
    During the typing of a class, abbreviations for correspondings
@@ -514,7 +432,6 @@ let generic_abbrev env path =
   with
     Not_found ->
       false
-(*e: function Ctype.generic_abbrev *)
 
 
                               (*****************)
@@ -522,16 +439,11 @@ let generic_abbrev env path =
                               (*****************)
 
 
-(*s: exception Ctype.Occur *)
 exception Occur
-(*e: exception Ctype.Occur *)
 
-(*s: constant Ctype.visited *)
 (* The marks are already used by [expand_abbrev]... *)
 let visited = ref []
-(*e: constant Ctype.visited *)
 
-(*s: function Ctype.non_recursive_abbrev *)
 let rec non_recursive_abbrev env ty =
   let ty = repr ty in
   if ty == none then raise Recursive_abbrev;
@@ -548,18 +460,14 @@ let rec non_recursive_abbrev env ty =
     | _ ->
         iter_type_expr (non_recursive_abbrev env) ty
   end
-(*e: function Ctype.non_recursive_abbrev *)
 
-(*s: function Ctype.correct_abbrev *)
 let correct_abbrev env ident params ty =
   visited := [];
   non_recursive_abbrev env
     (subst env generic_level (ref (Mcons (Path.Pident ident, none, Mnil))) None
        [] [] ty);
   visited := []
-(*e: function Ctype.correct_abbrev *)
 
-(*s: function Ctype.occur_rec *)
 let rec occur_rec env visited ty0 ty =
   if ty == ty0  then raise Occur;
   match ty.desc with
@@ -574,12 +482,9 @@ let rec occur_rec env visited ty0 ty =
       end
   | _ ->
       iter_type_expr (occur_rec env visited ty0) ty
-(*e: function Ctype.occur_rec *)
 
-(*s: function Ctype.occur *)
 let occur env ty0 ty =
   try occur_rec env [] ty0 ty with Occur -> raise (Unify [])
-(*e: function Ctype.occur *)
 
 
                               (*****************)
@@ -589,7 +494,6 @@ let occur env ty0 ty =
 
 
 (**** Transform error trace ****)
-(*s: function Ctype.expand_trace *)
 (* +++ Move it to some other place ? *)
 
 let expand_trace env trace =
@@ -597,9 +501,7 @@ let expand_trace env trace =
     (fun (t1, t2) rem ->
        (repr t1, full_expand env t1)::(repr t2, full_expand env t2)::rem)
     trace []
-(*e: function Ctype.expand_trace *)
 
-(*s: constant Ctype.filter_trace *)
 let rec filter_trace =
   function
     (t1, t1')::(t2, t2')::rem ->
@@ -609,11 +511,9 @@ let rec filter_trace =
       else (t1, t1')::(t2, t2')::rem'
   | _ ->
       []
-(*e: constant Ctype.filter_trace *)
 
 (**** Unification ****)
 
-(*s: function Ctype.deep_occur *)
 (* Return whether [t0] occurs in [ty]. Objects are also traversed. *)
 let deep_occur t0 ty =
   let rec occur_rec ty =
@@ -628,7 +528,6 @@ let deep_occur t0 ty =
     occur_rec ty; unmark_type ty; false
   with Occur ->
     unmark_type ty; true
-(*e: function Ctype.deep_occur *)
 
 (*
    1. When unifying two non-abbreviated types, one type is made a link
@@ -775,7 +674,6 @@ and unify_list env tl1 tl2 =
 
 
 
-(*s: function Ctype.unify *)
 let unify env ty1 ty2 =
   try
     unify env ty1 ty2
@@ -786,15 +684,11 @@ let unify env ty1 ty2 =
         raise (Unify (t1::t2::filter_trace rem))
     | _ ->
         fatal_error "Ctype.unify"
-(*e: function Ctype.unify *)
 
-(*s: toplevel Ctype._2 *)
 let _ = unify' := unify
-(*e: toplevel Ctype._2 *)
 
 (**** Special cases of unification ****)
 
-(*s: function Ctype.filter_arrow *)
 (* Unify [t] and ['a -> 'b]. Return ['a] and ['b]. *)
 let rec filter_arrow env t =
   let t = expand_head env t in
@@ -809,7 +703,6 @@ let rec filter_arrow env t =
       (t1, t2)
   | _ ->
       raise (Unify [])
-(*e: function Ctype.filter_arrow *)
 
 
 
@@ -817,7 +710,6 @@ let rec filter_arrow env t =
                         (*  Matching between type schemes  *)
                         (***********************************)
 
-(*s: function Ctype.moregen_occur *)
 (*
    Update the level of [ty]. First check that the levels of variables
    from the subject are not lowered.
@@ -837,9 +729,7 @@ let moregen_occur env level ty =
     unmark_type ty; raise (Unify [])
   end;
   update_level env level ty
-(*e: function Ctype.moregen_occur *)
 
-(*s: function Ctype.moregeneral *)
 (*
    Non-generic variable can be instanciated only if [inst_nongen] is
    true. So, [inst_nongen] should be set to false if the subject might
@@ -915,7 +805,6 @@ let moregeneral env inst_nongen pat_sch subj_sch =
   let res = try moregen env patt subj; true with Unify _ -> false in
   current_level := old_level;
   res
-(*e: function Ctype.moregeneral *)
 
 
                  (*********************************************)
@@ -923,7 +812,6 @@ let moregeneral env inst_nongen pat_sch subj_sch =
                  (*********************************************)
 
 
-(*s: function Ctype.equal *)
 (* Two modes: with or without renaming of variables *)
 
 let equal env rename tyl1 tyl2 =
@@ -984,7 +872,6 @@ let equal env rename tyl1 tyl2 =
 
   in
     eqtype_list tyl1 tyl2
-(*e: function Ctype.equal *)
 
 
                               (***************)
@@ -992,13 +879,10 @@ let equal env rename tyl1 tyl2 =
                               (***************)
 
 
-(*s: constant Ctype.subtypes *)
 (**** Build a subtype of a given type. ****)
 
 let subtypes = ref []
-(*e: constant Ctype.subtypes *)
 
-(*s: function Ctype.build_subtype *)
 (* XXX Types récursifs ? *)
 let rec build_subtype env t =
   let t = repr t in
@@ -1029,19 +913,15 @@ let rec build_subtype env t =
   | Tnil ->
       let v = new_global_var () in
       (v, true)
-(*e: function Ctype.build_subtype *)
 
-(*s: function Ctype.enlarge_type *)
 let enlarge_type env ty =
   subtypes := [];
   let (ty', _) = build_subtype env ty in
   subtypes := [];
   ty'
-(*e: function Ctype.enlarge_type *)
 
 (**** Check whether a type is a subtype of another type. ****)
 
-(*s: constant Ctype.subtypes (./typing/ctype.ml) *)
 (*
     During the traversal, a trace of visited types is maintained. It
     is printed in case of error.
@@ -1057,12 +937,9 @@ let enlarge_type env ty =
 *)
 
 let subtypes = ref [];;
-(*e: constant Ctype.subtypes (./typing/ctype.ml) *)
 
-(*s: function Ctype.subtype_error *)
 let subtype_error env trace =
   raise (Subtype (expand_trace env (List.rev trace), []))
-(*e: function Ctype.subtype_error *)
 
 let rec subtype_rec env trace t1 t2 =
   let t1 = repr t1 in
@@ -1103,7 +980,6 @@ and subtype_list env trace tl1 tl2 =
     [] tl1 tl2
 
 
-(*s: function Ctype.subtype *)
 let subtype env ty1 ty2 =
   subtypes := [];
   (* Build constraint set. *)
@@ -1117,7 +993,6 @@ let subtype env ty1 ty2 =
                            List.tl (List.tl trace))))
       cstrs;
     subtypes := []
-(*e: function Ctype.subtype *)
 
 
                               (*******************)
@@ -1125,7 +1000,6 @@ let subtype env ty1 ty2 =
                               (*******************)
 
 
-(*s: function Ctype.unalias *)
 let unalias ty =
   let ty = repr ty in
   match ty.desc with
@@ -1133,9 +1007,7 @@ let unalias ty =
       ty
   | _ ->
       {desc = ty.desc; level = ty.level}
-(*e: function Ctype.unalias *)
 
-(*s: function Ctype.unroll_abbrev *)
 let unroll_abbrev id tl ty =
   let ty = repr ty in
   if (ty.desc = Tvar) || (List.exists (deep_occur ty) tl) then
@@ -1145,17 +1017,13 @@ let unroll_abbrev id tl ty =
     ty.desc <- Tlink {desc = Tconstr (Path.Pident id, tl, ref Mnil);
                       level = ty.level};
     ty'
-(*e: function Ctype.unroll_abbrev *)
 
-(*s: function Ctype.arity *)
 (* Return the arity (as for curried functions) of the given type. *)
 let rec arity ty =
   match (repr ty).desc with
     Tarrow(t1, t2) -> 1 + arity t2
   | _ -> 0
-(*e: function Ctype.arity *)
 
-(*s: function Ctype.cyclic_abbrev *)
 (* Check whether an abbreviation expands to itself. *)
 let rec cyclic_abbrev env id ty =
   let ty = repr ty in
@@ -1170,7 +1038,6 @@ let rec cyclic_abbrev env id ty =
       end
   | _ ->
       false
-(*e: function Ctype.cyclic_abbrev *)
 
 
                     (**************************************)
@@ -1178,14 +1045,9 @@ let rec cyclic_abbrev env id ty =
                     (**************************************)
 
 
-(*s: type Ctype.closed_schema_result (./typing/ctype.ml) *)
 type closed_schema_result = Var of type_expr | Row_var of type_expr
-(*e: type Ctype.closed_schema_result (./typing/ctype.ml) *)
-(*s: exception Ctype.Failed *)
 exception Failed of closed_schema_result
-(*e: exception Ctype.Failed *)
 
-(*s: function Ctype.closed_schema_rec *)
 let rec closed_schema_rec row ty =
   let ty = repr ty in
   if ty.level >= lowest_level then begin
@@ -1197,9 +1059,7 @@ let rec closed_schema_rec row ty =
     | _ ->
         iter_type_expr (closed_schema_rec false) ty
   end
-(*e: function Ctype.closed_schema_rec *)
 
-(*s: function Ctype.closed_schema *)
 (* Return whether all variables of type [ty] are generic. *)
 let closed_schema ty =
   try
@@ -1209,6 +1069,4 @@ let closed_schema ty =
   with Failed _ ->
     unmark_type ty;
     false
-(*e: function Ctype.closed_schema *)
 
-(*e: ./typing/ctype.ml *)

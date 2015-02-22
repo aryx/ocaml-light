@@ -1,5 +1,3 @@
-(*s: ./typing/printtyp.ml *)
-(*s: copyright header2 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -10,7 +8,6 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-(*e: copyright header2 *)
 
 (* Printing functions *)
 
@@ -23,28 +20,21 @@ open Asttypes
 open Types
 open Btype
 
-(*s: constant Printtyp.longident *)
 (* Print a long identifier *)
 
 let rec longident = function
     Lident s -> print_string s
   | Ldot(p, s) -> longident p; print_string "."; print_string s
-(*e: constant Printtyp.longident *)
 
-(*s: function Printtyp.ident *)
 (* Print an identifier *)
 
 let ident id =
   print_string(Ident.name id)
-(*e: function Printtyp.ident *)
 
-(*s: constant Printtyp.ident_pervasive *)
 (* Print a path *)
 
 let ident_pervasive = Ident.create_persistent "Pervasives"
-(*e: constant Printtyp.ident_pervasive *)
 
-(*s: constant Printtyp.path *)
 let rec path = function
     Pident id ->
       ident id
@@ -52,22 +42,14 @@ let rec path = function
       print_string s
   | Pdot(p, s, pos) ->
       path p; print_string "."; print_string s
-(*e: constant Printtyp.path *)
 
-(*s: constant Printtyp.names *)
 (* Print a type expression *)
 
 let names = ref ([] : (type_expr * string) list)
-(*e: constant Printtyp.names *)
-(*s: constant Printtyp.name_counter *)
 let name_counter = ref 0
-(*e: constant Printtyp.name_counter *)
 
-(*s: function Printtyp.reset_names *)
 let reset_names () = names := []; name_counter := 0
-(*e: function Printtyp.reset_names *)
 
-(*s: function Printtyp.new_name *)
 let new_name () =
   let name =
     if !name_counter < 26
@@ -77,38 +59,26 @@ let new_name () =
   in
     incr name_counter;
     name
-(*e: function Printtyp.new_name *)
 
-(*s: function Printtyp.name_of_type *)
 let name_of_type t =
   try List.assq t !names with Not_found ->
     let name = new_name () in
     names := (t, name) :: !names;
     name
-(*e: function Printtyp.name_of_type *)
 
-(*s: function Printtyp.list_removeq *)
 let rec list_removeq a =
   function
     [] ->
       []
   | (b, _) as e::l ->
       if a == b then l else e::list_removeq a l
-(*e: function Printtyp.list_removeq *)
 
-(*s: function Printtyp.remove_name_of_type *)
 let remove_name_of_type t =
   names := list_removeq t !names
-(*e: function Printtyp.remove_name_of_type *)
 
-(*s: constant Printtyp.visited_objects *)
 let visited_objects = ref ([] : type_expr list)
-(*e: constant Printtyp.visited_objects *)
-(*s: constant Printtyp.aliased *)
 let aliased = ref ([] : type_expr list)
-(*e: constant Printtyp.aliased *)
 
-(*s: function Printtyp.mark_loops_rec *)
 let rec mark_loops_rec visited ty =
   let ty = repr ty in
   if List.memq ty visited then begin
@@ -125,23 +95,15 @@ let rec mark_loops_rec visited ty =
         List.iter (mark_loops_rec visited) tyl
     | Tnil                -> ()
     | Tlink _             -> fatal_error "Printtyp.mark_loops_rec (2)"
-(*e: function Printtyp.mark_loops_rec *)
 
-(*s: function Printtyp.mark_loops *)
 let mark_loops ty = mark_loops_rec [] ty
-(*e: function Printtyp.mark_loops *)
 
-(*s: function Printtyp.reset_loop_marks *)
 let reset_loop_marks () =
   visited_objects := []; aliased := []
-(*e: function Printtyp.reset_loop_marks *)
 
-(*s: function Printtyp.reset *)
 let reset () =
   reset_names (); reset_loop_marks ()
-(*e: function Printtyp.reset *)
 
-(*s: function Printtyp.typeexp *)
 let rec typexp sch prio0 ty =
   let ty = repr ty in
   try
@@ -241,12 +203,9 @@ and typfields sch rest =
       typexp sch 0 t;
       print_string ";"; print_space ();
       typfields sch rest l
-(*e: function Printtyp.typeexp *)
 
-(*s: function Printtyp.type_expr *)
 let type_expr ty =
   typexp false 0 ty
-(*e: function Printtyp.type_expr *)
 
 
 and type_sch ty =
@@ -255,7 +214,6 @@ and type_sch ty =
 and type_scheme ty =
   reset(); mark_loops ty; typexp true 0 ty
 
-(*s: function Printtyp.constrain *)
 (* Print one type declaration *)
 
 let constrain ty =
@@ -270,9 +228,7 @@ let constrain ty =
     type_sch ty';
     close_box()
   end
-(*e: function Printtyp.constrain *)
 
-(*s: function Printtyp.type_declaration *)
 let rec type_declaration id decl =
   reset();
 
@@ -341,16 +297,12 @@ and label (name, mut, arg) =
   print_string ": ";
   type_expr arg
 
-(*e: function Printtyp.type_declaration *)
 
-(*s: function Printtyp.exception_declaration *)
 (* Print an exception declaration *)
 
 let exception_declaration id decl =
   print_string "exception "; constructor (Ident.name id, decl)
-(*e: function Printtyp.exception_declaration *)
 
-(*s: function Printtyp.value_description *)
 (* Print a value declaration *)
 
 let value_description id decl =
@@ -364,11 +316,9 @@ let value_description id decl =
   | _ -> ()
   end;
   close_box()
-(*e: function Printtyp.value_description *)
 
 
 (* Print a module type *)
-(*s: function Printtyp.modtype *)
 let rec modtype = function
     Tmty_ident p ->
       path p
@@ -394,8 +344,6 @@ and signature_body spc = function
             open_box 2; print_string "module "; ident id; print_string " :";
             print_space(); modtype mty; close_box(); rem
       in signature_body true cont
-(*e: function Printtyp.modtype *)
-(*s: function Printtyp.signature *)
 (* Print a signature body (used when compiling a .mli and printing results
    in interactive use). *)
 
@@ -403,9 +351,7 @@ let signature sg =
   open_vbox 0;
   signature_body false sg;
   close_box()
-(*e: function Printtyp.signature *)
 
-(*s: function Printtyp.type_expansion *)
 (* Print an unification error *)
 
 let type_expansion t t' =
@@ -418,9 +364,7 @@ let type_expansion t t' =
     type_expr t';
     close_box ()
   end
-(*e: function Printtyp.type_expansion *)
 
-(*s: function Printtyp.trace *)
 let rec trace fst txt =
   function
     (t1, t1')::(t2, t2')::rem ->
@@ -435,9 +379,7 @@ let rec trace fst txt =
       trace false txt rem
   | _ ->
       ()
-(*e: function Printtyp.trace *)
 
-(*s: function Printtyp.unification_error *)
 let unification_error tr txt1 txt2 =
   reset ();
   List.iter
@@ -453,5 +395,3 @@ let unification_error tr txt1 txt2 =
   close_box();
   trace false (fun _ -> print_string "is not compatible with type")
         (List.tl (List.tl tr))
-(*e: function Printtyp.unification_error *)
-(*e: ./typing/printtyp.ml *)

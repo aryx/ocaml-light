@@ -1,5 +1,3 @@
-(*s: ./typing/datarepr.ml *)
-(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -10,7 +8,6 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-(*e: copyright header *)
 
 (* Compute constructor and label descriptions from type declarations,
    determining their representation. *)
@@ -19,7 +16,6 @@ open Misc
 open Asttypes
 open Types
 
-(*s: function Datarepr.constructor_descrs *)
 let constructor_descrs ty_res cstrs =
   let num_consts = ref 0 and num_nonconsts = ref 0 in
   List.iter
@@ -44,9 +40,7 @@ let constructor_descrs ty_res cstrs =
             cstr_nonconsts = !num_nonconsts } in
         (name, cstr) :: descr_rem in
   describe_constructors 0 0 cstrs
-(*e: function Datarepr.constructor_descrs *)
 
-(*s: function Datarepr.exception_descr *)
 let exception_descr path_exc decl =
   { cstr_res = Predef.type_exn;
     cstr_args = decl;
@@ -54,19 +48,13 @@ let exception_descr path_exc decl =
     cstr_tag = Cstr_exception path_exc;
     cstr_consts = -1;
     cstr_nonconsts = -1 }
-(*e: function Datarepr.exception_descr *)
 
-(*s: constant Datarepr.none *)
 let none = {desc = Ttuple []; level = -1}
                                         (* Clearly ill-formed type *)
-(*e: constant Datarepr.none *)
-(*s: constant Datarepr.dummy_label *)
 let dummy_label =
   { lbl_res = none; lbl_arg = none; lbl_mut = Immutable;
     lbl_pos = (-1); lbl_all = [||]; lbl_repres = Record_regular }
-(*e: constant Datarepr.dummy_label *)
 
-(*s: constant Datarepr.is_float *)
 (* Cannot call ctype.repres here *)
 
 let rec is_float = 
@@ -74,9 +62,7 @@ let rec is_float =
     {desc = Tlink ty} -> is_float ty
   | {desc = Tconstr(p, _, _)} -> Path.same p Predef.path_float
   | _ -> false
-(*e: constant Datarepr.is_float *)
 
-(*s: function Datarepr.label_descrs *)
 let label_descrs ty_res lbls =
   let all_labels = Array.create (List.length lbls) dummy_label in
   let repres =
@@ -96,5 +82,3 @@ let label_descrs ty_res lbls =
         all_labels.(num) <- lbl;
         (name, lbl) :: describe_labels (num+1) rest in
   describe_labels 0 lbls
-(*e: function Datarepr.label_descrs *)
-(*e: ./typing/datarepr.ml *)

@@ -1,5 +1,3 @@
-(*s: ./typing/includecore.ml *)
-(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -10,7 +8,6 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-(*e: copyright header *)
 
 (* Inclusion checks for the core language *)
 
@@ -19,13 +16,10 @@ open Path
 open Types
 open Typedtree
 
-(*s: exception Includecore.Dont_match (./typing/includecore.ml) *)
 (* Inclusion between value descriptions *)
 
 exception Dont_match
-(*e: exception Includecore.Dont_match (./typing/includecore.ml) *)
 
-(*s: function Includecore.value_descriptions *)
 let value_descriptions env vd1 vd2 =
   if Ctype.moregeneral env true vd1.val_type vd2.val_type then begin
     match (vd1.val_kind, vd2.val_kind) with
@@ -36,9 +30,7 @@ let value_descriptions env vd1 vd2 =
       | (_, _) -> Tcoerce_none
   end else
     raise Dont_match
-(*e: function Includecore.value_descriptions *)
 
-(*s: function Includecore.type_declarations *)
 (* Inclusion between type declarations *)
 
 let type_declarations env id decl1 decl2 =
@@ -78,12 +70,8 @@ let type_declarations env id decl1 decl2 =
           &
         Ctype.equal env false [ty1] [ty2]
   end
-(*e: function Includecore.type_declarations *)
 
-(*s: function Includecore.exception_declarations *)
 (* Inclusion between exception declarations *)
 
 let exception_declarations env ed1 ed2 =
   for_all2 (fun ty1 ty2 -> Ctype.equal env false [ty1] [ty2]) ed1 ed2
-(*e: function Includecore.exception_declarations *)
-(*e: ./typing/includecore.ml *)
