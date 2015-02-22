@@ -397,18 +397,6 @@ let string_length exp =
                   [Cop(Cadda, [str; Cvar tmp_var])])])))
 (*e: function Cmmgen.string_length *)
 
-(*s: function Cmmgen.lookup_label *)
-(* Message sending *)
-
-let lookup_label obj lab =
-  bind "lab" lab (fun lab ->
-    let table = Cop (Cload typ_addr, [obj]) in
-    let buck_index = Cop(Clsr, [lab; Cconst_int 16]) in
-    let bucket = Cop (Cload typ_addr, [Cop (Cadda, [table; buck_index])]) in
-    let item_index = Cop (Cand, [lab; Cconst_int (255 * size_addr)]) in
-    Cop (Cload typ_addr, [Cop (Cadda, [bucket; item_index])]))
-(*e: function Cmmgen.lookup_label *)
-
 (*s: function Cmmgen.fundecls_size *)
 (* To compile "let rec" over values *)
 
@@ -580,17 +568,6 @@ let rec transl = function
       Cop(Capply typ_addr,
           Cconst_symbol(apply_function arity) ::
           List.map transl (args @ [clos]))
-  | Usend(met, obj, []) ->
-      bind "obj" (transl obj) (fun obj ->
-      bind "met" (lookup_label obj (transl met)) (fun clos ->
-        Cop(Capply typ_addr, [get_field clos 0; obj; clos])))
-  | Usend(met, obj, args) ->
-      let arity = List.length args + 1 in
-      bind "obj" (transl obj) (fun obj ->
-      bind "met" (lookup_label obj (transl met)) (fun clos ->
-        Cop(Capply typ_addr,
-            Cconst_symbol(apply_function arity) ::
-            obj :: (List.map transl args) @ [clos])))
   | Ulet(id, exp, body) ->
       if is_unboxed_float exp then begin
         let unboxed_id = Ident.create (Ident.name id) in

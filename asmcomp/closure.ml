@@ -68,8 +68,6 @@ let occurs_var var u =
     | Uwhile(cond, body) -> occurs cond or occurs body
     | Ufor(id, lo, hi, dir, body) -> occurs lo or occurs hi or occurs body
     | Uassign(id, u) -> id = var or occurs u
-    | Usend(met, obj, args) -> 
-        occurs met or occurs obj or List.exists occurs args
   and occurs_array a =
     try
       for i = 0 to Array.length a - 1 do
@@ -158,9 +156,6 @@ let lambda_smaller lam threshold =
         size := !size + 4; lambda_size low; lambda_size high; lambda_size body
     | Uassign(id, lam) ->
         incr size;  lambda_size lam
-    | Usend(met, obj, args) ->
-        size := !size + 8;
-        lambda_size met; lambda_size obj; lambda_list_size args
   and lambda_list_size l = List.iter lambda_size l
   and lambda_array_size a = Array.iter lambda_size a in
   try

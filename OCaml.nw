@@ -1803,7 +1803,7 @@ and type_expect env sexp ty_expected =
           exp_loc = sexp.pexp_loc;
           exp_type =
             (* Terrible hack for format strings *)
-            begin match (repr ty_expected).desc with
+            begin match (Ctype.repr ty_expected).desc with
               Tconstr(path, _, _) when Path.same path Predef.path_format ->
                 type_format sexp.pexp_loc s
             | _ -> instance Predef.type_string
@@ -1834,7 +1834,7 @@ and type_expect env sexp ty_expected =
 
 and type_statement env sexp =
     let exp = type_exp env sexp in
-    match (repr exp.exp_type).desc with
+    match (Ctype.repr exp.exp_type).desc with
       Tarrow(_, _) ->
         Location.print_warning sexp.pexp_loc
           "this function application is partial,\n\
