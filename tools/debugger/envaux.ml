@@ -14,6 +14,7 @@
 
 open Misc
 open Types
+open Typedtree
 open Env
 
 type error =

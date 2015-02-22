@@ -35,17 +35,16 @@ PARSING=parsing/linenum.cmo parsing/location.cmo parsing/longident.cmo \
   parsing/lexer.cmo parsing/parse.cmo
 
 TYPING=typing/ident.cmo typing/path.cmo \
-  typing/primitive.cmo \
-  typing/btype.cmo \
+  typing/primitive.cmo typing/typedtree.cmo \
   typing/subst.cmo typing/predef.cmo \
   typing/datarepr.cmo typing/env.cmo \
-  typing/typedtree.cmo \
   typing/ctype.cmo typing/printtyp.cmo \
   typing/mtype.cmo typing/includecore.cmo \
   typing/includemod.cmo typing/parmatch.cmo \
   typing/typetexp.cmo typing/typecore.cmo \
   typing/typedecl.cmo  \
-  typing/typemod.cmo
+  typing/typemod.cmo \
+  typing/types.cmo typing/btype.cmo
 
 COMP=bytecomp/lambda.cmo bytecomp/printlambda.cmo \
   bytecomp/matching.cmo bytecomp/translcore.cmo \
@@ -89,7 +88,7 @@ OPTOBJS=$(OPTUTILS) $(PARSING) $(TYPING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
 
 EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
   utils/config.cmo utils/clflags.cmo \
-  typing/ident.cmo typing/btype.cmo typing/predef.cmo \
+  typing/ident.cmo typing/predef.cmo \
   bytecomp/runtimedef.cmo bytecomp/symtable.cmo \
   tools/toplevel/expunge.cmo
 
@@ -104,7 +103,8 @@ PERVASIVES=arg array callback char digest filename format gc hashtbl \
 
 # Recompile the system using the bootstrap compiler
 all: runtime ocamlc ocamllex ocamlyacc ocamltools library ocaml \
-  otherlibraries $(DEBUGGER)
+  otherlibraries 
+#$(DEBUGGER)
 
 # The compilation of ocaml will fail if the runtime has changed.
 # Never mind, just do make bootstrap to reach fixpoint again.
