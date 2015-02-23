@@ -104,8 +104,6 @@ let rec modtype s = function
       end
   | Tmty_signature sg ->
       Tmty_signature(signature s sg)
-  | Tmty_functor(id, arg, res) ->
-      Tmty_functor(id, modtype s arg, modtype s res)
 
 and signature s sg = List.map (signature_item s) sg
 
@@ -114,8 +112,3 @@ and signature_item s = function
   | Tsig_type(id, d) -> Tsig_type(id, type_declaration s d)
   | Tsig_exception(id, d) -> Tsig_exception(id, exception_declaration s d)
   | Tsig_module(id, mty) -> Tsig_module(id, modtype s mty)
-  | Tsig_modtype(id, d) -> Tsig_modtype(id, modtype_declaration s d)
-
-and modtype_declaration s = function
-    Tmodtype_abstract -> Tmodtype_abstract
-  | Tmodtype_manifest mty -> Tmodtype_manifest(modtype s mty)

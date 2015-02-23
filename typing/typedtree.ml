@@ -126,7 +126,6 @@ type exception_declaration = type_expr list
 type module_type =
     Tmty_ident of Path.t
   | Tmty_signature of signature
-  | Tmty_functor of Ident.t * module_type * module_type
 
 and signature = signature_item list
 
@@ -135,11 +134,6 @@ and signature_item =
   | Tsig_type of Ident.t * type_declaration
   | Tsig_exception of Ident.t * exception_declaration
   | Tsig_module of Ident.t * module_type
-  | Tsig_modtype of Ident.t * modtype_declaration
-
-and modtype_declaration =
-    Tmodtype_abstract
-  | Tmodtype_manifest of module_type
 
 (* Value expressions for the module language *)
 
@@ -151,8 +145,6 @@ type module_expr =
 and module_expr_desc =
     Tmod_ident of Path.t
   | Tmod_structure of structure
-  | Tmod_functor of Ident.t * module_type * module_expr
-  | Tmod_apply of module_expr * module_expr * module_coercion
   | Tmod_constraint of module_expr * module_type * module_coercion
 
 and structure = structure_item list
@@ -164,7 +156,6 @@ and structure_item =
   | Tstr_type of (Ident.t * type_declaration) list
   | Tstr_exception of Ident.t * exception_declaration
   | Tstr_module of Ident.t * module_expr
-  | Tstr_modtype of Ident.t * module_type
   | Tstr_open of Path.t
 
 and module_coercion =

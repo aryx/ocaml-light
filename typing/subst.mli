@@ -30,5 +30,4 @@ val exception_declaration:
         t -> exception_declaration -> exception_declaration
 val modtype: t -> module_type -> module_type
 val signature: t -> signature -> signature
-val modtype_declaration: t -> modtype_declaration -> modtype_declaration
 

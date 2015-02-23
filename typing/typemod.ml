@@ -59,12 +59,15 @@ let type_module_path env loc lid =
 let rec transl_modtype env smty =
   match smty.pmty_desc with
     Pmty_ident lid ->
+      failwith "transl_modtype:TODO"
+(*
       begin try
         let (path, info) = Env.lookup_modtype lid env in 
         Tmty_ident path
       with Not_found ->
         raise(Error(smty.pmty_loc, Unbound_modtype lid))
       end
+*)
   | Pmty_signature ssg ->
       Tmty_signature(transl_signature env ssg)
       
@@ -103,8 +106,6 @@ exception Not_a_path
 let rec path_of_module mexp =
   match mexp.mod_desc with
     Tmod_ident p -> p
-  | Tmod_apply(funct, arg, coercion) ->
-      Papply(path_of_module funct, path_of_module arg)
   | _ -> raise Not_a_path
 
 (* Check that all type and module identifiers in a structure have
