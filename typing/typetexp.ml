@@ -18,20 +18,20 @@ open Parsetree
 open Types
 open Ctype
 
-(*s: exception Typetexp.Already_bound (./typing/typetexp.ml) *)
+(*s: exception Typetexp.Already_bound *)
 exception Already_bound
-(*e: exception Typetexp.Already_bound (./typing/typetexp.ml) *)
+(*e: exception Typetexp.Already_bound *)
 
-(*s: type Typetexp.error (./typing/typetexp.ml) *)
+(*s: type Typetexp.error *)
 type error =
     Unbound_type_variable of string
   | Unbound_type_constructor of Longident.t
   | Type_arity_mismatch of Longident.t * int * int
-(*e: type Typetexp.error (./typing/typetexp.ml) *)
+(*e: type Typetexp.error *)
 
-(*s: exception Typetexp.Error (./typing/typetexp.ml) *)
+(*s: exception Typetexp.Error *)
 exception Error of Location.t * error
-(*e: exception Typetexp.Error (./typing/typetexp.ml) *)
+(*e: exception Typetexp.Error *)
 
 (*s: constant Typetexp.type_variables *)
 (* Translation of type expressions *)

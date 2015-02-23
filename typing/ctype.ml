@@ -18,9 +18,9 @@ open Misc
 open Path
 open Types
 
-(*s: exception Ctype.Unify (./typing/ctype.ml) *)
+(*s: exception Ctype.Unify *)
 exception Unify
-(*e: exception Ctype.Unify (./typing/ctype.ml) *)
+(*e: exception Ctype.Unify *)
 
 (*s: constant Ctype.current_level *)
 let current_level = ref 0

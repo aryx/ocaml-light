@@ -23,16 +23,18 @@ open Path
 open Types
 
 
-(*s: type Env.error (./typing/env.ml) *)
+(*s: type Env.error *)
+(* Error report *)
+
 type error =
     Not_an_interface of string
   | Corrupted_interface of string
   | Illegal_renaming of string * string
-(*e: type Env.error (./typing/env.ml) *)
+(*e: type Env.error *)
 
-(*s: exception Env.Error (./typing/env.ml) *)
+(*s: exception Env.Error *)
 exception Error of error
-(*e: exception Env.Error (./typing/env.ml) *)
+(*e: exception Env.Error *)
 
 (*s: type Env.t *)
 type t = {
@@ -73,10 +75,12 @@ and functor_components = {
 
 (*s: constant Env.empty *)
 let empty = {
-  values = Ident.empty; constrs = Ident.empty;
-  labels = Ident.empty; types = Ident.empty;
+  values = Ident.empty; 
+  constrs = Ident.empty;
+  labels = Ident.empty; 
+  types = Ident.empty;
   modules = Ident.empty;
-  components = Ident.empty }
+  components = Ident.empty; }
 (*e: constant Env.empty *)
 
 (*s: type Env.pers_struct *)
@@ -138,12 +142,7 @@ let reset_cache() =
 (*e: function Env.reset_cache *)
 
 (*s: constant Env.components_of_functor_appl *)
-(* Forward declarations *)
-
-let components_of_functor_appl =
-  ref ((fun f p1 p2 -> fatal_error "Env.components_of_functor_appl") :
 (*e: constant Env.components_of_functor_appl *)
-       functor_components -> Path.t -> Path.t -> module_components)
 
 (*s: constant Env.check_modtype_inclusion *)
 let check_modtype_inclusion =
@@ -174,13 +173,6 @@ let rec find_module_descr path env =
       | Functor_comps f ->
         raise Not_found
       end
-  | Papply(p1, p2) ->
-      begin match find_module_descr p1 env with
-       Functor_comps f ->
-          !components_of_functor_appl f p1 p2
-      | Structure_comps c ->
-         raise Not_found
-      end
 (*e: function Env.find_module_descr *)
 
 (*s: function Env.find *)
@@ -196,8 +188,6 @@ let find proj1 proj2 path env =
       | Functor_comps f ->
           raise Not_found
       end
-  | Papply(p1, p2) ->
-      raise Not_found
 (*e: function Env.find *)
 
 let find_value = find (fun env -> env.values) (fun sc -> sc.comp_values)
@@ -466,19 +456,6 @@ let funappl_memo =
   (Hashtbl.create 17 : (Path.t, module_components) Hashtbl.t)
 
 (*s: toplevel Env._1 *)
-let _ =
-  components_of_functor_appl :=
-    (fun f p1 p2 ->
-      let p = Papply(p1, p2) in
-      try
-        Hashtbl.find funappl_memo p
-      with Not_found ->
-        let mty = 
-          Subst.modtype (Subst.add_module f.fcomp_param p2 Subst.identity)
-                        f.fcomp_res in
-        let comps = components_of_module f.fcomp_env Subst.identity p mty in
-        Hashtbl.add funappl_memo p comps;
-        comps)
 (*e: toplevel Env._1 *)
 
 (* Insertion of bindings by identifier *)
@@ -611,13 +588,4 @@ let report_error = function
       print_string "contains the compiled interface for"; print_space();
       print_string modname
 (*e: function Env.report_error *)
-
-
-(*s: type Env.summary (./typing/env.ml) *)
-type summary = unit
-(*e: type Env.summary (./typing/env.ml) *)
-
-(*s: function Env.summary *)
-let summary _ = ()
-(*e: function Env.summary *)
 (*e: ./typing/env.ml *)

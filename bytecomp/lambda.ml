@@ -134,7 +134,7 @@ and lambda_event =
   { lev_loc: int;
     lev_kind: lambda_event_kind;
     lev_repr: int ref option;
-    lev_env: Env.summary }
+    lev_env: unit; (*Env.summary*) }
 (*e: type Lambda.lambda_event *)
 
 (*s: type Lambda.lambda_event_kind *)

@@ -22,7 +22,7 @@ open Typedtree
 open Ctype
 
 
-(*s: type Typecore.error (./typing/typecore.ml) *)
+(*s: type Typecore.error *)
 type error =
     Unbound_value of Longident.t
   | Unbound_constructor of Longident.t
@@ -38,11 +38,11 @@ type error =
   | Label_missing
   | Label_not_mutable of Longident.t
   | Bad_format of string
-(*e: type Typecore.error (./typing/typecore.ml) *)
+(*e: type Typecore.error *)
 
-(*s: exception Typecore.Error (./typing/typecore.ml) *)
+(*s: exception Typecore.Error *)
 exception Error of Location.t * error
-(*e: exception Typecore.Error (./typing/typecore.ml) *)
+(*e: exception Typecore.Error *)
 
 (*s: function Typecore.type_constant *)
 (* Typing of constants *)

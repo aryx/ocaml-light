@@ -376,7 +376,7 @@ let event_before exp lam =
   then Levent(lam, {lev_loc = exp.exp_loc.Location.loc_start;
                     lev_kind = Lev_before;
                     lev_repr = None;
-                    lev_env = Env.summary ()(*exp.exp_env*)})
+                    lev_env =  ()(* Env.summary exp.exp_env*)})
   else lam
 (*e: function Translcore.event_before *)
 
@@ -386,7 +386,7 @@ let event_after exp lam =
   then Levent(lam, {lev_loc = exp.exp_loc.Location.loc_end;
                     lev_kind = Lev_after exp.exp_type;
                     lev_repr = None;
-                    lev_env = Env.summary () (* exp.exp_env*)})
+                    lev_env = () (* Env.summary exp.exp_env*)})
   else lam
 (*e: function Translcore.event_after *)
 
@@ -399,7 +399,7 @@ let event_function exp lam =
      Levent(body, {lev_loc = exp.exp_loc.Location.loc_start;
                    lev_kind = Lev_function;
                    lev_repr = repr;
-                   lev_env = Env.summary () (* exp.exp_env*)}))
+                   lev_env = () (* Env.summary  exp.exp_env*)}))
   else
     lam None
 (*e: function Translcore.event_function *)
