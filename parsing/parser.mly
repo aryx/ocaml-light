@@ -56,7 +56,7 @@ let mkassert e =
 ;;
 
 let mklazy e =
-  let void_pat = mkpat (Ppat_construct (Lident "()", None, false)) in
+  let void_pat = mkpat (Ppat_construct (Lident "()", None)) in
   let f = mkexp (Pexp_function ([void_pat, e])) in
   let delayed = Ldot (Lident "Lazy", "Delayed") in
   let df = mkexp (Pexp_construct (delayed, Some f, false)) in
@@ -85,11 +85,11 @@ let rec mklistexp = function
                            false))
 let rec mklistpat = function
     [] ->
-      mkpat(Ppat_construct(Lident "[]", None, false))
+      mkpat(Ppat_construct(Lident "[]", None))
   | p1 :: pl ->
       mkpat(Ppat_construct(Lident "::",
-                           Some(mkpat(Ppat_tuple[p1; mklistpat pl])),
-                           false))
+                           Some(mkpat(Ppat_tuple[p1; mklistpat pl]))
+                           ))
 
 let mkstrexp e =
   { pstr_desc = Pstr_eval e; pstr_loc = e.pexp_loc }
@@ -562,10 +562,10 @@ pattern:
   | pattern_comma_list
       { mkpat(Ppat_tuple(List.rev $1)) }
   | constr_longident pattern %prec prec_constr_appl
-      { mkpat(Ppat_construct($1, Some $2, false)) }
+      { mkpat(Ppat_construct($1, Some $2)) }
   | pattern COLONCOLON pattern
-      { mkpat(Ppat_construct(Lident "::", Some(mkpat(Ppat_tuple[$1;$3])),
-                             false)) }
+      { mkpat(Ppat_construct(Lident "::", Some(mkpat(Ppat_tuple[$1;$3]))
+                             )) }
   | pattern BAR pattern
       { mkpat(Ppat_or($1, $3)) }
 ;
@@ -579,7 +579,7 @@ simple_pattern:
   | CHAR DOTDOT CHAR
       { mkrangepat $1 $3 }
   | constr_longident
-      { mkpat(Ppat_construct($1, None, false)) }
+      { mkpat(Ppat_construct($1, None)) }
   | LBRACE lbl_pattern_list opt_semi RBRACE
       { mkpat(Ppat_record(List.rev $2)) }
   | LBRACE lbl_pattern_list opt_semi error
