@@ -139,6 +139,8 @@ let implementation sourcefile =
   let ast = parse_file inputfile Parse.implementation ast_impl_magic_number in
   let (str, sg, finalenv) = Typemod.type_structure (initial_env()) ast in
   if !Clflags.print_types then (Printtyp.signature sg; print_newline());
+
+(*
   let coercion =
     if Sys.file_exists (prefixname ^ ".mli") then begin
       let intf_file =
@@ -151,6 +153,21 @@ let implementation sourcefile =
       Env.save_signature sg modulename (prefixname ^ ".cmi");
       Tcoerce_none
     end in
+*)
+
+    let (coercion, crc) =
+      if Sys.file_exists (prefixname ^ ".mli") then begin
+        let intf_file =
+          try find_in_path !load_path (prefixname ^ ".cmi")
+          with Not_found -> prefixname ^ ".cmi" in
+        let (dclsig, crc) = Env.read_signature modulename intf_file in
+        (Includemod.compunit sourcefile sg intf_file dclsig, crc)
+      end else begin
+        let crc = Env.save_signature sg modulename (prefixname ^ ".cmi") in
+        Typemod.check_nongen_schemes str;
+        (Tcoerce_none, crc)
+      end in
+
   Compilenv.reset modulename;
   let (compunit_size, lam) =
     Translmod.transl_store_implementation modulename str coercion in
