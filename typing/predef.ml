@@ -1,3 +1,4 @@
+(*s: ./typing/predef.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                         Caml Special Light                          *)
@@ -59,8 +60,11 @@ and ident_end_of_file = Ident.create "End_of_file"
 and ident_division_by_zero = Ident.create "Division_by_zero"
 and ident_stack_overflow = Ident.create "Stack_overflow"
 
+(*s: constant Predef.path_match_failure *)
 let path_match_failure = Pident ident_match_failure
+(*e: constant Predef.path_match_failure *)
 
+(*s: function Predef.build_initial_env *)
 let build_initial_env add_type add_exception empty_env =
   let newvar() =
     (* Cannot call the real newvar from ctype here
@@ -124,10 +128,14 @@ let build_initial_env add_type add_exception empty_env =
   add_type ident_char decl_abstr (
   add_type ident_int decl_abstr (
     empty_env)))))))))))))))))))
+(*e: function Predef.build_initial_env *)
 
+(*s: constant Predef.builtin_values *)
 let builtin_values =
   List.map (fun id -> Ident.make_global id; (Ident.name id, id))
       [ident_match_failure; ident_out_of_memory; ident_stack_overflow;
        ident_invalid_argument;
        ident_failure; ident_not_found; ident_sys_error; ident_end_of_file;
        ident_division_by_zero]
+(*e: constant Predef.builtin_values *)
+(*e: ./typing/predef.ml *)

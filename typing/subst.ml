@@ -1,3 +1,4 @@
+(*s: ./typing/subst.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                         Caml Special Light                          *)
@@ -18,29 +19,40 @@ open Path
 open Types
 
 
+(*s: type Subst.t *)
 type t = 
   { types: Path.t Ident.tbl;
     modules: Path.t Ident.tbl;
     modtypes: module_type Ident.tbl }
+(*e: type Subst.t *)
 
+(*s: constant Subst.identity *)
 let identity =
   { types = Ident.empty; modules = Ident.empty; modtypes = Ident.empty }
+(*e: constant Subst.identity *)
 
+(*s: function Subst.add_type *)
 let add_type id p s =
   { types = Ident.add id p s.types;
     modules = s.modules;
     modtypes = s.modtypes }
+(*e: function Subst.add_type *)
 
+(*s: function Subst.add_module *)
 let add_module id p s =
   { types = s.types;
     modules = Ident.add id p s.modules;
     modtypes = s.modtypes }
+(*e: function Subst.add_module *)
 
+(*s: function Subst.add_modtype *)
 let add_modtype id ty s =
   { types = s.types;
     modules = s.modules;
     modtypes = Ident.add id ty s.modtypes }
+(*e: function Subst.add_modtype *)
 
+(*s: function Subst.module_path *)
 let rec module_path s = function
     Pident id as p ->
       begin try Ident.find_same id s.modules with Not_found -> p end
@@ -48,7 +60,9 @@ let rec module_path s = function
       Pdot(module_path s p, n, pos)
   | Papply(p1, p2) ->
       Papply(module_path s p1, module_path s p2)
+(*e: function Subst.module_path *)
 
+(*s: function Subst.type_path *)
 let type_path s = function
     Pident id as p ->
       begin try Ident.find_same id s.types with Not_found -> p end
@@ -56,7 +70,9 @@ let type_path s = function
       Pdot(module_path s p, n, pos)
   | Papply(p1, p2) ->
       fatal_error "Subst.type_path"
+(*e: function Subst.type_path *)
 
+(*s: function Subst.type_expr *)
 let rec type_expr s = function
     Tvar{tvar_link = None} as ty -> ty
   | Tvar{tvar_link = Some ty} -> type_expr s ty
@@ -64,11 +80,15 @@ let rec type_expr s = function
   | Ttuple tl -> Ttuple(List.map (type_expr s) tl)
   | Tconstr(p, []) -> Tconstr(type_path s p, [])
   | Tconstr(p, tl) -> Tconstr(type_path s p, List.map (type_expr s) tl)
+(*e: function Subst.type_expr *)
 
+(*s: function Subst.value_description *)
 let value_description s descr =
   { val_type = type_expr s descr.val_type;
     val_prim = descr.val_prim }
+(*e: function Subst.value_description *)
 
+(*s: function Subst.type_declaration *)
 let type_declaration s decl =
   { type_params = decl.type_params;
     type_arity = decl.type_arity;
@@ -88,9 +108,12 @@ let type_declaration s decl =
       | Some ty -> Some(type_expr s ty)
       end
   }
+(*e: function Subst.type_declaration *)
 
+(*s: function Subst.exception_declaration *)
 let exception_declaration s tyl =
   List.map (type_expr s) tyl
+(*e: function Subst.exception_declaration *)
 
 let rec modtype s = function
     Tmty_ident p as mty ->
@@ -112,3 +135,4 @@ and signature_item s = function
   | Tsig_type(id, d) -> Tsig_type(id, type_declaration s d)
   | Tsig_exception(id, d) -> Tsig_exception(id, exception_declaration s d)
   | Tsig_module(id, mty) -> Tsig_module(id, modtype s mty)
+(*e: ./typing/subst.ml *)

@@ -8,8 +8,8 @@ I originally started my fork from caml special light 1.16 just before
 the object extensions were added
 (from github.com/ocaml/ocaml  7974a9d8b1c8195130b2df216d6a102ca00cdf5b^).
 It seemed like a good candidate for a fork. I think it was better 
-than caml light because caml special light had: 
- - a module system (no more #open, cleaner open and the possibility to qualify)
+than caml light because caml _special_ light had: 
+ - a module system (the possibility to qualify, and #open -> open)
  - a better code organization, code splitted in many directories (parsing/,
    typing/, bytecomp/, etc)
 and it was far simpler than recent ocaml because it didn't have:
@@ -76,22 +76,23 @@ it is maybe also a better candidate in the end for a fork because it has:
 Then I did many modifications, mostly removing stuff:
  - removed support for Windows and Mac (the Makefile.nt, Makefile.Mac, etc)
  - removed native code compiler targets: alpha, hppa, m68k, power, and sparc,
-   mips (just kept i386) and I backported the arm port from ocaml 2.01
+   mips (just kept i386) and I backported the ARM port from ocaml 2.01
  - removed support for objects! reduce the code and the complexity
    of the typechecker. In the end they are not used in the compiler
    (they are very ligtly used in asmcomp/ but the code can be rewritten using
    plain records)
- - removed support for functor! I prefer defunctorized data structure
-   anyway. I removed support for include, with type signature, and
-   also module types (I never understood them).
+ - removed support for functor! I prefer defunctorized data structures
+   anyway. I also removed support for 'include', 'with type' signature, and
+   also 'module type' (I never understood them).
    In the end they are also not that used in the compiler, or when
    they are used it's to use the default compare.
  - removed support for streams
- - I moved the debugger/ and toplevel/ under tools/
- - TODO go back to simpler typechecker with no Link, Nil and stuff
+ - I reverted to the simpler typechecker (no Link, Nil, expand_head, resetdef,
+   newgenty, etc), from caml special light 1.16
    introduced for the need of objects
+ - I moved the debugger/ and toplevel/ under tools/
 
-I have rewritten a few 
+I have also rewritten a few:
  - if then else if --> match () with when
  - iter f data in data |> iter f
 
