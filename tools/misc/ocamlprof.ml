@@ -203,7 +203,7 @@ and rewrite_exp sexp =
     if !instr_loops then insert_profile sbody.pexp_loc;
     rewrite_exp sbody
 
-  | Pexp_constraint(sarg, _, _) ->
+  | Pexp_constraint(sarg, _) ->
     rewrite_exp sarg
 
   | Pexp_when(scond, sbody) ->
@@ -229,7 +229,7 @@ and rewrite_annotate_exp_list l =
       rewrite_exp scond; 
       insert_profile sbody.pexp_loc;
       rewrite_exp sbody
-    | {pexp_desc = Pexp_constraint(sbody, _, _)} -> (* let f x : t = e *)
+    | {pexp_desc = Pexp_constraint(sbody, _)} -> (* let f x : t = e *)
       insert_profile sbody.pexp_loc;
       rewrite_exp sbody
     | sexp ->

@@ -431,7 +431,7 @@ let rec type_exp env sexp =
       { exp_desc = Texp_for(id, low, high, dir, body);
         exp_loc = sexp.pexp_loc;
         exp_type = Predef.type_unit }
-  | Pexp_constraint(sarg, Some sty, _) ->
+  | Pexp_constraint(sarg, sty) ->
       let ty = Typetexp.transl_simple_type env false sty in
       let arg = type_expect env sarg ty in
       { exp_desc = arg.exp_desc;
