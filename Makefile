@@ -320,6 +320,9 @@ beforedepend:: utils/config.ml
 
 parsing/parser.mli parsing/parser.ml: parsing/parser.mly
 	$(CAMLYACC) $(YACCFLAGS) parsing/parser.mly
+	perl -p -i -e 's#/\*\(\*e: \./parsing/parser.mly \*\)\*/##' parsing/parser.ml
+#pad: this  perl thing is just because ocamlyacc does not handle well
+# syncweb special comment at the very end
 
 partialclean::
 	rm -f parsing/parser.mli parsing/parser.ml parsing/parser.output
@@ -608,6 +611,7 @@ TEX=OCaml.tex
 
 SRC_ORIG=OCaml.nw OCaml_extra.nw
 
+#ML sources
 SRC_VIEWS= \
   ./utils/config.mli\
   ./utils/misc.mli\
@@ -630,6 +634,7 @@ SRC_VIEWS= \
   ./parsing/syntaxerr.ml\
   ./parsing/parsetree.mli\
   ./parsing/lexer.mli\
+  ./parsing/lexer.mll\
   ./parsing/parse.mli\
   ./parsing/parse.ml\
   \
@@ -770,3 +775,11 @@ SRC_VIEWS= \
   ./driver/opterrors.ml\
   ./driver/optmain.ml\
 
+sync::
+	$(MAKE) sync2
+
+sync2:
+	$(MAKE) LANG=ocamlyacc sync3
+
+sync3:
+	$(SYNCWEB) $(SRC_ORIG) parsing/parser.mly
