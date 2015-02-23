@@ -396,6 +396,56 @@ and core_type_desc =
 % note that there is no '_a here, because it's not representable
 % by the user. It can't appear in the source code itself.
 
+\subsection{Declarations}
+
+\subsubsection{Type declarations}
+
+
+<<type Parsetree.type_declaration>>=
+type type_declaration =
+  { ptype_params: string list;
+    ptype_cstrs: (string * core_type * Location.t) list;
+    ptype_kind: type_kind;
+    ptype_manifest: core_type option;
+    ptype_loc: Location.t }
+@
+% manifest?
+
+<<type Parsetree.type_kind>>=
+and type_kind =
+    Ptype_abstract
+  | Ptype_variant of (string * core_type list) list
+  | Ptype_record of (string * mutable_flag * core_type) list
+@
+
+<<type Asttypes.mutable_flag>>=
+type mutable_flag = Immutable | Mutable
+@
+
+%  | Psig_type of (string * type_declaration) list
+% list when mutually recursive!
+
+\subsubsection{Exception declarations}
+
+<<type Parsetree.exception_declaration>>=
+type exception_declaration = core_type list
+@
+% ??
+
+%  | Psig_exception of string * exception_declaration
+
+\subsubsection{Values}
+
+<<type Parsetree.value_description>>=
+(* Value descriptions *)
+
+type value_description =
+  { pval_type: core_type;
+    pval_prim: string list }
+@
+
+%    Psig_value of string * value_description
+
 \subsection{Expressions (and statements)}
 
 <<type Parsetree.expression>>=
@@ -463,56 +513,6 @@ and pattern_desc =
   | Ppat_or of pattern * pattern
   | Ppat_constraint of pattern * core_type
 @
-
-\subsection{Declarations}
-
-\subsubsection{Type declarations}
-
-
-<<type Parsetree.type_declaration>>=
-type type_declaration =
-  { ptype_params: string list;
-    ptype_cstrs: (string * core_type * Location.t) list;
-    ptype_kind: type_kind;
-    ptype_manifest: core_type option;
-    ptype_loc: Location.t }
-@
-% manifest?
-
-<<type Parsetree.type_kind>>=
-and type_kind =
-    Ptype_abstract
-  | Ptype_variant of (string * core_type list) list
-  | Ptype_record of (string * mutable_flag * core_type) list
-@
-
-<<type Asttypes.mutable_flag>>=
-type mutable_flag = Immutable | Mutable
-@
-
-%  | Psig_type of (string * type_declaration) list
-% list when mutually recursive!
-
-\subsubsection{Exception declarations}
-
-<<type Parsetree.exception_declaration>>=
-type exception_declaration = core_type list
-@
-% ??
-
-%  | Psig_exception of string * exception_declaration
-
-\subsubsection{Values}
-
-<<type Parsetree.value_description>>=
-(* Value descriptions *)
-
-type value_description =
-  { pval_type: core_type;
-    pval_prim: string list }
-@
-
-%    Psig_value of string * value_description
 
 \subsection{Modules}
 
@@ -593,7 +593,7 @@ and module_expr_desc =
 @
 
 
-\section{Types and the Typed Tree}
+\section{Types and the typed tree}
 
 % many Types.xxx are really close to Parsetree.xxx
 % they actually have the same name, but core_type
@@ -943,6 +943,9 @@ let interface = wrap Parser.interface
 %\subsection{Globals}
 
 \section{Types}
+% type expressions?
+
+\section{Type declarations}
 
 \subsection{Variants}
 
@@ -1153,7 +1156,9 @@ and module_coercion =
 @
 
 
-\section{Builtin types}
+\section{Builtins}
+
+\subsection{Builtin types}
 % and exceptions
 
 %(* Predefined type constructors (with special typing rules in typecore) *)
@@ -1228,7 +1233,7 @@ and type_array t = Tconstr(path_array, [t])
 
 
 
-\section{Builtin values}
+\subsection{Builtin values}
 % different from primitives
 % different from pervasives
 
@@ -1306,7 +1311,7 @@ let build_initial_env add_type add_exception empty_env =
 @
 
 
-\section{Primitives}
+\subsection{Primitives}
 
 <<type Primitive.description>>=
 (* Description of primitive functions *)
@@ -1956,7 +1961,8 @@ val transl_let:
       rec_flag -> (pattern * expression) list -> lambda -> lambda
 @
 
-\subsection{Modules, [[Translmod.transl_implementation()]]}
+\subsection{Modules, [[transl_implementation()]]}
+%Translmod
 
 <<signature Translmod.transl_implementation>>=
 val transl_implementation: string -> structure -> module_coercion -> lambda
@@ -2695,7 +2701,7 @@ let command cmdline =
 
 
 
-\subsection{Typed structures}
+\subsection{Typed data structures}
 
 \subsubsection{Primitives}
 
