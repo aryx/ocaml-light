@@ -1532,7 +1532,7 @@ and path_exn = Pident ident_exn
 @
 
 <<constants Predef.type_xxx>>=
-%and type_exn = Tconstr(path_exn, [])
+and type_exn = Tconstr(path_exn, [])
 @
 
 
@@ -2452,7 +2452,7 @@ and lambda_event =
   { lev_loc: int;
     lev_kind: lambda_event_kind;
     lev_repr: int ref option;
-    lev_env: Env.summary }
+    lev_env: unit; (*Env.summary*) }
 @
 
 <<type Lambda.lambda_event_kind>>=
@@ -2485,7 +2485,7 @@ type debug_event =
     ev_char: int;                       (* Location in source file *)
     ev_kind: debug_event_kind;          (* Before/after event *)
     ev_info: debug_event_info;          (* Extra information *)
-    ev_typenv: Env.summary;             (* Typing environment *)
+    ev_typenv: unit(*Env.summary*);             (* Typing environment *)
     ev_compenv: compilation_env;        (* Compilation environment *)
     ev_stacksize: int;                  (* Size of stack frame *)
     ev_repr: debug_event_repr }         (* Position of the representative *)
@@ -3360,6 +3360,377 @@ let report_error = function
       print_string "Syntax error"
 @
 
+
+\section{Naming errors}
+
+<<type Env.error>>=
+(* Error report *)
+
+type error =
+    Not_an_interface of string
+  | Corrupted_interface of string
+  | Illegal_renaming of string * string
+@
+
+<<exception Env.Error>>=
+exception Error of error
+@
+
+<<signature Env.report_error>>=
+val report_error: error -> unit
+@
+
+<<function Env.report_error>>=
+(* Error report *)
+
+let report_error = function
+    Not_an_interface filename ->
+      print_string filename; print_space();
+      print_string "is not a compiled interface."
+  | Corrupted_interface filename ->
+      print_string "Corrupted compiled interface"; print_space();
+      print_string filename
+  | Illegal_renaming(modname, filename) ->
+      print_string "Wrong file naming:"; print_space();
+      print_string filename; print_space();
+      print_string "contains the compiled interface for"; print_space();
+      print_string modname
+@
+%TODO: forward port Inconsistent_import check
+%  | Inconsistent_import(name, source1, source2) ->
+%      open_hvbox 0;
+%      print_string "The compiled interfaces for "; print_string source1;
+%      print_string " and "; print_string source2; print_space();
+%      print_string "make inconsistent assumptions over interface ";
+%      print_string name;
+%      close_box()
+
+
+\section{Typing errors}
+
+\subsection{Types}
+
+<<type Typetexp.error>>=
+type error =
+    Unbound_type_variable of string
+  | Unbound_type_constructor of Longident.t
+  | Type_arity_mismatch of Longident.t * int * int
+@
+
+<<exception Typetexp.Error>>=
+exception Error of Location.t * error
+@
+
+<<signature Typetexp.report_error>>=
+val report_error: error -> unit
+@
+
+
+<<function Typetexp.report_error>>=
+let report_error = function
+    Unbound_type_variable name ->
+      print_string "Unbound type parameter "; print_string name
+  | Unbound_type_constructor lid ->
+      print_string "Unbound type constructor "; longident lid
+  | Type_arity_mismatch(lid, expected, provided) ->
+      open_hovbox 0;
+      print_string "The type constructor "; longident lid;
+      print_space(); print_string "expects "; print_int expected;
+      print_string " argument(s),"; print_space();
+      print_string "but is here applied to "; print_int provided;
+      print_string " argument(s)";
+      close_box()
+@
+
+\subsection{Modules}
+
+<<type Typemod.error>>=
+type error =
+    Unbound_module of Longident.t
+  | Unbound_modtype of Longident.t
+  | Cannot_apply of module_type
+  | Not_included of Includemod.error list
+  | Cannot_eliminate_dependency of module_type
+  | Signature_expected
+  | Structure_expected of module_type
+  | With_no_component of Longident.t
+  | Repeated_name of string * string
+  | Non_generalizable of type_expr
+@
+
+
+<<exception Typemod.Error>>=
+exception Error of Location.t * error
+@
+
+<<signature Typemod.report_error>>=
+val report_error: error -> unit
+@
+
+
+<<function Typemod.report_error>>=
+let report_error = function
+    Unbound_module lid ->
+      print_string "Unbound module "; longident lid
+  | Unbound_modtype lid ->
+      print_string "Unbound module type "; longident lid
+  | Cannot_apply mty ->
+      open_hovbox 0;
+      print_string "This module is not a functor; it has type";
+      print_space(); modtype mty;
+      close_box()
+  | Not_included errs ->
+      open_vbox 0;
+      print_string "Signature mismatch:"; print_space();
+      Includemod.report_error errs;
+      close_box()
+  | Cannot_eliminate_dependency mty ->
+      open_hovbox 0;
+      print_string "This functor has type";
+      print_space(); modtype mty; print_space();
+      print_string "The parameter cannot be eliminated in the result type.";
+      print_space();
+      print_string "Please bind the argument to a module identifier.";
+      close_box()
+  | Signature_expected ->
+      print_string "This module type is not a signature"
+  | Structure_expected mty ->
+      open_hovbox 0;
+      print_string "This module is not a structure; it has type";
+      print_space(); modtype mty;
+      close_box()
+  | With_no_component lid ->
+      print_string "The signature constrained by `with' has no component named";
+      print_space(); longident lid
+  | Repeated_name(kind, name) ->
+      open_hovbox 0;
+      print_string "Multiple definition of the "; print_string kind;
+      print_string " name "; print_string name; print_string ".";
+      print_space();
+      print_string "Names must be unique in a given structure.";
+      close_box()
+  | Non_generalizable typ ->
+      open_hovbox 0;
+      print_string "The type of this expression,"; print_space();
+      type_scheme typ; print_string ","; print_space();
+      print_string "contains type variables that cannot be generalized"
+@
+
+
+
+
+<<type Includemod.error>>=
+type error =
+    Missing_field of Ident.t
+  | Value_descriptions of Ident.t * value_description * value_description
+  | Type_declarations of Ident.t * type_declaration * type_declaration
+  | Exception_declarations of
+      Ident.t * exception_declaration * exception_declaration
+  | Module_types of module_type * module_type
+  | Modtype_permutation
+  | Interface_mismatch of string * string
+@
+
+<<exception Includemod.Error>>=
+exception Error of error list
+@
+
+<<signature Includemod.report_error>>=
+val report_error: error list -> unit
+@
+
+
+<<function Includemod.include_err>>=
+let include_err = function
+    Missing_field id ->
+      print_string "The field `"; ident id; 
+      print_string "' is required but not provided"
+  | Value_descriptions(id, d1, d2) ->
+      open_hvbox 2;
+      print_string "Values do not match:"; print_space();
+      value_description id d1; 
+      print_break 1 (-2);
+      print_string "is not included in"; print_space();
+      value_description id d2;
+      close_box()
+  | Type_declarations(id, d1, d2) ->
+      open_hvbox 2;
+      print_string "Type declarations do not match:"; print_space();
+      type_declaration id d1; 
+      print_break 1 (-2);
+      print_string "is not included in"; print_space();
+      type_declaration id d2;
+      close_box()
+  | Exception_declarations(id, d1, d2) ->
+      open_hvbox 2;
+      print_string "Exception declarations do not match:"; print_space();
+      exception_declaration id d1; 
+      print_break 1 (-2);
+      print_string "is not included in"; print_space();
+      exception_declaration id d2;
+      close_box()
+  | Module_types(mty1, mty2)->
+      open_hvbox 2;
+      print_string "Modules do not match:"; print_space();
+      modtype mty1;
+      print_break 1 (-2);
+      print_string "is not included in"; print_space();
+      modtype mty2;
+      close_box()
+  | Modtype_permutation ->
+      print_string "Illegal permutation of structure fields"
+  | Interface_mismatch(impl_name, intf_name) ->
+      open_hovbox 0;
+      print_string "The implementation "; print_string impl_name;
+      print_space(); print_string "does not match the interface ";
+      print_string intf_name;
+      print_string ":";
+      close_box()
+@
+
+<<function Includemod.report_error>>=
+let report_error errlist =
+  match errlist with
+    [] -> ()
+  | err :: rem ->
+      open_vbox 0;
+      include_err err;
+      List.iter (fun err -> print_space(); include_err err) rem;
+      close_box()
+@
+
+\subsection{Declarations}
+
+<<type Typedecl.error>>=
+type error =
+    Repeated_parameter
+  | Duplicate_constructor of string
+  | Too_many_constructors
+  | Duplicate_label of string
+  | Recursive_abbrev of string
+  | Definition_mismatch of type_expr
+@
+
+
+<<exception Typedecl.Error>>=
+exception Error of Location.t * error
+@
+
+<<signature Typedecl.report_error>>=
+val report_error: error -> unit
+@
+
+
+<<function Typedecl.report_error>>=
+let report_error = function
+    Repeated_parameter ->
+      print_string "A type parameter occurs several times"
+  | Duplicate_constructor s ->
+      print_string "Two constructors are named "; print_string s
+  | Too_many_constructors ->
+      print_string "Too many constructors -- maximum is ";
+      print_int Config.max_tag; print_string " constructors"
+  | Duplicate_label s ->
+      print_string "Two labels are named "; print_string s
+  | Recursive_abbrev s ->
+      print_string "The type abbreviation "; print_string s;
+      print_string " is cyclic"
+  | Definition_mismatch ty ->
+      print_string
+        "The variant or record definition does not match that of type";
+      print_space(); Printtyp.type_expr ty
+@
+
+
+\subsection{Expressions}
+
+<<type Typecore.error>>=
+type error =
+    Unbound_value of Longident.t
+  | Unbound_constructor of Longident.t
+  | Unbound_label of Longident.t
+  | Constructor_arity_mismatch of Longident.t * int * int
+  | Label_mismatch of Longident.t * type_expr * type_expr
+  | Pattern_type_clash of type_expr * type_expr
+  | Multiply_bound_variable
+  | Orpat_not_closed
+  | Expr_type_clash of type_expr * type_expr
+  | Apply_non_function of type_expr
+  | Label_multiply_defined of Longident.t
+  | Label_missing
+  | Label_not_mutable of Longident.t
+  | Bad_format of string
+@
+
+<<exception Typecore.Error>>=
+exception Error of Location.t * error
+@
+
+<<signature Typecore.report_error>>=
+val report_error: error -> unit
+@
+
+
+<<function Typecore.report_error>>=
+let report_error = function
+    Unbound_value lid ->
+      print_string "Unbound value "; longident lid
+  | Unbound_constructor lid ->
+      print_string "Unbound constructor "; longident lid
+  | Unbound_label lid ->
+      print_string "Unbound label "; longident lid
+  | Constructor_arity_mismatch(lid, expected, provided) ->
+      open_hovbox 0;
+      print_string "The constructor "; longident lid;
+      print_space(); print_string "expects "; print_int expected;
+      print_string " argument(s),"; print_space();
+      print_string "but is here applied to "; print_int provided;
+      print_string " argument(s)";
+      close_box()
+  | Label_mismatch(lid, actual, expected) ->
+      open_hovbox 0;
+      print_string "The label "; longident lid;
+      print_space(); print_string "belongs to the type"; print_space();
+      type_expr actual; print_space();
+      print_string "but is here mixed with labels of type"; print_space();
+      type_expr expected;
+      close_box()
+  | Pattern_type_clash(inferred, expected) ->
+      open_hovbox 0;
+      print_string "This pattern matches values of type"; print_space();
+      type_expr inferred; print_space();
+      print_string "but is here used to match values of type"; print_space();
+      type_expr expected;
+      close_box()
+  | Multiply_bound_variable ->
+      print_string "This variable is bound several times in this matching"
+  | Orpat_not_closed ->
+      print_string "A pattern with | must not bind variables"
+  | Expr_type_clash(inferred, expected) ->
+      open_hovbox 0;
+      print_string "This expression has type"; print_space();
+      type_expr inferred; print_space();
+      print_string "but is here used with type"; print_space();
+      type_expr expected;
+      close_box()
+  | Apply_non_function typ ->
+      begin match Ctype.repr typ with
+        Tarrow(_, _) ->
+          print_string "This function is applied to too many arguments"
+      | _ ->
+          print_string "This expression is not a function, it cannot be applied"
+      end
+  | Label_multiply_defined lid ->
+      print_string "The label "; longident lid;
+      print_string " is defined several times"
+  | Label_missing ->
+      print_string "Some labels are undefined"
+  | Label_not_mutable lid ->
+      print_string "The label "; longident lid;
+      print_string " is not mutable"
+  | Bad_format s ->
+      print_string "Bad format `"; print_string s; print_string "'"
+@
 
 
 \section{Compilation errors}
