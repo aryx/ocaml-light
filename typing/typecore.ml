@@ -16,6 +16,7 @@
 open Misc
 open Asttypes
 open Parsetree
+open Types
 open Typedtree
 open Ctype
 

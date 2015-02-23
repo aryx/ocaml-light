@@ -13,6 +13,7 @@
 
 (* Type-checking of the module language *)
 
+open Types
 open Typedtree
 
 val type_structure:

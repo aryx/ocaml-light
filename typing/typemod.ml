@@ -17,6 +17,7 @@ open Misc
 open Longident
 open Path
 open Parsetree
+open Types
 open Typedtree
 
 

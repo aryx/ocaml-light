@@ -13,7 +13,7 @@
 
 (* Operations on core types *)
 
-open Typedtree
+open Types
 
 val begin_def: unit -> unit
         (* Raise the variable level by one at the beginning of a definition. *)

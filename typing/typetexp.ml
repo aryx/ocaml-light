@@ -14,7 +14,7 @@
 (* Typechecking of type expressions for the core language *)
 
 open Parsetree
-open Typedtree
+open Types
 open Ctype
 
 exception Already_bound
@@ -28,7 +28,7 @@ exception Error of Location.t * error
 
 (* Translation of type expressions *)
 
-let type_variables = ref (Tbl.empty : (string, type_expr) Tbl.t)
+let type_variables = ref (Tbl.empty : (string, Types.type_expr) Tbl.t)
 
 let reset_type_variables () =
   type_variables := Tbl.empty

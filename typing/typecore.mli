@@ -14,7 +14,7 @@
 (* Type inference for the core language *)
 
 open Asttypes
-open Typedtree
+open Types
 
 val type_binding:
         Env.t -> rec_flag ->

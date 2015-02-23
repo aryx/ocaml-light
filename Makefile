@@ -35,16 +35,16 @@ PARSING=parsing/linenum.cmo parsing/location.cmo parsing/longident.cmo \
   parsing/lexer.cmo parsing/parse.cmo
 
 TYPING=typing/ident.cmo typing/path.cmo \
-  typing/primitive.cmo typing/typedtree.cmo \
+  typing/primitive.cmo typing/types.cmo \
   typing/subst.cmo typing/predef.cmo \
   typing/datarepr.cmo typing/env.cmo \
-  typing/ctype.cmo typing/printtyp.cmo \
+  typing/ctype.cmo \
+  typing/typedtree.cmo typing/printtyp.cmo \
   typing/mtype.cmo typing/includecore.cmo \
   typing/includemod.cmo typing/parmatch.cmo \
   typing/typetexp.cmo typing/typecore.cmo \
   typing/typedecl.cmo  \
   typing/typemod.cmo \
-  typing/types.cmo typing/btype.cmo
 
 COMP=bytecomp/lambda.cmo bytecomp/printlambda.cmo \
   bytecomp/matching.cmo bytecomp/translcore.cmo \
