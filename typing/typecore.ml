@@ -311,7 +311,7 @@ let rec type_exp env sexp =
       { exp_desc = Texp_tuple expl;
         exp_loc = sexp.pexp_loc;
         exp_type = Ttuple(List.map (fun exp -> exp.exp_type) expl) }
-  | Pexp_construct(lid, sarg, _bool) ->
+  | Pexp_construct(lid, sarg) ->
       let constr =
         try
           Env.lookup_constructor lid env

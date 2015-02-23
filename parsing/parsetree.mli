@@ -67,7 +67,7 @@ and expression_desc =
   | Pexp_constant of constant
 
   | Pexp_tuple of expression list
-  | Pexp_construct of Longident.t * expression option * bool
+  | Pexp_construct of Longident.t * expression option
   | Pexp_record of (Longident.t * expression) list
   | Pexp_array of expression list
 
