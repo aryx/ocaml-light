@@ -87,7 +87,7 @@ and expression_desc =
   | Pexp_while of expression * expression
   | Pexp_for of string * expression * expression * direction_flag * expression
 
-  | Pexp_constraint of expression * core_type option * core_type option
+  | Pexp_constraint of expression * core_type
 (*e: type Parsetree.expression_desc *)
 
 (*s: type Parsetree.value_description *)

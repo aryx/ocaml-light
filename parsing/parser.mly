@@ -459,7 +459,7 @@ simple_expr:
   | BEGIN seq_expr error
       { unclosed "begin" 1 "end" 3 }
   | LPAREN seq_expr type_constraint RPAREN
-      { let (t, t') = $3 in mkexp(Pexp_constraint($2, t, t')) }
+      { mkexp(Pexp_constraint($2, $3)) }
   | simple_expr DOT label_longident
       { mkexp(Pexp_field($1, $3)) }
   | simple_expr DOT LPAREN seq_expr RPAREN
@@ -509,7 +509,7 @@ fun_binding:
     EQUAL seq_expr %prec prec_let
       { $2 }
   | type_constraint EQUAL seq_expr %prec prec_let
-      { let (t, t') = $1 in mkexp(Pexp_constraint($3, t, t')) }
+      { mkexp(Pexp_constraint($3, $1)) }
   | simple_pattern fun_binding
       { mkexp(Pexp_function[$1,$2]) }
 ;
@@ -548,7 +548,7 @@ expr_semi_list:
   | expr_semi_list SEMI expr %prec prec_list    { $3 :: $1 }
 ;
 type_constraint:
-    COLON core_type                             { (Some $2, None) }
+    COLON core_type                             { ($2) }
   | COLON error                                 { syntax_error() }
 ;
 
