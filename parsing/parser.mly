@@ -44,12 +44,12 @@ let mkassert e =
                         mkexp (Pexp_constant (Const_int st));
                         mkexp (Pexp_constant (Const_int en))]) in
   let ex = Ldot (Lident "Pervasives", "Assert_failure") in
-  let bucket = mkexp (Pexp_construct (ex, Some triple, false)) in
+  let bucket = mkexp (Pexp_construct (ex, Some triple)) in
   let ra = Ldot (Lident "Pervasives", "raise") in
   let raiser = mkexp (Pexp_apply (mkexp (Pexp_ident ra), [bucket])) in
-  let un = mkexp (Pexp_construct (Lident "()", None, false)) in
+  let un = mkexp (Pexp_construct (Lident "()", None)) in
   match e with
-  | {pexp_desc = Pexp_construct (Lident "false", None, false) } -> raiser
+  | {pexp_desc = Pexp_construct (Lident "false", None) } -> raiser
   | _ -> if !Clflags.noassert
          then un
          else mkexp (Pexp_ifthenelse (e, un, Some raiser))
@@ -59,7 +59,7 @@ let mklazy e =
   let void_pat = mkpat (Ppat_construct (Lident "()", None)) in
   let f = mkexp (Pexp_function ([void_pat, e])) in
   let delayed = Ldot (Lident "Lazy", "Delayed") in
-  let df = mkexp (Pexp_construct (delayed, Some f, false)) in
+  let df = mkexp (Pexp_construct (delayed, Some f)) in
   let r = mkexp (Pexp_ident (Ldot (Lident "Pervasives", "ref"))) in
   mkexp (Pexp_apply (r, [df]))
 ;;
@@ -78,11 +78,11 @@ let mkuminus name arg =
 
 let rec mklistexp = function
     [] ->
-      mkexp(Pexp_construct(Lident "[]", None, false))
+      mkexp(Pexp_construct(Lident "[]", None))
   | e1 :: el ->
       mkexp(Pexp_construct(Lident "::",
-                           Some(mkexp(Pexp_tuple[e1; mklistexp el])),
-                           false))
+                           Some(mkexp(Pexp_tuple[e1; mklistexp el]))
+                           ))
 let rec mklistpat = function
     [] ->
       mkpat(Ppat_construct(Lident "[]", None))
@@ -387,7 +387,7 @@ expr:
   | expr_comma_list
       { mkexp(Pexp_tuple(List.rev $1)) }
   | constr_longident simple_expr %prec prec_constr_appl
-      { mkexp(Pexp_construct($1, Some $2, false)) }
+      { mkexp(Pexp_construct($1, Some $2)) }
   | IF seq_expr THEN expr ELSE expr %prec prec_if
       { mkexp(Pexp_ifthenelse($2, $4, Some $6)) }
   | IF seq_expr THEN expr %prec prec_if
@@ -397,7 +397,7 @@ expr:
   | FOR val_ident EQUAL seq_expr direction_flag seq_expr DO seq_expr DONE
       { mkexp(Pexp_for($2, $4, $6, $5, $8)) }
   | expr COLONCOLON expr
-      { mkexp(Pexp_construct(Lident "::", Some(mkexp(Pexp_tuple[$1;$3])), false)) }
+      { mkexp(Pexp_construct(Lident "::", Some(mkexp(Pexp_tuple[$1;$3])))) }
   | expr INFIXOP0 expr
       { mkinfix $1 $2 $3 }
   | expr INFIXOP1 expr
@@ -449,7 +449,7 @@ simple_expr:
   | constant
       { mkexp(Pexp_constant $1) }
   | constr_longident
-      { mkexp(Pexp_construct($1, None, false)) }
+      { mkexp(Pexp_construct($1, None)) }
   | LPAREN seq_expr RPAREN
       { $2 }
   | LPAREN seq_expr error

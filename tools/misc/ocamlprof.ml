@@ -163,8 +163,8 @@ and rewrite_exp sexp =
   | Pexp_tuple sexpl ->
     rewrite_exp_list sexpl
 
-  | Pexp_construct(_, None, _) -> ()
-  | Pexp_construct(_, Some sarg, _) ->
+  | Pexp_construct(_, None) -> ()
+  | Pexp_construct(_, Some sarg) ->
     rewrite_exp sarg
 
   | Pexp_record lid_sexp_list ->
