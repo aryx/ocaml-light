@@ -1,3 +1,4 @@
+(*s: ./typing/typedecl.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                         Caml Special Light                          *)
@@ -16,18 +17,27 @@
 open Types
 open Typedtree
 
+(*s: signature Typedecl.transl_type_decl *)
 val transl_type_decl:
         Env.t -> (string * Parsetree.type_declaration) list ->
                                   (Ident.t * type_declaration) list * Env.t
+(*e: signature Typedecl.transl_type_decl *)
+(*s: signature Typedecl.transl_exception *)
 val transl_exception:
         Env.t -> Parsetree.exception_declaration -> exception_declaration
+(*e: signature Typedecl.transl_exception *)
 
+(*s: signature Typedecl.transl_value_decl *)
 val transl_value_decl:
         Env.t -> Parsetree.value_description -> value_description
+(*e: signature Typedecl.transl_value_decl *)
 
+(*s: signature Typedecl.transl_with_constraint *)
 val transl_with_constraint:
         Env.t -> Parsetree.type_declaration -> type_declaration
+(*e: signature Typedecl.transl_with_constraint *)
     
+(*s: type Typedecl.error *)
 type error =
     Repeated_parameter
   | Duplicate_constructor of string
@@ -35,7 +45,13 @@ type error =
   | Duplicate_label of string
   | Recursive_abbrev of string
   | Definition_mismatch of type_expr
+(*e: type Typedecl.error *)
 
+(*s: exception Typedecl.Error *)
 exception Error of Location.t * error
+(*e: exception Typedecl.Error *)
 
+(*s: signature Typedecl.report_error *)
 val report_error: error -> unit
+(*e: signature Typedecl.report_error *)
+(*e: ./typing/typedecl.mli *)

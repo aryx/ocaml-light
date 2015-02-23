@@ -1,3 +1,4 @@
+(*s: ./typing/path.mli *)
 (***********************************************************************)
 (*                                                                     *)
 (*                         Caml Special Light                          *)
@@ -11,14 +12,23 @@
 
 (* $Id$ *)
 
+(*s: type Path.t *)
 (* Access paths *)
 
 type t =
     Pident of Ident.t
   | Pdot of t * string * int
   | Papply of t * t
+(*e: type Path.t *)
 
+(*s: signature Path.same *)
 val same: t -> t -> bool
+(*e: signature Path.same *)
+(*s: signature Path.isfree *)
 val isfree: Ident.t -> t -> bool
+(*e: signature Path.isfree *)
 
+(*s: signature Path.nopos *)
 val nopos: int
+(*e: signature Path.nopos *)
+(*e: ./typing/path.mli *)

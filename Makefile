@@ -633,6 +633,43 @@ SRC_VIEWS= \
   ./parsing/parse.mli\
   ./parsing/parse.ml\
   \
+  ./typing/ident.mli\
+  ./typing/ident.ml\
+  ./typing/primitive.mli\
+  ./typing/primitive.ml\
+  ./typing/path.mli\
+  ./typing/path.ml\
+  ./typing/types.ml\
+  ./typing/subst.mli\
+  ./typing/subst.ml\
+  ./typing/predef.mli\
+  ./typing/predef.ml\
+  ./typing/datarepr.mli\
+  ./typing/datarepr.ml\
+  ./typing/env.mli\
+  ./typing/env.ml\
+  ./typing/typedtree.mli\
+  ./typing/typedtree.ml\
+  ./typing/ctype.mli\
+  ./typing/ctype.ml\
+  ./typing/includecore.mli\
+  ./typing/includecore.ml\
+  ./typing/mtype.mli\
+  ./typing/mtype.ml\
+  ./typing/printtyp.mli\
+  ./typing/printtyp.ml\
+  ./typing/parmatch.mli\
+  ./typing/parmatch.ml\
+  ./typing/typetexp.mli\
+  ./typing/typetexp.ml\
+  ./typing/includemod.mli\
+  ./typing/includemod.ml\
+  ./typing/typedecl.mli\
+  ./typing/typedecl.ml\
+  ./typing/typecore.mli\
+  ./typing/typecore.ml\
+  ./typing/typemod.mli\
+  ./typing/typemod.ml\
   \
   ./bytecomp/lambda.mli\
   ./bytecomp/lambda.ml\
@@ -733,45 +770,3 @@ SRC_VIEWS= \
   ./driver/opterrors.ml\
   ./driver/optmain.ml\
 
-
-
-TODO=\
-  ./typing/ident.mli\
-  ./typing/ident.ml\
-  ./typing/primitive.mli\
-  ./typing/primitive.ml\
-  ./typing/path.mli\
-  ./typing/path.ml\
-  ./typing/types.mli\
-  ./typing/btype.mli\
-  ./typing/btype.ml\
-  ./typing/subst.mli\
-  ./typing/subst.ml\
-  ./typing/predef.mli\
-  ./typing/predef.ml\
-  ./typing/datarepr.mli\
-  ./typing/datarepr.ml\
-  ./typing/env.mli\
-  ./typing/env.ml\
-  ./typing/typedtree.mli\
-  ./typing/typedtree.ml\
-  ./typing/ctype.mli\
-  ./typing/ctype.ml\
-  ./typing/includecore.mli\
-  ./typing/includecore.ml\
-  ./typing/mtype.mli\
-  ./typing/mtype.ml\
-  ./typing/printtyp.mli\
-  ./typing/printtyp.ml\
-  ./typing/parmatch.mli\
-  ./typing/parmatch.ml\
-  ./typing/typetexp.mli\
-  ./typing/typetexp.ml\
-  ./typing/includemod.mli\
-  ./typing/includemod.ml\
-  ./typing/typedecl.mli\
-  ./typing/typedecl.ml\
-  ./typing/typecore.mli\
-  ./typing/typecore.ml\
-  ./typing/typemod.mli\
-  ./typing/typemod.ml\

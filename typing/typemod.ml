@@ -1,3 +1,4 @@
+(*s: ./typing/typemod.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                         Caml Special Light                          *)
@@ -21,6 +22,7 @@ open Types
 open Typedtree
 
 
+(*s: type Typemod.error (./typing/typemod.ml) *)
 type error =
     Unbound_module of Longident.t
   | Unbound_modtype of Longident.t
@@ -32,21 +34,29 @@ type error =
   | With_no_component of Longident.t
   | Repeated_name of string * string
   | Non_generalizable of type_expr
+(*e: type Typemod.error (./typing/typemod.ml) *)
 
+(*s: exception Typemod.Error (./typing/typemod.ml) *)
 exception Error of Location.t * error
+(*e: exception Typemod.Error (./typing/typemod.ml) *)
 
+(*s: function Typemod.extract_sig *)
 (* Extract a signature from a module type *)
 
 let extract_sig env loc mty =
   match Mtype.scrape env mty with
     Tmty_signature sg -> sg
   | _ -> raise(Error(loc, Signature_expected))
+(*e: function Typemod.extract_sig *)
 
+(*s: function Typemod.extract_sig_open *)
 let extract_sig_open env loc mty =
   match Mtype.scrape env mty with
     Tmty_signature sg -> sg
   | _ -> raise(Error(loc, Structure_expected mty))
+(*e: function Typemod.extract_sig_open *)
 
+(*s: function Typemod.type_module_path *)
 (* Lookup the type of a module path *)
 
 let type_module_path env loc lid =
@@ -54,6 +64,7 @@ let type_module_path env loc lid =
     Env.lookup_module lid env
   with Not_found ->
     raise(Error(loc, Unbound_module lid))
+(*e: function Typemod.type_module_path *)
 
 (* Check and translate a module type expression *)
 
@@ -100,27 +111,32 @@ and transl_signature env sg =
       let newenv = Env.open_signature path sg env in
       transl_signature newenv srem
 
+(*s: exception Typemod.Not_a_path *)
 (* Try to convert a module expression to a module path. *)
 
 exception Not_a_path
+(*e: exception Typemod.Not_a_path *)
 
+(*s: function Typemod.path_of_module *)
 let rec path_of_module mexp =
   match mexp.mod_desc with
     Tmod_ident p -> p
   | _ -> raise Not_a_path
+(*e: function Typemod.path_of_module *)
 
 (* Check that all type and module identifiers in a structure have
    distinct names (so that access by named paths is unambiguous). *)
 
 module StringSet = Set
 
+(*s: function Typemod.check_unique_names *)
 let check_unique_names sg =
   let type_names = ref StringSet.empty
   and module_names = ref StringSet.empty
   and modtype_names = ref StringSet.empty in
-  let check class loc set_ref name =
+  let check cl loc set_ref name =
     if StringSet.mem name !set_ref
-    then raise(Error(loc, Repeated_name(class, name)))
+    then raise(Error(loc, Repeated_name(cl, name)))
     else set_ref := StringSet.add name !set_ref in
   let check_item item =
     match item.pstr_desc with
@@ -136,7 +152,9 @@ let check_unique_names sg =
         check "module" item.pstr_loc module_names name
     | Pstr_open lid -> () in
   List.iter check_item sg
+(*e: function Typemod.check_unique_names *)
 
+(*s: function Typemod.check_nongen_schemes *)
 (* Check that all core type schemes in a structure are closed *)
 
 let check_nongen_schemes str =
@@ -150,6 +168,7 @@ let check_nongen_schemes str =
             pat_exp_list
       | _ -> ())  (* Sub-structures have been checked before *)
   str
+(*e: function Typemod.check_nongen_schemes *)
 
 (* Type a module value expression *)
 
@@ -236,6 +255,7 @@ and type_struct env = function
 open Format
 open Printtyp
 
+(*s: function Typemod.report_error *)
 let report_error = function
     Unbound_module lid ->
       print_string "Unbound module "; longident lid
@@ -281,3 +301,5 @@ let report_error = function
       print_string "The type of this expression,"; print_space();
       type_scheme typ; print_string ","; print_space();
       print_string "contains type variables that cannot be generalized"
+(*e: function Typemod.report_error *)
+(*e: ./typing/typemod.ml *)
