@@ -1484,11 +1484,6 @@ open Format
 
 
 
-<<signature Primitive.print_description>>=
-val print_description: description -> unit
-@
-
-
 %-------------------------------------------------------------
 
 <<./typing/primitive.mli>>=
@@ -1516,20 +1511,6 @@ val print_description: description -> unit
 
 
 
-<<function Primitive.print_quoted>>=
-let print_quoted s = print_char '"'; print_string s; print_char '"'
-@
-
-<<function Primitive.print_description>>=
-let print_description p =
-  print_quoted p.prim_name;
-  if not p.prim_alloc then
-    (print_space(); print_quoted "noalloc");
-  if p.prim_native_name <> "" then
-    (print_space(); print_quoted p.prim_native_name);
-  if p.prim_native_float then
-    (print_space(); print_quoted "float")
-@
 
 
 %-------------------------------------------------------------
@@ -4292,49 +4273,19 @@ and strengthen_sig env sg p =
 
 \subsection*{[[./typing/printtyp.mli]]}
 
-<<signature Printtyp.longident>>=
-val longident: Longident.t -> unit
-@
-
-<<signature Printtyp.ident>>=
-val ident: Ident.t -> unit
-@
-
-<<signature Printtyp.path>>=
-val path: Path.t -> unit
-@
 
 <<signature Printtyp.reset_var_names>>=
 val reset_var_names: unit -> unit
 @
 
-<<signature Printtyp.type_expr>>=
-val type_expr: type_expr -> unit
-@
 
 <<signature Printtyp.type_scheme>>=
 val type_scheme: type_expr -> unit
 @
 
-<<signature Printtyp.value_description>>=
-val value_description: Ident.t -> value_description -> unit
-@
 
-<<signature Printtyp.type_declaration>>=
-val type_declaration: Ident.t -> type_declaration -> unit
-@
 
-<<signature Printtyp.exception_declaration>>=
-val exception_declaration: Ident.t -> exception_declaration -> unit
-@
 
-<<signature Printtyp.modtype>>=
-val modtype: module_type -> unit
-@
-
-<<signature Printtyp.signature>>=
-val signature: signature -> unit
-@
 
 <<signature Printtyp.signature_item>>=
 val signature_item: signature_item -> unit
@@ -4378,36 +4329,7 @@ open Typedtree
 
 \subsection*{[[./typing/printtyp.ml]]}
 
-<<function Printtyp.longident>>=
-(* Print a long identifier *)
 
-let rec longident = function
-    Lident s -> print_string s
-  | Ldot(p, s) -> longident p; print_string "."; print_string s
-@
-
-<<function Printtyp.ident>>=
-(* Print an identifier *)
-
-let ident id =
-  print_string(Ident.name id)
-@
-
-<<constant Printtyp.ident_pervasive>>=
-(* Print a path *)
-
-let ident_pervasive = Ident.create_persistent "Pervasives"
-@
-
-<<function Printtyp.path>>=
-let rec path = function
-    Pident id ->
-      ident id
-  | Pdot(Pident id, s, pos) when Ident.same id ident_pervasive ->
-      print_string s
-  | Pdot(p, s, pos) ->
-      path p; print_string "."; print_string s
-@
 
 <<constant Printtyp.var_names>>=
 (* Print a type expression *)
@@ -4438,36 +4360,8 @@ let name_of_var v =
     name
 @
 
-<<function Printtyp.exception_declaration>>=
-(* Print an exception declaration *)
 
-let exception_declaration id decl =
-  print_string "exception "; constructor (Ident.name id, decl)
-@
 
-<<function Printtyp.value_description>>=
-(* Print a value declaration *)
-
-let value_description id decl =
-  open_hovbox 2;
-  print_string "val "; ident id; print_string " :"; print_space();
-  type_scheme decl.val_type;
-  begin match decl.val_prim with
-    None -> ()
-  | Some p -> print_space(); print_string "= "; Primitive.print_description p
-  end;
-  close_box()
-@
-
-<<function Printtyp.signature>>=
-(* Print a signature body (used when compiling a .mli and printing results
-   in interactive use). *)
-
-let signature sg =
-  open_vbox 0;
-  List.iter (fun item -> signature_item item; print_space()) sg;
-  close_box()
-@
 
 
 %-------------------------------------------------------------
@@ -4511,97 +4405,14 @@ open Typedtree
 
 <<function Printtyp.name_of_var>>
 
-let rec typexp sch prio = function
-    Tvar {tvar_link = Some ty} ->
-      typexp sch prio ty
-  | Tvar {tvar_link = None; tvar_level = lvl} as v ->
-      if (not sch) or lvl = -1 (* generic *)
-      then print_string "'"
-      else print_string "'_";
-      print_string(name_of_var v)
-  | Tarrow(ty1, ty2) ->
-      if prio >= 1 then begin open_hovbox 1; print_string "(" end
-                   else open_hovbox 0;
-      typexp sch 1 ty1;
-      print_string " ->"; print_space();
-      typexp sch 0 ty2;
-      if prio >= 1 then print_string ")";
-      close_box()
-  | Ttuple tyl ->
-      if prio >= 2 then begin open_hovbox 1; print_string "(" end
-                   else open_hovbox 0;
-      typlist sch 2 " *" tyl;
-      if prio >= 2 then print_string ")";
-      close_box()
-  | Tconstr(p, tyl) ->
-      open_hovbox 0;
-      begin match tyl with
-        [] -> ()
-      | [ty1] ->
-          typexp sch 2 ty1; print_space()
-      | tyl ->
-          open_hovbox 1; print_string "("; typlist sch 0 "," tyl;
-          print_string ")"; close_box(); print_space()
-      end;
-      path p;
-      close_box()
+<<function Printtyp.typeexp>>
+<<function Printtyp.type_expr>>
 
-and typlist sch prio sep = function
-    [] -> ()
-  | [ty] -> typexp sch prio ty
-  | ty::tyl ->
-      typexp sch prio ty; print_string sep; print_space();
-      typlist sch prio sep tyl
-
-let type_expr ty = typexp false 0 ty
 and type_scheme ty = reset_var_names(); typexp true 0 ty
 
 (* Print one type declaration *)
 
-let rec type_declaration id decl =
-  reset_var_names();
-  open_hvbox 2;
-  print_string "type ";
-  type_expr (Tconstr(Pident id, decl.type_params));
-  begin match decl.type_manifest with
-    None -> ()
-  | Some ty -> print_string " ="; print_space(); type_expr ty
-  end;
-  begin match decl.type_kind with
-    Type_abstract -> ()
-  | Type_variant [] -> ()
-      (* A fatal error actually, except when printing type exn... *)
-  | Type_variant (cstr1 :: cstrs) ->
-      print_string " ="; print_break 1 2;
-      constructor cstr1;
-      List.iter
-        (fun cstr -> print_space(); print_string "| "; constructor cstr)
-        cstrs
-  | Type_record (lbl1 :: lbls) ->
-      print_string " ="; print_space();
-      print_string "{ "; label lbl1;
-      List.iter
-        (fun lbl -> print_string ";"; print_break 1 2; label lbl)
-        lbls;
-      print_string " }"
-  end;
-  close_box()
-
-and constructor (name, args) =
-  print_string name;
-  match args with
-    [] -> ()
-  | _  -> print_string " of ";
-          open_hovbox 2; typlist false 2 " *" args; close_box()
-
-and label (name, mut, arg) =
-  begin match mut with
-      Immutable -> ()
-    | Mutable -> print_string "mutable "
-  end;
-  print_string name;
-  print_string ": ";
-  type_expr arg
+<<function Printtyp.type_declaration>>
 
 <<function Printtyp.exception_declaration>>
 
@@ -4609,32 +4420,7 @@ and label (name, mut, arg) =
 
 (* Print a module type *)
 
-let rec modtype = function
-    Tmty_ident p ->
-      path p
-  | Tmty_signature [] ->
-      print_string "sig end"
-  | Tmty_signature(item :: rem) ->
-      open_hvbox 2;
-      print_string "sig"; print_space(); 
-      signature_item item;
-      List.iter
-        (fun item -> print_space(); signature_item item)
-      rem;
-      print_break 1 (-2); print_string "end";
-      close_box()
-
-and signature_item = function
-    Tsig_value(id, decl) ->
-      value_description id decl
-  | Tsig_type(id, decl) ->
-      type_declaration id decl
-  | Tsig_exception(id, decl) ->
-      exception_declaration id decl
-  | Tsig_module(id, mty) ->
-      open_hovbox 2; print_string "module "; ident id; print_string " :";
-      print_space(); modtype mty; close_box()
-
+<<function Printtyp.modtype>>
 
 <<function Printtyp.signature>>
 @

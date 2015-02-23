@@ -81,6 +81,7 @@ let name_of_var v =
     name
 (*e: function Printtyp.name_of_var *)
 
+(*s: function Printtyp.typeexp *)
 let rec typexp sch prio = function
     Tvar {tvar_link = Some ty} ->
       typexp sch prio ty
@@ -123,11 +124,17 @@ and typlist sch prio sep = function
       typexp sch prio ty; print_string sep; print_space();
       typlist sch prio sep tyl
 
-let type_expr ty = typexp false 0 ty
+(*e: function Printtyp.typeexp *)
+(*s: function Printtyp.type_expr *)
+let type_expr ty = 
+  typexp false 0 ty
+(*e: function Printtyp.type_expr *)
+
 and type_scheme ty = reset_var_names(); typexp true 0 ty
 
 (* Print one type declaration *)
 
+(*s: function Printtyp.type_declaration *)
 let rec type_declaration id decl =
   reset_var_names();
   open_hvbox 2;
@@ -172,6 +179,7 @@ and label (name, mut, arg) =
   print_string name;
   print_string ": ";
   type_expr arg
+(*e: function Printtyp.type_declaration *)
 
 (*s: function Printtyp.exception_declaration *)
 (* Print an exception declaration *)
@@ -195,6 +203,8 @@ let value_description id decl =
 (*e: function Printtyp.value_description *)
 
 (* Print a module type *)
+
+(*s: function Printtyp.modtype *)
 
 let rec modtype = function
     Tmty_ident p ->
@@ -222,6 +232,7 @@ and signature_item = function
       open_hovbox 2; print_string "module "; ident id; print_string " :";
       print_space(); modtype mty; close_box()
 
+(*e: function Printtyp.modtype *)
 
 (*s: function Printtyp.signature *)
 (* Print a signature body (used when compiling a .mli and printing results
