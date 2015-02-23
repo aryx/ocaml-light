@@ -49,7 +49,7 @@ and pattern_desc =
   | Ppat_alias of pattern * string
   | Ppat_constant of constant
   | Ppat_tuple of pattern list
-  | Ppat_construct of Longident.t * pattern option * bool
+  | Ppat_construct of Longident.t * pattern option
   | Ppat_record of (Longident.t * pattern) list
   | Ppat_or of pattern * pattern
   | Ppat_constraint of pattern * core_type

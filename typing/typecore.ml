@@ -91,7 +91,7 @@ let rec type_pat env sp =
       { pat_desc = Tpat_tuple pl;
         pat_loc = sp.ppat_loc;
         pat_type = Ttuple(List.map (fun p -> p.pat_type) pl) }
-  | Ppat_construct(lid, sarg, _bool) ->
+  | Ppat_construct(lid, sarg) ->
       let constr =
         try
           Env.lookup_constructor lid env
