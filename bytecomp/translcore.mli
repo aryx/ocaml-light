@@ -28,11 +28,12 @@ val maybe_pointer: expression -> bool
 (*e: signature Translcore.maybe_pointer *)
 
 (*s: signature Translcore.transl_exp *)
-val transl_exp: expression -> lambda
+val transl_exp: Typedtree.expression -> lambda
 (*e: signature Translcore.transl_exp *)
 (*s: signature Translcore.transl_let *)
 val transl_let:
-      rec_flag -> (pattern * expression) list -> lambda -> lambda
+      rec_flag -> (Typedtree.pattern * Typedtree.expression) list -> 
+        lambda -> lambda
 (*e: signature Translcore.transl_let *)
 (*s: signature Translcore.transl_primitive *)
 val transl_primitive: Primitive.description -> lambda

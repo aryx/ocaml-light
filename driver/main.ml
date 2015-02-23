@@ -34,10 +34,11 @@ let process_file name =
       objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
   | _ when Filename.check_suffix name ".mli" ->
       Compile.interface name
-
+  (*s: [[Main.process_file()]] cases *)
   | _ when Filename.check_suffix name ".cmo" 
         or Filename.check_suffix name ".cma" ->
       objfiles := name :: !objfiles
+  (*x: [[Main.process_file()]] cases *)
   | _ when Filename.check_suffix name ext_obj
         or Filename.check_suffix name ext_lib ->
       ccobjs := name :: !ccobjs
@@ -45,6 +46,7 @@ let process_file name =
       Compile.c_file name;
       ccobjs := (Filename.chop_suffix (Filename.basename name) ".c" ^ ext_obj)
        :: !ccobjs
+  (*e: [[Main.process_file()]] cases *)
   | _ -> 
       raise(Arg.Bad("don't know what to do with " ^ name))
 (*e: function Main.process_file *)
@@ -66,56 +68,84 @@ let main () =
   try
     Arg.parse [
        (*s: [[Main.main()]] command line options *)
-       "-a", Arg.Set make_archive, " Build a library";
-       "-c", Arg.Set compile_only, " Compile only (do not link)";
-       "-cclib", Arg.String(fun s -> ccobjs := s :: !ccobjs),
-             "<opt>  Pass option <opt> to the C linker";
-       "-ccopt", Arg.String(fun s -> ccopts := s :: !ccopts),
-             "<opt>  Pass option <opt> to the C compiler and linker";
-       "-custom", Arg.Set custom_runtime, " Link in custom mode";
-       "-g", Arg.Set debug, " Save debugging information";
-       "-i", Arg.Set print_types, " Print the types";
-       "-I", Arg.String(fun dir -> include_dirs := dir :: !include_dirs),
-             "<dir>  Add <dir> to the list of include directories";
-       "-impl", Arg.String process_implementation_file,
-             "<file>  Compile <file> as a .ml file";
-       "-intf", Arg.String process_interface_file,
-             "<file>  Compile <file> as a .mli file";
-       "-linkall", Arg.Set link_everything,
-             " Link all modules, even unused ones";
-       "-noassert", Arg.Set noassert, " Don't compile assertion checks";
+       "-nopervasives", Arg.Set nopervasives, " (undocumented)";
+       (*x: [[Main.main()]] command line options *)
        "-o", Arg.String(fun s -> exec_name := s;
                                  archive_name := s;
                                  object_name := s),
              "<file>  Set output file name to <file> (default a.out)";
+       (*x: [[Main.main()]] command line options *)
+       "-v", Arg.Unit print_version_number, " Print compiler version number";
+       "-verbose", Arg.Set verbose, " Print calls to external commands";
+       (*x: [[Main.main()]] command line options *)
+       "-", Arg.String process_file,
+            "<file>  Treat <file> as a file name (even if it starts with `-')";
+       (*x: [[Main.main()]] command line options *)
+       "-impl", Arg.String process_implementation_file,
+             "<file>  Compile <file> as a .ml file";
+       (*x: [[Main.main()]] command line options *)
+       "-intf", Arg.String process_interface_file,
+             "<file>  Compile <file> as a .mli file";
+       (*x: [[Main.main()]] command line options *)
+       "-c", Arg.Set compile_only, " Compile only (do not link)";
+       (*x: [[Main.main()]] command line options *)
+       "-I", Arg.String(fun dir -> include_dirs := dir :: !include_dirs),
+             "<dir>  Add <dir> to the list of include directories";
+       (*x: [[Main.main()]] command line options *)
+       "-a", Arg.Set make_archive, " Build a library";
+       (*x: [[Main.main()]] command line options *)
+       "-cclib", Arg.String(fun s -> ccobjs := s :: !ccobjs),
+             "<opt>  Pass option <opt> to the C linker";
+       "-ccopt", Arg.String(fun s -> ccopts := s :: !ccopts),
+             "<opt>  Pass option <opt> to the C compiler and linker";
+       (*x: [[Main.main()]] command line options *)
+       "-custom", Arg.Set custom_runtime, " Link in custom mode";
+       (*x: [[Main.main()]] command line options *)
+       "-linkall", Arg.Set link_everything,
+             " Link all modules, even unused ones";
+       (*x: [[Main.main()]] command line options *)
        "-output-obj", Arg.Unit(fun () -> output_c_object := true;
                                          custom_runtime := true),
              "Output a C object file instead of an executable";
-       "-pp", Arg.String(fun s -> preprocessor := Some s),
-             "<command>  Pipe sources through preprocessor <command>";
-       "-thread", Arg.Set thread_safe, " Use thread-safe standard library";
+       (*x: [[Main.main()]] command line options *)
+       "-g", Arg.Set debug, " Save debugging information";
+       (*x: [[Main.main()]] command line options *)
+       "-i", Arg.Set print_types, " Print the types";
+       (*x: [[Main.main()]] command line options *)
+       "-noassert", Arg.Set noassert, " Don't compile assertion checks";
+       (*x: [[Main.main()]] command line options *)
        "-unsafe", Arg.Set fast,
              " No bounds checking on array and string access";
-       "-v", Arg.Unit print_version_number, " Print compiler version number";
-       "-verbose", Arg.Set verbose, " Print calls to external commands";
-
-       "-nopervasives", Arg.Set nopervasives, " (undocumented)";
-       "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
+       (*x: [[Main.main()]] command line options *)
+       "-thread", Arg.Set thread_safe, " Use thread-safe standard library";
+       (*x: [[Main.main()]] command line options *)
+       "-pp", Arg.String(fun s -> preprocessor := Some s),
+             "<command>  Pipe sources through preprocessor <command>";
+       (*x: [[Main.main()]] command line options *)
        "-dlambda", Arg.Set dump_lambda, " (undocumented)";
+       "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
+       (*x: [[Main.main()]] command line options *)
        "-dinstr", Arg.Set dump_instr, " (undocumented)";
-
-       "-", Arg.String process_file,
-            "<file>  Treat <file> as a file name (even if it starts with `-')"
        (*e: [[Main.main()]] command line options *)
-      ] process_file usage;
+      ] 
+      process_file 
+      usage;
 
     (match () with
     | _ when !make_archive ->
         Compile.init_path();
         Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
+    (*s: [[Main.main()]] after process_file cases *)
     | _ when not !compile_only & !objfiles <> [] ->
         Compile.init_path();
         Bytelink.link (List.rev !objfiles)
+    (*x: [[Main.main()]] after process_file cases *)
+    (*
+    | _ when !make_archive ->
+        Compile.init_path();
+        Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
+    *)
+    (*e: [[Main.main()]] after process_file cases *)
     | _ -> ()
     );
     exit 0

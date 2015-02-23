@@ -31,10 +31,12 @@ and pattern_desc =
     Tpat_any
   | Tpat_var of Ident.t
   | Tpat_alias of pattern * Ident.t
+
   | Tpat_constant of constant
   | Tpat_tuple of pattern list
   | Tpat_construct of constructor_description * pattern list
   | Tpat_record of (label_description * pattern) list
+
   | Tpat_or of pattern * pattern
 (*e: type Typedtree.pattern_desc *)
 
@@ -54,12 +56,15 @@ and expression_desc =
   | Texp_apply of expression * expression list
   | Texp_match of expression * (pattern * expression) list
   | Texp_try of expression * (pattern * expression) list
+
   | Texp_tuple of expression list
   | Texp_construct of constructor_description * expression list
   | Texp_record of (label_description * expression) list
+
   | Texp_field of expression * label_description
   | Texp_setfield of expression * label_description * expression
   | Texp_array of expression list
+
   | Texp_ifthenelse of expression * expression * expression option
   | Texp_sequence of expression * expression
   | Texp_while of expression * expression
@@ -93,8 +98,10 @@ and structure_item =
     Tstr_eval of expression
   | Tstr_value of rec_flag * (pattern * expression) list
   | Tstr_primitive of Ident.t * value_description
+
   | Tstr_type of (Ident.t * type_declaration) list
   | Tstr_exception of Ident.t * exception_declaration
+
   | Tstr_module of Ident.t * module_expr
   | Tstr_open of Path.t
 (*e: type Typedtree.structure_item *)

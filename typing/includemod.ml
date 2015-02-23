@@ -28,7 +28,6 @@ type error =
   | Exception_declarations of
       Ident.t * exception_declaration * exception_declaration
   | Module_types of module_type * module_type
-  | Modtype_permutation
   | Interface_mismatch of string * string
 (*e: type Includemod.error *)
 
@@ -219,13 +218,6 @@ and signature_components env = function
   | _ ->
       fatal_error "Includemod.signature_components"
 
-(* Inclusion between module type specifications *)
-
-and check_modtype_equiv env mty1 mty2 =
-  match (modtypes env mty1 mty2, modtypes env mty2 mty1) with
-    (Tcoerce_none, Tcoerce_none) -> ()
-  | (_, _) -> raise(Error [Modtype_permutation])
-
 (*s: function Includemod.check_modtype_inclusion *)
 (* Simplified inclusion check between module types *)
 
@@ -293,8 +285,6 @@ let include_err = function
       print_string "is not included in"; print_space();
       modtype mty2;
       close_box()
-  | Modtype_permutation ->
-      print_string "Illegal permutation of structure fields"
   | Interface_mismatch(impl_name, intf_name) ->
       open_hovbox 0;
       print_string "The implementation "; print_string impl_name;
