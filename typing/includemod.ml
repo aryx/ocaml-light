@@ -25,7 +25,6 @@ type error =
   | Exception_declarations of
       Ident.t * exception_declaration * exception_declaration
   | Module_types of module_type * module_type
-  | Modtype_infos of Ident.t * modtype_declaration * modtype_declaration
   | Modtype_permutation
   | Interface_mismatch of string * string
 
@@ -62,12 +61,15 @@ let exception_declarations env id decl1 decl2 =
 exception Dont_match
 
 let expand_module_path env path =
+  failwith "expand_module_path:TODO"
+(*
   try
     match Env.find_modtype path env with
       Tmodtype_abstract -> raise Dont_match
     | Tmodtype_manifest mty -> mty
   with Not_found ->
     raise Dont_match
+*)
 
 (* Extract name, kind and ident from a signature item *)
 
@@ -83,7 +85,6 @@ let item_ident_name = function
   | Tsig_type(id, _) -> (id, Field_type(Ident.name id))
   | Tsig_exception(id, _) -> (id, Field_exception(Ident.name id))
   | Tsig_module(id, _) -> (id, Field_module(Ident.name id))
-  | Tsig_modtype(id, _) -> (id, Field_modtype(Ident.name id))
 
 (* Simplify a structure coercion *)
 
@@ -122,16 +123,6 @@ and try_modtypes env mty1 mty2 =
       try_modtypes env mty1 (expand_module_path env p2)
   | (Tmty_signature sig1, Tmty_signature sig2) ->
       signatures env sig1 sig2
-  | (Tmty_functor(param1, arg1, res1), Tmty_functor(param2, arg2, res2)) ->
-      let cc_arg =
-        modtypes env arg2 arg1 in
-      let cc_res =
-        Ident.identify param2 param1
-          (fun () -> modtypes (Env.add_module param1 arg1 env) res1 res2) in
-      begin match (cc_arg, cc_res) with
-          (Tcoerce_none, Tcoerce_none) -> Tcoerce_none
-        | _ -> Tcoerce_functor(cc_arg, cc_res)
-      end
   | (_, _) ->
       raise Dont_match
 
@@ -154,7 +145,7 @@ and signatures env sig1 sig2 =
           | Tsig_module(_,_) -> pos+1
           | Tsig_value(_,{val_prim = Some _})
           | Tsig_type(_,_)
-          | Tsig_modtype(_,_) -> pos in
+          -> pos in
         build_component_table nextpos
                               (Tbl.add name (id, item, pos) tbl) rem in
   let comps1 =
@@ -203,25 +194,10 @@ and signature_components env = function
   | (Tsig_module(id1, mty1), Tsig_module(id2, mty2), pos) :: rem ->
       let cc = modtypes env mty1 mty2 in
       (pos, cc) :: signature_components env rem
-  | (Tsig_modtype(id1, info1), Tsig_modtype(id2, info2), pos) :: rem ->
-      modtype_infos env id1 info1 info2;
-      signature_components env rem
   | _ ->
       fatal_error "Includemod.signature_components"
 
 (* Inclusion between module type specifications *)
-
-and modtype_infos env id info1 info2 =
-  try
-    match (info1, info2) with
-      (Tmodtype_abstract, Tmodtype_abstract) -> ()
-    | (Tmodtype_manifest mty1, Tmodtype_abstract) -> ()
-    | (Tmodtype_manifest mty1, Tmodtype_manifest mty2) ->
-        check_modtype_equiv env mty1 mty2
-    | (Tmodtype_abstract, Tmodtype_manifest mty2) ->
-        check_modtype_equiv env (Tmty_ident(Pident id)) mty2
-  with Error reasons ->
-    raise(Error(Modtype_infos(id, info1, info2) :: reasons))
 
 and check_modtype_equiv env mty1 mty2 =
   match (modtypes env mty1 mty2, modtypes env mty2 mty1) with
@@ -287,14 +263,6 @@ let include_err = function
       print_break 1 (-2);
       print_string "is not included in"; print_space();
       modtype mty2;
-      close_box()
-  | Modtype_infos(id, d1, d2) ->
-      open_hvbox 2;
-      print_string "Module type declarations do not match:"; print_space();
-      modtype_declaration id d1; 
-      print_break 1 (-2);
-      print_string "is not included in"; print_space();
-      modtype_declaration id d2;
       close_box()
   | Modtype_permutation ->
       print_string "Illegal permutation of structure fields"

@@ -190,14 +190,6 @@ let rec modtype = function
       rem;
       print_break 1 (-2); print_string "end";
       close_box()
-  | Tmty_functor(param, ty_arg, ty_res) ->
-      open_hovbox 2;
-      print_string "functor"; print_cut();
-      print_string "("; ident param; print_string " : ";
-      modtype ty_arg;
-      print_string ") ->"; print_space();
-      modtype ty_res;
-      close_box()
 
 and signature_item = function
     Tsig_value(id, decl) ->
@@ -209,17 +201,7 @@ and signature_item = function
   | Tsig_module(id, mty) ->
       open_hovbox 2; print_string "module "; ident id; print_string " :";
       print_space(); modtype mty; close_box()
-  | Tsig_modtype(id, decl) ->
-      modtype_declaration id decl
 
-and modtype_declaration id decl =
-  open_hovbox 2; print_string "module type "; ident id;
-  begin match decl with
-    Tmodtype_abstract -> ()
-  | Tmodtype_manifest mty ->
-      print_string " ="; print_space(); modtype mty
-  end;
-  close_box()
 
 (* Print a signature body (used when compiling a .mli and printing results
    in interactive use). *)

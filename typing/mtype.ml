@@ -20,6 +20,8 @@ open Typedtree
 let rec scrape env mty =
   match mty with
     Tmty_ident p ->
+      failwith "Mtype.scrape:TODO"
+(*
       begin try
         match Env.find_modtype p env with
           Tmodtype_abstract -> mty
@@ -27,14 +29,13 @@ let rec scrape env mty =
       with Not_found ->
         mty
       end
+*)
   | _ -> mty
 
 let rec strengthen env mty p =
   match scrape env mty with
     Tmty_signature sg ->
       Tmty_signature(strengthen_sig env sg p)
-  | Tmty_functor(param, arg, res) ->
-      Tmty_functor(param, arg, strengthen env res (Papply(p, Pident param)))
   | mty ->
       mty
 
@@ -60,16 +61,6 @@ and strengthen_sig env sg p =
       Tsig_module(id, strengthen env mty (Pdot(p, Ident.name id, nopos))) ::
       strengthen_sig (Env.add_module id mty env) rem p
       (* Need to add the module in case it defines manifest module types *)
-  | Tsig_modtype(id, decl) :: rem ->
-      let newdecl =
-        match decl with
-          Tmodtype_abstract ->
-            Tmodtype_manifest(Tmty_ident(Pdot(p, Ident.name id, nopos)))
-        | Tmodtype_manifest _ ->
-            decl in
-      Tsig_modtype(id, newdecl) ::
-      strengthen_sig (Env.add_modtype id decl env) rem p
-      (* Need to add the module type in case it is manifest *)
 
 (* In nondep_supertype, env is only used for the type it assigns to id.
    Hence there is no need to keep env up-to-date by adding the bindings
@@ -83,16 +74,15 @@ let nondep_supertype env mid mty =
     match mty with
       Tmty_ident p ->
         if Path.isfree mid p then begin
+          failwith "nondep_mty:TODO"
+            (*
           match Env.find_modtype p env with
             Tmodtype_abstract -> raise Not_found
           | Tmodtype_manifest mty -> nondep_mty var mty      
+            *)
         end else mty
     | Tmty_signature sg ->
         Tmty_signature(nondep_sig var sg)
-    | Tmty_functor(param, arg, res) ->
-        let var_inv =
-          match var with Co -> Contra | Contra -> Co | Strict -> Strict in
-        Tmty_functor(param, nondep_mty var_inv arg, nondep_mty var res)
 
   and nondep_sig var = function
     [] -> []
@@ -108,14 +98,6 @@ let nondep_supertype env mid mty =
           Tsig_exception(id, List.map (Ctype.nondep_type env mid) d) :: rem'
       | Tsig_module(id, mty) ->
           Tsig_module(id, nondep_mty var mty) :: rem'
-      | Tsig_modtype(id, d) ->
-          begin try
-            Tsig_modtype(id, nondep_modtype_decl d) :: rem'
-          with Not_found ->
-            match var with
-              Co -> Tsig_modtype(id, Tmodtype_abstract) :: rem'
-            | _  -> raise Not_found
-          end
 
   and nondep_type_decl var d =
     {type_params = d.type_params;
@@ -144,10 +126,6 @@ let nondep_supertype env mid mty =
        with Not_found ->
          match var with Co -> None | _ -> raise Not_found
        end}
-
-  and nondep_modtype_decl = function
-      Tmodtype_abstract -> Tmodtype_abstract
-    | Tmodtype_manifest mty -> Tmodtype_manifest(nondep_mty Strict mty)
 
   in
     nondep_mty Co mty
