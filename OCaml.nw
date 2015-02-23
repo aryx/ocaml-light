@@ -663,6 +663,9 @@ let main () =
       usage;
 
     (match () with
+    | _ when !make_archive ->
+        Compile.init_path();
+        Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
     <<[[Main.main()]] after process_file cases>>
     | _ -> ()
     );
@@ -729,7 +732,7 @@ let process_file name =
 \ifallcode
 <<[[Main.main()]] command line options>>=
 "-", Arg.String process_file,
-     "<file>  Treat <file> as a file name (even if it starts with `-')"
+     "<file>  Treat <file> as a file name (even if it starts with `-')";
 @
 \fi
 
@@ -1542,7 +1545,7 @@ val transl_signature:
 <<signature Typemod.type_structure>>=
 val type_structure:
         Env.t -> Parsetree.structure -> 
-          Parsedtree.structure * Types.signature * Env.t
+          Typedtree.structure * Types.signature * Env.t
 @
 
 
@@ -2313,9 +2316,11 @@ let make_archive = ref false            (* -a *)
 @
 
 <<[[Main.main()]] after process_file cases>>=
+(*
 | _ when !make_archive ->
     Compile.init_path();
     Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
+*)
 @
 
 <<constant Clflags.archive_name>>=

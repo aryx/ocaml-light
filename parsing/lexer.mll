@@ -1,3 +1,4 @@
+(*s: ./parsing/lexer.mll *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -286,3 +287,4 @@ and string = parse
       { store_string_char(Lexing.lexeme_char lexbuf 0);
         string lexbuf }
 
+(*e: ./parsing/lexer.mll *)
