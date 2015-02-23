@@ -120,7 +120,9 @@ let interface sourcefile =
   let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
 
   let sg = Typemod.transl_signature (initial_env()) ast in
+
   if !Clflags.print_types then (Printtyp.signature sg; print_newline());
+
   Env.save_signature sg modulename (prefixname ^ ".cmi");
   remove_preprocessed inputfile
 (*e: function Compile.interface *)

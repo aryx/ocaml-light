@@ -104,10 +104,13 @@ type lambda =
     Lvar of Ident.t
   | Lconst of structured_constant
   | Lapply of lambda * lambda list
+
   | Lfunction of function_kind * Ident.t list * lambda
   | Llet of let_kind * Ident.t * lambda * lambda
   | Lletrec of (Ident.t * lambda) list * lambda
+
   | Lprim of primitive * lambda list
+
   | Lswitch of lambda * lambda_switch
   | Lstaticfail
   | Lcatch of lambda * lambda
@@ -117,6 +120,7 @@ type lambda =
   | Lwhile of lambda * lambda
   | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
   | Lassign of Ident.t * lambda
+
   | Levent of lambda * lambda_event
 (*e: type Lambda.lambda *)
 

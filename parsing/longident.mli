@@ -19,8 +19,4 @@ type t =
     Lident of string
   | Ldot of t * string
 (*e: type Longident.t *)
-
-(*s: signature Longident.flatten *)
-val flatten: t -> string list
-(*e: signature Longident.flatten *)
 (*e: ./parsing/longident.mli *)

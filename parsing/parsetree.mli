@@ -47,10 +47,12 @@ and pattern_desc =
     Ppat_any
   | Ppat_var of string
   | Ppat_alias of pattern * string
+
   | Ppat_constant of constant
   | Ppat_tuple of pattern list
   | Ppat_construct of Longident.t * pattern option
   | Ppat_record of (Longident.t * pattern) list
+
   | Ppat_or of pattern * pattern
   | Ppat_constraint of pattern * core_type
 (*e: type Parsetree.pattern_desc *)
@@ -64,7 +66,7 @@ type expression =
 (*s: type Parsetree.expression_desc *)
 and expression_desc =
     Pexp_ident of Longident.t
-  | Pexp_constant of constant
+  | Pexp_constant of Asttypes.constant
 
   | Pexp_tuple of expression list
   | Pexp_construct of Longident.t * expression option
@@ -185,6 +187,7 @@ and structure_item_desc =
     Pstr_eval of expression
   | Pstr_value of rec_flag * (pattern * expression) list
   | Pstr_primitive of string * value_description
+
   | Pstr_type of (string * type_declaration) list
   | Pstr_exception of string * exception_declaration
 

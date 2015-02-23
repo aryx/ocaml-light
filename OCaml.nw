@@ -18,7 +18,7 @@
 % 
 
 %thx to codemap/codegraph/scheck:
-% - use cg to to look at backward deps (but the ocaml linker enforce layers)
+% - use cg to to look at backward deps (but  ml linker already enforces layers)
 %   (harder to understand non layered code)
 % - use scheck to remove deadcode, found some even in latest ocaml :)
 %   (harder to understand big files)
@@ -110,7 +110,7 @@ Principia Softwarica: The OCaml Light Compilers
 }\\
 {version 0.1}
 }
-% compilers, with an s
+% compilers, with an s, ocamlc and ocamlopt
 
 \author{
 Yoann Padioleau\\
@@ -151,7 +151,7 @@ Yoann Padioleau\\
 \section{Motivations}
 
 The goal of this book is to present in full details the source code of
-a compiler for a high level language.
+a compiler for a high level language (higher than C).
 Why? Because I think it makes you a better programmer if
 you fully understand how things work under the hood.
 
@@ -160,15 +160,16 @@ you fully understand how things work under the hood.
 %  - objects
 %  - functors
 % (indeed they were not that used in the code of ocaml itself ... hmm)
+% good increments over C (see section below in first chapter).
 
 Here are other candidates that were considered but ultimately discarded:
 \begin{itemize}
-\item ML
+\item SML
 % not active
 \item Haskell
 % nice but lazy, and too strict (no pun intended) forcing programmer
 % to be purely functional (or to use intrusive and complex monads IO),
-% but some nice things to steal (typeclasses, template haskell)
+% but some nice things to steal (typeclasses, deriving)
 \item Scheme
 % not typed, no ADT, but some nice things: macros, call/cc, eval
 \item Scala
@@ -218,15 +219,15 @@ License.
 \section{Acknowledgments}
 
 I would like to thank of course Xavier Leroy and Damien Doligez,
-the authors of OCaml.
+the main authors of OCaml.
 
 \chapter{Overview}
 
 \section{High-level language principles}
 
 %advanced features not in C, so good increment:
-% - gc (no more malloc/free and bugs), which imply special bits
-%   for each values
+% - gc (no more malloc/free and bugs), which imply special bit
+%   for each values (and some tricks around integer operations)
 % - parametric polymorphism (no more code duplication and void* loophole)
 %   which imply boxing values for certain implementation strategy
 % - closures (can factorize more code, no more loop for everything)
@@ -239,7 +240,8 @@ the authors of OCaml.
 %    but could, see
 %    http://gallium.inria.fr/~xleroy/software/ocaml-callcc-1.0.tar.gz
 %    or http://okmij.org/ftp/continuations/implementations.html
-%  - macros (hmm but need compile time metaprogramming though at least)
+%  - macros 
+%    but could at least implement deriving
 % missing on purpose: 
 %  - objects (see lablgtk mess), 
 %  - functors (see ocamlgraph or ocsigen mess).
@@ -287,6 +289,9 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 <<constant Clflags.nopervasives>>=
 let nopervasives = ref false            (* -nopervasives *)
 @
+<<[[Main.main()]] command line options>>=
+"-nopervasives", Arg.Set nopervasives, " (undocumented)";
+@
 
 % make bootstrap
 
@@ -314,19 +319,19 @@ type t =
 @
 %note: like a list, but enforce have at least one element
 
-<<signature Longident.flatten>>=
-val flatten: t -> string list
-@
-% dead actually?
-
-<<function Longident.flat>>=
-let rec flat accu = function
-    Lident s -> s :: accu
-  | Ldot(lid, s) -> flat (s :: accu) lid
-@
-<<function Longident.flatten>>=
-let flatten lid = flat [] lid
-@
+%<<signature Longident.flatten>>=
+%val flatten: t -> string list
+%@
+%% dead actually?
+%
+%<<function Longident.flat>>=
+%let rec flat accu = function
+%    Lident s -> s :: accu
+%  | Ldot(lid, s) -> flat (s :: accu) lid
+%@
+%<<function Longident.flatten>>=
+%let flatten lid = flat [] lid
+%@
 
 \subsection{Positions}
 
@@ -417,10 +422,12 @@ and type_kind =
   | Ptype_variant of (string * core_type list) list
   | Ptype_record of (string * mutable_flag * core_type) list
 @
+% type sum, type product
 
 <<type Asttypes.mutable_flag>>=
 type mutable_flag = Immutable | Mutable
 @
+% remove? just use ref? I get confused anyway
 
 %  | Psig_type of (string * type_declaration) list
 % list when mutually recursive!
@@ -460,7 +467,7 @@ type expression =
 <<type Parsetree.expression_desc>>=
 and expression_desc =
     Pexp_ident of Longident.t
-  | Pexp_constant of constant
+  | Pexp_constant of Asttypes.constant
 
   | Pexp_tuple of expression list
   | Pexp_construct of Longident.t * expression option
@@ -506,10 +513,12 @@ and pattern_desc =
     Ppat_any
   | Ppat_var of string
   | Ppat_alias of pattern * string
+
   | Ppat_constant of constant
   | Ppat_tuple of pattern list
   | Ppat_construct of Longident.t * pattern option
   | Ppat_record of (Longident.t * pattern) list
+
   | Ppat_or of pattern * pattern
   | Ppat_constraint of pattern * core_type
 @
@@ -548,7 +557,7 @@ and module_type_desc =
     Pmty_ident of Longident.t
   | Pmty_signature of signature
 @
-
+%less: remove PPmty_ident? no aliases for sig? because no module type
 
 
 
@@ -571,6 +580,7 @@ and structure_item_desc =
     Pstr_eval of expression
   | Pstr_value of rec_flag * (pattern * expression) list
   | Pstr_primitive of string * value_description
+
   | Pstr_type of (string * type_declaration) list
   | Pstr_exception of string * exception_declaration
 
@@ -595,12 +605,6 @@ and module_expr_desc =
 
 \section{Types and the typed tree}
 
-% many Types.xxx are really close to Parsetree.xxx
-% they actually have the same name, but core_type
-% has been replaced by type_expr.
-
-% In the same way many Pxxx become Txxx
-
 <<type Types.type_expr>>=
 type type_expr =
     Tvar of type_variable
@@ -614,6 +618,18 @@ and type_variable =
     { mutable tvar_level: int;
       mutable tvar_link: type_expr option }
 @
+% level?
+
+% alternatives: 
+% - return equations?
+% - actually use "global", that's what prolog Does in some way
+
+
+% many Types.xxx are really close to Parsetree.xxx
+% they actually have the same name, but core_type
+% has been replaced by type_expr.
+
+% In the same way many Pxxx become Txxx
 
 
 \section{[[Lambda]] and [[Instruction]] intermediate languages}
@@ -642,15 +658,12 @@ let main () =
   try
     Arg.parse [
        <<[[Main.main()]] command line options>>
-      ] process_file usage;
+      ] 
+      process_file 
+      usage;
 
     (match () with
-    | _ when !make_archive ->
-        Compile.init_path();
-        Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
-    | _ when not !compile_only & !objfiles <> [] ->
-        Compile.init_path();
-        Bytelink.link (List.rev !objfiles)
+    <<[[Main.main()]] after process_file cases>>
     | _ -> ()
     );
     exit 0
@@ -660,49 +673,27 @@ let main () =
     exit 2
 @
 
+
+<<constant Clflags.exec_name>>=
+let exec_name = ref "a.out"             (* -o *)
+@
+
 <<[[Main.main()]] command line options>>=
-"-a", Arg.Set make_archive, " Build a library";
-"-c", Arg.Set compile_only, " Compile only (do not link)";
-"-cclib", Arg.String(fun s -> ccobjs := s :: !ccobjs),
-      "<opt>  Pass option <opt> to the C linker";
-"-ccopt", Arg.String(fun s -> ccopts := s :: !ccopts),
-      "<opt>  Pass option <opt> to the C compiler and linker";
-"-custom", Arg.Set custom_runtime, " Link in custom mode";
-"-g", Arg.Set debug, " Save debugging information";
-"-i", Arg.Set print_types, " Print the types";
-"-I", Arg.String(fun dir -> include_dirs := dir :: !include_dirs),
-      "<dir>  Add <dir> to the list of include directories";
-"-impl", Arg.String process_implementation_file,
-      "<file>  Compile <file> as a .ml file";
-"-intf", Arg.String process_interface_file,
-      "<file>  Compile <file> as a .mli file";
-"-linkall", Arg.Set link_everything,
-      " Link all modules, even unused ones";
-"-noassert", Arg.Set noassert, " Don't compile assertion checks";
 "-o", Arg.String(fun s -> exec_name := s;
                           archive_name := s;
                           object_name := s),
       "<file>  Set output file name to <file> (default a.out)";
-"-output-obj", Arg.Unit(fun () -> output_c_object := true;
-                                  custom_runtime := true),
-      "Output a C object file instead of an executable";
-"-pp", Arg.String(fun s -> preprocessor := Some s),
-      "<command>  Pipe sources through preprocessor <command>";
-"-thread", Arg.Set thread_safe, " Use thread-safe standard library";
-"-unsafe", Arg.Set fast,
-      " No bounds checking on array and string access";
-"-v", Arg.Unit print_version_number, " Print compiler version number";
-"-verbose", Arg.Set verbose, " Print calls to external commands";
-
-"-nopervasives", Arg.Set nopervasives, " (undocumented)";
-"-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
-"-dlambda", Arg.Set dump_lambda, " (undocumented)";
-"-dinstr", Arg.Set dump_instr, " (undocumented)";
-
-"-", Arg.String process_file,
-     "<file>  Treat <file> as a file name (even if it starts with `-')"
 @
 
+
+
+
+
+
+<<[[Main.main()]] command line options>>=
+"-v", Arg.Unit print_version_number, " Print compiler version number";
+"-verbose", Arg.Set verbose, " Print calls to external commands";
+@
 
 <<function Main.print_version_number>>=
 let print_version_number () =
@@ -727,17 +718,7 @@ let process_file name =
       objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
   | _ when Filename.check_suffix name ".mli" ->
       Compile.interface name
-
-  | _ when Filename.check_suffix name ".cmo" 
-        or Filename.check_suffix name ".cma" ->
-      objfiles := name :: !objfiles
-  | _ when Filename.check_suffix name ext_obj
-        or Filename.check_suffix name ext_lib ->
-      ccobjs := name :: !ccobjs
-  | _ when Filename.check_suffix name ".c" ->
-      Compile.c_file name;
-      ccobjs := (Filename.chop_suffix (Filename.basename name) ".c" ^ ext_obj)
-       :: !ccobjs
+  <<[[Main.process_file()]] cases>>
   | _ -> 
       raise(Arg.Bad("don't know what to do with " ^ name))
 @
@@ -745,18 +726,16 @@ let process_file name =
 %old: I rewrote with match () with when
 
 
-
-
-
+\ifallcode
+<<[[Main.main()]] command line options>>=
+"-", Arg.String process_file,
+     "<file>  Treat <file> as a file name (even if it starts with `-')"
+@
+\fi
 
 
 \section{[[Compile.implementation()]]}
 
-<<function Main.process_implementation_file>>=
-let process_implementation_file name =
-  Compile.implementation name;
-  objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
-@
 
 
 <<signature Compile.implementation>>=
@@ -765,14 +744,14 @@ val implementation: string -> unit
 
 
 
-<<signature Compile.initial_env>>=
-val initial_env: unit -> Env.t
-@
 
 <<signature Compile.init_path>>=
 val init_path: unit -> unit
 @
 
+<<signature Compile.initial_env>>=
+val initial_env: unit -> Env.t
+@
 
 
 <<function Compile.implementation>>=
@@ -836,12 +815,22 @@ let implementation sourcefile =
 @
 %less: Common.finalize
 
+\ifallcode
+% -impl
+<<function Main.process_implementation_file>>=
+let process_implementation_file name =
+  Compile.implementation name;
+  objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
+@
+
+<<[[Main.main()]] command line options>>=
+"-impl", Arg.String process_implementation_file,
+      "<file>  Compile <file> as a .ml file";
+@
+\fi
+
 \section{[[Compile.interface()]]}
 
-<<function Main.process_interface_file>>=
-let process_interface_file name =
-  Compile.interface name
-@
 
 <<signature Compile.interface>>=
 val interface: string -> unit
@@ -859,9 +848,37 @@ let interface sourcefile =
   let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
 
   let sg = Typemod.transl_signature (initial_env()) ast in
+
   if !Clflags.print_types then (Printtyp.signature sg; print_newline());
+
   Env.save_signature sg modulename (prefixname ^ ".cmi");
   remove_preprocessed inputfile
+@
+
+
+\ifallcode
+% -intf
+<<[[Main.main()]] command line options>>=
+"-intf", Arg.String process_interface_file,
+      "<file>  Compile <file> as a .mli file";
+@
+<<function Main.process_interface_file>>=
+let process_interface_file name =
+  Compile.interface name
+@
+% delete?
+\fi
+
+\section{[[Bytelink.link()]]}
+
+<<[[Main.main()]] command line options>>=
+"-c", Arg.Set compile_only, " Compile only (do not link)";
+@
+
+<<[[Main.main()]] after process_file cases>>=
+| _ when not !compile_only & !objfiles <> [] ->
+    Compile.init_path();
+    Bytelink.link (List.rev !objfiles)
 @
 
 \chapter{Lexing}
@@ -934,13 +951,16 @@ let implementation = wrap Parser.implementation
 let interface = wrap Parser.interface
 @
 
+\section{Structures}
+% the .ml
+% Implementation
+
+\section{Signatures}
+% the .mli
+% Ininterface
+
+
 \section{Names}
-
-\section{Values}
-
-%\subsection{Functions}
-%\subsection{Constants}
-%\subsection{Globals}
 
 \section{Types}
 % type expressions?
@@ -953,6 +973,13 @@ let interface = wrap Parser.interface
 
 
 \section{Expressions}
+
+%\section{Values}
+
+%\subsection{Functions}
+%\subsection{Constants}
+%\subsection{Globals}
+
 
 \subsection{Constants}
 
@@ -972,20 +999,12 @@ type constant =
 type direction_flag = Upto | Downto
 @
 
-\section{Signatures}
-% the .mli
-
-\section{Structures}
-% the .ml
-
 \chapter{Typing}
 
 % note that this phase build a global environment,
 % and will load .cmi of other files!
 
-% see types.mli, Link
-
-
+% recall type_expr from core DS chapter
 
 <<signature Ctype.newvar>>=
 val newvar: unit -> type_expr
@@ -1018,15 +1037,6 @@ val newvar: unit -> type_expr
 %      information is indeed lost, but it probably does not worth it.
 
 
-<<function Typecore.type_constant>>=
-(* Typing of constants *)
-
-let type_constant = function
-    Const_int _ -> Predef.type_int
-  | Const_char _ -> Predef.type_char
-  | Const_string _ -> Predef.type_string
-  | Const_float _ -> Predef.type_float
-@
 
 \section{Resolving names}
 %Naming? A special section? nast
@@ -1082,10 +1092,12 @@ and pattern_desc =
     Tpat_any
   | Tpat_var of Ident.t
   | Tpat_alias of pattern * Ident.t
+
   | Tpat_constant of constant
   | Tpat_tuple of pattern list
   | Tpat_construct of constructor_description * pattern list
   | Tpat_record of (label_description * pattern) list
+
   | Tpat_or of pattern * pattern
 @
 
@@ -1105,12 +1117,15 @@ and expression_desc =
   | Texp_apply of expression * expression list
   | Texp_match of expression * (pattern * expression) list
   | Texp_try of expression * (pattern * expression) list
+
   | Texp_tuple of expression list
   | Texp_construct of constructor_description * expression list
   | Texp_record of (label_description * expression) list
+
   | Texp_field of expression * label_description
   | Texp_setfield of expression * label_description * expression
   | Texp_array of expression list
+
   | Texp_ifthenelse of expression * expression * expression option
   | Texp_sequence of expression * expression
   | Texp_while of expression * expression
@@ -1132,6 +1147,7 @@ and module_expr_desc =
   | Tmod_structure of structure
   | Tmod_constraint of module_expr * module_type * module_coercion
 @
+%todo: module_coercion? need?
 
 <<type Typedtree.structure>>=
 and structure = structure_item list
@@ -1142,8 +1158,10 @@ and structure_item =
     Tstr_eval of expression
   | Tstr_value of rec_flag * (pattern * expression) list
   | Tstr_primitive of Ident.t * value_description
+
   | Tstr_type of (Ident.t * type_declaration) list
   | Tstr_exception of Ident.t * exception_declaration
+
   | Tstr_module of Ident.t * module_expr
   | Tstr_open of Path.t
 @
@@ -1231,6 +1249,17 @@ and type_list t = Tconstr(path_list, [t])
 and type_array t = Tconstr(path_array, [t])
 @
 
+
+
+<<function Typecore.type_constant>>=
+(* Typing of constants *)
+
+let type_constant = function
+    Const_int _ -> Predef.type_int
+  | Const_char _ -> Predef.type_char
+  | Const_string _ -> Predef.type_string
+  | Const_float _ -> Predef.type_float
+@
 
 
 \subsection{Builtin values}
@@ -1371,9 +1400,9 @@ type t = {
   components: (Path.t * module_components) Ident.tbl
 }
 @
-%  summary: summary
-% no Path for constructor and record?
-% components??
+%old:  summary: summary, used by debugger.
+%less: no Path for constructor and record?
+%less: components??
 
 <<signature Env.empty>>=
 val empty: t
@@ -1388,7 +1417,7 @@ let empty = {
   modules = Ident.empty;
   components = Ident.empty; }
 @
-%  summary = Env_empty }
+%old:  summary = Env_empty }
 
 
 
@@ -1437,22 +1466,22 @@ type t =
     modules: Path.t Ident.tbl;
     modtypes: module_type Ident.tbl }
 @
-
-
+% ??
+% for naming? to transform ident to path?
 
 \section{Unification}
 
 <<exception Ctype.Unify>>=
 exception Unify
 @
-%exception Unify of (type_expr * type_expr) list
+%new: exception Unify of (type_expr * type_expr) list
 
 \section{Typing}
 
 % string -> Ident.t
 % Parsetree.xxx -> Types.xxx or Typedtree.xxx
 
-\subsection{Types}
+\subsection{Type expressions}
 
 <<signature Typetexp.transl_simple_type>>=
 (* Typechecking of type expressions for the core language *)
@@ -1462,26 +1491,33 @@ val transl_simple_type:
 @
 % bool?
 
-\subsection{Declarations}
+\subsection{Type declarations}
 
 
 <<signature Typedecl.transl_type_decl>>=
 val transl_type_decl:
         Env.t -> (string * Parsetree.type_declaration) list ->
-                                  (Ident.t * type_declaration) list * Env.t
+                         (Ident.t * Types.type_declaration) list * Env.t
 @
 
 <<signature Typedecl.transl_exception>>=
 val transl_exception:
-        Env.t -> Parsetree.exception_declaration -> exception_declaration
+        Env.t -> Parsetree.exception_declaration -> Types.exception_declaration
 @
 
 <<signature Typedecl.transl_value_decl>>=
 val transl_value_decl:
-        Env.t -> Parsetree.value_description -> value_description
+        Env.t -> Parsetree.value_description -> Types.value_description
 @
 
 \subsection{Expressions}
+
+
+<<signature Typecore.type_expression>>=
+val type_expression:
+        Env.t -> Parsetree.expression -> Typedtree.expression
+@
+
 
 
 <<signature Typecore.type_binding>>=
@@ -1491,10 +1527,6 @@ val type_binding:
             (Typedtree.pattern * Typedtree.expression) list * Env.t
 @
 
-<<signature Typecore.type_expression>>=
-val type_expression:
-        Env.t -> Parsetree.expression -> Typedtree.expression
-@
 
 
 
@@ -1504,12 +1536,13 @@ val type_expression:
 
 <<signature Typemod.transl_signature>>=
 val transl_signature:
-        Env.t -> Parsetree.signature -> signature
+        Env.t -> Parsetree.signature -> Types.signature
 @
 
 <<signature Typemod.type_structure>>=
 val type_structure:
-        Env.t -> Parsetree.structure -> structure * signature * Env.t
+        Env.t -> Parsetree.structure -> 
+          Parsedtree.structure * Types.signature * Env.t
 @
 
 
@@ -1654,6 +1687,11 @@ let type_format loc fmt =
   Tconstr(Predef.path_format, [scan_format 0; ty_input; ty_result])
 @
 
+\subsection{Objects}
+
+% things got so much more complicated with objects ...
+% huge change in the typechecker, ctype.ml from 400LOC to 1200LOC
+% and actually should also count the new btype.ml
 
 
 \chapter{Checking}
@@ -1665,13 +1703,15 @@ let type_format loc fmt =
 % parmatch.ml
 
 <<signature Parmatch.check_partial>>=
-val check_partial: Location.t -> (pattern * expression) list -> unit
+val check_partial: 
+  Location.t -> (Typedtree.pattern * Typedtree.expression) list -> unit
 @
 
 \section{Unused pattern matches}
 
 <<signature Parmatch.check_unused>>=
-val check_unused: (pattern * expression) list -> unit
+val check_unused: 
+  (Typedtree.pattern * Typedtree.expression) list -> unit
 @
 
 
@@ -1704,10 +1744,13 @@ type lambda =
     Lvar of Ident.t
   | Lconst of structured_constant
   | Lapply of lambda * lambda list
+
   | Lfunction of function_kind * Ident.t list * lambda
   | Llet of let_kind * Ident.t * lambda * lambda
   | Lletrec of (Ident.t * lambda) list * lambda
+
   | Lprim of primitive * lambda list
+
   | Lswitch of lambda * lambda_switch
   | Lstaticfail
   | Lcatch of lambda * lambda
@@ -1717,6 +1760,7 @@ type lambda =
   | Lwhile of lambda * lambda
   | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
   | Lassign of Ident.t * lambda
+
   | Levent of lambda * lambda_event
 @
 
@@ -1953,29 +1997,30 @@ let primitives_table = create_hashtable 31 [
 
 
 <<signature Translcore.transl_exp>>=
-val transl_exp: expression -> lambda
+val transl_exp: Typedtree.expression -> lambda
 @
+
+
 
 <<signature Translcore.transl_let>>=
 val transl_let:
-      rec_flag -> (pattern * expression) list -> lambda -> lambda
+      rec_flag -> (Typedtree.pattern * Typedtree.expression) list -> 
+        lambda -> lambda
 @
 
 \subsection{Modules, [[transl_implementation()]]}
 %Translmod
 
 <<signature Translmod.transl_implementation>>=
-val transl_implementation: string -> structure -> module_coercion -> lambda
+val transl_implementation: 
+  string -> Typedtree.structure -> module_coercion -> lambda
 @
 
 <<signature Translmod.transl_store_implementation>>=
 val transl_store_implementation:
-      string -> structure -> module_coercion -> int * lambda
+      string -> Typedtree.structure -> module_coercion -> int * lambda
 @
-
-<<signature Translmod.transl_toplevel_definition>>=
-val transl_toplevel_definition: structure -> lambda
-@
+%? variant?
 
 \section{Lambda simplifications}
 
@@ -2185,29 +2230,25 @@ let to_file outchan unit_name code =
 
 \chapter{Linking}
 
-<<constant Clflags.ccobjs>>=
-let ccobjs = ref ([] : string list)     (* .o, .a and -lxxx files *)
-@
-
-
-<<constant Clflags.exec_name>>=
-let exec_name = ref "a.out"             (* -o *)
+<<[[Main.process_file()]] cases>>=
+| _ when Filename.check_suffix name ".cmo" 
+      or Filename.check_suffix name ".cma" ->
+    objfiles := name :: !objfiles
 @
 
 <<constant Clflags.include_dirs>>=
 let include_dirs = ref ([] : string list)(* -I *)
 @
-
-
-
-
-<<constant Clflags.link_everything>>=
-let link_everything = ref false         (* -linkall *)
+<<[[Main.main()]] command line options>>=
+"-I", Arg.String(fun dir -> include_dirs := dir :: !include_dirs),
+      "<dir>  Add <dir> to the list of include directories";
 @
 
-<<constant Clflags.custom_runtime>>=
-let custom_runtime = ref false          (* -custom *)
-@
+
+
+
+
+
 
 
 
@@ -2267,6 +2308,15 @@ let check_consistency file_name cu =
 <<constant Clflags.make_archive>>=
 let make_archive = ref false            (* -a *)
 @
+<<[[Main.main()]] command line options>>=
+"-a", Arg.Set make_archive, " Build a library";
+@
+
+<<[[Main.main()]] after process_file cases>>=
+| _ when !make_archive ->
+    Compile.init_path();
+    Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
+@
 
 <<constant Clflags.archive_name>>=
 let archive_name = ref "library.cma"    (* -o *)
@@ -2282,6 +2332,8 @@ let archive_name = ref "library.cma"    (* -o *)
 val create_archive: string list -> string -> unit
 @
 
+
+
 \subsection{Archive format, [[.cma]]}
 
 %(* Format of a library file:
@@ -2293,6 +2345,20 @@ val create_archive: string list -> string -> unit
 
 \section{Linking with C}
 
+<<constant Clflags.ccobjs>>=
+let ccobjs = ref ([] : string list)     (* .o, .a and -lxxx files *)
+@
+
+<<[[Main.process_file()]] cases>>=
+| _ when Filename.check_suffix name ext_obj
+      or Filename.check_suffix name ext_lib ->
+    ccobjs := name :: !ccobjs
+| _ when Filename.check_suffix name ".c" ->
+    Compile.c_file name;
+    ccobjs := (Filename.chop_suffix (Filename.basename name) ".c" ^ ext_obj)
+     :: !ccobjs
+@
+
 <<signature Compile.c_file>>=
 val c_file: string -> unit
 @
@@ -2300,6 +2366,17 @@ val c_file: string -> unit
 <<function Compile.c_file>>=
 let c_file name =
   if Ccomp.compile_file_bytecode name <> 0 then exit 2
+@
+
+<<constant Clflags.ccopts>>=
+let ccopts = ref ([] : string list)     (* -ccopt *)
+@
+
+<<[[Main.main()]] command line options>>=
+"-cclib", Arg.String(fun s -> ccobjs := s :: !ccobjs),
+      "<opt>  Pass option <opt> to the C linker";
+"-ccopt", Arg.String(fun s -> ccopts := s :: !ccopts),
+      "<opt>  Pass option <opt> to the C compiler and linker";
 @
 
 \subsection{Foreign function interface}
@@ -2369,6 +2446,45 @@ let create_archive archive file_list =
       else command(Config.ranlib ^ " " ^ archive)
 @
 
+\section{Advanced linking issues}
+
+\subsection{[[-custom]]}
+
+<<constant Clflags.custom_runtime>>=
+let custom_runtime = ref false          (* -custom *)
+@
+<<[[Main.main()]] command line options>>=
+"-custom", Arg.Set custom_runtime, " Link in custom mode";
+@
+
+\subsection{[[-linkall]]}
+
+<<constant Clflags.link_everything>>=
+let link_everything = ref false         (* -linkall *)
+@
+<<[[Main.main()]] command line options>>=
+"-linkall", Arg.Set link_everything,
+      " Link all modules, even unused ones";
+@
+
+
+\subsection{[[-output-obj]]}
+
+<<constant Clflags.object_name>>=
+let object_name = ref ("camlprog" ^ Config.ext_obj) (* -o *)
+@
+%camlprog??
+
+<<constant Clflags.output_c_object>>=
+let output_c_object = ref false         (* -output-obj *)
+@
+%??
+
+<<[[Main.main()]] command line options>>=
+"-output-obj", Arg.Unit(fun () -> output_c_object := true;
+                                  custom_runtime := true),
+      "Output a C object file instead of an executable";
+@
 
 \chapter{Interpreting}
 % Running
@@ -2384,15 +2500,15 @@ let keep_startup_file = ref false       (* -dstartup *)
 
 \chapter{Garbage Collection}
 
+
+
+
 \chapter{Native Code Generation}
 
 <<constant Clflags.native_code>>=
 let native_code = ref false             (* set to true under ocamlopt *)
 @
 
-<<constant Clflags.ccopts>>=
-let ccopts = ref ([] : string list)     (* -ccopt *)
-@
 
 
 <<constant Clflags.inline_threshold>>=
@@ -2403,20 +2519,15 @@ let inline_threshold = ref 10
 let keep_asm_file = ref false           (* -S *)
 @
 
-<<constant Clflags.object_name>>=
-let object_name = ref ("camlprog" ^ Config.ext_obj) (* -o *)
-@
-%camlprog??
 
-<<constant Clflags.output_c_object>>=
-let output_c_object = ref false         (* -output-obj *)
-@
-%??
 
 \chapter{Debugging Support}
 
 <<constant Clflags.debug>>=
 let debug = ref false                   (* -g *)
+@
+<<[[Main.main()]] command line options>>=
+"-g", Arg.Set debug, " Save debugging information";
 @
 
 
@@ -2552,38 +2663,60 @@ and array_kind =
 
 \chapter{Advanced Topics}
 
-<<constant Clflags.print_types>>=
-let print_types = ref false             (* -i *)
-@
-
-
-
-
-<<constant Clflags.fast>>=
-let fast = ref false                    (* -unsafe *)
-@
 
 <<constant Clflags.optimize_for_speed>>=
 let optimize_for_speed = ref true       (* -compact *)
 @
 
 
+\section{Printing types, [[-i]]}
+
+<<constant Clflags.print_types>>=
+let print_types = ref false             (* -i *)
+@
+
+<<[[Main.main()]] command line options>>=
+"-i", Arg.Set print_types, " Print the types";
+@
+
+\section{[[-noassert]]}
 
 <<constant Clflags.noassert>>=
 let noassert = ref false                (* -noassert *)
 @
+<<[[Main.main()]] command line options>>=
+"-noassert", Arg.Set noassert, " Don't compile assertion checks";
+@
 
+\section{[[-unsafe]]}
+
+<<constant Clflags.fast>>=
+let fast = ref false                    (* -unsafe *)
+@
+
+<<[[Main.main()]] command line options>>=
+"-unsafe", Arg.Set fast,
+      " No bounds checking on array and string access";
+@
 
 \section{Threads}
 
 <<constant Clflags.thread_safe>>=
 let thread_safe = ref false             (* -thread *)
 @
+<<[[Main.main()]] command line options>>=
+"-thread", Arg.Set thread_safe, " Use thread-safe standard library";
+@
 
 \section{Preprocessing}
 
 <<constant Clflags.preprocessor>>=
 let preprocessor = ref(None : string option) (* -pp *)
+@
+
+<<[[Main.main()]] command line options>>=
+"-pp", Arg.String(fun s -> preprocessor := Some s),
+      "<command>  Pipe sources through preprocessor <command>";
 @
 
 <<function Compile.preprocess>>=
@@ -2650,6 +2783,11 @@ let toplevel_phrase = wrap Parser.toplevel_phrase
 let use_file = wrap Parser.use_file
 @
 
+<<signature Translmod.transl_toplevel_definition>>=
+val transl_toplevel_definition: 
+  Typedtree.structure -> lambda
+@
+
 \subsection{Phrases}
 
 <<type Parsetree.toplevel_phrase>>=
@@ -2685,6 +2823,7 @@ and directive_argument =
 let verbose = ref false                 (* -verbose *)
 @
 
+% when compiling c stuff? calling assembler? -> <>
 <<function Ccomp.command>>=
 let command cmdline =
   if !Clflags.verbose then begin
@@ -2711,10 +2850,6 @@ val print_description: description -> unit
 @
 
 
-<<function Primitive.print_quoted>>=
-let print_quoted s = print_char '"'; print_string s; print_char '"'
-@
-
 <<function Primitive.print_description>>=
 let print_description p =
   print_quoted p.prim_name;
@@ -2725,6 +2860,11 @@ let print_description p =
   if p.prim_native_float then
     (print_space(); print_quoted "float")
 @
+
+<<function Primitive.print_quoted>>=
+let print_quoted s = print_char '"'; print_string s; print_char '"'
+@
+
 
 \subsubsection{Names}
 
@@ -2990,6 +3130,11 @@ let dump_lambda = ref false             (* -dlambda *)
 let dump_rawlambda = ref false          (* -drawlambda *)
 @
 % before simplify
+
+<<[[Main.main()]] command line options>>=
+"-dlambda", Arg.Set dump_lambda, " (undocumented)";
+"-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
+@
 
 
 
@@ -3284,8 +3429,12 @@ let primitive = function
 
 \subsubsection{[[-dInstr]]}
 
+
 <<constant Clflags.dump_instr>>=
 let dump_instr = ref false              (* -dinstr *)
+@
+<<[[Main.main()]] command line options>>=
+"-dinstr", Arg.Set dump_instr, " (undocumented)";
 @
 
 
@@ -3444,6 +3593,8 @@ let dump_reload = ref false             (* -dreload *)
 let dump_linear = ref false             (* -dlinear *)
 @
 
+\subsubsection{[[-dcmm]]}
+
 
 
 \chapter{Profiling}
@@ -3503,7 +3654,7 @@ let report_error exn =
 
 
 
-\section{Location errors}
+%\section{Location errors}
 
 <<signature Location.print>>=
 val print: t -> unit
@@ -3604,6 +3755,7 @@ type error =
     Unclosed of Location.t * string * Location.t * string
   | Other of Location.t
 @
+%Other for ?
 
 <<exception Syntaxerr.Error>>=
 exception Error of error
@@ -3612,6 +3764,7 @@ exception Error of error
 <<exception Syntaxerr.Escape_error>>=
 exception Escape_error
 @
+% why not an error case? 
 
 <<signature Syntaxerr.report_error>>=
 val report_error: error -> unit
@@ -3700,6 +3853,8 @@ type error =
   | Unbound_type_constructor of Longident.t
   | Type_arity_mismatch of Longident.t * int * int
 @
+% no unify error?
+%TODO: error a la julien? far easier to understand
 
 <<exception Typetexp.Error>>=
 exception Error of Location.t * error
@@ -3731,17 +3886,13 @@ let report_error = function
 <<type Typemod.error>>=
 type error =
     Unbound_module of Longident.t
-  | Unbound_modtype of Longident.t
-  | Cannot_apply of module_type
   | Not_included of Includemod.error list
-  | Cannot_eliminate_dependency of module_type
   | Signature_expected
   | Structure_expected of module_type
   | With_no_component of Longident.t
   | Repeated_name of string * string
   | Non_generalizable of type_expr
 @
-
 
 <<exception Typemod.Error>>=
 exception Error of Location.t * error
@@ -3756,25 +3907,10 @@ val report_error: error -> unit
 let report_error = function
     Unbound_module lid ->
       print_string "Unbound module "; longident lid
-  | Unbound_modtype lid ->
-      print_string "Unbound module type "; longident lid
-  | Cannot_apply mty ->
-      open_hovbox 0;
-      print_string "This module is not a functor; it has type";
-      print_space(); modtype mty;
-      close_box()
   | Not_included errs ->
       open_vbox 0;
       print_string "Signature mismatch:"; print_space();
       Includemod.report_error errs;
-      close_box()
-  | Cannot_eliminate_dependency mty ->
-      open_hovbox 0;
-      print_string "This functor has type";
-      print_space(); modtype mty; print_space();
-      print_string "The parameter cannot be eliminated in the result type.";
-      print_space();
-      print_string "Please bind the argument to a module identifier.";
       close_box()
   | Signature_expected ->
       print_string "This module type is not a signature"
@@ -3811,9 +3947,9 @@ type error =
   | Exception_declarations of
       Ident.t * exception_declaration * exception_declaration
   | Module_types of module_type * module_type
-  | Modtype_permutation
   | Interface_mismatch of string * string
 @
+% last one is probably the most classic?
 
 <<exception Includemod.Error>>=
 exception Error of error list
@@ -3861,8 +3997,6 @@ let include_err = function
       print_string "is not included in"; print_space();
       modtype mty2;
       close_box()
-  | Modtype_permutation ->
-      print_string "Illegal permutation of structure fields"
   | Interface_mismatch(impl_name, intf_name) ->
       open_hovbox 0;
       print_string "The implementation "; print_string impl_name;
@@ -3933,6 +4067,7 @@ type error =
     Unbound_value of Longident.t
   | Unbound_constructor of Longident.t
   | Unbound_label of Longident.t
+
   | Constructor_arity_mismatch of Longident.t * int * int
   | Label_mismatch of Longident.t * type_expr * type_expr
   | Pattern_type_clash of type_expr * type_expr

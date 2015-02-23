@@ -25,10 +25,7 @@ open Typedtree
 (*s: type Typemod.error *)
 type error =
     Unbound_module of Longident.t
-  | Unbound_modtype of Longident.t
-  | Cannot_apply of module_type
   | Not_included of Includemod.error list
-  | Cannot_eliminate_dependency of module_type
   | Signature_expected
   | Structure_expected of module_type
   | With_no_component of Longident.t
@@ -259,25 +256,10 @@ open Printtyp
 let report_error = function
     Unbound_module lid ->
       print_string "Unbound module "; longident lid
-  | Unbound_modtype lid ->
-      print_string "Unbound module type "; longident lid
-  | Cannot_apply mty ->
-      open_hovbox 0;
-      print_string "This module is not a functor; it has type";
-      print_space(); modtype mty;
-      close_box()
   | Not_included errs ->
       open_vbox 0;
       print_string "Signature mismatch:"; print_space();
       Includemod.report_error errs;
-      close_box()
-  | Cannot_eliminate_dependency mty ->
-      open_hovbox 0;
-      print_string "This functor has type";
-      print_space(); modtype mty; print_space();
-      print_string "The parameter cannot be eliminated in the result type.";
-      print_space();
-      print_string "Please bind the argument to a module identifier.";
       close_box()
   | Signature_expected ->
       print_string "This module type is not a signature"
