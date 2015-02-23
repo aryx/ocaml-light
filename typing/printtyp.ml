@@ -51,8 +51,6 @@ let rec path = function
       print_string s
   | Pdot(p, s, pos) ->
       path p; print_string "."; print_string s
-  | Papply(p1, p2) ->
-      path p1; print_string "("; path p2; print_string ")"
 (*e: function Printtyp.path *)
 
 (*s: constant Printtyp.var_names *)

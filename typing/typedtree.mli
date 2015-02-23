@@ -42,7 +42,7 @@ and pattern_desc =
 type expression =
   { exp_desc: expression_desc;
     exp_loc: Location.t;
-    exp_type: type_expr }
+    exp_type: type_expr; }
 (*e: type Typedtree.expression *)
 
 (*s: type Typedtree.expression_desc *)
@@ -74,7 +74,7 @@ and expression_desc =
 type module_expr =
   { mod_desc: module_expr_desc;
     mod_loc: Location.t;
-    mod_type: module_type }
+    mod_type: module_type; }
 (*e: type Typedtree.module_expr *)
 
 (*s: type Typedtree.module_expr_desc *)
@@ -103,7 +103,6 @@ and structure_item =
 and module_coercion =
     Tcoerce_none
   | Tcoerce_structure of (int * module_coercion) list
-  | Tcoerce_functor of module_coercion * module_coercion
   | Tcoerce_primitive of Primitive.description
 (*e: type Typedtree.module_coercion *)
 

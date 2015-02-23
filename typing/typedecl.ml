@@ -20,7 +20,7 @@ open Typedtree
 open Typetexp
 
 
-(*s: type Typedecl.error (./typing/typedecl.ml) *)
+(*s: type Typedecl.error *)
 type error =
     Repeated_parameter
   | Duplicate_constructor of string
@@ -28,11 +28,11 @@ type error =
   | Duplicate_label of string
   | Recursive_abbrev of string
   | Definition_mismatch of type_expr
-(*e: type Typedecl.error (./typing/typedecl.ml) *)
+(*e: type Typedecl.error *)
 
-(*s: exception Typedecl.Error (./typing/typedecl.ml) *)
+(*s: exception Typedecl.Error *)
 exception Error of Location.t * error
-(*e: exception Typedecl.Error (./typing/typedecl.ml) *)
+(*e: exception Typedecl.Error *)
 
 (*s: function Typedecl.enter_types *)
 (* Enter all declared types in the environment as abstract types *)

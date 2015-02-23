@@ -39,7 +39,7 @@ type debug_event =
     ev_char: int;                       (* Location in source file *)
     ev_kind: debug_event_kind;          (* Before/after event *)
     ev_info: debug_event_info;          (* Extra information *)
-    ev_typenv: Env.summary;             (* Typing environment *)
+    ev_typenv: unit(*Env.summary*);             (* Typing environment *)
     ev_compenv: compilation_env;        (* Compilation environment *)
     ev_stacksize: int;                  (* Size of stack frame *)
     ev_repr: debug_event_repr }         (* Position of the representative *)

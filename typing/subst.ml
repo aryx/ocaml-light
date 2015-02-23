@@ -58,8 +58,6 @@ let rec module_path s = function
       begin try Ident.find_same id s.modules with Not_found -> p end
   | Pdot(p, n, pos) ->
       Pdot(module_path s p, n, pos)
-  | Papply(p1, p2) ->
-      Papply(module_path s p1, module_path s p2)
 (*e: function Subst.module_path *)
 
 (*s: function Subst.type_path *)
@@ -68,8 +66,6 @@ let type_path s = function
       begin try Ident.find_same id s.types with Not_found -> p end
   | Pdot(p, n, pos) ->
       Pdot(module_path s p, n, pos)
-  | Papply(p1, p2) ->
-      fatal_error "Subst.type_path"
 (*e: function Subst.type_path *)
 
 (*s: function Subst.type_expr *)
@@ -122,8 +118,6 @@ let rec modtype s = function
           begin try Ident.find_same id s.modtypes with Not_found -> mty end
       | Pdot(p, n, pos) ->
           Tmty_ident(Pdot(module_path s p, n, pos))
-      | Papply(p1, p2) ->
-          fatal_error "Subst.modtype"
       end
   | Tmty_signature sg ->
       Tmty_signature(signature s sg)

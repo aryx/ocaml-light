@@ -1070,17 +1070,11 @@ open Location
 
 \subsection*{[[./typing/ident.mli]]}
 
-<<signature Ident.create>>=
-val create: string -> t
-@
 
 <<signature Ident.create_persistent>>=
 val create_persistent: string -> t
 @
 
-<<signature Ident.name>>=
-val name: t -> string
-@
 
 <<signature Ident.unique_name>>=
 val unique_name: t -> string
@@ -1206,9 +1200,6 @@ type 'a tbl
 
 \subsection*{[[./typing/ident.ml]]}
 
-<<type Ident.t>>=
-type t = { mutable stamp: int; mutable name: string; mutable global: bool }
-@
 
 <<constant Ident.currentstamp>>=
 (* A stamp of 0 denotes a persistent identifier *)
@@ -1491,20 +1482,7 @@ open Format
 
 \subsection*{[[./typing/primitive.mli]]}
 
-<<type Primitive.description>>=
-(* Description of primitive functions *)
 
-type description =
-  { prim_name: string;         (* Name of primitive  or C function *)
-    prim_arity: int;           (* Number of arguments *)
-    prim_alloc: bool;          (* Does it allocates or raise? *)
-    prim_native_name: string;  (* Name of C function for the nat. code gen. *)
-    prim_native_float: bool }  (* Does the above operate on unboxed floats? *)
-@
-
-<<signature Primitive.parse_declaration>>=
-val parse_declaration: int -> string list -> description option
-@
 
 <<signature Primitive.print_description>>=
 val print_description: description -> unit
@@ -1536,39 +1514,7 @@ val print_description: description -> unit
 
 \subsection*{[[./typing/primitive.ml]]}
 
-<<type Primitive.description (./typing/primitive.ml)>>=
-type description =
-  { prim_name: string;         (* Name of primitive  or C function *)
-    prim_arity: int;           (* Number of arguments *)
-    prim_alloc: bool;          (* Does it allocates or raise? *)
-    prim_native_name: string;  (* Name of C function for the nat. code gen. *)
-    prim_native_float: bool }  (* Does the above operate on unboxed floats? *)
-@
 
-<<function Primitive.parse_declaration>>=
-let parse_declaration arity decl =
-  match decl with
-    name :: "noalloc" :: name2 :: "float" :: _ ->
-      Some{prim_name = name; prim_arity = arity; prim_alloc = false;
-           prim_native_name = name2; prim_native_float = true}
-  | name :: "noalloc" :: name2 :: _ ->
-      Some{prim_name = name; prim_arity = arity; prim_alloc = false;
-           prim_native_name = name2; prim_native_float = false}
-  | name :: name2 :: "float" :: _ ->
-      Some{prim_name = name; prim_arity = arity; prim_alloc = true;
-           prim_native_name = name2; prim_native_float = true}
-  | name :: "noalloc" :: _ ->
-      Some{prim_name = name; prim_arity = arity; prim_alloc = false;
-           prim_native_name = ""; prim_native_float = false}
-  | name :: name2 :: _ ->
-      Some{prim_name = name; prim_arity = arity; prim_alloc = true;
-           prim_native_name = name2; prim_native_float = false}
-  | name :: _ ->
-      Some{prim_name = name; prim_arity = arity; prim_alloc = true;
-           prim_native_name = ""; prim_native_float = false}
-  | [] ->
-      None
-@
 
 <<function Primitive.print_quoted>>=
 let print_quoted s = print_char '"'; print_string s; print_char '"'
@@ -1606,7 +1552,7 @@ let print_description p =
 
 open Format
 
-<<type Primitive.description (./typing/primitive.ml)>>
+<<type Primitive.description>>
 
 <<function Primitive.parse_declaration>>
 
@@ -1618,14 +1564,6 @@ open Format
 
 \subsection*{[[./typing/path.mli]]}
 
-<<type Path.t>>=
-(* Access paths *)
-
-type t =
-    Pident of Ident.t
-  | Pdot of t * string * int
-  | Papply of t * t
-@
 
 <<signature Path.same>>=
 val same: t -> t -> bool
@@ -1667,15 +1605,6 @@ val nopos: int
 
 \subsection*{[[./typing/path.ml]]}
 
-<<type Path.t (./typing/path.ml)>>=
-(* $Id$ *)
-
-type t =
-    Pident of Ident.t
-  | Pdot of t * string * int
-  | Papply of t * t
-@
-
 <<constant Path.nopos>>=
 let nopos = -1
 @
@@ -1711,7 +1640,7 @@ let rec isfree id = function
 (*                                                                     *)
 (***********************************************************************)
 
-<<type Path.t (./typing/path.ml)>>
+<<type Path.t>>
 
 <<constant Path.nopos>>
 
@@ -1723,19 +1652,6 @@ let rec isfree id = function
 
 \subsection*{[[./typing/types.ml]]}
 
-<<type Types.type_expr>>=
-type type_expr =
-    Tvar of type_variable
-  | Tarrow of type_expr * type_expr
-  | Ttuple of type_expr list
-  | Tconstr of Path.t * type_expr list
-@
-
-<<type Types.type_variable>>=
-and type_variable =
-    { mutable tvar_level: int;
-      mutable tvar_link: type_expr option }
-@
 
 <<type Types.value_description>>=
 (* Value descriptions *)
@@ -1953,12 +1869,6 @@ type t
 
 \subsection*{[[./typing/subst.ml]]}
 
-<<type Subst.t>>=
-type t = 
-  { types: Path.t Ident.tbl;
-    modules: Path.t Ident.tbl;
-    modtypes: module_type Ident.tbl }
-@
 
 <<constant Subst.identity>>=
 let identity =
@@ -2120,104 +2030,6 @@ and signature_item s = function
 
 \subsection*{[[./typing/predef.mli]]}
 
-<<signature Predef.type_int>>=
-val type_int: type_expr
-@
-
-<<signature Predef.type_char>>=
-val type_char: type_expr
-@
-
-<<signature Predef.type_string>>=
-val type_string: type_expr
-@
-
-<<signature Predef.type_float>>=
-val type_float: type_expr
-@
-
-<<signature Predef.type_bool>>=
-val type_bool: type_expr
-@
-
-<<signature Predef.type_unit>>=
-val type_unit: type_expr
-@
-
-<<signature Predef.type_exn>>=
-val type_exn: type_expr
-@
-
-<<signature Predef.type_array>>=
-val type_array: type_expr -> type_expr
-@
-
-<<signature Predef.type_list>>=
-val type_list: type_expr -> type_expr
-@
-
-<<signature Predef.path_int>>=
-val path_int: Path.t
-@
-
-<<signature Predef.path_char>>=
-val path_char: Path.t
-@
-
-<<signature Predef.path_string>>=
-val path_string: Path.t
-@
-
-<<signature Predef.path_float>>=
-val path_float: Path.t
-@
-
-<<signature Predef.path_bool>>=
-val path_bool: Path.t
-@
-
-<<signature Predef.path_unit>>=
-val path_unit: Path.t
-@
-
-<<signature Predef.path_exn>>=
-val path_exn: Path.t
-@
-
-<<signature Predef.path_array>>=
-val path_array: Path.t
-@
-
-<<signature Predef.path_list>>=
-val path_list: Path.t
-@
-
-<<signature Predef.path_format>>=
-val path_format: Path.t
-@
-
-<<signature Predef.path_match_failure>>=
-val path_match_failure: Path.t
-@
-
-<<signature Predef.build_initial_env>>=
-(* To build the initial environment. Since there is a nasty mutual
-   recursion between predef and env, we break it by parameterizing
-   over Env.t, Env.add_type and Env.add_exception. *)
-
-val build_initial_env:
-  (Ident.t -> type_declaration -> 'a -> 'a) ->
-  (Ident.t -> exception_declaration -> 'a -> 'a) ->
-  'a -> 'a
-@
-
-<<signature Predef.builtin_values>>=
-(* To initialize linker tables *)
-
-val builtin_values: (string * Ident.t) list
-@
-
-
 %-------------------------------------------------------------
 
 <<./typing/predef.mli>>=
@@ -2232,32 +2044,13 @@ val builtin_values: (string * Ident.t) list
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 (* Predefined type constructors (with special typing rules in typecore) *)
 
 open Types
 
-<<signature Predef.type_int>>
-<<signature Predef.type_char>>
-<<signature Predef.type_string>>
-<<signature Predef.type_float>>
-<<signature Predef.type_bool>>
-<<signature Predef.type_unit>>
-<<signature Predef.type_exn>>
-<<signature Predef.type_array>>
-<<signature Predef.type_list>>
+<<signatures Predef.type_xxx>>
 
-<<signature Predef.path_int>>
-<<signature Predef.path_char>>
-<<signature Predef.path_string>>
-<<signature Predef.path_float>>
-<<signature Predef.path_bool>>
-<<signature Predef.path_unit>>
-<<signature Predef.path_exn>>
-<<signature Predef.path_array>>
-<<signature Predef.path_list>>
-<<signature Predef.path_format>>
+<<signatures Predef.path_xxx>>
 
 <<signature Predef.path_match_failure>>
 
@@ -2269,84 +2062,7 @@ open Types
 
 \subsection*{[[./typing/predef.ml]]}
 
-<<constant Predef.path_match_failure>>=
-let path_match_failure = Pident ident_match_failure
-@
 
-<<function Predef.build_initial_env>>=
-let build_initial_env add_type add_exception empty_env =
-  let newvar() =
-    (* Cannot call the real newvar from ctype here
-       because ctype imports predef via env *)
-    Tvar{tvar_level = -1 (*generic_level*); tvar_link = None} in
-  let decl_abstr =
-    {type_params = [];
-     type_arity = 0;
-     type_kind = Type_abstract;
-     type_manifest = None}
-  and decl_bool =
-    {type_params = [];
-     type_arity = 0;
-     type_kind = Type_variant["false",[]; "true",[]];
-     type_manifest = None}
-  and decl_unit =
-    {type_params = []; 
-     type_arity = 0;
-     type_kind = Type_variant["()",[]];
-     type_manifest = None}
-  and decl_exn =
-    {type_params = [];
-     type_arity = 0;
-     type_kind = Type_variant [];
-     type_manifest = None}
-  and decl_array =
-    let tvar = newvar() in
-    {type_params = [tvar];
-     type_arity = 1;
-     type_kind = Type_abstract;
-     type_manifest = None}
-  and decl_list =
-    let tvar = newvar() in
-    {type_params = [tvar];
-     type_arity = 1;
-     type_kind = Type_variant["[]", []; "::", [tvar; type_list tvar]];
-     type_manifest = None}
-  and decl_format =
-    {type_params = [newvar(); newvar(); newvar()];
-     type_arity = 3;
-     type_kind = Type_abstract;
-     type_manifest = None} in
-
-  add_exception ident_match_failure [Ttuple[type_string; type_int; type_int]] (
-  add_exception ident_out_of_memory [] (
-  add_exception ident_stack_overflow [] (
-  add_exception ident_invalid_argument [type_string] (
-  add_exception ident_failure [type_string] (
-  add_exception ident_not_found [] (
-  add_exception ident_sys_error [type_string] (
-  add_exception ident_end_of_file [] (
-  add_exception ident_division_by_zero [] (
-  add_type ident_format decl_format (
-  add_type ident_list decl_list (
-  add_type ident_array decl_array (
-  add_type ident_exn decl_exn (
-  add_type ident_unit decl_unit (
-  add_type ident_bool decl_bool (
-  add_type ident_float decl_abstr (
-  add_type ident_string decl_abstr (
-  add_type ident_char decl_abstr (
-  add_type ident_int decl_abstr (
-    empty_env)))))))))))))))))))
-@
-
-<<constant Predef.builtin_values>>=
-let builtin_values =
-  List.map (fun id -> Ident.make_global id; (Ident.name id, id))
-      [ident_match_failure; ident_out_of_memory; ident_stack_overflow;
-       ident_invalid_argument;
-       ident_failure; ident_not_found; ident_sys_error; ident_end_of_file;
-       ident_division_by_zero]
-@
 
 
 %-------------------------------------------------------------
@@ -2371,47 +2087,13 @@ open Path
 open Types
 
 
-let ident_int = Ident.create "int"
-and ident_char = Ident.create "char"
-and ident_string = Ident.create "string"
-and ident_float = Ident.create "float"
-and ident_bool = Ident.create "bool"
-and ident_unit = Ident.create "unit"
-and ident_exn = Ident.create "exn"
-and ident_array = Ident.create "array"
-and ident_list = Ident.create "list"
-and ident_format = Ident.create "format"
+<<constants Predef.ident_xxx>>
+<<constants Predef.path_xxx>>
 
-let path_int = Pident ident_int
-and path_char = Pident ident_char
-and path_string = Pident ident_string
-and path_float = Pident ident_float
-and path_bool = Pident ident_bool
-and path_unit = Pident ident_unit
-and path_exn = Pident ident_exn
-and path_array = Pident ident_array
-and path_list = Pident ident_list
-and path_format = Pident ident_format
+<<constants Predef.type_xxx>>
 
-let type_int = Tconstr(path_int, [])
-and type_char = Tconstr(path_char, [])
-and type_string = Tconstr(path_string, [])
-and type_float = Tconstr(path_float, [])
-and type_bool = Tconstr(path_bool, [])
-and type_unit = Tconstr(path_unit, [])
-and type_exn = Tconstr(path_exn, [])
-and type_array t = Tconstr(path_array, [t])
-and type_list t = Tconstr(path_list, [t])
 
-let ident_match_failure = Ident.create "Match_failure"
-and ident_out_of_memory = Ident.create "Out_of_memory"
-and ident_invalid_argument = Ident.create "Invalid_argument"
-and ident_failure = Ident.create "Failure"
-and ident_not_found = Ident.create "Not_found"
-and ident_sys_error = Ident.create "Sys_error"
-and ident_end_of_file = Ident.create "End_of_file"
-and ident_division_by_zero = Ident.create "Division_by_zero"
-and ident_stack_overflow = Ident.create "Stack_overflow"
+<<constants Predef.ident_exn_xxx>>
 
 <<constant Predef.path_match_failure>>
 
@@ -2583,45 +2265,6 @@ open Types
 
 \subsection*{[[./typing/env.mli]]}
 
-<<signature Env.empty>>=
-val empty: t
-@
-
-<<signature Env.initial>>=
-val initial: t
-@
-
-<<signature Env.find_value>>=
-(* Lookup by paths *)
-
-val find_value: Path.t -> t -> value_description
-@
-
-<<signature Env.find_type>>=
-val find_type: Path.t -> t -> type_declaration
-@
-
-<<signature Env.lookup_value>>=
-(* Lookup by long identifiers *)
-
-val lookup_value: Longident.t -> t -> Path.t * value_description
-@
-
-<<signature Env.lookup_constructor>>=
-val lookup_constructor: Longident.t -> t -> constructor_description
-@
-
-<<signature Env.lookup_label>>=
-val lookup_label: Longident.t -> t -> label_description
-@
-
-<<signature Env.lookup_type>>=
-val lookup_type: Longident.t -> t -> Path.t * type_declaration
-@
-
-<<signature Env.lookup_module>>=
-val lookup_module: Longident.t -> t -> Path.t * module_type
-@
 
 <<signature Env.add_value>>=
 (* Insertion by identifier *)
@@ -2755,7 +2398,7 @@ val summary: 'a -> summary
 
 open Types
 
-type t
+<<signature type Env.t>>
 
 <<signature Env.empty>>
 <<signature Env.initial>>
@@ -2808,27 +2451,8 @@ type t
 
 \subsection*{[[./typing/env.ml]]}
 
-<<type Env.error (./typing/env.ml)>>=
-type error =
-    Not_an_interface of string
-  | Corrupted_interface of string
-  | Illegal_renaming of string * string
-@
 
-<<exception Env.Error (./typing/env.ml)>>=
-exception Error of error
-@
 
-<<type Env.t>>=
-type t = {
-  values: (Path.t * value_description) Ident.tbl;
-  constrs: constructor_description Ident.tbl;
-  labels: label_description Ident.tbl;
-  types: (Path.t * type_declaration) Ident.tbl;
-  modules: (Path.t * module_type) Ident.tbl;
-  components: (Path.t * module_components) Ident.tbl
-}
-@
 
 <<type Env.module_components>>=
 and module_components =
@@ -2856,13 +2480,6 @@ and functor_components = {
 }
 @
 
-<<constant Env.empty>>=
-let empty = {
-  values = Ident.empty; constrs = Ident.empty;
-  labels = Ident.empty; types = Ident.empty;
-  modules = Ident.empty;
-  components = Ident.empty }
-@
 
 <<type Env.pers_struct>>=
 (* Persistent structure descriptions *)
@@ -3210,13 +2827,6 @@ let report_error = function
       print_string modname
 @
 
-<<type Env.summary (./typing/env.ml)>>=
-type summary = unit
-@
-
-<<function Env.summary>>=
-let summary _ = ()
-@
 
 
 %-------------------------------------------------------------
@@ -3246,9 +2856,9 @@ open Path
 open Types
 
 
-<<type Env.error (./typing/env.ml)>>
+<<type Env.error>>
 
-<<exception Env.Error (./typing/env.ml)>>
+<<exception Env.Error>>
 
 <<type Env.t>>
 
@@ -3502,101 +3112,11 @@ and enter_module = enter store_module
 <<function Env.imported_units>>
 
 <<function Env.report_error>>
-
-
-<<type Env.summary (./typing/env.ml)>>
-
-<<function Env.summary>>
 @
 
 
 \subsection*{[[./typing/typedtree.mli]]}
 
-<<type Typedtree.pattern>>=
-type pattern =
-  { pat_desc: pattern_desc;
-    pat_loc: Location.t;
-    pat_type: type_expr }
-@
-
-<<type Typedtree.pattern_desc>>=
-and pattern_desc =
-    Tpat_any
-  | Tpat_var of Ident.t
-  | Tpat_alias of pattern * Ident.t
-  | Tpat_constant of constant
-  | Tpat_tuple of pattern list
-  | Tpat_construct of constructor_description * pattern list
-  | Tpat_record of (label_description * pattern) list
-  | Tpat_or of pattern * pattern
-@
-
-<<type Typedtree.expression>>=
-type expression =
-  { exp_desc: expression_desc;
-    exp_loc: Location.t;
-    exp_type: type_expr }
-@
-
-<<type Typedtree.expression_desc>>=
-and expression_desc =
-    Texp_ident of Path.t * value_description
-  | Texp_constant of constant
-  | Texp_let of rec_flag * (pattern * expression) list * expression
-  | Texp_function of (pattern * expression) list
-  | Texp_apply of expression * expression list
-  | Texp_match of expression * (pattern * expression) list
-  | Texp_try of expression * (pattern * expression) list
-  | Texp_tuple of expression list
-  | Texp_construct of constructor_description * expression list
-  | Texp_record of (label_description * expression) list
-  | Texp_field of expression * label_description
-  | Texp_setfield of expression * label_description * expression
-  | Texp_array of expression list
-  | Texp_ifthenelse of expression * expression * expression option
-  | Texp_sequence of expression * expression
-  | Texp_while of expression * expression
-  | Texp_for of
-      Ident.t * expression * expression * direction_flag * expression
-  | Texp_when of expression * expression
-@
-
-<<type Typedtree.module_expr>>=
-type module_expr =
-  { mod_desc: module_expr_desc;
-    mod_loc: Location.t;
-    mod_type: module_type }
-@
-
-<<type Typedtree.module_expr_desc>>=
-and module_expr_desc =
-    Tmod_ident of Path.t
-  | Tmod_structure of structure
-  | Tmod_constraint of module_expr * module_type * module_coercion
-@
-
-<<type Typedtree.structure>>=
-and structure = structure_item list
-@
-
-<<type Typedtree.structure_item>>=
-and structure_item =
-    Tstr_eval of expression
-  | Tstr_value of rec_flag * (pattern * expression) list
-  | Tstr_primitive of Ident.t * value_description
-  | Tstr_type of (Ident.t * type_declaration) list
-  | Tstr_exception of Ident.t * exception_declaration
-  | Tstr_module of Ident.t * module_expr
-  | Tstr_open of Path.t
-@
-
-<<type Typedtree.module_coercion>>=
-and module_coercion =
-    Tcoerce_none
-  | Tcoerce_structure of (int * module_coercion) list
-  | Tcoerce_functor of module_coercion * module_coercion
-  | Tcoerce_primitive of Primitive.description
-@
 
 <<signature Typedtree.pat_bound_idents>>=
 (* Auxiliary functions over the a.s.t. *)
@@ -3664,91 +3184,6 @@ open Types
 
 \subsection*{[[./typing/typedtree.ml]]}
 
-<<type Typedtree.pattern (./typing/typedtree.ml)>>=
-type pattern =
-  { pat_desc: pattern_desc;
-    pat_loc: Location.t;
-    pat_type: type_expr }
-@
-
-<<type Typedtree.pattern_desc (./typing/typedtree.ml)>>=
-and pattern_desc =
-    Tpat_any
-  | Tpat_var of Ident.t
-  | Tpat_alias of pattern * Ident.t
-  | Tpat_constant of constant
-  | Tpat_tuple of pattern list
-  | Tpat_construct of constructor_description * pattern list
-  | Tpat_record of (label_description * pattern) list
-  | Tpat_or of pattern * pattern
-@
-
-<<type Typedtree.expression (./typing/typedtree.ml)>>=
-type expression =
-  { exp_desc: expression_desc;
-    exp_loc: Location.t;
-    exp_type: type_expr }
-@
-
-<<type Typedtree.expression_desc (./typing/typedtree.ml)>>=
-and expression_desc =
-    Texp_ident of Path.t * value_description
-  | Texp_constant of constant
-  | Texp_let of rec_flag * (pattern * expression) list * expression
-  | Texp_function of (pattern * expression) list
-  | Texp_apply of expression * expression list
-  | Texp_match of expression * (pattern * expression) list
-  | Texp_try of expression * (pattern * expression) list
-  | Texp_tuple of expression list
-  | Texp_construct of constructor_description * expression list
-  | Texp_record of (label_description * expression) list
-  | Texp_field of expression * label_description
-  | Texp_setfield of expression * label_description * expression
-  | Texp_array of expression list
-  | Texp_ifthenelse of expression * expression * expression option
-  | Texp_sequence of expression * expression
-  | Texp_while of expression * expression
-  | Texp_for of
-      Ident.t * expression * expression * direction_flag * expression
-  | Texp_when of expression * expression
-@
-
-<<type Typedtree.module_expr (./typing/typedtree.ml)>>=
-type module_expr =
-  { mod_desc: module_expr_desc;
-    mod_loc: Location.t;
-    mod_type: module_type }
-@
-
-<<type Typedtree.module_expr_desc (./typing/typedtree.ml)>>=
-and module_expr_desc =
-    Tmod_ident of Path.t
-  | Tmod_structure of structure
-  | Tmod_constraint of module_expr * module_type * module_coercion
-@
-
-<<type Typedtree.structure (./typing/typedtree.ml)>>=
-and structure = structure_item list
-@
-
-<<type Typedtree.structure_item (./typing/typedtree.ml)>>=
-and structure_item =
-    Tstr_eval of expression
-  | Tstr_value of rec_flag * (pattern * expression) list
-  | Tstr_primitive of Ident.t * value_description
-  | Tstr_type of (Ident.t * type_declaration) list
-  | Tstr_exception of Ident.t * exception_declaration
-  | Tstr_module of Ident.t * module_expr
-  | Tstr_open of Path.t
-@
-
-<<type Typedtree.module_coercion (./typing/typedtree.ml)>>=
-and module_coercion =
-    Tcoerce_none
-  | Tcoerce_structure of (int * module_coercion) list
-  | Tcoerce_functor of module_coercion * module_coercion
-  | Tcoerce_primitive of Primitive.description
-@
 
 <<constant Typedtree.idents>>=
 (* List the identifiers bound by a pattern or a let *)
@@ -3810,26 +3245,26 @@ open Types
 
 (* Value expressions for the core language *)
 
-<<type Typedtree.pattern (./typing/typedtree.ml)>>
+<<type Typedtree.pattern>>
 
-<<type Typedtree.pattern_desc (./typing/typedtree.ml)>>
+<<type Typedtree.pattern_desc>>
 
-<<type Typedtree.expression (./typing/typedtree.ml)>>
+<<type Typedtree.expression>>
 
-<<type Typedtree.expression_desc (./typing/typedtree.ml)>>
+<<type Typedtree.expression_desc>>
 
 
 (* Value expressions for the module language *)
 
-<<type Typedtree.module_expr (./typing/typedtree.ml)>>
+<<type Typedtree.module_expr>>
 
-<<type Typedtree.module_expr_desc (./typing/typedtree.ml)>>
+<<type Typedtree.module_expr_desc>>
 
-<<type Typedtree.structure (./typing/typedtree.ml)>>
+<<type Typedtree.structure>>
 
-<<type Typedtree.structure_item (./typing/typedtree.ml)>>
+<<type Typedtree.structure_item>>
 
-<<type Typedtree.module_coercion (./typing/typedtree.ml)>>
+<<type Typedtree.module_coercion>>
 
 (* Auxiliary functions over the a.s.t. *)
 
@@ -3864,10 +3299,6 @@ val reset_def: unit -> unit
         (* Reset (to 0) the variable level *)
 @
 
-<<signature Ctype.newvar>>=
-val newvar: unit -> type_expr
-        (* Return a fresh variable *)
-@
 
 <<signature Ctype.new_global_var>>=
 val new_global_var: unit -> type_expr
@@ -3971,9 +3402,6 @@ val substitute:
            by the [ti]. *)
 @
 
-<<exception Ctype.Unify>>=
-exception Unify
-@
 
 <<signature Ctype.newty>>=
 val newty: 'a -> 'a
@@ -4036,9 +3464,6 @@ open Types
 
 \subsection*{[[./typing/ctype.ml]]}
 
-<<exception Ctype.Unify (./typing/ctype.ml)>>=
-exception Unify
-@
 
 <<constant Ctype.current_level>>=
 let current_level = ref 0
@@ -4421,7 +3846,7 @@ open Misc
 open Path
 open Types
 
-<<exception Ctype.Unify (./typing/ctype.ml)>>
+<<exception Ctype.Unify>>
 
 <<constant Ctype.current_level>>
 
@@ -5287,13 +4712,7 @@ and signature_item = function
 
 \subsection*{[[./typing/parmatch.mli]]}
 
-<<signature Parmatch.check_partial>>=
-val check_partial: Location.t -> (pattern * expression) list -> unit
-@
 
-<<signature Parmatch.check_unused>>=
-val check_unused: (pattern * expression) list -> unit
-@
 
 
 %-------------------------------------------------------------
@@ -5693,12 +5112,6 @@ and le_pats ps qs =
 
 \subsection*{[[./typing/typetexp.mli]]}
 
-<<signature Typetexp.transl_simple_type>>=
-(* Typechecking of type expressions for the core language *)
-
-val transl_simple_type:
-        Env.t -> bool -> Parsetree.core_type -> Types.type_expr
-@
 
 <<signature Typetexp.transl_type_scheme>>=
 val transl_type_scheme:
@@ -5766,20 +5179,6 @@ val report_error: error -> unit
 
 \subsection*{[[./typing/typetexp.ml]]}
 
-<<exception Typetexp.Already_bound (./typing/typetexp.ml)>>=
-exception Already_bound
-@
-
-<<type Typetexp.error (./typing/typetexp.ml)>>=
-type error =
-    Unbound_type_variable of string
-  | Unbound_type_constructor of Longident.t
-  | Type_arity_mismatch of Longident.t * int * int
-@
-
-<<exception Typetexp.Error (./typing/typetexp.ml)>>=
-exception Error of Location.t * error
-@
 
 <<constant Typetexp.type_variables>>=
 (* Translation of type expressions *)
@@ -5883,11 +5282,11 @@ open Parsetree
 open Types
 open Ctype
 
-<<exception Typetexp.Already_bound (./typing/typetexp.ml)>>
+<<exception Typetexp.Already_bound>>
 
-<<type Typetexp.error (./typing/typetexp.ml)>>
+<<type Typetexp.error>>
 
-<<exception Typetexp.Error (./typing/typetexp.ml)>>
+<<exception Typetexp.Error>>
 
 <<constant Typetexp.type_variables>>
 
@@ -5978,21 +5377,6 @@ open Typedtree
 
 \subsection*{[[./typing/includemod.ml]]}
 
-<<type Includemod.error (./typing/includemod.ml)>>=
-type error =
-    Missing_field of Ident.t
-  | Value_descriptions of Ident.t * value_description * value_description
-  | Type_declarations of Ident.t * type_declaration * type_declaration
-  | Exception_declarations of
-      Ident.t * exception_declaration * exception_declaration
-  | Module_types of module_type * module_type
-  | Modtype_permutation
-  | Interface_mismatch of string * string
-@
-
-<<exception Includemod.Error (./typing/includemod.ml)>>=
-exception Error of error list
-@
 
 <<function Includemod.value_descriptions>>=
 (* Inclusion between value descriptions *)
@@ -6185,9 +5569,9 @@ open Types
 open Typedtree
 
 
-<<type Includemod.error (./typing/includemod.ml)>>
+<<type Includemod.error>>
 
-<<exception Includemod.Error (./typing/includemod.ml)>>
+<<exception Includemod.Error>>
 
 (* All functions "blah env x1 x2" check that x1 is included in x2,
    i.e. that x1 is the type of an implementation that fulfills the
@@ -6333,21 +5717,8 @@ open Printtyp
 
 \subsection*{[[./typing/typedecl.mli]]}
 
-<<signature Typedecl.transl_type_decl>>=
-val transl_type_decl:
-        Env.t -> (string * Parsetree.type_declaration) list ->
-                                  (Ident.t * type_declaration) list * Env.t
-@
 
-<<signature Typedecl.transl_exception>>=
-val transl_exception:
-        Env.t -> Parsetree.exception_declaration -> exception_declaration
-@
 
-<<signature Typedecl.transl_value_decl>>=
-val transl_value_decl:
-        Env.t -> Parsetree.value_description -> value_description
-@
 
 <<signature Typedecl.transl_with_constraint>>=
 val transl_with_constraint:
@@ -6411,19 +5782,6 @@ open Typedtree
 
 \subsection*{[[./typing/typedecl.ml]]}
 
-<<type Typedecl.error (./typing/typedecl.ml)>>=
-type error =
-    Repeated_parameter
-  | Duplicate_constructor of string
-  | Too_many_constructors
-  | Duplicate_label of string
-  | Recursive_abbrev of string
-  | Definition_mismatch of type_expr
-@
-
-<<exception Typedecl.Error (./typing/typedecl.ml)>>=
-exception Error of Location.t * error
-@
 
 <<function Typedecl.enter_types>>=
 (* Enter all declared types in the environment as abstract types *)
@@ -6641,9 +5999,9 @@ open Typedtree
 open Typetexp
 
 
-<<type Typedecl.error (./typing/typedecl.ml)>>
+<<type Typedecl.error>>
 
-<<exception Typedecl.Error (./typing/typedecl.ml)>>
+<<exception Typedecl.Error>>
 
 <<function Typedecl.enter_types>>
 
@@ -6674,17 +6032,7 @@ open Format
 
 \subsection*{[[./typing/typecore.mli]]}
 
-<<signature Typecore.type_binding>>=
-val type_binding:
-        Env.t -> rec_flag ->
-          (Parsetree.pattern * Parsetree.expression) list -> 
-            (Typedtree.pattern * Typedtree.expression) list * Env.t
-@
 
-<<signature Typecore.type_expression>>=
-val type_expression:
-        Env.t -> Parsetree.expression -> Typedtree.expression
-@
 
 <<type Typecore.error>>=
 type error =
@@ -6747,37 +6095,7 @@ open Types
 
 \subsection*{[[./typing/typecore.ml]]}
 
-<<type Typecore.error (./typing/typecore.ml)>>=
-type error =
-    Unbound_value of Longident.t
-  | Unbound_constructor of Longident.t
-  | Unbound_label of Longident.t
-  | Constructor_arity_mismatch of Longident.t * int * int
-  | Label_mismatch of Longident.t * type_expr * type_expr
-  | Pattern_type_clash of type_expr * type_expr
-  | Multiply_bound_variable
-  | Orpat_not_closed
-  | Expr_type_clash of type_expr * type_expr
-  | Apply_non_function of type_expr
-  | Label_multiply_defined of Longident.t
-  | Label_missing
-  | Label_not_mutable of Longident.t
-  | Bad_format of string
-@
 
-<<exception Typecore.Error (./typing/typecore.ml)>>=
-exception Error of Location.t * error
-@
-
-<<function Typecore.type_constant>>=
-(* Typing of constants *)
-
-let type_constant = function
-    Const_int _ -> Predef.type_int
-  | Const_char _ -> Predef.type_char
-  | Const_string _ -> Predef.type_string
-  | Const_float _ -> Predef.type_float
-@
 
 <<function Typecore.unify_pat>>=
 (* Typing of patterns *)
@@ -6939,50 +6257,6 @@ let rec is_nonexpansive exp =
   | _ -> false
 @
 
-<<function Typecore.type_format>>=
-(* Typing of printf formats *)
-
-let type_format loc fmt =
-  let len = String.length fmt in
-  let ty_input = newvar()
-  and ty_result = newvar() in
-  let rec skip_args j =
-    if j >= len then j else
-      match fmt.[j] with
-        '0' .. '9' | ' ' | '.' | '-' -> skip_args (j+1)
-      | _ -> j in
-  let rec scan_format i =
-    if i >= len then ty_result else
-    match fmt.[i] with
-      '%' ->
-        let j = skip_args(i+1) in
-        begin match String.unsafe_get fmt j with
-        (* We're using unsafe_get here so that if j = String.length fmt,
-           we'll fall in the catch-all case of the match *)
-          '%' ->
-            scan_format (j+1)
-        | 's' ->
-            Tarrow(Predef.type_string, scan_format (j+1))
-        | 'c' ->
-            Tarrow(Predef.type_char, scan_format (j+1))
-        | 'd' | 'o' | 'x' | 'X' | 'u' ->
-            Tarrow(Predef.type_int, scan_format (j+1))
-        | 'f' | 'e' | 'E' | 'g' | 'G' ->
-            Tarrow(Predef.type_float, scan_format (j+1))
-        | 'b' ->
-            Tarrow(Predef.type_bool, scan_format (j+1))
-        | 'a' ->
-            let ty_arg = newvar() in
-            Tarrow (Tarrow(ty_input, Tarrow (ty_arg, ty_result)),
-                    Tarrow (ty_arg, scan_format (j+1)))
-        | 't' ->
-            Tarrow(Tarrow(ty_input, ty_result), scan_format (j+1))
-        | c ->
-            raise(Error(loc, Bad_format(String.sub fmt i (j-i))))
-        end
-    | _ -> scan_format (i+1) in
-  Tconstr(Predef.path_format, [scan_format 0; ty_input; ty_result])
-@
 
 <<function Typecore.unify_exp>>=
 (* Typing of expressions *)
@@ -7104,9 +6378,9 @@ open Typedtree
 open Ctype
 
 
-<<type Typecore.error (./typing/typecore.ml)>>
+<<type Typecore.error>>
 
-<<exception Typecore.Error (./typing/typecore.ml)>>
+<<exception Typecore.Error>>
 
 <<function Typecore.type_constant>>
 
@@ -7428,15 +6702,7 @@ open Printtyp
 
 \subsection*{[[./typing/typemod.mli]]}
 
-<<signature Typemod.type_structure>>=
-val type_structure:
-        Env.t -> Parsetree.structure -> structure * signature * Env.t
-@
 
-<<signature Typemod.transl_signature>>=
-val transl_signature:
-        Env.t -> Parsetree.signature -> signature
-@
 
 <<signature Typemod.check_nongen_schemes>>=
 val check_nongen_schemes:
@@ -7501,23 +6767,6 @@ open Typedtree
 
 \subsection*{[[./typing/typemod.ml]]}
 
-<<type Typemod.error (./typing/typemod.ml)>>=
-type error =
-    Unbound_module of Longident.t
-  | Unbound_modtype of Longident.t
-  | Cannot_apply of module_type
-  | Not_included of Includemod.error list
-  | Cannot_eliminate_dependency of module_type
-  | Signature_expected
-  | Structure_expected of module_type
-  | With_no_component of Longident.t
-  | Repeated_name of string * string
-  | Non_generalizable of type_expr
-@
-
-<<exception Typemod.Error (./typing/typemod.ml)>>=
-exception Error of Location.t * error
-@
 
 <<function Typemod.extract_sig>>=
 (* Extract a signature from a module type *)
@@ -7674,9 +6923,9 @@ open Types
 open Typedtree
 
 
-<<type Typemod.error (./typing/typemod.ml)>>
+<<type Typemod.error>>
 
-<<exception Typemod.Error (./typing/typemod.ml)>>
+<<exception Typemod.Error>>
 
 <<function Typemod.extract_sig>>
 
