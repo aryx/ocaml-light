@@ -15,6 +15,7 @@
 
 open Misc
 open Asttypes
+open Types
 open Typedtree
 
 

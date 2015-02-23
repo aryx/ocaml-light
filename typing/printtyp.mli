@@ -12,7 +12,7 @@
 (* $Id$ *)
 
 (* Printing functions *)
-
+open Types
 open Typedtree
 
 val longident: Longident.t -> unit

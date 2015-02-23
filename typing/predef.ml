@@ -14,7 +14,7 @@
 (* Predefined type constructors (with special typing rules in typecore) *)
 
 open Path
-open Typedtree
+open Types
 
 
 let ident_int = Ident.create "int"

@@ -14,11 +14,11 @@
 (* Typechecking of type expressions for the core language *)
 
 val transl_simple_type:
-        Env.t -> bool -> Parsetree.core_type -> Typedtree.type_expr
+        Env.t -> bool -> Parsetree.core_type -> Types.type_expr
 val transl_type_scheme:
-        Env.t -> Parsetree.core_type -> Typedtree.type_expr
+        Env.t -> Parsetree.core_type -> Types.type_expr
 val reset_type_variables: unit -> unit
-val enter_type_variable: string -> Typedtree.type_expr
+val enter_type_variable: string -> Types.type_expr
 
 exception Already_bound
 

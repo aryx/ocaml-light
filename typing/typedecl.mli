@@ -13,6 +13,7 @@
 
 (* Typing of type definitions and primitive definitions *)
 
+open Types
 open Typedtree
 
 val transl_type_decl:

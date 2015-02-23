@@ -17,6 +17,7 @@ open Format
 open Longident
 open Path
 open Asttypes
+open Types
 open Typedtree
 
 
