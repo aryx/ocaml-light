@@ -70,6 +70,7 @@ let rec generalize ty =
   match repr ty with
     Tvar v ->
       if v.tvar_level > !current_level then v.tvar_level <- generic_level
+  (* boilerplate *)
   | Tarrow(t1, t2) ->
       generalize t1; generalize t2
   | Ttuple tl ->
@@ -85,6 +86,7 @@ let rec make_nongen ty =
   match repr ty with
     Tvar v ->
       if v.tvar_level > !current_level then v.tvar_level <- !current_level
+  (* boilerplate *)
   | Tarrow(t1, t2) ->
       make_nongen t1; make_nongen t2
   | Ttuple tl ->
@@ -113,6 +115,7 @@ let rec copy ty =
           inst_subst := (t, t') :: !inst_subst;
           t'
       end else t
+  (* boilerplate *)
   | Tarrow(t1, t2) ->
       Tarrow(copy t1, copy t2)
   | Ttuple tl ->
@@ -190,6 +193,7 @@ let rec occur tvar ty =
       List.iter (occur tvar) tl
 (*e: function Ctype.occur *)
 
+(*s: function Ctype.unify *)
 let rec unify env t1 t2 =
   if t1 == t2 then () else begin
     let t1 = repr t1 in
@@ -238,6 +242,7 @@ and unify_list env tl1 tl2 =
     ([], []) -> ()
   | (t1::r1, t2::r2) -> unify env t1 t2; unify_list env r1 r2
   | (_, _) -> raise Unify
+(*e: function Ctype.unify *)
 
 (*s: function Ctype.filter_arrow *)
 let rec filter_arrow env t =
@@ -468,10 +473,4 @@ let rec arity ty =
   | _ -> 0
 (*e: function Ctype.arity *)
 
-(*s: function Ctype.newty *)
-let newty x = x
-(*e: function Ctype.newty *)
-(*s: function Ctype.init_def *)
-let init_def _ = ()
-(*e: function Ctype.init_def *)
 (*e: ./typing/ctype.ml *)

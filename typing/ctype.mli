@@ -121,10 +121,4 @@ val substitute:
 exception Unify
 (*e: exception Ctype.Unify *)
 
-(*s: signature Ctype.newty *)
-val newty: 'a -> 'a
-(*e: signature Ctype.newty *)
-(*s: signature Ctype.init_def *)
-val init_def: 'a -> unit
-(*e: signature Ctype.init_def *)
 (*e: ./typing/ctype.mli *)

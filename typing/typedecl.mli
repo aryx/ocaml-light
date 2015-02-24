@@ -31,12 +31,7 @@ val transl_exception:
 val transl_value_decl:
         Env.t -> Parsetree.value_description -> Types.value_description
 (*e: signature Typedecl.transl_value_decl *)
-
-(*s: signature Typedecl.transl_with_constraint *)
-val transl_with_constraint:
-        Env.t -> Parsetree.type_declaration -> type_declaration
-(*e: signature Typedecl.transl_with_constraint *)
-    
+   
 (*s: type Typedecl.error *)
 type error =
     Repeated_parameter

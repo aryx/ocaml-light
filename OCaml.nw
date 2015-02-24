@@ -2430,6 +2430,20 @@ type t =
 
 % diff with core_type?
 
+<<signature Ctype.repr>>=
+val repr: type_expr -> type_expr
+        (* Return the canonical representative of a type. *)
+@
+
+<<function Ctype.repr>>=
+let rec repr = function
+    Tvar({tvar_link = Some ty} as v) ->
+      let r = repr ty in
+      if r != ty then v.tvar_link <- Some r;
+      r
+  | t -> t
+@
+
 
 \section{The typed AST}
 
@@ -2851,7 +2865,7 @@ and structure_components = {
   mutable comp_values     : (string, (Types.value_description * int)) Tbl.t;
   mutable comp_types      : (string, (Types.type_declaration * int))  Tbl.t;
   mutable comp_modules    : (string, (Types.module_type * int))       Tbl.t;
-  mutable comp_components : (string, (module_components * int))       Tbl.t
+  mutable comp_components : (string, (module_components * int))       Tbl.t;
 
   mutable comp_constrs    : (string, (constructor_description * int)) Tbl.t;
   mutable comp_labels     : (string, (label_description * int))       Tbl.t;
@@ -3349,10 +3363,92 @@ val open_pers_signature: string -> t -> t
 
 \section{Unification}
 
+<<signature Ctype.unify>>=
+val unify: Env.t -> type_expr -> type_expr -> unit
+        (* Unify the two types given. Raise [Unify] if not possible. *)
+@
+
+
 <<exception Ctype.Unify>>=
 exception Unify
 @
 %new: exception Unify of (type_expr * type_expr) list
+
+
+<<function Ctype.occur>>=
+let rec occur tvar ty =
+  match repr ty with
+    Tvar v ->
+      if v == tvar then raise Unify;
+      if v.tvar_level > tvar.tvar_level then v.tvar_level <- tvar.tvar_level
+  | Tarrow(t1, t2) ->
+      occur tvar t1; occur tvar t2
+  | Ttuple tl ->
+      List.iter (occur tvar) tl
+  | Tconstr(p, []) ->
+      ()
+  | Tconstr(p, tl) ->
+      List.iter (occur tvar) tl
+@
+% ==, physical equality
+
+
+<<function Ctype.unify>>=
+let rec unify env t1 t2 =
+  if t1 == t2 then () else begin
+    let t1 = repr t1 in
+    let t2 = repr t2 in
+    if t1 == t2 then () else begin
+      match (t1, t2) with
+        (Tvar v, _) ->
+          occur v t2; v.tvar_link <- Some t2
+      | (_, Tvar v) ->
+          occur v t1; v.tvar_link <- Some t1
+      | (Tarrow(t1, u1), Tarrow(t2, u2)) ->
+          unify env t1 t2; unify env u1 u2
+      | (Ttuple tl1, Ttuple tl2) ->
+          unify_list env tl1 tl2
+      | (Tconstr(p1, tl1), Tconstr(p2, tl2)) ->
+          if Path.same p1 p2 then
+            unify_list env tl1 tl2
+          else begin
+            try
+              unify env (expand_abbrev env p1 tl1) t2
+            with Cannot_expand ->
+            try
+              unify env t1 (expand_abbrev env p2 tl2)
+            with Cannot_expand ->
+              raise Unify
+          end
+      | (Tconstr(p1, tl1), _) ->
+          begin try
+            unify env (expand_abbrev env p1 tl1) t2
+          with Cannot_expand ->
+            raise Unify
+          end
+      | (_, Tconstr(p2, tl2)) ->
+          begin try
+            unify env t1 (expand_abbrev env p2 tl2)
+          with Cannot_expand ->
+            raise Unify
+          end
+      | (_, _) ->
+          raise Unify
+    end
+  end
+
+and unify_list env tl1 tl2 =
+  match (tl1, tl2) with
+    ([], []) -> ()
+  | (t1::r1, t2::r2) -> unify env t1 t2; unify_list env r1 r2
+  | (_, _) -> raise Unify
+@
+
+
+\section{Typing}
+
+% string -> Ident.t
+% Parsetree.xxx -> Types.xxx or Typedtree.xxx
 
 
 <<signature Ctype.newvar>>=
@@ -3360,10 +3456,34 @@ val newvar: unit -> type_expr
         (* Return a fresh variable *)
 @
 
-\section{Typing}
 
-% string -> Ident.t
-% Parsetree.xxx -> Types.xxx or Typedtree.xxx
+<<function Ctype.newvar>>=
+let newvar () =
+  Tvar { tvar_level = !current_level; tvar_link = None }
+@
+
+
+
+<<constant Ctype.current_level>>=
+let current_level = ref 0
+@
+
+<<constant Ctype.generic_level>>=
+let generic_level = (-1)
+@
+
+<<function Ctype.reset_def>>=
+let reset_def () = current_level := 0
+@
+
+<<function Ctype.begin_def>>=
+let begin_def () = incr current_level
+@
+
+<<function Ctype.end_def>>=
+let end_def () = decr current_level
+@
+
 
 \subsection{Type expressions}
 
@@ -3374,6 +3494,73 @@ val transl_simple_type:
         Env.t -> bool -> Parsetree.core_type -> Types.type_expr
 @
 % bool?
+
+
+
+<<constant Typetexp.type_variables>>=
+(* Translation of type expressions *)
+
+let type_variables = ref (Tbl.empty : (string, Types.type_expr) Tbl.t)
+@
+% exported because used in typedecl too
+<<signature Typetexp.reset_type_variables>>=
+val reset_type_variables: unit -> unit
+@
+<<signature Typetexp.enter_type_variable>>=
+val enter_type_variable: string -> Types.type_expr
+@
+<<exception Typetexp.Already_bound>>=
+exception Already_bound
+@
+<<function Typetexp.reset_type_variables>>=
+let reset_type_variables () =
+  type_variables := Tbl.empty
+@
+<<function Typetexp.enter_type_variable>>=
+let enter_type_variable name =
+  try
+    Tbl.find name !type_variables; raise Already_bound
+  with Not_found ->
+    let v = new_global_var() in
+    type_variables := Tbl.add name v !type_variables;
+    v
+@
+%todo: boilerplate again? could factorize code?
+
+<<function Typetexp.transl_simple_type>>=
+let rec transl_simple_type env fixed styp =
+  match styp.ptyp_desc with
+    Ptyp_var name ->
+      begin try
+        Tbl.find name !type_variables
+      with Not_found ->
+        if fixed then
+          raise(Error(styp.ptyp_loc, Unbound_type_variable name))
+        else begin
+          let v = new_global_var() in
+          type_variables := Tbl.add name v !type_variables;
+          v
+        end
+      end
+  | Ptyp_arrow(st1, st2) ->
+      Tarrow(transl_simple_type env fixed st1,
+             transl_simple_type env fixed st2)
+  | Ptyp_tuple stl ->
+      Ttuple(List.map (transl_simple_type env fixed) stl)
+  | Ptyp_constr(lid, stl) ->
+      let (path, decl) =
+        try
+          Env.lookup_type lid env
+        with Not_found ->
+          raise(Error(styp.ptyp_loc, Unbound_type_constructor lid)) in
+      if List.length stl <> decl.type_arity then
+        raise(Error(styp.ptyp_loc, Type_arity_mismatch(lid, decl.type_arity,
+                                                           List.length stl)));
+      Tconstr(path, List.map (transl_simple_type env fixed) stl)
+@
+
+
+
 
 \subsection{Type declarations}
 
@@ -3394,6 +3581,147 @@ val transl_value_decl:
         Env.t -> Parsetree.value_description -> Types.value_description
 @
 
+
+
+<<function Typedecl.transl_type_decl>>=
+(* Translate a set of mutually recursive type declarations *)
+
+let transl_type_decl env name_sdecl_list =
+  Ctype.reset_def();
+  let decls =
+    match name_sdecl_list with
+      [(name, {ptype_kind = Ptype_abstract}) as name_sdecl] ->
+        (* No recursion involved, use original env for translation *)
+        let id = Ident.create name in
+        [transl_declaration env name_sdecl id]
+    | _ ->
+        (* Enter the types as abstract *)
+        let (id_list, temp_env) = enter_types env name_sdecl_list in
+        (* Translate each declaration *)
+        List.map2 (transl_declaration temp_env) name_sdecl_list id_list in
+  (* Build the final env *)
+  let newenv =
+    List.fold_right
+      (fun (id, decl) env -> Env.add_type id decl env)
+      decls env in
+  (* Check for recursive abbrevs *)
+  List.iter2 (check_recursive_abbrev newenv) name_sdecl_list decls;
+  (* Done *)
+  (decls, newenv)
+@
+
+<<function Typedecl.transl_declaration>>=
+let transl_declaration env (name, sdecl) id =
+  Ctype.begin_def();
+  reset_type_variables();
+  let params =
+    try
+      List.map enter_type_variable sdecl.ptype_params
+    with Already_bound ->
+      raise(Error(sdecl.ptype_loc, Repeated_parameter)) in
+  let decl =
+    { type_params = params;
+      type_arity = List.length params;
+      type_kind =
+        begin match sdecl.ptype_kind with
+          Ptype_abstract ->
+            Type_abstract
+        | Ptype_variant cstrs ->
+            let all_constrs = ref StringSet.empty in
+            List.iter
+              (fun (name, args) ->
+                if StringSet.mem name !all_constrs then
+                  raise(Error(sdecl.ptype_loc, Duplicate_constructor name));
+                all_constrs := StringSet.add name !all_constrs)
+              cstrs;
+            if List.length cstrs > Config.max_tag then
+              raise(Error(sdecl.ptype_loc, Too_many_constructors));
+            Type_variant(List.map
+              (fun (name, args) ->
+                      (name, List.map (transl_simple_type env true) args))
+              cstrs)
+        | Ptype_record lbls ->
+            let all_labels = ref StringSet.empty in
+            List.iter
+              (fun (name, mut, arg) ->
+                if StringSet.mem name !all_labels then
+                  raise(Error(sdecl.ptype_loc, Duplicate_label name));
+                all_labels := StringSet.add name !all_labels)
+              lbls;
+            Type_record(List.map
+              (fun (name, mut, arg) ->
+                      (name, mut, transl_simple_type env true arg))
+              lbls)
+        end;
+      type_manifest =
+        begin match sdecl.ptype_manifest with
+          None -> None
+        | Some sty -> Some(transl_simple_type env true sty)
+        end } in
+  Ctype.end_def();
+  List.iter Ctype.generalize params;
+  (* If both a variant/record definition and a type equation are given,
+     need to check that the equation refers to a type of the same kind
+     with the same constructors and labels *)
+  begin match decl with
+    {type_kind = (Type_variant _ | Type_record _); type_manifest = Some ty} ->
+      begin match ty with
+        Tconstr(path, args) ->
+          begin try
+            let decl' = Env.find_type path env in
+            if args = params & Includecore.type_declarations env id decl decl'
+            then ()
+            else raise(Error(sdecl.ptype_loc, Definition_mismatch ty))
+          with Not_found ->
+            raise(Error(sdecl.ptype_loc, Definition_mismatch ty))
+          end
+      | _ -> raise(Error(sdecl.ptype_loc, Definition_mismatch ty))
+      end
+  | _ -> ()
+  end;
+  (id, decl)
+@
+
+
+<<function Typedecl.enter_types>>=
+(* Enter all declared types in the environment as abstract types *)
+
+let rec enter_types env = function
+    [] ->
+      ([], env)
+  | (name, sdecl) :: srem ->
+      let decl =
+        { type_params = []; (*this field is unused when kind = Type_abstract*)
+          type_arity = List.length sdecl.ptype_params;
+          type_kind = Type_abstract;
+          type_manifest = None } in
+      let (id, extenv) = Env.enter_type name decl env in
+      let (rem_id, final_env) = enter_types extenv srem in
+      (id :: rem_id, final_env)
+@
+
+
+<<function Typedecl.transl_exception>>=
+(* Translate an exception declaration *)
+
+let transl_exception env excdecl =
+  Ctype.reset_def();
+  reset_type_variables();
+  List.map (transl_simple_type env true) excdecl
+@
+
+
+<<function Typedecl.transl_value_decl>>=
+(* Translate a value declaration *)
+
+let transl_value_decl env valdecl =
+  Ctype.reset_def();
+  let ty = Typetexp.transl_type_scheme env valdecl.pval_type in
+  { val_type = ty;
+    val_prim = Primitive.parse_declaration (Ctype.arity ty) valdecl.pval_prim }
+@
+
+
 \subsection{Expressions}
 
 
@@ -3412,6 +3740,305 @@ val type_binding:
 @
 
 
+
+<<function Typecore.type_expression>>=
+(* Typing of toplevel expressions *)
+
+let type_expression env sexp =
+  reset_def();
+  Typetexp.reset_type_variables();
+  begin_def();
+  let exp = type_exp env sexp in
+  end_def();
+  if is_nonexpansive exp 
+  then generalize exp.exp_type;
+  exp
+@
+
+<<function Typecore.type_exp>>=
+let rec type_exp env sexp =
+  match sexp.pexp_desc with
+    Pexp_ident lid ->
+      begin try
+        let (path, desc) = Env.lookup_value lid env in
+        { exp_desc = Texp_ident(path, desc);
+          exp_loc = sexp.pexp_loc;
+          exp_type = instance desc.val_type }
+      with Not_found ->
+        raise(Error(sexp.pexp_loc, Unbound_value lid))
+      end
+  | Pexp_constant cst ->
+      { exp_desc = Texp_constant cst;
+        exp_loc = sexp.pexp_loc;
+        exp_type = type_constant cst }
+  | Pexp_let(rec_flag, spat_sexp_list, sbody) ->
+      let (pat_exp_list, new_env) = type_let env rec_flag spat_sexp_list in
+      let body = type_exp new_env sbody in
+      { exp_desc = Texp_let(rec_flag, pat_exp_list, body);
+        exp_loc = sexp.pexp_loc;
+        exp_type = body.exp_type }
+  | Pexp_function caselist ->
+      let ty_arg = newvar() and ty_res = newvar() in
+      let cases = type_cases env ty_arg ty_res caselist in
+      Parmatch.check_unused cases;
+      Parmatch.check_partial sexp.pexp_loc cases;
+      { exp_desc = Texp_function cases;
+        exp_loc = sexp.pexp_loc;
+        exp_type = Tarrow(ty_arg, ty_res) }
+  | Pexp_apply(sfunct, sargs) ->
+      let funct = type_exp env sfunct in
+      let rec type_args ty_fun = function
+        [] ->
+          ([], ty_fun)
+      | sarg1 :: sargl ->
+          let (ty1, ty2) =
+            try
+              filter_arrow env ty_fun
+            with Unify ->
+              raise(Error(sfunct.pexp_loc,
+                          Apply_non_function funct.exp_type)) in
+          let arg1 = type_expect env sarg1 ty1 in
+          let (argl, ty_res) = type_args ty2 sargl in
+          (arg1 :: argl, ty_res) in
+      let (args, ty_res) = type_args funct.exp_type sargs in
+      { exp_desc = Texp_apply(funct, args);
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty_res }
+  | Pexp_match(sarg, caselist) ->
+      let arg = type_exp env sarg in
+      let ty_res = newvar() in
+      let cases = type_cases env arg.exp_type ty_res caselist in
+      Parmatch.check_unused cases;
+      Parmatch.check_partial sexp.pexp_loc cases;
+      { exp_desc = Texp_match(arg, cases);
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty_res }
+  | Pexp_try(sbody, caselist) ->
+      let body = type_exp env sbody in
+      let cases = type_cases env Predef.type_exn body.exp_type caselist in
+      Parmatch.check_unused cases;
+      { exp_desc = Texp_try(body, cases);
+        exp_loc = sexp.pexp_loc;
+        exp_type = body.exp_type }
+  | Pexp_tuple sexpl ->
+      let expl = List.map (type_exp env) sexpl in
+      { exp_desc = Texp_tuple expl;
+        exp_loc = sexp.pexp_loc;
+        exp_type = Ttuple(List.map (fun exp -> exp.exp_type) expl) }
+  | Pexp_construct(lid, sarg) ->
+      let constr =
+        try
+          Env.lookup_constructor lid env
+        with Not_found ->
+          raise(Error(sexp.pexp_loc, Unbound_constructor lid)) in
+      let sargs =
+        match sarg with
+          None -> []
+        | Some {pexp_desc = Pexp_tuple sel} when constr.cstr_arity > 1 -> sel
+        | Some se -> [se] in
+      if List.length sargs <> constr.cstr_arity then
+        raise(Error(sexp.pexp_loc, Constructor_arity_mismatch(lid,
+                                       constr.cstr_arity, List.length sargs)));
+      let (ty_args, ty_res) = instance_constructor constr in
+      let args = List.map2 (type_expect env) sargs ty_args in
+      { exp_desc = Texp_construct(constr, args);
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty_res }
+  | Pexp_record lid_sexp_list ->
+      let ty = newvar() in
+      let num_fields = ref 0 in
+      let type_label_exp (lid, sarg) =
+        let label =
+          try
+            Env.lookup_label lid env
+          with Not_found ->
+            raise(Error(sexp.pexp_loc, Unbound_label lid)) in
+        let (ty_arg, ty_res) = instance_label label in
+        begin try
+          unify env ty_res ty
+        with Unify ->
+          raise(Error(sexp.pexp_loc, Label_mismatch(lid, ty_res, ty)))
+        end;
+        let arg = type_expect env sarg ty_arg in
+        num_fields := Array.length label.lbl_all;
+        (label, arg) in
+      let lbl_exp_list = List.map type_label_exp lid_sexp_list in
+      let rec check_duplicates = function
+        [] -> ()
+      | (lid, sarg) :: remainder ->
+          if List.mem_assoc lid remainder
+          then raise(Error(sexp.pexp_loc, Label_multiply_defined lid))
+          else check_duplicates remainder in
+      check_duplicates lid_sexp_list;
+      if List.length lid_sexp_list <> !num_fields then
+        raise(Error(sexp.pexp_loc, Label_missing));
+      { exp_desc = Texp_record lbl_exp_list;
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty }
+  | Pexp_field(sarg, lid) ->
+      let arg = type_exp env sarg in
+      let label =
+        try
+          Env.lookup_label lid env
+        with Not_found ->
+          raise(Error(sexp.pexp_loc, Unbound_label lid)) in
+      let (ty_arg, ty_res) = instance_label label in
+      unify_exp env arg ty_res;
+      { exp_desc = Texp_field(arg, label);
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty_arg }
+  | Pexp_setfield(srecord, lid, snewval) ->
+      let record = type_exp env srecord in
+      let label =
+        try
+          Env.lookup_label lid env
+        with Not_found ->
+          raise(Error(sexp.pexp_loc, Unbound_label lid)) in
+      if label.lbl_mut = Immutable then
+        raise(Error(sexp.pexp_loc, Label_not_mutable lid));
+      let (ty_arg, ty_res) = instance_label label in
+      unify_exp env record ty_res;
+      let newval = type_expect env snewval ty_arg in
+      { exp_desc = Texp_setfield(record, label, newval);
+        exp_loc = sexp.pexp_loc;
+        exp_type = Predef.type_unit }
+  | Pexp_array(sargl) ->
+      let ty = newvar() in
+      let argl = List.map (fun sarg -> type_expect env sarg ty) sargl in
+      { exp_desc = Texp_array argl;
+        exp_loc = sexp.pexp_loc;
+        exp_type = Predef.type_array ty }
+  | Pexp_ifthenelse(scond, sifso, sifnot) ->
+      let cond = type_expect env scond Predef.type_bool in
+      begin match sifnot with
+        None ->
+          let ifso = type_expect env sifso Predef.type_unit in
+          { exp_desc = Texp_ifthenelse(cond, ifso, None);
+            exp_loc = sexp.pexp_loc;
+            exp_type = Predef.type_unit }
+      | Some sexp ->
+          let ifso = type_exp env sifso in
+          let ifnot = type_expect env sexp ifso.exp_type in
+          { exp_desc = Texp_ifthenelse(cond, ifso, Some ifnot);
+            exp_loc = sexp.pexp_loc;
+            exp_type = ifso.exp_type }
+      end
+  | Pexp_sequence(sexp1, sexp2) ->
+      let exp1 = type_statement env sexp1 in
+      let exp2 = type_exp env sexp2 in
+      { exp_desc = Texp_sequence(exp1, exp2);
+        exp_loc = sexp.pexp_loc;
+        exp_type = exp2.exp_type }
+  | Pexp_while(scond, sbody) ->
+      let cond = type_expect env scond Predef.type_bool in
+      let body = type_statement env sbody in
+      { exp_desc = Texp_while(cond, body);
+        exp_loc = sexp.pexp_loc;
+        exp_type = Predef.type_unit }
+  | Pexp_for(param, slow, shigh, dir, sbody) ->
+      let low = type_expect env slow Predef.type_int in
+      let high = type_expect env shigh Predef.type_int in
+      let (id, new_env) =
+        Env.enter_value param {val_type = Predef.type_int;
+                                val_prim = None} env in
+      let body = type_statement new_env sbody in
+      { exp_desc = Texp_for(id, low, high, dir, body);
+        exp_loc = sexp.pexp_loc;
+        exp_type = Predef.type_unit }
+  | Pexp_constraint(sarg, sty) ->
+      let ty = Typetexp.transl_simple_type env false sty in
+      let arg = type_expect env sarg ty in
+      { exp_desc = arg.exp_desc;
+        exp_loc = arg.exp_loc;
+        exp_type = ty }
+  | Pexp_when(scond, sbody) ->
+      let cond = type_expect env scond Predef.type_bool in
+      let body = type_exp env sbody in
+      { exp_desc = Texp_when(cond, body);
+        exp_loc = sexp.pexp_loc;
+        exp_type = body.exp_type }
+      
+(* Typing of an expression with an expected type.
+   Some constructs are treated specially to provide better error messages. *)
+
+and type_expect env sexp ty_expected =
+  match sexp.pexp_desc with
+    Pexp_constant(Const_string s as cst) ->
+      let exp =
+        { exp_desc = Texp_constant cst;
+          exp_loc = sexp.pexp_loc;
+          exp_type =
+            (* Terrible hack for format strings *)
+            match Ctype.repr ty_expected with
+              Tconstr(path, _) when Path.same path Predef.path_format ->
+                type_format sexp.pexp_loc s
+            | _ -> Predef.type_string } in
+      unify_exp env exp ty_expected;
+      exp
+  | Pexp_let(rec_flag, spat_sexp_list, sbody) ->
+      let (pat_exp_list, new_env) = type_let env rec_flag spat_sexp_list in
+      let body = type_expect new_env sbody ty_expected in
+      { exp_desc = Texp_let(rec_flag, pat_exp_list, body);
+        exp_loc = sexp.pexp_loc;
+        exp_type = body.exp_type }
+  | Pexp_sequence(sexp1, sexp2) ->
+      let exp1 = type_statement env sexp1 in
+      let exp2 = type_expect env sexp2 ty_expected in
+      { exp_desc = Texp_sequence(exp1, exp2);
+        exp_loc = sexp.pexp_loc;
+        exp_type = exp2.exp_type }
+  | _ ->
+      let exp = type_exp env sexp in
+      unify_exp env exp ty_expected;
+      exp
+
+(* Typing of statements (expressions whose values are discarded) *)
+
+and type_statement env sexp =
+    let exp = type_exp env sexp in
+    match Ctype.repr exp.exp_type with
+      Tarrow(_, _) ->
+        Location.print_warning sexp.pexp_loc
+          "this function application is partial,\n\
+           maybe some arguments are missing.";
+        exp
+    | _ -> exp
+
+(* Typing of match cases *)
+
+and type_cases env ty_arg ty_res caselist =
+  List.map
+    (fun (spat, sexp) ->
+      let (pat, ext_env) = type_pattern env spat in
+      unify_pat env pat ty_arg;
+      let exp = type_expect ext_env sexp ty_res in
+      (pat, exp))
+    caselist
+
+(* Typing of let bindings *)
+
+and type_let env rec_flag spat_sexp_list =
+  begin_def();
+  let (pat_list, new_env) =
+    type_pattern_list env (List.map (fun (spat, sexp) -> spat) spat_sexp_list) in
+  let exp_env =
+    match rec_flag with Nonrecursive -> env | Recursive -> new_env in
+  let exp_list =
+    List.map2
+      (fun (spat, sexp) pat -> type_expect exp_env sexp pat.pat_type)
+      spat_sexp_list pat_list in
+  List.iter2
+    (fun pat exp -> Parmatch.check_partial pat.pat_loc [pat, exp])
+    pat_list exp_list;
+  end_def();
+  List.iter
+    (fun exp -> if not (is_nonexpansive exp) then make_nongen exp.exp_type)
+    exp_list;
+  List.iter
+    (fun exp -> generalize exp.exp_type)
+    exp_list;
+  (List.combine pat_list exp_list, new_env)
+@
 
 
 
@@ -3534,6 +4161,29 @@ let builtin_values =
 %      abbreviated.  It would be possible to check whether some
 %      information is indeed lost, but it probably does not worth it.
 
+<<function Ctype.expand_abbrev>>=
+let expand_abbrev env path args =
+  try
+    let decl = Env.find_type path env in
+    match decl.type_manifest with
+      Some body -> substitute decl.type_params args body
+    | None -> raise Cannot_expand
+  with Not_found ->
+    raise Cannot_expand
+@
+
+
+<<function Typedecl.check_recursive_abbrev>>=
+(* Check for recursive abbrevs *)
+
+let check_recursive_abbrev env (name, sdecl) (id, decl) =
+  match decl.type_manifest with
+    Some ty ->
+      if Ctype.free_type_ident env [id] ty
+      then raise(Error(sdecl.ptype_loc, Recursive_abbrev name))
+  | _ -> ()
+@
+
 \subsection{Printf}
 
 <<constants Predef.ident_xxx>>=
@@ -3605,7 +4255,10 @@ let type_format loc fmt =
 \chapter{Checking}
 
 \section{Interface/Implementation consistency}
+
 %includemod.ml
+
+%includecore.ml
 
 \section{Partial pattern matches}
 % parmatch.ml
@@ -5004,6 +5657,37 @@ and typlist sch prio sep = function
 @
 
 
+<<constant Printtyp.var_names>>=
+(* Print a type expression *)
+
+let var_names = ref ([] : (type_expr * string) list)
+@
+<<constant Printtyp.var_counter>>=
+let var_counter = ref 0
+@
+
+<<function Printtyp.reset_var_names>>=
+let reset_var_names () = 
+  var_names := []; 
+  var_counter := 0
+@
+
+<<function Printtyp.name_of_var>>=
+let name_of_var v =
+  try
+    List.assq v !var_names
+  with Not_found ->
+    let name = 
+      if !var_counter < 26
+      then String.make 1 (Char.chr(97 + !var_counter)) 
+      else String.make 1 (Char.chr(97 + !var_counter mod 26)) ^
+           string_of_int(!var_counter / 26) in
+    var_names := (v, name) :: !var_names;
+    incr var_counter;
+    name
+@
+
+
 
 \subsubsection{Expressions}
 
@@ -5023,6 +5707,12 @@ let value_description id decl =
   | Some p -> print_space(); print_string "= "; Primitive.print_description p
   end;
   close_box()
+@
+
+<<function Printtyp.type_scheme>>=
+and type_scheme ty = 
+  reset_var_names(); 
+  typexp true 0 ty
 @
 
 \subsubsection{Type declarations}
