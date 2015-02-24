@@ -172,7 +172,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token OR
 %token PARSER
 %token <string> PREFIXOP
-%token QUESTION
 %token QUOTE
 %token RBRACE
 %token RBRACKET
@@ -517,10 +516,6 @@ fun_binding:
 opt_pat:
     /* empty */                                 { None }
   | simple_pattern                              { Some $1 }
-;
-opt_err:
-    /* empty */                                 { None }
-  | QUESTION expr %prec prec_list               { Some $2 }
 ;
 match_cases:
     pattern match_action                        { [$1, $2] }

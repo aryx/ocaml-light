@@ -164,18 +164,21 @@ you fully understand how things work under the hood.
 
 Here are other candidates that were considered but ultimately discarded:
 \begin{itemize}
+\item Scheme
+% not typed, no ADT, but some nice things: macros, call/cc, eval
 \item SML
 % not active
 \item Haskell
 % nice but lazy, and too strict (no pun intended) forcing programmer
 % to be purely functional (or to use intrusive and complex monads IO),
 % but some nice things to steal (typeclasses, deriving)
-\item Scheme
-% not typed, no ADT, but some nice things: macros, call/cc, eval
 \item Scala
 % too big, don't need objects anyway.
 % implicits are nice, but controversial, just like OO they can
 % lead to spaghetti code or hard to follow code more easily
+\item Rust
+% excellent for low-level high-level language, but want here
+% high-level high-level language :)
 \end{itemize}
 
 % so many candidates to list here actually.
@@ -395,7 +398,8 @@ and core_type_desc =
   | Ptyp_alias of core_type * string
 @
 % any?
-% less: rename constr? it's not constructor, it's apply
+% rename constr? it's not constructor, it's apply,
+%  well it's kinda a constructor, but for type level.
 % note: alias here, but should disappear at some point.
 
 % note that there is no '_a here, because it's not representable
@@ -612,6 +616,7 @@ type type_expr =
   | Ttuple of type_expr list
   | Tconstr of Path.t * type_expr list
 @
+% Tconstr, type "constructor"
 
 <<type Types.type_variable>>=
 and type_variable =
@@ -663,10 +668,8 @@ let main () =
       usage;
 
     (match () with
-    | _ when !make_archive ->
-        Compile.init_path();
-        Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
-    <<[[Main.main()]] after process_file cases>>
+    <<[[Main.main()]] if make archive case>>
+    <<[[Main.main()]] if linking case>>
     | _ -> ()
     );
     exit 0
@@ -719,8 +722,10 @@ let process_file name =
   | _ when Filename.check_suffix name ".ml" ->
       Compile.implementation name;
       objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
+
   | _ when Filename.check_suffix name ".mli" ->
       Compile.interface name
+
   <<[[Main.process_file()]] cases>>
   | _ -> 
       raise(Arg.Bad("don't know what to do with " ^ name))
@@ -773,20 +778,6 @@ let implementation sourcefile =
       Typemod.type_structure (initial_env()) ast in
 
     if !Clflags.print_types then (Printtyp.signature sg; print_newline());
-(*
-    let coercion =
-      if Sys.file_exists (prefixname ^ ".mli") then begin
-        let intf_file =
-          try find_in_path !load_path (prefixname ^ ".cmi")
-          with Not_found -> prefixname ^ ".cmi" in
-        let dclsig = Env.read_signature modulename intf_file in
-        Includemod.compunit sourcefile sg intf_file dclsig
-      end else begin
-        Typemod.check_nongen_schemes finalenv str;
-        Env.save_signature sg modulename (prefixname ^ ".cmi");
-        Tcoerce_none
-      end in
-*)
 
     let (coercion, crc) =
       if Sys.file_exists (prefixname ^ ".mli") then begin
@@ -816,7 +807,23 @@ let implementation sourcefile =
     remove_file objfile;
     raise x
 @
-%less: Common.finalize
+%less: Common.finalize, and use |> !!
+%with later typing/
+%(*
+%    let coercion =
+%      if Sys.file_exists (prefixname ^ ".mli") then begin
+%        let intf_file =
+%          try find_in_path !load_path (prefixname ^ ".cmi")
+%          with Not_found -> prefixname ^ ".cmi" in
+%        let dclsig = Env.read_signature modulename intf_file in
+%        Includemod.compunit sourcefile sg intf_file dclsig
+%      end else begin
+%        Typemod.check_nongen_schemes finalenv str;
+%        Env.save_signature sg modulename (prefixname ^ ".cmi");
+%        Tcoerce_none
+%      end in
+%*)
+
 
 \ifallcode
 % -impl
@@ -878,13 +885,16 @@ let process_interface_file name =
 "-c", Arg.Set compile_only, " Compile only (do not link)";
 @
 
-<<[[Main.main()]] after process_file cases>>=
+<<[[Main.main()]] if linking case>>=
 | _ when not !compile_only & !objfiles <> [] ->
     Compile.init_path();
     Bytelink.link (List.rev !objfiles)
 @
 
 \chapter{Lexing}
+
+% See lex&yacc tutorial, even ocamllex/ocamlyacc tutorial.
+% bootstrapping issue? yes for ocamllex.
 
 % see also preprocessing section in advanced topics
 
@@ -895,21 +905,459 @@ val token: Lexing.lexbuf -> Parser.token
 @
 
 
+
+
+<<./parsing/lexer.mll>>=
+<<copyright header>>
+
+(* The lexer definition *)
+
+{
+open Misc
+open Parser
+
+<<type Lexer.error>>
+<<exception Lexer.Error>>
+
+<<Lexer helpers>>
+
+(* Error report *)
+open Format
+<<function Lexer.report_error>>
+}
+
+<<rule Lexer.token>>
+
+<<rule Lexer.comment>>
+
+<<rule Lexer.string>>
+
+@
+%$
+
+
+
+
+<<rule Lexer.token>>=
+rule token = parse
+  <<[[Lexer.token()]] space case>>
+  <<[[Lexer.token()]] comment case>>
+
+  <<[[Lexer.token()]] underscore case>>
+  <<[[Lexer.token()]] identifier or keyword cases>>
+
+  <<[[Lexer.token()]] integer case>>
+  <<[[Lexer.token()]] float case>>
+
+  <<[[Lexer.token()]] string case>>
+  <<[[Lexer.token()]] character case>>
+
+  <<[[Lexer.token()]] directive case>>
+  <<[[Lexer.token()]] sharp case>>
+
+  <<[[Lexer.token()]] operator cases>>
+  | eof { EOF }
+  | _
+      { raise (Error(Illegal_character,
+                     Lexing.lexeme_start lexbuf, Lexing.lexeme_end lexbuf)) }
+
+@
+% the order of the patterns matter in ocamllex, so I prefer
+% to be more explicit instead of having just a <<[[Lexer.token()]] cases ...
+
+
+\ifallcode
+<<Lexer helpers>>=
+(* For nested comments *)
+
+<<global Lexer.comment_depth>>
+
+(* The table of keywords *)
+
+<<constant Lexer.keyword_table>>
+
+(* To buffer string literals *)
+
+<<Lexer string related functions>>
+
+(* To translate escape sequences *)
+
+<<Lexer escape sequences related functions>>
+
+(* To store the position of the beginning of a string or comment *)
+
+<<global Lexer.start_pos>>
+@
+\fi
+
 \section{Comments}
+% space and comments?
+
+<<[[Lexer.token()]] space case>>=
+  [' ' '\010' '\013' '\009' '\012'] +
+    { token lexbuf }
+@
+
+
+<<[[Lexer.token()]] comment case>>=
+| "(*"
+    { comment_depth := 1;
+      start_pos := Lexing.lexeme_start lexbuf;
+      comment lexbuf;
+      token lexbuf }
+@
+
+<<global Lexer.comment_depth>>=
+let comment_depth = ref 0
+@
+
+<<global Lexer.start_pos>>=
+let start_pos = ref 0
+@
+
+<<rule Lexer.comment>>=
+and comment = parse
+    "(*"
+      { comment_depth := succ !comment_depth; comment lexbuf }
+  | "*)"
+      { comment_depth := pred !comment_depth;
+        if !comment_depth > 0 then comment lexbuf }
+  <<[[Lexer.comment()]] string or char in comment cases>>
+  | eof
+      { raise (Error(Unterminated_comment, !start_pos, !start_pos+2)) }
+  | _
+      { comment lexbuf }
+@
+%+2??
+
+
+
 
 \section{Keywords and identifiers}
 
+<<[[Lexer.token()]] identifier or keyword cases>>=
+| ['a'-'z'  '_'] (['A'-'Z' 'a'-'z' '_' '\'' '0'-'9' ]) *
+    { let s = Lexing.lexeme lexbuf in
+        try
+          Hashtbl.find keyword_table s
+        with Not_found ->
+          LIDENT s 
+     }
+| ['A'-'Z'  ] (['A'-'Z' 'a'-'z' '_' '\'' '0'-'9' ]) *
+    { UIDENT(Lexing.lexeme lexbuf) }       (* No capitalized keywords *)
+@
+%old: was 
+%| ['a'-'z' '\223'-'\246' '\248'-'\255' '_']
+%  (['A'-'Z' 'a'-'z' '_' '\192'-'\214' '\216'-'\246' '\248'-'\255'
+%| ['A'-'Z' '\192'-'\214' '\216'-'\222' ]
+%  (['A'-'Z' 'a'-'z' '_' '\192'-'\214' '\216'-'\246' '\248'-'\255'
+% not sure why allowed that
+
+<<constant Lexer.keyword_table>>=
+let keyword_table =
+  create_hashtable 149 [
+    "true", TRUE;
+    "false", FALSE;
+
+    "let", LET;
+    "rec", REC;
+    "in", IN;
+    "fun", FUN;
+    "function", FUNCTION;
+
+    "if", IF;
+    "then", THEN;
+    "else", ELSE;
+    "begin", BEGIN;
+    "end", END;
+    "while", WHILE;
+    "for", FOR;
+    "do", DO;
+    "done", DONE;
+    "to", TO;
+    "downto", DOWNTO;
+
+    "match", MATCH;
+    "with", WITH;
+    "when", WHEN;
+    "as", AS;
+
+    "try", TRY;
+    "exception", EXCEPTION;
+
+    "lazy", LAZY;
+    "assert", ASSERT;
+
+    "type", TYPE;
+    "of", OF;
+    "val", VAL;
+    "external", EXTERNAL;
+    "mutable", MUTABLE;
+
+    "module", MODULE;
+    "sig", SIG;
+    "struct", STRUCT;
+    "open", OPEN;
+
+    "and", AND;
+    "or", OR;
+
+    "mod", INFIXOP3("mod");
+    "land", INFIXOP3("land");
+    "lor", INFIXOP3("lor");
+    "lxor", INFIXOP3("lxor");
+    "lsl", INFIXOP4("lsl");
+    "lsr", INFIXOP4("lsr");
+    "asr", INFIXOP4("asr")
+]
+@
+%old: was sorted originally
+%todo: and and or are obsolete no?
+
+<<[[Lexer.token()]] underscore case>>=
+| "_"  { UNDERSCORE }
+@
+% special rule, not an identifier!
+
 \section{Operators}
+
+<<[[Lexer.token()]] operator cases>>=
+| "("  { LPAREN } | ")"  { RPAREN }
+| "{"  { LBRACE } | "}"  { RBRACE }
+| "["  { LBRACKET } | "]"  { RBRACKET }
+| "[|" { LBRACKETBAR } | "|]" { BARRBRACKET }
+@
+% paren for expressions, brace for records, bracket for lists
+
+<<[[Lexer.token()]] operator cases>>=
+| "|"  { BAR }
+| "*"  { STAR }
+| "'"  { QUOTE }
+@
+% | for patterns, * for type tuples, ' for polymorphic types
+
+
+<<[[Lexer.token()]] operator cases>>=
+| ","  { COMMA }
+| "->" { MINUSGREATER }
+| "."  { DOT }
+| ".." { DOTDOT }
+| ":"  { COLON }
+| "::" { COLONCOLON }
+| ":=" { COLONEQUAL }
+| "<-" { LESSMINUS }
+| ";"  { SEMI }
+@
+
+<<[[Lexer.token()]] operator cases>>=
+| "="  { EQUAL }
+| "!=" { INFIXOP0 "!=" }
+| "<"  { LESS } | ">"  { GREATER }
+@
+
+<<[[Lexer.token()]] operator cases>>=
+| "&"  { AMPERSAND }
+| "&&" { AMPERAMPER }
+| "||" { BARBAR }
+@
+%less: remove & ?
+
+<<[[Lexer.token()]] operator cases>>=
+| "-"  { SUBTRACTIVE "-" }
+| "-." { SUBTRACTIVE "-." }
+@
+
+<<[[Lexer.token()]] operator cases>>=
+| ['!' '?' '~']
+  ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
+          { PREFIXOP(Lexing.lexeme lexbuf) }
+
+| ['=' '<' '>' '|' '&' '$']
+  ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
+          { INFIXOP0(Lexing.lexeme lexbuf) }
+| ['@' '^']
+  ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
+          { INFIXOP1(Lexing.lexeme lexbuf) }
+| ['+' '-']
+  ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
+          { INFIXOP2(Lexing.lexeme lexbuf) }
+| "**"
+  ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
+          { INFIXOP4(Lexing.lexeme lexbuf) }
+| ['*' '/' '%']
+  ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
+          { INFIXOP3(Lexing.lexeme lexbuf) }
+@
+%$
+%different priorities, mimicing the smaller version
+%less: factorize ?
+%less: why special case for ** ?
+
+% in ocaml 4.00
+%  | "!" symbolchar +
+%            { PREFIXOP(Lexing.lexeme lexbuf) }
+%  | ['~' '?'] symbolchar +
+%            { PREFIXOP(Lexing.lexeme lexbuf) }
+%  | ['=' '<' '>' '|' '&' '$'] symbolchar *
+%            { INFIXOP0(Lexing.lexeme lexbuf) }
+%  | ['@' '^'] symbolchar *
+%            { INFIXOP1(Lexing.lexeme lexbuf) }
+%  | ['+' '-'] symbolchar *
+%            { INFIXOP2(Lexing.lexeme lexbuf) }
+%  | "**" symbolchar *
+%            { INFIXOP4(Lexing.lexeme lexbuf) }
+%  | ['*' '/' '%'] symbolchar *
+%            { INFIXOP3(Lexing.lexeme lexbuf) }
+%$
+
+<<[[Lexer.token()]] sharp case>>=
+| "#"  { SHARP }
+@
+% special case because have also #line
 
 \section{Numbers}
 
 \subsection{Integers}
 
+<<[[Lexer.token()]] integer case>>=
+| ['0'-'9']+
+  | '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f']+
+  | '0' ['o' 'O'] ['0'-'7']+
+  | '0' ['b' 'B'] ['0'-'1']+
+    { INT (int_of_string(Lexing.lexeme lexbuf)) }
+@
+%int_of_string from pervasives handles many format
+
 \subsection{Floats}
+
+<<[[Lexer.token()]] float case>>=
+| ['0'-'9']+ ('.' ['0'-'9']*)? (['e' 'E'] ['+' '-']? ['0'-'9']+)?
+    { FLOAT (Lexing.lexeme lexbuf) }
+@
 
 \section{Characters}
 
+
+<<[[Lexer.token()]] character case>>=
+| "'" [^ '\\' '\''] "'"
+    { CHAR(Lexing.lexeme_char lexbuf 1) }
+@
+
+
+<<[[Lexer.token()]] character case>>=
+| "'" '\\' ['\\' '\'' 'n' 't' 'b' 'r'] "'"
+    { CHAR(char_for_backslash (Lexing.lexeme_char lexbuf 2)) }
+@
+
+<<Lexer escape sequences related functions>>=
+let char_for_backslash =
+  match Sys.os_type with
+  | "Unix" ->
+      begin function
+      | 'n' -> '\010'
+      | 'r' -> '\013'
+      | 'b' -> '\008'
+      | 't' -> '\009'
+      | c   -> c
+      end
+  | x -> fatal_error "Lexer: unknown system type"
+@
+
+<<[[Lexer.token()]] character case>>=
+| "'" '\\' ['0'-'9'] ['0'-'9'] ['0'-'9'] "'"
+    { CHAR(char_for_decimal_code lexbuf 2) }
+@
+
+
+<<Lexer escape sequences related functions>>=
+let char_for_decimal_code lexbuf i =
+  let c = 100 * (Char.code(Lexing.lexeme_char lexbuf i) - 48) +
+           10 * (Char.code(Lexing.lexeme_char lexbuf (i+1)) - 48) +
+                (Char.code(Lexing.lexeme_char lexbuf (i+2)) - 48) in  
+  Char.chr(c land 0xFF)
+@
+
 \section{Strings}
+
+<<[[Lexer.token()]] string case>>=
+| "\""
+    { reset_string_buffer();
+      let string_start = Lexing.lexeme_start lexbuf in
+      start_pos := string_start;
+
+      string lexbuf;
+
+      lexbuf.Lexing.lex_start_pos <-
+        string_start - lexbuf.Lexing.lex_abs_pos;
+      STRING (get_stored_string()) }
+@
+
+<<rule Lexer.string>>=
+and string = parse
+    '"'
+      { () }
+  | '\\' ("\010" | "\013" | "\013\010") [' ' '\009'] *
+      { string lexbuf }
+  | '\\' ['\\' '"' 'n' 't' 'b' 'r']
+      { store_string_char(char_for_backslash(Lexing.lexeme_char lexbuf 1));
+        string lexbuf }
+  | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
+      { store_string_char(char_for_decimal_code lexbuf 1);
+         string lexbuf }
+  | eof
+      { raise (Error(Unterminated_string, !start_pos, !start_pos+1)) }
+  | _
+      { store_string_char(Lexing.lexeme_char lexbuf 0);
+        string lexbuf }
+@
+
+<<Lexer string related functions>>=
+let initial_string_buffer = String.create 256
+let string_buff = ref initial_string_buffer
+let string_index = ref 0
+
+let reset_string_buffer () =
+  string_buff := initial_string_buffer;
+  string_index := 0
+
+let store_string_char c =
+  if !string_index >= String.length (!string_buff) then begin
+    let new_buff = String.create (String.length (!string_buff) * 2) in
+      String.blit (!string_buff) 0 new_buff 0 (String.length (!string_buff));
+      string_buff := new_buff
+  end;
+  String.unsafe_set (!string_buff) (!string_index) c;
+  incr string_index
+
+let get_stored_string () =
+  let s = String.sub (!string_buff) 0 (!string_index) in
+  string_buff := initial_string_buffer;
+  s
+@
+
+
+\ifallcode
+<<[[Lexer.comment()]] string or char in comment cases>>=
+| "\""
+    { reset_string_buffer();
+      start_pos := Lexing.lexeme_start lexbuf;
+      string lexbuf;
+      string_buff := initial_string_buffer;
+      comment lexbuf }
+| "''"
+    { comment lexbuf }
+| "'" [^ '\\' '\''] "'"
+    { comment lexbuf }
+| "'\\" ['\\' '\'' 'n' 't' 'b' 'r'] "'"
+    { comment lexbuf }
+| "'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "'"
+    { comment lexbuf }
+@
+%less: meh for the string in comment honestly
+\fi
+
+
+
 
 \chapter{Parsing}
 
@@ -2315,13 +2763,12 @@ let make_archive = ref false            (* -a *)
 "-a", Arg.Set make_archive, " Build a library";
 @
 
-<<[[Main.main()]] after process_file cases>>=
-(*
+<<[[Main.main()]] if make archive case>>=
 | _ when !make_archive ->
     Compile.init_path();
     Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
-*)
 @
+
 
 <<constant Clflags.archive_name>>=
 let archive_name = ref "library.cma"    (* -o *)
@@ -2750,8 +3197,19 @@ let remove_preprocessed inputfile =
 
 \subsection{[[#line]]}
 
+<<[[Lexer.token()]] directive case>>=
+| "#" [' ' '\t']* ['0'-'9']+ [' ' '\t']* "\"" [^ '\n' '\r'] *
+  ('\n' | '\r' | "\r\n")
+    (* # linenum "filename" flags \n *)
+    { token lexbuf }
+@
+
 
 \section{Toplevel}
+
+<<[[Lexer.token()]] operator cases>>=
+| ";;" { SEMISEMI }
+@
 
 <<signature Parse.toplevel_phrase>>=
 val toplevel_phrase : Lexing.lexbuf -> Parsetree.toplevel_phrase
@@ -3750,6 +4208,16 @@ val report_error: error -> unit
 @
 
 % in .mll
+
+<<function Lexer.report_error>>=
+let report_error = function
+    Illegal_character ->
+      print_string "Illegal character"
+  | Unterminated_comment ->
+      print_string "Comment not terminated"
+  | Unterminated_string ->
+      print_string "String literal not terminated"
+@
 
 \section{Syntax errors}
 
