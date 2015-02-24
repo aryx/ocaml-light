@@ -32,8 +32,10 @@ let process_file name =
   | _ when Filename.check_suffix name ".ml" ->
       Compile.implementation name;
       objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
+
   | _ when Filename.check_suffix name ".mli" ->
       Compile.interface name
+
   (*s: [[Main.process_file()]] cases *)
   | _ when Filename.check_suffix name ".cmo" 
         or Filename.check_suffix name ".cma" ->
@@ -132,20 +134,16 @@ let main () =
       usage;
 
     (match () with
+    (*s: [[Main.main()]] if make archive case *)
     | _ when !make_archive ->
         Compile.init_path();
         Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
-    (*s: [[Main.main()]] after process_file cases *)
+    (*e: [[Main.main()]] if make archive case *)
+    (*s: [[Main.main()]] if linking case *)
     | _ when not !compile_only & !objfiles <> [] ->
         Compile.init_path();
         Bytelink.link (List.rev !objfiles)
-    (*x: [[Main.main()]] after process_file cases *)
-    (*
-    | _ when !make_archive ->
-        Compile.init_path();
-        Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
-    *)
-    (*e: [[Main.main()]] after process_file cases *)
+    (*e: [[Main.main()]] if linking case *)
     | _ -> ()
     );
     exit 0

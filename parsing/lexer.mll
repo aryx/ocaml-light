@@ -1,4 +1,5 @@
 (*s: ./parsing/lexer.mll *)
+(*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: lexer.mll,v 1.23 1997/11/13 09:04:03 vouillon Exp $ *)
+(*e: copyright header *)
 
 (* The lexer definition *)
 
@@ -18,58 +18,73 @@
 open Misc
 open Parser
 
+(*s: type Lexer.error *)
 type error =
     Illegal_character
   | Unterminated_comment
   | Unterminated_string
-
+(*e: type Lexer.error *)
+(*s: exception Lexer.Error *)
 exception Error of error * int * int
+(*e: exception Lexer.Error *)
 
+(*s: Lexer helpers *)
 (* For nested comments *)
 
+(*s: global Lexer.comment_depth *)
 let comment_depth = ref 0
+(*e: global Lexer.comment_depth *)
 
 (* The table of keywords *)
 
+(*s: constant Lexer.keyword_table *)
 let keyword_table =
   create_hashtable 149 [
-    "and", AND;
-    "as", AS;
-    "assert", ASSERT;
-    "begin", BEGIN;
-    "do", DO;
-    "done", DONE;
-    "downto", DOWNTO;
-    "else", ELSE;
-    "end", END;
-    "exception", EXCEPTION;
-    "external", EXTERNAL;
+    "true", TRUE;
     "false", FALSE;
-    "for", FOR;
+
+    "let", LET;
+    "rec", REC;
+    "in", IN;
     "fun", FUN;
     "function", FUNCTION;
+
     "if", IF;
-    "in", IN;
-    "lazy", LAZY;
-    "let", LET;
+    "then", THEN;
+    "else", ELSE;
+    "begin", BEGIN;
+    "end", END;
+    "while", WHILE;
+    "for", FOR;
+    "do", DO;
+    "done", DONE;
+    "to", TO;
+    "downto", DOWNTO;
+
     "match", MATCH;
-    "module", MODULE;
-    "mutable", MUTABLE;
+    "with", WITH;
+    "when", WHEN;
+    "as", AS;
+
+    "try", TRY;
+    "exception", EXCEPTION;
+
+    "lazy", LAZY;
+    "assert", ASSERT;
+
+    "type", TYPE;
     "of", OF;
-    "open", OPEN;
-    "or", OR;
-    "rec", REC;
+    "val", VAL;
+    "external", EXTERNAL;
+    "mutable", MUTABLE;
+
+    "module", MODULE;
     "sig", SIG;
     "struct", STRUCT;
-    "then", THEN;
-    "to", TO;
-    "true", TRUE;
-    "try", TRY;
-    "type", TYPE;
-    "val", VAL;
-    "when", WHEN;
-    "while", WHILE;
-    "with", WITH;
+    "open", OPEN;
+
+    "and", AND;
+    "or", OR;
 
     "mod", INFIXOP3("mod");
     "land", INFIXOP3("land");
@@ -79,9 +94,11 @@ let keyword_table =
     "lsr", INFIXOP4("lsr");
     "asr", INFIXOP4("asr")
 ]
+(*e: constant Lexer.keyword_table *)
 
 (* To buffer string literals *)
 
+(*s: Lexer string related functions *)
 let initial_string_buffer = String.create 256
 let string_buff = ref initial_string_buffer
 let string_index = ref 0
@@ -103,9 +120,11 @@ let get_stored_string () =
   let s = String.sub (!string_buff) 0 (!string_index) in
   string_buff := initial_string_buffer;
   s
+(*e: Lexer string related functions *)
 
 (* To translate escape sequences *)
 
+(*s: Lexer escape sequences related functions *)
 let char_for_backslash =
   match Sys.os_type with
   | "Unix" ->
@@ -117,21 +136,24 @@ let char_for_backslash =
       | c   -> c
       end
   | x -> fatal_error "Lexer: unknown system type"
-
+(*x: Lexer escape sequences related functions *)
 let char_for_decimal_code lexbuf i =
   let c = 100 * (Char.code(Lexing.lexeme_char lexbuf i) - 48) +
            10 * (Char.code(Lexing.lexeme_char lexbuf (i+1)) - 48) +
                 (Char.code(Lexing.lexeme_char lexbuf (i+2)) - 48) in  
   Char.chr(c land 0xFF)
+(*e: Lexer escape sequences related functions *)
 
 (* To store the position of the beginning of a string or comment *)
 
+(*s: global Lexer.start_pos *)
 let start_pos = ref 0
+(*e: global Lexer.start_pos *)
+(*e: Lexer helpers *)
 
 (* Error report *)
-
 open Format
-
+(*s: function Lexer.report_error *)
 let report_error = function
     Illegal_character ->
       print_string "Illegal character"
@@ -139,92 +161,118 @@ let report_error = function
       print_string "Comment not terminated"
   | Unterminated_string ->
       print_string "String literal not terminated"
-
+(*e: function Lexer.report_error *)
 }
 
+(*s: rule Lexer.token *)
 rule token = parse
+  (*s: [[Lexer.token()]] space case *)
     [' ' '\010' '\013' '\009' '\012'] +
       { token lexbuf }
-  | "_"  { UNDERSCORE }
-  | ['a'-'z' '\223'-'\246' '\248'-'\255' '_']
-    (['A'-'Z' 'a'-'z' '_' '\192'-'\214' '\216'-'\246' '\248'-'\255'
-      '\'' '0'-'9' ]) *
-      { let s = Lexing.lexeme lexbuf in
-          try
-            Hashtbl.find keyword_table s
-          with Not_found ->
-            LIDENT s }
-  | ['A'-'Z' '\192'-'\214' '\216'-'\222' ]
-    (['A'-'Z' 'a'-'z' '_' '\192'-'\214' '\216'-'\246' '\248'-'\255'
-      '\'' '0'-'9' ]) *
-      { UIDENT(Lexing.lexeme lexbuf) }       (* No capitalized keywords *)
-  | ['0'-'9']+
-    | '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f']+
-    | '0' ['o' 'O'] ['0'-'7']+
-    | '0' ['b' 'B'] ['0'-'1']+
-      { INT (int_of_string(Lexing.lexeme lexbuf)) }
-  | ['0'-'9']+ ('.' ['0'-'9']*)? (['e' 'E'] ['+' '-']? ['0'-'9']+)?
-      { FLOAT (Lexing.lexeme lexbuf) }
-  | "\""
-      { reset_string_buffer();
-        let string_start = Lexing.lexeme_start lexbuf in
-        start_pos := string_start;
-        string lexbuf;
-        lexbuf.Lexing.lex_start_pos <-
-          string_start - lexbuf.Lexing.lex_abs_pos;
-        STRING (get_stored_string()) }
-  | "'" [^ '\\' '\''] "'"
-      { CHAR(Lexing.lexeme_char lexbuf 1) }
-  | "'" '\\' ['\\' '\'' 'n' 't' 'b' 'r'] "'"
-      { CHAR(char_for_backslash (Lexing.lexeme_char lexbuf 2)) }
-  | "'" '\\' ['0'-'9'] ['0'-'9'] ['0'-'9'] "'"
-      { CHAR(char_for_decimal_code lexbuf 2) }
+  (*e: [[Lexer.token()]] space case *)
+  (*s: [[Lexer.token()]] comment case *)
   | "(*"
       { comment_depth := 1;
         start_pos := Lexing.lexeme_start lexbuf;
         comment lexbuf;
         token lexbuf }
+  (*e: [[Lexer.token()]] comment case *)
+
+  (*s: [[Lexer.token()]] underscore case *)
+  | "_"  { UNDERSCORE }
+  (*e: [[Lexer.token()]] underscore case *)
+  (*s: [[Lexer.token()]] identifier or keyword cases *)
+  | ['a'-'z'  '_'] (['A'-'Z' 'a'-'z' '_' '\'' '0'-'9' ]) *
+      { let s = Lexing.lexeme lexbuf in
+          try
+            Hashtbl.find keyword_table s
+          with Not_found ->
+            LIDENT s 
+       }
+  | ['A'-'Z'  ] (['A'-'Z' 'a'-'z' '_' '\'' '0'-'9' ]) *
+      { UIDENT(Lexing.lexeme lexbuf) }       (* No capitalized keywords *)
+  (*e: [[Lexer.token()]] identifier or keyword cases *)
+
+  (*s: [[Lexer.token()]] integer case *)
+  | ['0'-'9']+
+    | '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f']+
+    | '0' ['o' 'O'] ['0'-'7']+
+    | '0' ['b' 'B'] ['0'-'1']+
+      { INT (int_of_string(Lexing.lexeme lexbuf)) }
+  (*e: [[Lexer.token()]] integer case *)
+  (*s: [[Lexer.token()]] float case *)
+  | ['0'-'9']+ ('.' ['0'-'9']*)? (['e' 'E'] ['+' '-']? ['0'-'9']+)?
+      { FLOAT (Lexing.lexeme lexbuf) }
+  (*e: [[Lexer.token()]] float case *)
+
+  (*s: [[Lexer.token()]] string case *)
+  | "\""
+      { reset_string_buffer();
+        let string_start = Lexing.lexeme_start lexbuf in
+        start_pos := string_start;
+
+        string lexbuf;
+
+        lexbuf.Lexing.lex_start_pos <-
+          string_start - lexbuf.Lexing.lex_abs_pos;
+        STRING (get_stored_string()) }
+  (*e: [[Lexer.token()]] string case *)
+  (*s: [[Lexer.token()]] character case *)
+  | "'" [^ '\\' '\''] "'"
+      { CHAR(Lexing.lexeme_char lexbuf 1) }
+  (*x: [[Lexer.token()]] character case *)
+  | "'" '\\' ['\\' '\'' 'n' 't' 'b' 'r'] "'"
+      { CHAR(char_for_backslash (Lexing.lexeme_char lexbuf 2)) }
+  (*x: [[Lexer.token()]] character case *)
+  | "'" '\\' ['0'-'9'] ['0'-'9'] ['0'-'9'] "'"
+      { CHAR(char_for_decimal_code lexbuf 2) }
+  (*e: [[Lexer.token()]] character case *)
+
+  (*s: [[Lexer.token()]] directive case *)
   | "#" [' ' '\t']* ['0'-'9']+ [' ' '\t']* "\"" [^ '\n' '\r'] *
     ('\n' | '\r' | "\r\n")
       (* # linenum "filename" flags \n *)
       { token lexbuf }
+  (*e: [[Lexer.token()]] directive case *)
+  (*s: [[Lexer.token()]] sharp case *)
   | "#"  { SHARP }
-  | "&"  { AMPERSAND }
-  | "&&" { AMPERAMPER }
-  | "'"  { QUOTE }
-  | "("  { LPAREN }
-  | ")"  { RPAREN }
+  (*e: [[Lexer.token()]] sharp case *)
+
+  (*s: [[Lexer.token()]] operator cases *)
+  | "("  { LPAREN } | ")"  { RPAREN }
+  | "{"  { LBRACE } | "}"  { RBRACE }
+  | "["  { LBRACKET } | "]"  { RBRACKET }
+  | "[|" { LBRACKETBAR } | "|]" { BARRBRACKET }
+  (*x: [[Lexer.token()]] operator cases *)
+  | "|"  { BAR }
   | "*"  { STAR }
+  | "'"  { QUOTE }
+  (*x: [[Lexer.token()]] operator cases *)
   | ","  { COMMA }
-  | "?"  { QUESTION }
   | "->" { MINUSGREATER }
   | "."  { DOT }
   | ".." { DOTDOT }
   | ":"  { COLON }
   | "::" { COLONCOLON }
   | ":=" { COLONEQUAL }
-  | ";"  { SEMI }
-  | ";;" { SEMISEMI }
-  | "<"  { LESS }
   | "<-" { LESSMINUS }
+  | ";"  { SEMI }
+  (*x: [[Lexer.token()]] operator cases *)
   | "="  { EQUAL }
-  | "["  { LBRACKET }
-  | "[|" { LBRACKETBAR }
-  | "]"  { RBRACKET }
-  | "{"  { LBRACE }
-  | "|"  { BAR }
-  | "||" { BARBAR }
-  | "|]" { BARRBRACKET }
-  | ">"  { GREATER }
-  | "}"  { RBRACE }
-
   | "!=" { INFIXOP0 "!=" }
+  | "<"  { LESS } | ">"  { GREATER }
+  (*x: [[Lexer.token()]] operator cases *)
+  | "&"  { AMPERSAND }
+  | "&&" { AMPERAMPER }
+  | "||" { BARBAR }
+  (*x: [[Lexer.token()]] operator cases *)
   | "-"  { SUBTRACTIVE "-" }
   | "-." { SUBTRACTIVE "-." }
-
+  (*x: [[Lexer.token()]] operator cases *)
   | ['!' '?' '~']
     ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
             { PREFIXOP(Lexing.lexeme lexbuf) }
+
   | ['=' '<' '>' '|' '&' '$']
     ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
             { INFIXOP0(Lexing.lexeme lexbuf) }
@@ -240,17 +288,24 @@ rule token = parse
   | ['*' '/' '%']
     ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
             { INFIXOP3(Lexing.lexeme lexbuf) }
+  (*x: [[Lexer.token()]] operator cases *)
+  | ";;" { SEMISEMI }
+  (*e: [[Lexer.token()]] operator cases *)
   | eof { EOF }
   | _
       { raise (Error(Illegal_character,
                      Lexing.lexeme_start lexbuf, Lexing.lexeme_end lexbuf)) }
 
+(*e: rule Lexer.token *)
+
+(*s: rule Lexer.comment *)
 and comment = parse
     "(*"
       { comment_depth := succ !comment_depth; comment lexbuf }
   | "*)"
       { comment_depth := pred !comment_depth;
         if !comment_depth > 0 then comment lexbuf }
+  (*s: [[Lexer.comment()]] string or char in comment cases *)
   | "\""
       { reset_string_buffer();
         start_pos := Lexing.lexeme_start lexbuf;
@@ -265,11 +320,14 @@ and comment = parse
       { comment lexbuf }
   | "'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "'"
       { comment lexbuf }
+  (*e: [[Lexer.comment()]] string or char in comment cases *)
   | eof
       { raise (Error(Unterminated_comment, !start_pos, !start_pos+2)) }
   | _
       { comment lexbuf }
+(*e: rule Lexer.comment *)
 
+(*s: rule Lexer.string *)
 and string = parse
     '"'
       { () }
@@ -286,5 +344,6 @@ and string = parse
   | _
       { store_string_char(Lexing.lexeme_char lexbuf 0);
         string lexbuf }
+(*e: rule Lexer.string *)
 
 (*e: ./parsing/lexer.mll *)
