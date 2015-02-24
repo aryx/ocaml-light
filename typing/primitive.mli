@@ -1,4 +1,5 @@
 (*s: ./typing/primitive.mli *)
+(*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                         Caml Special Light                          *)
@@ -9,8 +10,8 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
+(*e: copyright header0 *)
 
-(* $Id$ *)
 
 (*s: type Primitive.description *)
 (* Description of primitive functions *)

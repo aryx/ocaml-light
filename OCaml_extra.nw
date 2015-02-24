@@ -14,36 +14,15 @@ val standard_library: string
         (* The directory containing the standard libraries *)
 @
 
-<<signature Config.bytecomp_c_compiler>>=
-val bytecomp_c_compiler: string
-        (* The C compiler to use for the custom runtime mode of the
-           bytecode compiler *)
-@
 
-<<signature Config.native_c_compiler>>=
-val native_c_compiler: string
-        (* The C compiler to use for the native code compiler *)
-@
 
 <<signature Config.native_partial_linker>>=
 val native_partial_linker: string
         (* The linker to use for partial links (-output-obj option) *)
 @
 
-<<signature Config.c_libraries>>=
-val c_libraries: string
-        (* The C libraries to link with custom runtimes *)
-@
 
-<<signature Config.ranlib>>=
-val ranlib: string
-        (* Command to randomize a library, or "" if not needed *)
-@
 
-<<signature Config.load_path>>=
-val load_path: string list ref
-        (* Directories in the search path for .cmi and .cmo files *)
-@
 
 <<signature Config.exec_magic_number>>=
 val exec_magic_number: string
@@ -74,6 +53,8 @@ val cmx_magic_number: string
 val cmxa_magic_number: string
         (* Magic number for libraries of compilation unit descriptions *)
 @
+
+
 
 <<signature Config.ast_intf_magic_number>>=
 val ast_intf_magic_number: string
@@ -585,7 +566,6 @@ external puts: out_channel -> string -> int -> unit = "terminfo_puts"
 
 
 
-
 %-------------------------------------------------------------
 
 <<./parsing/asttypes.mli>>=
@@ -605,17 +585,6 @@ external puts: out_channel -> string -> int -> unit = "terminfo_puts"
 
 \subsection*{[[./parsing/linenum.mli]]}
 
-<<signature Linenum.for_position>>=
-(* An auxiliary lexer for determining the line number corresponding to
-   a file position, honoring the directives # linenum "filename" *)
-
-val for_position: string -> int -> string * int * int
-        (* [Linenum.for_position file loc] returns a triple describing
-           the location [loc] in the file named [file].
-           First result is name of actual source file.
-           Second result is line number in that source file.
-           Third result is position of beginning of that line in [file]. *)
-@
 
 
 %-------------------------------------------------------------
@@ -663,30 +632,6 @@ val for_position: string -> int -> string * int * int
 
 \subsection*{[[./parsing/location.mli]]}
 
-<<signature Location.rhs_loc>>=
-val rhs_loc: int -> t
-@
-<<function Location.rhs_loc>>=
-let rhs_loc n =
-  { loc_start = Parsing.rhs_start n; loc_end = Parsing.rhs_end n }
-@
-
-<<signature Location.input_lexbuf>>=
-val input_lexbuf: Lexing.lexbuf option ref
-@
-
-
-<<signature Location.echo_eof>>=
-val echo_eof: unit -> unit
-@
-
-<<signature Location.reset>>=
-val reset: unit -> unit
-@
-
-<<signature Location.highlight_locations>>=
-val highlight_locations: t -> t -> bool
-@
 
 
 %-------------------------------------------------------------
@@ -715,12 +660,6 @@ val highlight_locations: t -> t -> bool
 \subsection*{[[./parsing/location.ml]]}
 
 
-
-
-
-<<constant Location.input_lexbuf>>=
-let input_lexbuf = ref (None : lexbuf option)
-@
 
 <<type Location.terminal_info_status>>=
 (* Terminal info *)
@@ -752,6 +691,19 @@ let setup_terminal_info() =
 
 let num_loc_lines = ref 0 (* number of lines already printed after input *)
 @
+
+<<signature Location.highlight_locations>>=
+val highlight_locations: t -> t -> bool
+@
+
+<<signature Location.input_lexbuf>>=
+val input_lexbuf: Lexing.lexbuf option ref
+@
+
+<<constant Location.input_lexbuf>>=
+let input_lexbuf = ref (None : lexbuf option)
+@
+
 
 <<function Location.highlight_locations>>=
 let rec highlight_locations loc1 loc2 =
@@ -803,12 +755,19 @@ let rec highlight_locations loc1 loc2 =
           end
 @
 
+<<signature Location.reset>>=
+val reset: unit -> unit
+@
+
 <<function Location.reset>>=
 let reset () =
   num_loc_lines := 0
 @
 
 
+<<signature Location.echo_eof>>=
+val echo_eof: unit -> unit
+@
 
 <<function Location.echo_eof>>=
 let echo_eof () =
@@ -1003,7 +962,6 @@ open Asttypes
 \subsection*{[[./parsing/lexer.mll]]}
 
 
-
 \subsection*{[[./parsing/parser.mly]]}
 
 \subsection*{[[./parsing/lexer.mli]]}
@@ -1125,6 +1083,12 @@ val global: t -> bool
 val print: t -> unit
 @
 
+
+
+
+
+
+
 <<signature Ident.empty>>=
 val empty: 'a tbl
 @
@@ -1153,18 +1117,7 @@ val current_time: unit -> int
 %-------------------------------------------------------------
 
 <<./typing/ident.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Identifiers (unique names) *)
 
@@ -1413,18 +1366,7 @@ let current_time _ = 1
 %-------------------------------------------------------------
 
 <<./typing/ident.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 open Format
 
@@ -1488,18 +1430,8 @@ open Format
 %-------------------------------------------------------------
 
 <<./typing/primitive.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
+<<copyright header0>>
 
-(* $Id$ *)
 
 <<type Primitive.description>>
 
@@ -1517,18 +1449,7 @@ open Format
 %-------------------------------------------------------------
 
 <<./typing/primitive.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Description of primitive functions *)
 
@@ -1563,18 +1484,7 @@ val nopos: int
 %-------------------------------------------------------------
 
 <<./typing/path.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 <<type Path.t>>
 
@@ -1609,16 +1519,7 @@ let rec isfree id = function
 %-------------------------------------------------------------
 
 <<./typing/path.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
+<<copyright header0>>
 
 <<type Path.t>>
 
@@ -1715,16 +1616,8 @@ and signature_item =
 %-------------------------------------------------------------
 
 <<./typing/types.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
+<<copyright header0>>
+
 open Asttypes
 
 (* Type expressions for the core language *)
@@ -1812,18 +1705,7 @@ val signature: t -> signature -> signature
 %-------------------------------------------------------------
 
 <<./typing/subst.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Substitutions *)
 
@@ -1939,18 +1821,7 @@ let exception_declaration s tyl =
 %-------------------------------------------------------------
 
 <<./typing/subst.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Substitutions *)
 
@@ -2007,16 +1878,7 @@ and signature_item s = function
 %-------------------------------------------------------------
 
 <<./typing/predef.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
+<<copyright header0>>
 
 (* Predefined type constructors (with special typing rules in typecore) *)
 
@@ -2042,18 +1904,7 @@ open Types
 %-------------------------------------------------------------
 
 <<./typing/predef.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Predefined type constructors (with special typing rules in typecore) *)
 
@@ -2100,18 +1951,7 @@ val label_descrs:
 %-------------------------------------------------------------
 
 <<./typing/datarepr.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Compute constructor and label descriptions from type declarations,
    determining their representation. *)
@@ -2205,18 +2045,7 @@ let label_descrs ty_res lbls =
 %-------------------------------------------------------------
 
 <<./typing/datarepr.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Compute constructor and label descriptions from type declarations,
    determining their representation. *)
@@ -2338,18 +2167,7 @@ val check_modtype_inclusion: (t -> module_type -> module_type -> unit) ref
 %-------------------------------------------------------------
 
 <<./typing/env.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Environment handling *)
 
@@ -2747,18 +2565,7 @@ let imported_units() = !imported_units
 %-------------------------------------------------------------
 
 <<./typing/env.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Environment handling *)
 
@@ -3050,18 +2857,7 @@ val rev_let_bound_idents: (pattern * expression) list -> Ident.t list
 %-------------------------------------------------------------
 
 <<./typing/typedtree.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Abstract syntax tree after typing *)
 
@@ -3140,16 +2936,7 @@ let let_bound_idents pat_expr_list =
 %-------------------------------------------------------------
 
 <<./typing/typedtree.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
+<<copyright header0>>
 
 (* Abstract syntax tree after typing *)
 
@@ -3329,18 +3116,7 @@ val init_def: 'a -> unit
 %-------------------------------------------------------------
 
 <<./typing/ctype.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Operations on core types *)
 
@@ -3741,18 +3517,7 @@ let init_def _ = ()
 %-------------------------------------------------------------
 
 <<./typing/ctype.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Operations on core types *)
 
@@ -3946,18 +3711,7 @@ val exception_declarations:
 %-------------------------------------------------------------
 
 <<./typing/includecore.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Inclusion checks for the core language *)
 
@@ -4040,18 +3794,7 @@ let exception_declarations env ed1 ed2 =
 %-------------------------------------------------------------
 
 <<./typing/includecore.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Inclusion checks for the core language *)
 
@@ -4097,18 +3840,7 @@ val nondep_supertype: Env.t -> Ident.t -> module_type -> module_type
 %-------------------------------------------------------------
 
 <<./typing/mtype.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Operations on module types *)
 
@@ -4215,18 +3947,7 @@ let nondep_supertype env mid mty =
 %-------------------------------------------------------------
 
 <<./typing/mtype.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Operations on module types *)
 
@@ -4296,18 +4017,7 @@ val signature_item: signature_item -> unit
 %-------------------------------------------------------------
 
 <<./typing/printtyp.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Printing functions *)
 open Types
@@ -4368,18 +4078,7 @@ let name_of_var v =
 %-------------------------------------------------------------
 
 <<./typing/printtyp.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Printing functions *)
 
@@ -4435,18 +4134,7 @@ and type_scheme ty = reset_var_names(); typexp true 0 ty
 %-------------------------------------------------------------
 
 <<./typing/parmatch.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Detection of partial matches and unused match cases. *)
 
@@ -4740,18 +4428,7 @@ let check_unused casel =
 %-------------------------------------------------------------
 
 <<./typing/parmatch.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Detection of partial matches and unused match cases. *)
 
@@ -4852,18 +4529,7 @@ exception Already_bound
 %-------------------------------------------------------------
 
 <<./typing/typetexp.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 <<signature Typetexp.transl_simple_type>>
 <<signature Typetexp.transl_type_scheme>>
@@ -4951,18 +4617,7 @@ let transl_type_scheme env styp =
 %-------------------------------------------------------------
 
 <<./typing/typetexp.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Typechecking of type expressions for the core language *)
 
@@ -5015,18 +4670,7 @@ val compunit: string -> signature -> string -> signature -> module_coercion
 %-------------------------------------------------------------
 
 <<./typing/includemod.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Inclusion checks for the module language *)
 
@@ -5160,18 +4804,7 @@ let compunit impl_name impl_sig intf_name intf_sig =
 %-------------------------------------------------------------
 
 <<./typing/includemod.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Inclusion checks for the module language *)
 
@@ -5335,18 +4968,7 @@ val transl_with_constraint:
 %-------------------------------------------------------------
 
 <<./typing/typedecl.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Typing of type definitions and primitive definitions *)
 
@@ -5547,18 +5169,7 @@ let transl_with_constraint env sdecl =
 %-------------------------------------------------------------
 
 <<./typing/typedecl.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Typing of type definitions *)
 
@@ -5608,18 +5219,7 @@ open Format
 %-------------------------------------------------------------
 
 <<./typing/typecore.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Type inference for the core language *)
 
@@ -5839,18 +5439,7 @@ let type_expression env sexp =
 %-------------------------------------------------------------
 
 <<./typing/typecore.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Typechecking for the core language *)
 
@@ -6199,18 +5788,7 @@ val check_nongen_schemes:
 %-------------------------------------------------------------
 
 <<./typing/typemod.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Type-checking of the module language *)
 
@@ -6317,18 +5895,7 @@ let check_nongen_schemes str =
 %-------------------------------------------------------------
 
 <<./typing/typemod.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                         Caml Special Light                          *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id$ *)
+<<copyright header0>>
 
 (* Type-checking of the module language *)
 
@@ -10760,31 +10327,6 @@ let rec extract suffix l =
   | h::t -> extract suffix t
 @
 
-<<function Bytelink.build_custom_runtime>>=
-let build_custom_runtime prim_name exec_name =
-  let libname = "libcamlrun" ^ ext_lib in
-  let runtime_lib =
-    try
-      find_in_path !load_path libname
-    with Not_found ->
-      raise(Error(File_not_found libname)) in
-  match Sys.os_type with
-    "Unix" ->
-      Ccomp.command
-       (Printf.sprintf
-          "%s -o %s -I%s %s %s -L%s %s %s %s"
-          Config.bytecomp_c_compiler
-          exec_name
-          Config.standard_library
-          (String.concat " " (List.rev !Clflags.ccopts))
-          prim_name
-          Config.standard_library
-          (String.concat " " (List.rev !Clflags.ccobjs))
-          runtime_lib
-          Config.c_libraries)
-  | _ ->
-    fatal_error "Bytelink.build_custom_runtime"
-@
 
 <<function Bytelink.append_bytecode_and_cleanup>>=
 let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
@@ -20853,24 +20395,6 @@ let call_linker file_list startup_file =
       raise(Error(File_not_found libname)) in
   let cmd =
     match Config.system with
-      "win32" ->
-        if not !Clflags.output_c_object then
-          Printf.sprintf "%s /Fe%s -I%s %s %s %s %s %s %s"
-            Config.native_c_compiler
-            !Clflags.exec_name
-            Config.standard_library
-            (String.concat " " (List.rev !Clflags.ccopts))
-            startup_file
-            (String.concat " " (List.rev file_list))
-            (String.concat " " (List.rev !Clflags.ccobjs))
-            runtime_lib
-            Config.c_libraries
-        else
-          Printf.sprintf "%s /out:%s %s %s"
-            Config.native_partial_linker
-            !Clflags.object_name
-            startup_file
-            (String.concat " " (List.rev file_list))
     | _ ->
         if not !Clflags.output_c_object then
           Printf.sprintf "%s -o %s -I%s %s %s %s -L%s %s %s %s"

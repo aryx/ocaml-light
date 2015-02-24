@@ -1,4 +1,5 @@
 (*s: ./typing/path.ml *)
+(*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                         Caml Special Light                          *)
@@ -9,6 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
+(*e: copyright header0 *)
 
 (*s: type Path.t *)
 (* Access paths *)

@@ -1,4 +1,5 @@
 (*s: ./typing/predef.mli *)
+(*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                         Caml Special Light                          *)
@@ -9,6 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
+(*e: copyright header0 *)
 
 (* Predefined type constructors (with special typing rules in typecore) *)
 

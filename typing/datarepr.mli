@@ -1,4 +1,5 @@
 (*s: ./typing/datarepr.mli *)
+(*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                         Caml Special Light                          *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id$ *)
+(*e: copyright header0 *)
 
 (* Compute constructor and label descriptions from type declarations,
    determining their representation. *)
