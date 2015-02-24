@@ -2112,10 +2112,6 @@ fun_binding:
   | simple_pattern fun_binding
       { mkexp(Pexp_function[$1,$2]) }
 ;
-opt_pat:
-    /* empty */                                 { None }
-  | simple_pattern                              { Some $1 }
-;
 match_cases:
     pattern match_action                        { [$1, $2] }
   | match_cases BAR pattern match_action        { ($3, $4) :: $1 }
