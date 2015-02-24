@@ -50,9 +50,9 @@ val lookup_type: Longident.t -> t -> Path.t * Types.type_declaration
 val lookup_module: Longident.t -> t -> Path.t * Types.module_type
 (*e: signature Env.lookup_module *)
 
-(*s: signature Env.add_value *)
 (* Insertion by identifier *)
 
+(*s: signature Env.add_value *)
 val add_value: Ident.t -> value_description -> t -> t
 (*e: signature Env.add_value *)
 (*s: signature Env.add_type *)
@@ -81,9 +81,9 @@ val open_signature: Path.t -> signature -> t -> t
 val open_pers_signature: string -> t -> t
 (*e: signature Env.open_pers_signature *)
 
-(*s: signature Env.enter_value *)
 (* Insertion by name *)
 
+(*s: signature Env.enter_value *)
 val enter_value: string -> value_description -> t -> Ident.t * t
 (*e: signature Env.enter_value *)
 (*s: signature Env.enter_type *)

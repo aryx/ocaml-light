@@ -111,6 +111,7 @@ let exception_declaration s tyl =
   List.map (type_expr s) tyl
 (*e: function Subst.exception_declaration *)
 
+(*s: function Subst.modtype *)
 let rec modtype s = function
     Tmty_ident p as mty ->
       begin match p with
@@ -129,4 +130,6 @@ and signature_item s = function
   | Tsig_type(id, d) -> Tsig_type(id, type_declaration s d)
   | Tsig_exception(id, d) -> Tsig_exception(id, exception_declaration s d)
   | Tsig_module(id, mty) -> Tsig_module(id, modtype s mty)
+(*e: function Subst.modtype *)
+
 (*e: ./typing/subst.ml *)

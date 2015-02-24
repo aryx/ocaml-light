@@ -29,10 +29,6 @@ val exec_magic_number: string
         (* Magic number for bytecode executable files *)
 @
 
-<<signature Config.cmi_magic_number>>=
-val cmi_magic_number: string
-        (* Magic number for compiled interface files *)
-@
 
 <<signature Config.cmo_magic_number>>=
 val cmo_magic_number: string
@@ -1579,46 +1575,6 @@ open Asttypes
 
 \subsection*{[[./typing/subst.mli]]}
 
-<<signature Subst.identity>>=
-val identity: t
-@
-
-<<signature Subst.add_type>>=
-val add_type: Ident.t -> Path.t -> t -> t
-@
-
-<<signature Subst.add_module>>=
-val add_module: Ident.t -> Path.t -> t -> t
-@
-
-<<signature Subst.add_modtype>>=
-val add_modtype: Ident.t -> module_type -> t -> t
-@
-
-<<signature Subst.type_expr>>=
-val type_expr: t -> type_expr -> type_expr
-@
-
-<<signature Subst.value_description>>=
-val value_description: t -> value_description -> value_description
-@
-
-<<signature Subst.type_declaration>>=
-val type_declaration: t -> type_declaration -> type_declaration
-@
-
-<<signature Subst.exception_declaration>>=
-val exception_declaration:
-        t -> exception_declaration -> exception_declaration
-@
-
-<<signature Subst.modtype>>=
-val modtype: t -> module_type -> module_type
-@
-
-<<signature Subst.signature>>=
-val signature: t -> signature -> signature
-@
 
 
 %-------------------------------------------------------------
@@ -1649,92 +1605,6 @@ type t
 
 
 \subsection*{[[./typing/subst.ml]]}
-
-
-<<constant Subst.identity>>=
-let identity =
-  { types = Ident.empty; modules = Ident.empty; modtypes = Ident.empty }
-@
-
-<<function Subst.add_type>>=
-let add_type id p s =
-  { types = Ident.add id p s.types;
-    modules = s.modules;
-    modtypes = s.modtypes }
-@
-
-<<function Subst.add_module>>=
-let add_module id p s =
-  { types = s.types;
-    modules = Ident.add id p s.modules;
-    modtypes = s.modtypes }
-@
-
-<<function Subst.add_modtype>>=
-let add_modtype id ty s =
-  { types = s.types;
-    modules = s.modules;
-    modtypes = Ident.add id ty s.modtypes }
-@
-
-<<function Subst.module_path>>=
-let rec module_path s = function
-    Pident id as p ->
-      begin try Ident.find_same id s.modules with Not_found -> p end
-  | Pdot(p, n, pos) ->
-      Pdot(module_path s p, n, pos)
-@
-
-<<function Subst.type_path>>=
-let type_path s = function
-    Pident id as p ->
-      begin try Ident.find_same id s.types with Not_found -> p end
-  | Pdot(p, n, pos) ->
-      Pdot(module_path s p, n, pos)
-@
-
-<<function Subst.type_expr>>=
-let rec type_expr s = function
-    Tvar{tvar_link = None} as ty -> ty
-  | Tvar{tvar_link = Some ty} -> type_expr s ty
-  | Tarrow(t1, t2) -> Tarrow(type_expr s t1, type_expr s t2)
-  | Ttuple tl -> Ttuple(List.map (type_expr s) tl)
-  | Tconstr(p, []) -> Tconstr(type_path s p, [])
-  | Tconstr(p, tl) -> Tconstr(type_path s p, List.map (type_expr s) tl)
-@
-
-<<function Subst.value_description>>=
-let value_description s descr =
-  { val_type = type_expr s descr.val_type;
-    val_prim = descr.val_prim }
-@
-
-<<function Subst.type_declaration>>=
-let type_declaration s decl =
-  { type_params = decl.type_params;
-    type_arity = decl.type_arity;
-    type_kind =
-      begin match decl.type_kind with
-        Type_abstract -> Type_abstract
-      | Type_variant cstrs ->
-          Type_variant(List.map (fun (n, args) -> (n, List.map (type_expr s) args))
-                           cstrs)
-      | Type_record lbls ->
-          Type_record(List.map (fun (n, mut, arg) -> (n, mut, type_expr s arg))
-                          lbls)
-      end;
-    type_manifest =
-      begin match decl.type_manifest with
-        None -> None
-      | Some ty -> Some(type_expr s ty)
-      end
-  }
-@
-
-<<function Subst.exception_declaration>>=
-let exception_declaration s tyl =
-  List.map (type_expr s) tyl
-@
 
 
 %-------------------------------------------------------------
@@ -1771,24 +1641,8 @@ open Types
 
 <<function Subst.exception_declaration>>
 
-let rec modtype s = function
-    Tmty_ident p as mty ->
-      begin match p with
-        Pident id ->
-          begin try Ident.find_same id s.modtypes with Not_found -> mty end
-      | Pdot(p, n, pos) ->
-          Tmty_ident(Pdot(module_path s p, n, pos))
-      end
-  | Tmty_signature sg ->
-      Tmty_signature(signature s sg)
+<<function Subst.modtype>>
 
-and signature s sg = List.map (signature_item s) sg
-
-and signature_item s = function
-    Tsig_value(id, d) -> Tsig_value(id, value_description s d)
-  | Tsig_type(id, d) -> Tsig_type(id, type_declaration s d)
-  | Tsig_exception(id, d) -> Tsig_exception(id, exception_declaration s d)
-  | Tsig_module(id, mty) -> Tsig_module(id, modtype s mty)
 @
 
 
@@ -1816,8 +1670,6 @@ open Types
 
 
 \subsection*{[[./typing/predef.ml]]}
-
-
 
 
 %-------------------------------------------------------------
@@ -1849,24 +1701,6 @@ open Types
 
 \subsection*{[[./typing/datarepr.mli]]}
 
-<<signature Datarepr.constructor_descrs>>=
-val constructor_descrs:
-  type_expr -> (string * type_expr list) list ->
-    (string * constructor_description) list
-@
-
-<<signature Datarepr.exception_descr>>=
-val exception_descr:
-  Path.t -> type_expr list -> constructor_description
-@
-
-<<signature Datarepr.label_descrs>>=
-val label_descrs:
-  type_expr -> (string * mutable_flag * type_expr) list ->
-    (string * label_description) list
-@
-
-
 %-------------------------------------------------------------
 
 <<./typing/datarepr.mli>>=
@@ -1886,79 +1720,6 @@ open Types
 
 \subsection*{[[./typing/datarepr.ml]]}
 
-<<function Datarepr.constructor_descrs>>=
-let constructor_descrs ty_res cstrs =
-  let num_consts = ref 0 and num_nonconsts = ref 0 in
-  List.iter
-    (function (name, []) -> incr num_consts
-            | (name, _)  -> incr num_nonconsts)
-    cstrs;
-  let rec describe_constructors idx_const idx_nonconst = function
-      [] -> []
-    | (name, ty_args) :: rem ->
-        let (tag, descr_rem) =
-          match ty_args with
-            [] -> (Cstr_constant idx_const,
-                   describe_constructors (idx_const+1) idx_nonconst rem)
-          | _  -> (Cstr_block idx_nonconst,
-                   describe_constructors idx_const (idx_nonconst+1) rem) in
-        let cstr =
-          { cstr_res = ty_res;
-            cstr_args = ty_args;
-            cstr_arity = List.length ty_args;
-            cstr_tag = tag;
-            cstr_consts = !num_consts;
-            cstr_nonconsts = !num_nonconsts } in
-        (name, cstr) :: descr_rem in
-  describe_constructors 0 0 cstrs
-@
-
-<<function Datarepr.exception_descr>>=
-let exception_descr path_exc decl =
-  { cstr_res = Predef.type_exn;
-    cstr_args = decl;
-    cstr_arity = List.length decl;
-    cstr_tag = Cstr_exception path_exc;
-    cstr_consts = -1;
-    cstr_nonconsts = -1 }
-@
-
-<<constant Datarepr.dummy_label>>=
-let dummy_label =
-  { lbl_res = Ttuple []; lbl_arg = Ttuple []; lbl_mut = Immutable;
-    lbl_pos = (-1); lbl_all = [||]; lbl_repres = Record_regular }
-@
-
-<<function Datarepr.is_float>>=
-(* Cannot call ctype.repres here *)
-
-let rec is_float = function
-    Tvar{tvar_link = Some ty} -> is_float ty
-  | Tconstr(p, _) -> Path.same p Predef.path_float
-  | _ -> false
-@
-
-<<function Datarepr.label_descrs>>=
-let label_descrs ty_res lbls =
-  let all_labels = Array.create (List.length lbls) dummy_label in
-  let repres =
-    if List.for_all (fun (name, flag, ty) -> is_float ty) lbls
-    then Record_float
-    else Record_regular in
-  let rec describe_labels num = function
-      [] -> []
-    | (name, mut_flag, ty_arg) :: rest ->
-        let lbl =
-          { lbl_res = ty_res;
-            lbl_arg = ty_arg;
-            lbl_mut = mut_flag;
-            lbl_pos = num;
-            lbl_all = all_labels;
-            lbl_repres = repres } in
-        all_labels.(num) <- lbl;
-        (name, lbl) :: describe_labels (num+1) rest in
-  describe_labels 0 lbls
-@
 
 
 %-------------------------------------------------------------
@@ -1988,58 +1749,13 @@ open Types
 \subsection*{[[./typing/env.mli]]}
 
 
-<<signature Env.add_value>>=
-(* Insertion by identifier *)
-
-val add_value: Ident.t -> value_description -> t -> t
-@
-
-<<signature Env.add_type>>=
-val add_type: Ident.t -> type_declaration -> t -> t
-@
-
-<<signature Env.add_exception>>=
-val add_exception: Ident.t -> exception_declaration -> t -> t
-@
-
-<<signature Env.add_module>>=
-val add_module: Ident.t -> module_type -> t -> t
-@
-
 <<signature Env.add_signature>>=
 (* Insertion of all fields of a signature. *)
 
 val add_signature: signature -> t -> t
 @
 
-<<signature Env.open_signature>>=
-(* Insertion of all fields of a signature, relative to the given path.
-   Used to implement open. *)
 
-val open_signature: Path.t -> signature -> t -> t
-@
-
-<<signature Env.open_pers_signature>>=
-val open_pers_signature: string -> t -> t
-@
-
-<<signature Env.enter_value>>=
-(* Insertion by name *)
-
-val enter_value: string -> value_description -> t -> Ident.t * t
-@
-
-<<signature Env.enter_type>>=
-val enter_type: string -> type_declaration -> t -> Ident.t * t
-@
-
-<<signature Env.enter_exception>>=
-val enter_exception: string -> exception_declaration -> t -> Ident.t * t
-@
-
-<<signature Env.enter_module>>=
-val enter_module: string -> module_type -> t -> Ident.t * t
-@
 
 <<signature Env.reset_cache>>=
 (* Reset the cache of in-core module interfaces.
@@ -2106,6 +1822,8 @@ open Types
 <<signature Env.lookup_type>>
 <<signature Env.lookup_module>>
 
+(* Insertion by identifier *)
+
 <<signature Env.add_value>>
 <<signature Env.add_type>>
 <<signature Env.add_exception>>
@@ -2115,6 +1833,8 @@ open Types
 
 <<signature Env.open_signature>>
 <<signature Env.open_pers_signature>>
+
+(* Insertion by name *)
 
 <<signature Env.enter_value>>
 <<signature Env.enter_type>>
@@ -2148,92 +1868,10 @@ open Types
 
 
 
-<<type Env.module_components>>=
-and module_components =
-    Structure_comps of structure_components
-  | Functor_comps of functor_components
-@
-
-<<type Env.structure_components>>=
-and structure_components = {
-  mutable comp_values: (string, (value_description * int)) Tbl.t;
-  mutable comp_constrs: (string, (constructor_description * int)) Tbl.t;
-  mutable comp_labels: (string, (label_description * int)) Tbl.t;
-  mutable comp_types: (string, (type_declaration * int)) Tbl.t;
-  mutable comp_modules: (string, (module_type * int)) Tbl.t;
-  mutable comp_components: (string, (module_components * int)) Tbl.t
-}
-@
-
-<<type Env.functor_components>>=
-and functor_components = {
-  fcomp_param: Ident.t;
-  fcomp_arg: module_type;
-  fcomp_res: module_type;
-  fcomp_env: t
-}
-@
 
 
-<<type Env.pers_struct>>=
-(* Persistent structure descriptions *)
 
-type pers_struct =
-  { ps_name: string;
-    ps_sig: signature;
-    ps_comps: module_components }
-@
 
-<<constant Env.persistent_structures>>=
-let persistent_structures =
-@
-
-<<constant Env.imported_units>>=
-let imported_units = ref ([] : (string * Digest.t) list)
-@
-
-<<function Env.read_pers_struct>>=
-let read_pers_struct modname filename =
-  let ic = open_in_bin filename in
-  try
-    let buffer = String.create (String.length cmi_magic_number) in
-    really_input ic buffer 0 (String.length cmi_magic_number);
-    if buffer <> cmi_magic_number then begin
-      close_in ic;
-      raise(Error(Not_an_interface filename))
-    end;
-    let ps = (input_value ic : pers_struct) in
-    let crc = Digest.input ic in
-    close_in ic;
-    if ps.ps_name <> modname then
-      raise(Error(Illegal_renaming(ps.ps_name, filename)));
-    (ps, crc)
-  with End_of_file | Failure _ ->
-    close_in ic;
-    raise(Error(Corrupted_interface(filename)))
-@
-
-<<function Env.find_pers_struct>>=
-let find_pers_struct name =
-  try
-    Hashtbl.find persistent_structures name
-  with Not_found ->
-    let (ps, crc) =
-      read_pers_struct name
-        (find_in_path !load_path (String.lowercase name ^ ".cmi")) in
-    Hashtbl.add persistent_structures name ps;
-    imported_units := (name, crc) :: !imported_units;
-    ps
-@
-
-<<function Env.reset_cache>>=
-let reset_cache() =
-  Hashtbl.clear persistent_structures;
-  imported_units := []
-@
-
-<<constant Env.components_of_functor_appl>>=
-@
 
 <<constant Env.check_modtype_inclusion>>=
 let check_modtype_inclusion =
@@ -2258,10 +1896,8 @@ let rec find_module_descr path env =
   | Pdot(p, s, pos) ->
       begin match find_module_descr p env with
        Structure_comps c ->
-      let (descr, pos) = Tbl.find s c.comp_components in
+          let (descr, pos) = Tbl.find s c.comp_components in
           descr
-      | Functor_comps f ->
-        raise Not_found
       end
 @
 
@@ -2275,8 +1911,6 @@ let find proj1 proj2 path env =
       begin match find_module_descr p env with
         Structure_comps c ->
           let (data, pos) = Tbl.find s (proj2 c) in data
-      | Functor_comps f ->
-          raise Not_found
       end
 @
 
@@ -2290,8 +1924,6 @@ let lookup proj1 proj2 lid env =
        (p, Structure_comps c) ->
       let (data, pos) = Tbl.find s (proj2 c) in
           (Pdot(p, s, pos), data)
-      | (p, Functor_comps f) ->
-         raise Not_found
       end
 @
 
@@ -2305,8 +1937,6 @@ let lookup_simple proj1 proj2 lid env =
        (p, Structure_comps c) ->
       let (data, pos) = Tbl.find s (proj2 c) in
           data
-      | (p, Functor_comps f) ->
-         raise Not_found
       end
 @
 
@@ -2378,9 +2008,7 @@ let rec prefix_idents root pos sub = function
    in a path. *)
 
 let funappl_memo =
-@
-
-<<toplevel Env._1>>=
+  (Hashtbl.create 17 : (Path.t, module_components) Hashtbl.t)
 @
 
 <<function Env.enter>>=
@@ -2439,12 +2067,6 @@ let open_pers_signature name env =
   open_signature (Pident(Ident.create_persistent name)) ps.ps_sig env
 @
 
-<<function Env.read_signature>>=
-(* Read a signature from a file *)
-
-let read_signature modname filename =
-  let (ps, crc) = read_pers_struct modname filename in (ps.ps_sig, crc)
-@
 
 <<function Env.save_signature>>=
 (* Save a signature to a file *)
@@ -2465,19 +2087,6 @@ let save_signature sg modname filename =
   close_out oc;
   crc
 @
-
-<<constant Env.initial>>=
-(* Make the initial environment *)
-
-let initial = Predef.build_initial_env add_type add_exception empty
-@
-
-<<function Env.imported_units>>=
-(* Return the list of imported interfaces with their CRCs *)
-
-let imported_units() = !imported_units
-@
-
 
 
 
@@ -2507,14 +2116,11 @@ open Types
 
 <<type Env.structure_components>>
 
-<<type Env.functor_components>>
-
 <<constant Env.empty>>
 
 <<type Env.pers_struct>>
 
 <<constant Env.persistent_structures>>
-  (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
 
 <<constant Env.imported_units>>
 
@@ -2523,8 +2129,6 @@ open Types
 <<function Env.find_pers_struct>>
 
 <<function Env.reset_cache>>
-
-<<constant Env.components_of_functor_appl>>
 
 <<constant Env.check_modtype_inclusion>>
        t -> module_type -> module_type -> unit)
@@ -2552,8 +2156,6 @@ let rec lookup_module_descr lid env =
        Structure_comps c ->
       let (descr, pos) = Tbl.find s c.comp_components in
           (Pdot(p, s, pos), descr)
-      | Functor_comps f ->
-         raise Not_found
       end
 
 and lookup_module lid env =
@@ -2571,8 +2173,6 @@ and lookup_module lid env =
        Structure_comps c ->
           let (data, pos) = Tbl.find s c.comp_modules in
           (Pdot(p, s, pos), data)
-      | Functor_comps f ->
-         raise Not_found
       end
 
 <<function Env.lookup>>
@@ -2710,9 +2310,6 @@ and store_components id path comps env =
     components = Ident.add id (path, comps) env.components }
 
 <<constant Env.funappl_memo>>
-  (Hashtbl.create 17 : (Path.t, module_components) Hashtbl.t)
-
-<<toplevel Env._1>>
 
 (* Insertion of bindings by identifier *)
 
@@ -2897,7 +2494,6 @@ open Types
 <<function Typedtree.rev_let_bound_idents>>
 
 <<function Typedtree.let_bound_idents>>
-
       
 @
 
