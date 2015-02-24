@@ -63,7 +63,9 @@ let var_counter = ref 0
 (*e: constant Printtyp.var_counter *)
 
 (*s: function Printtyp.reset_var_names *)
-let reset_var_names () = var_names := []; var_counter := 0
+let reset_var_names () = 
+  var_names := []; 
+  var_counter := 0
 (*e: function Printtyp.reset_var_names *)
 
 (*s: function Printtyp.name_of_var *)
@@ -130,7 +132,11 @@ let type_expr ty =
   typexp false 0 ty
 (*e: function Printtyp.type_expr *)
 
-and type_scheme ty = reset_var_names(); typexp true 0 ty
+(*s: function Printtyp.type_scheme *)
+and type_scheme ty = 
+  reset_var_names(); 
+  typexp true 0 ty
+(*e: function Printtyp.type_scheme *)
 
 (* Print one type declaration *)
 

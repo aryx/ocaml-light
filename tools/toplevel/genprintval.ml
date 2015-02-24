@@ -141,7 +141,7 @@ and print_label =
 (* An abstract type *)
 
 let abstract_type =
-  Ctype.newty (Tconstr (Pident (Ident.create "abstract"), [](*, ref Mnil*)))
+  (Tconstr (Pident (Ident.create "abstract"), []))
 
 (* The main printing function *)
 
