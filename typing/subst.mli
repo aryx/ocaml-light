@@ -42,8 +42,7 @@ val value_description: t -> value_description -> value_description
 val type_declaration: t -> type_declaration -> type_declaration
 (*e: signature Subst.type_declaration *)
 (*s: signature Subst.exception_declaration *)
-val exception_declaration:
-        t -> exception_declaration -> exception_declaration
+val exception_declaration: t -> exception_declaration -> exception_declaration
 (*e: signature Subst.exception_declaration *)
 (*s: signature Subst.modtype *)
 val modtype: t -> module_type -> module_type

@@ -38,40 +38,32 @@ exception Error of error
 
 (*s: type Env.t *)
 type t = {
-  values: (Path.t * value_description) Ident.tbl;
-  constrs: constructor_description Ident.tbl;
-  labels: label_description Ident.tbl;
-  types: (Path.t * type_declaration) Ident.tbl;
-  modules: (Path.t * module_type) Ident.tbl;
-  components: (Path.t * module_components) Ident.tbl
+  values     : (Path.t * Types.value_description) Ident.tbl;
+  types      : (Path.t * Types.type_declaration)  Ident.tbl;
+  modules    : (Path.t * Types.module_type)       Ident.tbl;
+  components : (Path.t * module_components)       Ident.tbl;
+
+  constrs    : Types.constructor_description      Ident.tbl;
+  labels     : Types.label_description            Ident.tbl;
 }
 (*e: type Env.t *)
 
 (*s: type Env.module_components *)
 and module_components =
     Structure_comps of structure_components
-  | Functor_comps of functor_components
 (*e: type Env.module_components *)
 
 (*s: type Env.structure_components *)
 and structure_components = {
-  mutable comp_values: (string, (value_description * int)) Tbl.t;
-  mutable comp_constrs: (string, (constructor_description * int)) Tbl.t;
-  mutable comp_labels: (string, (label_description * int)) Tbl.t;
-  mutable comp_types: (string, (type_declaration * int)) Tbl.t;
-  mutable comp_modules: (string, (module_type * int)) Tbl.t;
-  mutable comp_components: (string, (module_components * int)) Tbl.t
+  mutable comp_values     : (string, (Types.value_description * int)) Tbl.t;
+  mutable comp_types      : (string, (Types.type_declaration * int))  Tbl.t;
+  mutable comp_modules    : (string, (Types.module_type * int))       Tbl.t;
+  mutable comp_components : (string, (module_components * int))       Tbl.t;
+
+  mutable comp_constrs    : (string, (constructor_description * int)) Tbl.t;
+  mutable comp_labels     : (string, (label_description * int))       Tbl.t;
 }
 (*e: type Env.structure_components *)
-
-(*s: type Env.functor_components *)
-and functor_components = {
-  fcomp_param: Ident.t;
-  fcomp_arg: module_type;
-  fcomp_res: module_type;
-  fcomp_env: t
-}
-(*e: type Env.functor_components *)
 
 (*s: constant Env.empty *)
 let empty = {
@@ -94,8 +86,8 @@ type pers_struct =
 
 (*s: constant Env.persistent_structures *)
 let persistent_structures =
-(*e: constant Env.persistent_structures *)
   (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
+(*e: constant Env.persistent_structures *)
 
 (*s: constant Env.imported_units *)
 let imported_units = ref ([] : (string * Digest.t) list)
@@ -141,9 +133,6 @@ let reset_cache() =
   imported_units := []
 (*e: function Env.reset_cache *)
 
-(*s: constant Env.components_of_functor_appl *)
-(*e: constant Env.components_of_functor_appl *)
-
 (*s: constant Env.check_modtype_inclusion *)
 let check_modtype_inclusion =
   (* to be filled with includemod.check_modtype_inclusion *)
@@ -168,10 +157,8 @@ let rec find_module_descr path env =
   | Pdot(p, s, pos) ->
       begin match find_module_descr p env with
        Structure_comps c ->
-      let (descr, pos) = Tbl.find s c.comp_components in
+          let (descr, pos) = Tbl.find s c.comp_components in
           descr
-      | Functor_comps f ->
-        raise Not_found
       end
 (*e: function Env.find_module_descr *)
 
@@ -185,8 +172,6 @@ let find proj1 proj2 path env =
       begin match find_module_descr p env with
         Structure_comps c ->
           let (data, pos) = Tbl.find s (proj2 c) in data
-      | Functor_comps f ->
-          raise Not_found
       end
 (*e: function Env.find *)
 
@@ -209,8 +194,6 @@ let rec lookup_module_descr lid env =
        Structure_comps c ->
       let (descr, pos) = Tbl.find s c.comp_components in
           (Pdot(p, s, pos), descr)
-      | Functor_comps f ->
-         raise Not_found
       end
 
 and lookup_module lid env =
@@ -228,8 +211,6 @@ and lookup_module lid env =
        Structure_comps c ->
           let (data, pos) = Tbl.find s c.comp_modules in
           (Pdot(p, s, pos), data)
-      | Functor_comps f ->
-         raise Not_found
       end
 
 (*s: function Env.lookup *)
@@ -242,8 +223,6 @@ let lookup proj1 proj2 lid env =
        (p, Structure_comps c) ->
       let (data, pos) = Tbl.find s (proj2 c) in
           (Pdot(p, s, pos), data)
-      | (p, Functor_comps f) ->
-         raise Not_found
       end
 (*e: function Env.lookup *)
 
@@ -257,8 +236,6 @@ let lookup_simple proj1 proj2 lid env =
        (p, Structure_comps c) ->
       let (data, pos) = Tbl.find s (proj2 c) in
           data
-      | (p, Functor_comps f) ->
-         raise Not_found
       end
 (*e: function Env.lookup_simple *)
 
@@ -452,11 +429,8 @@ and store_components id path comps env =
    in a path. *)
 
 let funappl_memo =
-(*e: constant Env.funappl_memo *)
   (Hashtbl.create 17 : (Path.t, module_components) Hashtbl.t)
-
-(*s: toplevel Env._1 *)
-(*e: toplevel Env._1 *)
+(*e: constant Env.funappl_memo *)
 
 (* Insertion of bindings by identifier *)
 
@@ -537,7 +511,8 @@ let open_pers_signature name env =
 (* Read a signature from a file *)
 
 let read_signature modname filename =
-  let (ps, crc) = read_pers_struct modname filename in (ps.ps_sig, crc)
+  let (ps, crc) = read_pers_struct modname filename in 
+  (ps.ps_sig, crc)
 (*e: function Env.read_signature *)
 
 (*s: function Env.save_signature *)
