@@ -1,4 +1,5 @@
 (*s: ./typing/typetexp.mli *)
+(*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                         Caml Special Light                          *)
@@ -9,8 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id$ *)
+(*e: copyright header0 *)
 
 (*s: signature Typetexp.transl_simple_type *)
 (* Typechecking of type expressions for the core language *)

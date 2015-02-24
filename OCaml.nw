@@ -218,6 +218,21 @@ those parts are copyright by INRIA.
 The prose is mine and is licensed under the GNU Free Documentation
 License.
 
+\ifallcode
+<<copyright header0>>=
+(***********************************************************************)
+(*                                                                     *)
+(*                         Caml Special Light                          *)
+(*                                                                     *)
+(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
+(*                                                                     *)
+(*  Copyright 1995 Institut National de Recherche en Informatique et   *)
+(*  Automatique.  Distributed only by permission.                      *)
+(*                                                                     *)
+(***********************************************************************)
+@
+% for typing/
+\fi
 
 \section{Acknowledgments}
 
@@ -823,6 +838,12 @@ let implementation sourcefile =
 %        Tcoerce_none
 %      end in
 %*)
+
+
+<<signature Config.load_path>>=
+val load_path: string list ref
+        (* Directories in the search path for .cmi and .cmo files *)
+@
 
 
 \ifallcode
@@ -2349,6 +2370,16 @@ let unclosed opening_name opening_num closing_name closing_num =
 
 @
 
+
+
+<<signature Location.rhs_loc>>=
+val rhs_loc: int -> t
+@
+<<function Location.rhs_loc>>=
+let rhs_loc n =
+  { loc_start = Parsing.rhs_start n; loc_end = Parsing.rhs_end n }
+@
+
 \chapter{Typing}
 
 % note that this phase build a global environment,
@@ -2362,29 +2393,6 @@ val newvar: unit -> type_expr
 @
 
 
-% in ctype.ml before unify
-
-%   1. When unifying two non-abbreviated types, one type is made a link
-%      to the other. When unifying an abbreviated type with a
-%      non-abbreviated type, the non-abbreviated type is made a link to
-%      the other one. When unifying to abbreviated types, these two
-%      types are kept distincts, but they are made to (temporally)
-%      expand to the same type.
-%   2. Abbreviations with at least one parameter are systematically
-%      expanded. The overhead does not seem to high, and that way
-%      abbreviations where some parameters does not appear in the
-%      expansion, such as ['a t = int], are correctly handled. In
-%      particular, for this example, unifying ['a t] with ['b t] keeps
-%      ['a] and ['b] distincts. (Is it really important ?)
-%   3. Unifying an abbreviation ['a t = 'a] with ['a] should not yield
-%      ['a t as 'a]. Indeed, the type variable would otherwise be lost.
-%      This problem occurs for abbreviations expanding to a type
-%      variable, but also to many other constrained abbreviations (for
-%      instance, [(< x : 'a > -> unit) t = <x : 'a>]). The solution is
-%      that, if an abbreviation is unified with some subpart of its
-%      parameters, then the parameter actually does not get
-%      abbreviated.  It would be possible to check whether some
-%      information is indeed lost, but it probably does not worth it.
 
 
 
@@ -2975,6 +2983,30 @@ let builtin_values =
 \subsection{Abstract types}
 
 \subsection{Type aliases}
+
+% in ctype.ml before unify
+
+%   1. When unifying two non-abbreviated types, one type is made a link
+%      to the other. When unifying an abbreviated type with a
+%      non-abbreviated type, the non-abbreviated type is made a link to
+%      the other one. When unifying to abbreviated types, these two
+%      types are kept distincts, but they are made to (temporally)
+%      expand to the same type.
+%   2. Abbreviations with at least one parameter are systematically
+%      expanded. The overhead does not seem to high, and that way
+%      abbreviations where some parameters does not appear in the
+%      expansion, such as ['a t = int], are correctly handled. In
+%      particular, for this example, unifying ['a t] with ['b t] keeps
+%      ['a] and ['b] distincts. (Is it really important ?)
+%   3. Unifying an abbreviation ['a t = 'a] with ['a] should not yield
+%      ['a t as 'a]. Indeed, the type variable would otherwise be lost.
+%      This problem occurs for abbreviations expanding to a type
+%      variable, but also to many other constrained abbreviations (for
+%      instance, [(< x : 'a > -> unit) t = <x : 'a>]). The solution is
+%      that, if an abbreviation is unified with some subpart of its
+%      parameters, then the parameter actually does not get
+%      abbreviated.  It would be possible to check whether some
+%      information is indeed lost, but it probably does not worth it.
 
 \subsection{Printf}
 
@@ -3767,6 +3799,13 @@ let compile_file_bytecode name =
      name)
 @
 
+<<signature Config.bytecomp_c_compiler>>=
+val bytecomp_c_compiler: string
+        (* The C compiler to use for the custom runtime mode of the
+           bytecode compiler *)
+@
+
+
 <<function Ccomp.compile_file_native>>=
 let compile_file_native name =
   command
@@ -3780,6 +3819,12 @@ let compile_file_native name =
      Config.standard_library
      name)
 @
+
+<<signature Config.native_c_compiler>>=
+val native_c_compiler: string
+        (* The C compiler to use for the native code compiler *)
+@
+
 
 <<function Ccomp.create_archive>>=
 let create_archive archive file_list =
@@ -3797,6 +3842,11 @@ let create_archive archive file_list =
       else command(Config.ranlib ^ " " ^ archive)
 @
 
+<<signature Config.ranlib>>=
+val ranlib: string
+        (* Command to randomize a library, or "" if not needed *)
+@
+
 \section{Advanced linking issues}
 
 \subsection{[[-custom]]}
@@ -3807,6 +3857,38 @@ let custom_runtime = ref false          (* -custom *)
 <<[[Main.main()]] command line options>>=
 "-custom", Arg.Set custom_runtime, " Link in custom mode";
 @
+
+<<function Bytelink.build_custom_runtime>>=
+let build_custom_runtime prim_name exec_name =
+  let libname = "libcamlrun" ^ ext_lib in
+  let runtime_lib =
+    try
+      find_in_path !load_path libname
+    with Not_found ->
+      raise(Error(File_not_found libname)) in
+  match Sys.os_type with
+    "Unix" ->
+      Ccomp.command
+       (Printf.sprintf
+          "%s -o %s -I%s %s %s -L%s %s %s %s"
+          Config.bytecomp_c_compiler
+          exec_name
+          Config.standard_library
+          (String.concat " " (List.rev !Clflags.ccopts))
+          prim_name
+          Config.standard_library
+          (String.concat " " (List.rev !Clflags.ccobjs))
+          runtime_lib
+          Config.c_libraries)
+  | _ ->
+    fatal_error "Bytelink.build_custom_runtime"
+@
+
+<<signature Config.c_libraries>>=
+val c_libraries: string
+        (* The C libraries to link with custom runtimes *)
+@
+
 
 \subsection{[[-linkall]]}
 
@@ -4103,6 +4185,18 @@ let remove_preprocessed inputfile =
     { token lexbuf }
 @
 
+<<signature Linenum.for_position>>=
+(* An auxiliary lexer for determining the line number corresponding to
+   a file position, honoring the directives # linenum "filename" *)
+
+val for_position: string -> int -> string * int * int
+        (* [Linenum.for_position file loc] returns a triple describing
+           the location [loc] in the file named [file].
+           First result is name of actual source file.
+           Second result is line number in that source file.
+           Third result is position of beginning of that line in [file]. *)
+@
+% in linenum.mll
 
 \section{Toplevel}
 

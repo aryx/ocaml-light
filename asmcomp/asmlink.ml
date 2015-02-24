@@ -195,24 +195,6 @@ let call_linker file_list startup_file =
       raise(Error(File_not_found libname)) in
   let cmd =
     match Config.system with
-      "win32" ->
-        if not !Clflags.output_c_object then
-          Printf.sprintf "%s /Fe%s -I%s %s %s %s %s %s %s"
-            Config.native_c_compiler
-            !Clflags.exec_name
-            Config.standard_library
-            (String.concat " " (List.rev !Clflags.ccopts))
-            startup_file
-            (String.concat " " (List.rev file_list))
-            (String.concat " " (List.rev !Clflags.ccobjs))
-            runtime_lib
-            Config.c_libraries
-        else
-          Printf.sprintf "%s /out:%s %s %s"
-            Config.native_partial_linker
-            !Clflags.object_name
-            startup_file
-            (String.concat " " (List.rev file_list))
     | _ ->
         if not !Clflags.output_c_object then
           Printf.sprintf "%s -o %s -I%s %s %s %s -L%s %s %s %s"
