@@ -27,10 +27,12 @@ type core_type =
 (*s: type Parsetree.core_type_desc *)
 and core_type_desc = 
     Ptyp_any
+
   | Ptyp_var of string
   | Ptyp_arrow of core_type * core_type
   | Ptyp_tuple of core_type list
   | Ptyp_constr of Longident.t * core_type list
+
   | Ptyp_alias of core_type * string
 (*e: type Parsetree.core_type_desc *)
 
@@ -107,6 +109,7 @@ type type_declaration =
   { ptype_params: string list;
     ptype_cstrs: (string * core_type * Location.t) list;
     ptype_kind: type_kind;
+
     ptype_manifest: core_type option;
     ptype_loc: Location.t }
 (*e: type Parsetree.type_declaration *)
