@@ -10,11 +10,10 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: parser.mly,v 1.51 1997/11/17 10:39:00 xleroy Exp $ */
-
 /* The parser definition */
 
 %{
+/*(*s: Parser header *)*/
 open Location
 open Asttypes
 open Longident
@@ -111,10 +110,12 @@ let unclosed opening_name opening_num closing_name closing_num =
   raise(Syntaxerr.Error(Syntaxerr.Unclosed(rhs_loc opening_num, opening_name,
                                            rhs_loc closing_num, closing_name)))
 
+/*(*e: Parser header *)*/
 %}
 
 /* Tokens */
 
+/*(*s: Parser tokens *)*/
 %token AMPERAMPER
 %token AMPERSAND
 %token AND
@@ -196,9 +197,11 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token WHEN
 %token WHILE
 %token WITH
+/*(*e: Parser tokens *)*/
 
 /* Precedences and associativities. Lower precedences come first. */
 
+/*(*s: Parser precedences and associativities *)*/
 %right prec_let                         /* let ... in ... */
 %right prec_type_def                    /* = in type definitions */
 %right SEMI                             /* e1; e2 (sequence) */
@@ -223,28 +226,37 @@ let unclosed opening_name opening_num closing_name closing_num =
 %right prec_constr_appl                 /* constructor application */
 %left  DOT                              /* record access, array access */
 %right PREFIXOP                         /* ! */
+/*(*e: Parser precedences and associativities *)*/
 
 /* Entry points */
 
+/*(*s: Parser entry points types *)*/
 %start implementation                   /* for implementation files */
 %type <Parsetree.structure> implementation
 %start interface                        /* for interface files */
 %type <Parsetree.signature> interface
+/*(*x: Parser entry points types *)*/
 %start toplevel_phrase                  /* for interactive use */
 %type <Parsetree.toplevel_phrase> toplevel_phrase
 %start use_file                         /* for the #use directive */
 %type <Parsetree.toplevel_phrase list> use_file
+/*(*e: Parser entry points types *)*/
 
 %%
 
+/*(*s: grammar *)*/
+
 /* Entry points */
 
+/*(*s: entry points rules *)*/
 implementation:
     structure EOF                        { $1 }
 ;
 interface:
     signature EOF                        { List.rev $1 }
 ;
+/*(*x: entry points rules *)*/
+
 toplevel_phrase:
     top_structure SEMISEMI               { Ptop_def $1 }
   | seq_expr SEMISEMI                    { Ptop_def[mkstrexp $1] }
@@ -269,7 +281,11 @@ use_file_tail:
   | toplevel_directive use_file_tail            { $1 :: $2 }
 ;
 
+/*(*e: entry points rules *)*/
+
 /* Module expressions */
+
+/*(*s: structure rules *)*/
 
 module_expr:
     mod_longident
@@ -320,8 +336,11 @@ module_binding:
   | COLON module_type EQUAL module_expr
       { mkmod(Pmod_constraint($4, $2)) }
 ;
+/*(*e: structure rules *)*/
 
 /* Module types */
+
+/*(*s: signature rules *)*/
 
 module_type:
     mty_longident
@@ -359,8 +378,11 @@ module_declaration:
     COLON module_type
       { $2 }
 ;
+/*(*e: signature rules *)*/
 
 /* Core expressions */
+
+/*(*s: expression rules *)*/
 
 seq_expr:
   | expr                          { $1 }
@@ -547,9 +569,11 @@ type_constraint:
     COLON core_type                             { ($2) }
   | COLON error                                 { syntax_error() }
 ;
+/*(*e: expression rules *)*/
 
 /* Patterns */
 
+/*(*s: pattern rules *)*/
 pattern:
     simple_pattern
       { $1 }
@@ -606,17 +630,11 @@ lbl_pattern_list:
     label_longident EQUAL pattern               { [($1, $3)] }
   | lbl_pattern_list SEMI label_longident EQUAL pattern { ($3, $5) :: $1 }
 ;
-
-/* Primitive declarations */
-
-primitive_declaration:
-    STRING                                      { [$1] }
-  | STRING primitive_declaration                { $1 :: $2 }
-;
-
+/*(*e: pattern rules *)*/
 
 /* Type declarations */
 
+/*(*s: type declaration rules *)*/
 type_declarations:
     type_declaration                            { [$1] }
   | type_declarations AND type_declaration      { $3 :: $1 }
@@ -677,15 +695,11 @@ label_declarations:
 label_declaration:
     mutable_flag LIDENT COLON core_type         { ($2, $1, $4) }
 ;
-
-/* "with" constraints (additional type equations over signature components) */
-
-
-constraints:
-       /* empty */                             { [] }
-;
+/*(*e: type declaration rules *)*/
 
 /* Core types */
+
+/*(*s: type expression rules *)*/
 
 core_type:
     simple_core_type
@@ -725,22 +739,11 @@ core_type_list:
     simple_core_type                            { [$1] }
   | core_type_list STAR simple_core_type        { $3 :: $1 }
 ;
+/*(*e: type expression rules *)*/
 
-/* Constants */
-
-constant:
-    INT                                         { Const_int $1 }
-  | CHAR                                        { Const_char $1 }
-  | STRING                                      { Const_string $1 }
-  | FLOAT                                       { Const_float $1 }
-;
-signed_constant:
-    constant                                    { $1 }
-  | SUBTRACTIVE INT                             { Const_int(- $2) }
-  | SUBTRACTIVE FLOAT                           { Const_float("-" ^ $2) }
-;
 /* Identifiers and long identifiers */
 
+/*(*s: name rules *)*/
 ident:
     UIDENT                                      { $1 }
   | LIDENT                                      { $1 }
@@ -807,18 +810,47 @@ mty_longident:
     ident                                       { Lident $1 }
   | mod_ext_longident DOT ident                 { Ldot($1, $3) }
 ;
+/*(*e: name rules *)*/
 
 /* Toplevel directives */
 
+/*(*s: toplevel rules *)*/
 toplevel_directive:
     SHARP ident                 { Ptop_dir($2, Pdir_none) }
   | SHARP ident STRING          { Ptop_dir($2, Pdir_string $3) }
   | SHARP ident INT             { Ptop_dir($2, Pdir_int $3) }
   | SHARP ident val_longident   { Ptop_dir($2, Pdir_ident $3) }
 ;
+/*(*e: toplevel rules *)*/
+
+/*(*s: extra rules *)*/
+primitive_declaration:
+    STRING                                      { [$1] }
+  | STRING primitive_declaration                { $1 :: $2 }
+;
+/*(*x: extra rules *)*/
+/* "with" constraints (additional type equations over signature components) */
+
+constraints:
+       /* empty */                             { [] }
+;
+/*(*x: extra rules *)*/
+constant:
+    INT                                         { Const_int $1 }
+  | CHAR                                        { Const_char $1 }
+  | STRING                                      { Const_string $1 }
+  | FLOAT                                       { Const_float $1 }
+;
+signed_constant:
+    constant                                    { $1 }
+  | SUBTRACTIVE INT                             { Const_int(- $2) }
+  | SUBTRACTIVE FLOAT                           { Const_float("-" ^ $2) }
+;
+/*(*e: extra rules *)*/
 
 /* Miscellaneous */
 
+/*(*s: misc rules *)*/
 rec_flag:
     /* empty */                                 { Nonrecursive }
   | REC                                         { Recursive }
@@ -839,6 +871,8 @@ opt_semi:
   | /* empty */                                 { () }
   | SEMI                                        { () }
 ;
+/*(*e: misc rules *)*/
+/*(*e: grammar *)*/
 %%
 
 /*(*e: ./parsing/parser.mly *)*/
