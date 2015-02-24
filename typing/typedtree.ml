@@ -52,26 +52,28 @@ type expression =
 and expression_desc =
     Texp_ident of Path.t * value_description
   | Texp_constant of constant
-  | Texp_let of rec_flag * (pattern * expression) list * expression
-  | Texp_function of (pattern * expression) list
-  | Texp_apply of expression * expression list
-  | Texp_match of expression * (pattern * expression) list
-  | Texp_try of expression * (pattern * expression) list
 
   | Texp_tuple of expression list
   | Texp_construct of constructor_description * expression list
   | Texp_record of (label_description * expression) list
+  | Texp_array of expression list
 
   | Texp_field of expression * label_description
   | Texp_setfield of expression * label_description * expression
-  | Texp_array of expression list
 
+  | Texp_apply of expression * expression list
+
+  | Texp_let of rec_flag * (pattern * expression) list * expression
+  | Texp_function of (pattern * expression) list
+  | Texp_match of expression * (pattern * expression) list
+  | Texp_when of expression * expression
+
+  | Texp_try of expression * (pattern * expression) list
   | Texp_ifthenelse of expression * expression * expression option
   | Texp_sequence of expression * expression
   | Texp_while of expression * expression
   | Texp_for of
       Ident.t * expression * expression * direction_flag * expression
-  | Texp_when of expression * expression
 (*e: type Typedtree.expression_desc *)
 
 

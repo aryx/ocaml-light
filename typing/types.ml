@@ -82,6 +82,7 @@ type type_declaration =
   { type_params: type_expr list;
     type_arity: int;
     type_kind: type_kind;
+
     type_manifest: type_expr option }
 (*e: type Types.type_declaration *)
 
