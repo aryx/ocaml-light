@@ -320,7 +320,7 @@ beforedepend:: utils/config.ml
 
 parsing/parser.mli parsing/parser.ml: parsing/parser.mly
 	$(CAMLYACC) $(YACCFLAGS) parsing/parser.mly
-	perl -p -i -e 's#/\*\(\*e: \./parsing/parser.mly \*\)\*/##' parsing/parser.ml
+	perl -p -i -e 's#/\*\(\*[sex]: .* \*\)\*/##' parsing/parser.ml
 #pad: this  perl thing is just because ocamlyacc does not handle well
 # syncweb special comment at the very end
 
