@@ -292,14 +292,15 @@ module_expr:
       { mkmod(Pmod_ident $1) }
   | STRUCT structure END
       { mkmod(Pmod_structure($2)) }
-  | STRUCT structure error
-      { unclosed "struct" 1 "end" 3 }
   | LPAREN module_expr COLON module_type RPAREN
       { mkmod(Pmod_constraint($2, $4)) }
-  | LPAREN module_expr COLON module_type error
-      { unclosed "(" 1 ")" 5 }
   | LPAREN module_expr RPAREN
       { $2 }
+
+  | STRUCT structure error
+      { unclosed "struct" 1 "end" 3 }
+  | LPAREN module_expr COLON module_type error
+      { unclosed "(" 1 ")" 5 }
   | LPAREN module_expr error
       { unclosed "(" 1 ")" 3 }
 ;
@@ -347,10 +348,11 @@ module_type:
       { mkmty(Pmty_ident $1) }
   | SIG signature END
       { mkmty(Pmty_signature(List.rev $2)) }
-  | SIG signature error
-      { unclosed "sig" 1 "end" 3 }
   | LPAREN module_type RPAREN
       { $2 }
+
+  | SIG signature error
+      { unclosed "sig" 1 "end" 3 }
   | LPAREN module_type error
       { unclosed "(" 1 ")" 3 }
 ;
@@ -636,30 +638,33 @@ type_declarations:
   | type_declarations AND type_declaration      { $3 :: $1 }
 ;
 type_declaration:
-    type_parameters LIDENT type_kind constraints
+    type_parameters LIDENT type_kind
       { let (kind, manifest) = $3 in
         ($2, {ptype_params = $1;
-              ptype_cstrs = List.rev $4;
               ptype_kind = kind;
               ptype_manifest = manifest;
               ptype_loc = symbol_loc()}) }
 ;
 type_kind:
-    /*empty*/
-      { (Ptype_abstract, None) }
-  | EQUAL core_type %prec prec_type_def
-      { (Ptype_abstract, Some $2) }
   | EQUAL constructor_declarations
       { (Ptype_variant(List.rev $2), None) }
   | EQUAL BAR constructor_declarations
       { (Ptype_variant(List.rev $3), None) }
   | EQUAL LBRACE label_declarations opt_semi RBRACE
       { (Ptype_record(List.rev $3), None) }
+  /*(*s: [[rule type_kind]] cases *)*/
+  |  /*empty*/
+      { (Ptype_abstract, None) }
+  /*(*x: [[rule type_kind]] cases *)*/
+  | EQUAL core_type %prec prec_type_def
+      { (Ptype_abstract, Some $2) }
+  /*(*x: [[rule type_kind]] cases *)*/
   | EQUAL core_type EQUAL opt_bar constructor_declarations %prec prec_type_def
       { (Ptype_variant(List.rev $5), Some $2) }
   | EQUAL core_type EQUAL LBRACE label_declarations opt_semi RBRACE
     %prec prec_type_def
       { (Ptype_record(List.rev $5), Some $2) }
+  /*(*e: [[rule type_kind]] cases *)*/
 ;
 type_parameters:
     /*empty*/                                   { [] }
@@ -704,15 +709,15 @@ core_type:
       { mktyp(Ptyp_arrow($1, $3)) }
   | core_type_tuple
       { mktyp(Ptyp_tuple(List.rev $1)) }
+  /*(*s: [[rule core_type]] cases *)*/
   | core_type AS type_parameter
       { mktyp(Ptyp_alias($1, $3)) }
+  /*(*e: [[rule core_type]] cases *)*/
 ;
 
 simple_core_type:
     QUOTE ident
       { mktyp(Ptyp_var $2) }
-  | UNDERSCORE
-      { mktyp(Ptyp_any) }
   | type_longident
       { mktyp(Ptyp_constr($1, [])) }
   | simple_core_type type_longident %prec prec_constr_appl
@@ -722,6 +727,10 @@ simple_core_type:
       { mktyp(Ptyp_constr($4, List.rev $2)) }
   | LPAREN core_type RPAREN
       { $2 }
+  /*(*s: [[rule simple_core_type]] cases *)*/
+  | UNDERSCORE
+      { mktyp(Ptyp_any) }
+  /*(*e: [[rule simple_core_type]] cases *)*/
 ;
 core_type_tuple:
     simple_core_type STAR simple_core_type      { [$3; $1] }
@@ -825,12 +834,6 @@ primitive_declaration:
   | STRING primitive_declaration                { $1 :: $2 }
 ;
 /*(*x: extra rules *)*/
-/* "with" constraints (additional type equations over signature components) */
-
-constraints:
-       /* empty */                             { [] }
-;
-/*(*x: extra rules *)*/
 constant:
     INT                                         { Const_int $1 }
   | CHAR                                        { Const_char $1 }
@@ -859,6 +862,7 @@ mutable_flag:
     /* empty */                                 { Immutable }
   | MUTABLE                                     { Mutable }
 ;
+/*(*x: misc rules *)*/
 opt_bar:
     /* empty */                                 { () }
   | BAR                                         { () }
@@ -868,6 +872,8 @@ opt_semi:
   | SEMI                                        { () }
 ;
 /*(*e: misc rules *)*/
+/*(*s: ebnf rules *)*/
+/*(*e: ebnf rules *)*/
 /*(*e: grammar *)*/
 %%
 

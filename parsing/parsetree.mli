@@ -26,14 +26,15 @@ type core_type =
 
 (*s: type Parsetree.core_type_desc *)
 and core_type_desc = 
-    Ptyp_any
-
   | Ptyp_var of string
   | Ptyp_arrow of core_type * core_type
   | Ptyp_tuple of core_type list
   | Ptyp_constr of Longident.t * core_type list
-
+  (*s: [[Parsetree.core_type_desc]] cases *)
+  | Ptyp_any
+  (*x: [[Parsetree.core_type_desc]] cases *)
   | Ptyp_alias of core_type * string
+  (*e: [[Parsetree.core_type_desc]] cases *)
 (*e: type Parsetree.core_type_desc *)
 
 (* Value expressions for the core language *)
@@ -72,6 +73,7 @@ and expression_desc =
 
   | Pexp_tuple of expression list
   | Pexp_construct of Longident.t * expression option
+  (* todo: Pexp_record_with *)
   | Pexp_record of (Longident.t * expression) list
   | Pexp_array of expression list
 
@@ -83,6 +85,7 @@ and expression_desc =
   | Pexp_let of rec_flag * (pattern * expression) list * expression
   | Pexp_function of (pattern * expression) list
   | Pexp_match of expression * (pattern * expression) list
+  (* todo? not only in match? *)
   | Pexp_when of expression * expression
 
   | Pexp_try of expression * (pattern * expression) list
@@ -107,18 +110,21 @@ type value_description =
 (*s: type Parsetree.type_declaration *)
 type type_declaration =
   { ptype_params: string list;
-    ptype_cstrs: (string * core_type * Location.t) list;
     ptype_kind: type_kind;
-
+    ptype_loc: Location.t;
+    (*s: [[Parsetree.type_declaration]] other fields *)
     ptype_manifest: core_type option;
-    ptype_loc: Location.t }
+    (*e: [[Parsetree.type_declaration]] other fields *)
+  }
 (*e: type Parsetree.type_declaration *)
 
 (*s: type Parsetree.type_kind *)
 and type_kind =
-    Ptype_abstract
   | Ptype_variant of (string * core_type list) list
   | Ptype_record of (string * mutable_flag * core_type) list
+  (*s: [[Parsetree.type_kind]] cases *)
+  | Ptype_abstract
+  (*e: [[Parsetree.type_kind]] cases *)
 (*e: type Parsetree.type_kind *)
 
 (*s: type Parsetree.exception_declaration *)

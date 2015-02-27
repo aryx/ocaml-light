@@ -121,7 +121,8 @@ let interface sourcefile =
 
   let sg = Typemod.transl_signature (initial_env()) ast in
 
-  if !Clflags.print_types then (Printtyp.signature sg; print_newline());
+  if !Clflags.print_types 
+  then (Printtyp.signature sg; print_newline());
 
   Env.save_signature sg modulename (prefixname ^ ".cmi");
   remove_preprocessed inputfile
@@ -136,6 +137,7 @@ let print_if flag printer arg =
 (*e: function Compile.print_if *)
 
 (*s: function Compile.implementation *)
+let (|>) o f = f o
 let implementation sourcefile =
   init_path();
   let prefixname = Filename.chop_extension sourcefile in
@@ -147,31 +149,35 @@ let implementation sourcefile =
   let objfile = prefixname ^ ".cmo" in
   let oc = open_out_bin objfile in
   try
-    let (str, sg, finalenv) =
+    let (struc, sg, finalenv) =
       Typemod.type_structure (initial_env()) ast in
 
-    if !Clflags.print_types then (Printtyp.signature sg; print_newline());
+    if !Clflags.print_types 
+    then (Printtyp.signature sg; print_newline());
 
-    let (coercion, crc) =
+    let (coercion, _crc) =
       if Sys.file_exists (prefixname ^ ".mli") then begin
         let intf_file =
           try find_in_path !load_path (prefixname ^ ".cmi")
-          with Not_found -> prefixname ^ ".cmi" in
+          with Not_found -> prefixname ^ ".cmi" 
+        in
         let (dclsig, crc) = Env.read_signature modulename intf_file in
         (Includemod.compunit sourcefile sg intf_file dclsig, crc)
       end else begin
         let crc = Env.save_signature sg modulename (prefixname ^ ".cmi") in
-        Typemod.check_nongen_schemes str;
+        Typemod.check_nongen_schemes struc;
         (Tcoerce_none, crc)
-      end in
+      end 
+    in
 
-    Emitcode.to_file oc modulename
-      (print_if Clflags.dump_instr Printinstr.instrlist
-        (Bytegen.compile_implementation modulename
-          (print_if Clflags.dump_lambda Printlambda.lambda
-            (Simplif.simplify_lambda
-              (print_if Clflags.dump_rawlambda Printlambda.lambda
-                (Translmod.transl_implementation modulename str coercion))))));
+    Translmod.transl_implementation modulename struc coercion
+    |> print_if Clflags.dump_rawlambda Printlambda.lambda
+    |> Simplif.simplify_lambda
+    |> print_if Clflags.dump_lambda Printlambda.lambda
+    |> Bytegen.compile_implementation modulename
+    |> print_if Clflags.dump_instr Printinstr.instrlist
+    |> Emitcode.to_file oc modulename
+    ;
 
     remove_preprocessed inputfile;
     close_out oc
