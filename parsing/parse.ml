@@ -49,15 +49,17 @@ let wrap parsing_fun lexbuf =
                     loc_end = Lexing.lexeme_end lexbuf } in
         if !Location.input_name = "" 
         then maybe_skip_phrase lexbuf;
-        raise(Syntaxerr.Error(Syntaxerr.Other loc))
+        raise (Syntaxerr.Error(Syntaxerr.Other loc))
 
     | Lexer.Error(Lexer.Unterminated_comment, _, _) as err -> raise err
     | Lexer.Error(Lexer.Unterminated_string, _, _) as err -> raise err
     | Lexer.Error(_, _, _) as err ->
-        if !Location.input_name = "" then skip_phrase lexbuf;
+        if !Location.input_name = "" 
+        then skip_phrase lexbuf;
         raise err
     | Syntaxerr.Error _ as err ->
-        if !Location.input_name = "" then maybe_skip_phrase lexbuf;
+        if !Location.input_name = "" 
+        then maybe_skip_phrase lexbuf;
         raise err
 (*e: function Parse.wrap *)
 

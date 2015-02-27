@@ -19,6 +19,7 @@ open Asttypes
 (*s: type Types.type_expr *)
 type type_expr =
     Tvar of type_variable
+
   | Tarrow of type_expr * type_expr
   | Ttuple of type_expr list
   | Tconstr of Path.t * type_expr list

@@ -154,6 +154,7 @@ let main () =
 (*e: function Main.main *)
 
 (*s: toplevel Main._1 *)
-let _ = Printexc.catch main ()
+let _ = 
+  Printexc.catch main ()
 (*e: toplevel Main._1 *)
 (*e: ./driver/main.ml *)

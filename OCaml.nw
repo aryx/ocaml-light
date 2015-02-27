@@ -18,7 +18,7 @@
 % 
 
 %thx to codemap/codegraph/scheck:
-% - use cg to to look at backward deps (but  ml linker already enforces layers)
+% - use cg to to look at backward deps (but the linker already enforces layers)
 %   (harder to understand non layered code)
 % - use scheck to remove deadcode, found some even in latest ocaml :)
 %   (harder to understand big files)
@@ -155,7 +155,7 @@ a compiler for a high level language (higher than C).
 Why? Because I think it makes you a better programmer if
 you fully understand how things work under the hood.
 
-% ocaml because good compromise! functional, and imperative.
+% chose ocaml because good compromise! functional, and imperative.
 % I removed parts that were not that used:
 %  - objects
 %  - functors
@@ -231,6 +231,8 @@ those parts are copyright by INRIA.
 % for typing/
 \fi
 
+% some are also just copyright doligez, but not that many
+
 
 The prose is mine and is licensed under the GNU Free Documentation
 License.
@@ -238,8 +240,8 @@ License.
 
 \section{Acknowledgments}
 
-I would like to thank of course Xavier Leroy and Damien Doligez,
-the main authors of OCaml.
+I would like to thank of course Xavier Leroy
+the main author of OCaml.
 
 \chapter{Overview}
 
@@ -265,7 +267,6 @@ the main authors of OCaml.
 % missing on purpose: 
 %  - objects (see lablgtk mess), 
 %  - functors (see ocamlgraph or ocsigen mess).
-
 % toadd: 
 %  - type classes (no more + vs +., print_xxx, can factorize more code)
 %  - compile time metaprogramming? (no more boilerplate, show, map, visit, etc)
@@ -282,8 +283,6 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 
 \section{Code organization}
 
-% btype.ml: 
-%  "basic operations on core types"
 % datarepr.ml:  
 %  "Compute constructor and label descriptions from type declarations, determining their representation"
 % ctype.ml: 
@@ -342,7 +341,7 @@ type t =
 %<<signature Longident.flatten>>=
 %val flatten: t -> string list
 %@
-%% dead actually?
+%% dead, maybe dead because removed functors, module type, etc
 %
 %<<function Longident.flat>>=
 %let rec flat accu = function
@@ -407,16 +406,13 @@ type core_type =
 
 <<type Parsetree.core_type_desc>>=
 and core_type_desc = 
-    Ptyp_any
-
   | Ptyp_var of string
   | Ptyp_arrow of core_type * core_type
   | Ptyp_tuple of core_type list
   | Ptyp_constr of Longident.t * core_type list
-
-  | Ptyp_alias of core_type * string
+  <<[[Parsetree.core_type_desc]] cases>>
 @
-% any?
+% any? it's _, I think I should remove it
 % rename constr? it's not constructor, it's apply,
 %  well it's kinda a constructor, but for type level.
 % note: alias here, but should disappear at some point.
@@ -432,20 +428,17 @@ and core_type_desc =
 <<type Parsetree.type_declaration>>=
 type type_declaration =
   { ptype_params: string list;
-    ptype_cstrs: (string * core_type * Location.t) list;
     ptype_kind: type_kind;
-
-    ptype_manifest: core_type option;
-    ptype_loc: Location.t }
+    ptype_loc: Location.t;
+    <<[[Parsetree.type_declaration]] other fields>>
+  }
 @
-% manifest? for abstract types?
-% dup of ptype_cstrs with type_kind info? just for the location?
 
 <<type Parsetree.type_kind>>=
 and type_kind =
-    Ptype_abstract
   | Ptype_variant of (string * core_type list) list
   | Ptype_record of (string * mutable_flag * core_type) list
+  <<[[Parsetree.type_kind]] cases>>
 @
 % type sum, type product
 
@@ -496,6 +489,7 @@ and expression_desc =
 
   | Pexp_tuple of expression list
   | Pexp_construct of Longident.t * expression option
+  (* todo: Pexp_record_with *)
   | Pexp_record of (Longident.t * expression) list
   | Pexp_array of expression list
 
@@ -507,6 +501,7 @@ and expression_desc =
   | Pexp_let of rec_flag * (pattern * expression) list * expression
   | Pexp_function of (pattern * expression) list
   | Pexp_match of expression * (pattern * expression) list
+  (* todo? not only in match? *)
   | Pexp_when of expression * expression
 
   | Pexp_try of expression * (pattern * expression) list
@@ -523,6 +518,10 @@ and expression_desc =
 type rec_flag = Nonrecursive | Recursive
 @
 % actually can also have rec_flag for constants? build a cycle?
+
+<<type Asttypes.direction_flag>>=
+type direction_flag = Upto | Downto
+@
 
 
 \subsection{Patterns}
@@ -552,6 +551,8 @@ and pattern_desc =
 
 \subsubsection{Signatures}
 
+% mli
+
 <<type Parsetree.signature>>=
 and signature = signature_item list
 @
@@ -570,6 +571,8 @@ and signature_item_desc =
   | Psig_module of string * module_type
   | Psig_open of Longident.t
 @
+% recursive module type
+% type_declaration list  for mutually recursive types
 
 
 <<type Parsetree.module_type>>=
@@ -586,6 +589,8 @@ and module_type_desc =
 
 
 \subsubsection{Structures}
+
+% ml
 
 <<type Parsetree.structure>>=
 and structure = structure_item list
@@ -609,7 +614,9 @@ and structure_item_desc =
   | Pstr_module of string * module_expr
   | Pstr_open of Longident.t
 @
-
+% Pstr_value is a special case of Pstr_eval where the expr
+% is a let! it's treated specially
+% expression list  for mutually recursive functions
 
 <<type Parsetree.module_expr>>=
 type module_expr =
@@ -630,11 +637,13 @@ and module_expr_desc =
 <<type Types.type_expr>>=
 type type_expr =
     Tvar of type_variable
+
   | Tarrow of type_expr * type_expr
   | Ttuple of type_expr list
   | Tconstr of Path.t * type_expr list
 @
 % Tconstr, type "constructor"
+% diff with core_type_desc: no more Any, no more type aliases
 
 <<type Types.type_variable>>=
 and type_variable =
@@ -673,7 +682,8 @@ and type_variable =
 \chapter{[[main()]]}
 
 <<toplevel Main._1>>=
-let _ = Printexc.catch main ()
+let _ = 
+  Printexc.catch main ()
 @
 
 <<function Main.main>>=
@@ -696,12 +706,11 @@ let main () =
     Errors.report_error x;
     exit 2
 @
-
+% see report_error in appendix
 
 <<constant Clflags.exec_name>>=
 let exec_name = ref "a.out"             (* -o *)
 @
-
 <<[[Main.main()]] command line options>>=
 "-o", Arg.String(fun s -> exec_name := s;
                           archive_name := s;
@@ -767,13 +776,14 @@ let process_file name =
 <<signature Compile.implementation>>=
 val implementation: string -> unit
 @
-
+% filename
 
 
 
 <<signature Compile.init_path>>=
 val init_path: unit -> unit
 @
+% ?
 
 <<signature Compile.initial_env>>=
 val initial_env: unit -> Env.t
@@ -781,6 +791,7 @@ val initial_env: unit -> Env.t
 
 
 <<function Compile.implementation>>=
+let (|>) o f = f o
 let implementation sourcefile =
   init_path();
   let prefixname = Filename.chop_extension sourcefile in
@@ -792,31 +803,35 @@ let implementation sourcefile =
   let objfile = prefixname ^ ".cmo" in
   let oc = open_out_bin objfile in
   try
-    let (str, sg, finalenv) =
+    let (struc, sg, finalenv) =
       Typemod.type_structure (initial_env()) ast in
 
-    if !Clflags.print_types then (Printtyp.signature sg; print_newline());
+    if !Clflags.print_types 
+    then (Printtyp.signature sg; print_newline());
 
-    let (coercion, crc) =
+    let (coercion, _crc) =
       if Sys.file_exists (prefixname ^ ".mli") then begin
         let intf_file =
           try find_in_path !load_path (prefixname ^ ".cmi")
-          with Not_found -> prefixname ^ ".cmi" in
+          with Not_found -> prefixname ^ ".cmi" 
+        in
         let (dclsig, crc) = Env.read_signature modulename intf_file in
         (Includemod.compunit sourcefile sg intf_file dclsig, crc)
       end else begin
         let crc = Env.save_signature sg modulename (prefixname ^ ".cmi") in
-        Typemod.check_nongen_schemes str;
+        Typemod.check_nongen_schemes struc;
         (Tcoerce_none, crc)
-      end in
+      end 
+    in
 
-    Emitcode.to_file oc modulename
-      (print_if Clflags.dump_instr Printinstr.instrlist
-        (Bytegen.compile_implementation modulename
-          (print_if Clflags.dump_lambda Printlambda.lambda
-            (Simplif.simplify_lambda
-              (print_if Clflags.dump_rawlambda Printlambda.lambda
-                (Translmod.transl_implementation modulename str coercion))))));
+    Translmod.transl_implementation modulename struc coercion
+    |> print_if Clflags.dump_rawlambda Printlambda.lambda
+    |> Simplif.simplify_lambda
+    |> print_if Clflags.dump_lambda Printlambda.lambda
+    |> Bytegen.compile_implementation modulename
+    |> print_if Clflags.dump_instr Printinstr.instrlist
+    |> Emitcode.to_file oc modulename
+    ;
 
     remove_preprocessed inputfile;
     close_out oc
@@ -825,7 +840,7 @@ let implementation sourcefile =
     remove_file objfile;
     raise x
 @
-%less: Common.finalize, and use |> !!
+%less: Common.finalize
 %with later typing/
 %(*
 %    let coercion =
@@ -841,7 +856,9 @@ let implementation sourcefile =
 %        Tcoerce_none
 %      end in
 %*)
+%todo: crc seems unused later, why? and actually we don't use it here
 
+% ast_impl_magic_number ???
 
 <<signature Config.load_path>>=
 val load_path: string list ref
@@ -856,7 +873,6 @@ let process_implementation_file name =
   Compile.implementation name;
   objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
 @
-
 <<[[Main.main()]] command line options>>=
 "-impl", Arg.String process_implementation_file,
       "<file>  Compile <file> as a .ml file";
@@ -883,7 +899,8 @@ let interface sourcefile =
 
   let sg = Typemod.transl_signature (initial_env()) ast in
 
-  if !Clflags.print_types then (Printtyp.signature sg; print_newline());
+  if !Clflags.print_types 
+  then (Printtyp.signature sg; print_newline());
 
   Env.save_signature sg modulename (prefixname ^ ".cmi");
   remove_preprocessed inputfile
@@ -915,6 +932,7 @@ let process_interface_file name =
     Bytelink.link (List.rev !objfiles)
 @
 
+
 \chapter{Lexing}
 
 % See lex&yacc tutorial, even ocamllex/ocamlyacc tutorial.
@@ -927,8 +945,6 @@ let process_interface_file name =
 
 val token: Lexing.lexbuf -> Parser.token
 @
-
-
 
 
 <<./parsing/lexer.mll>>=
@@ -1099,6 +1115,7 @@ rule token = parse
 %token WHILE
 %token WITH
 @
+%less: regroup? can put multiple on one line
 
 \section{Comments}
 % space and comments?
@@ -1472,7 +1489,7 @@ let get_stored_string () =
 \chapter{Parsing}
 
 % Again, see lex&yacc tutorial, even ocamllex/ocamlyacc tutorial.
-% bootstrapping issue? no for ocamlyacc!
+% bootstrapping issue? no for ocamlyacc as it's written in C.
 
 <<signature Parse.implementation>>=
 val implementation : Lexing.lexbuf -> Parsetree.structure
@@ -1548,7 +1565,7 @@ val interface : Lexing.lexbuf -> Parsetree.signature
 %left  DOT                              /* record access, array access */
 %right PREFIXOP                         /* ! */
 @
-
+%todo: fix many conflicts by forwardporting from 4.00
 
 <<function Parse.wrap>>=
 let wrap parsing_fun lexbuf =
@@ -1562,18 +1579,20 @@ let wrap parsing_fun lexbuf =
                     loc_end = Lexing.lexeme_end lexbuf } in
         if !Location.input_name = "" 
         then maybe_skip_phrase lexbuf;
-        raise(Syntaxerr.Error(Syntaxerr.Other loc))
+        raise (Syntaxerr.Error(Syntaxerr.Other loc))
 
     | Lexer.Error(Lexer.Unterminated_comment, _, _) as err -> raise err
     | Lexer.Error(Lexer.Unterminated_string, _, _) as err -> raise err
     | Lexer.Error(_, _, _) as err ->
-        if !Location.input_name = "" then skip_phrase lexbuf;
+        if !Location.input_name = "" 
+        then skip_phrase lexbuf;
         raise err
     | Syntaxerr.Error _ as err ->
-        if !Location.input_name = "" then maybe_skip_phrase lexbuf;
+        if !Location.input_name = "" 
+        then maybe_skip_phrase lexbuf;
         raise err
 @
-
+%todo: factorize and aspectize maybe_skip_phrase
 
 <<function Parse.implementation>>=
 let implementation = wrap Parser.implementation
@@ -1645,7 +1664,13 @@ interface:
 /* Miscellaneous */
 
 <<misc rules>>
+<<ebnf rules>>
 @
+
+<<ebnf rules>>=
+@
+
+%todo: EBNF style
 
 <<misc rules>>=
 rec_flag:
@@ -1660,6 +1685,9 @@ mutable_flag:
     /* empty */                                 { Immutable }
   | MUTABLE                                     { Mutable }
 ;
+@
+
+<<misc rules>>=
 opt_bar:
     /* empty */                                 { () }
   | BAR                                         { () }
@@ -1683,14 +1711,15 @@ module_expr:
       { mkmod(Pmod_ident $1) }
   | STRUCT structure END
       { mkmod(Pmod_structure($2)) }
-  | STRUCT structure error
-      { unclosed "struct" 1 "end" 3 }
   | LPAREN module_expr COLON module_type RPAREN
       { mkmod(Pmod_constraint($2, $4)) }
-  | LPAREN module_expr COLON module_type error
-      { unclosed "(" 1 ")" 5 }
   | LPAREN module_expr RPAREN
       { $2 }
+
+  | STRUCT structure error
+      { unclosed "struct" 1 "end" 3 }
+  | LPAREN module_expr COLON module_type error
+      { unclosed "(" 1 ")" 5 }
   | LPAREN module_expr error
       { unclosed "(" 1 ")" 3 }
 ;
@@ -1742,10 +1771,11 @@ module_type:
       { mkmty(Pmty_ident $1) }
   | SIG signature END
       { mkmty(Pmty_signature(List.rev $2)) }
-  | SIG signature error
-      { unclosed "sig" 1 "end" 3 }
   | LPAREN module_type RPAREN
       { $2 }
+
+  | SIG signature error
+      { unclosed "sig" 1 "end" 3 }
   | LPAREN module_type error
       { unclosed "(" 1 ")" 3 }
 ;
@@ -1868,15 +1898,12 @@ core_type:
       { mktyp(Ptyp_arrow($1, $3)) }
   | core_type_tuple
       { mktyp(Ptyp_tuple(List.rev $1)) }
-  | core_type AS type_parameter
-      { mktyp(Ptyp_alias($1, $3)) }
+  <<[[rule core_type]] cases>>
 ;
 
 simple_core_type:
     QUOTE ident
       { mktyp(Ptyp_var $2) }
-  | UNDERSCORE
-      { mktyp(Ptyp_any) }
   | type_longident
       { mktyp(Ptyp_constr($1, [])) }
   | simple_core_type type_longident %prec prec_constr_appl
@@ -1886,6 +1913,7 @@ simple_core_type:
       { mktyp(Ptyp_constr($4, List.rev $2)) }
   | LPAREN core_type RPAREN
       { $2 }
+  <<[[rule simple_core_type]] cases>>
 ;
 core_type_tuple:
     simple_core_type STAR simple_core_type      { [$3; $1] }
@@ -1909,30 +1937,21 @@ type_declarations:
   | type_declarations AND type_declaration      { $3 :: $1 }
 ;
 type_declaration:
-    type_parameters LIDENT type_kind constraints
+    type_parameters LIDENT type_kind
       { let (kind, manifest) = $3 in
         ($2, {ptype_params = $1;
-              ptype_cstrs = List.rev $4;
               ptype_kind = kind;
               ptype_manifest = manifest;
               ptype_loc = symbol_loc()}) }
 ;
 type_kind:
-    /*empty*/
-      { (Ptype_abstract, None) }
-  | EQUAL core_type %prec prec_type_def
-      { (Ptype_abstract, Some $2) }
   | EQUAL constructor_declarations
       { (Ptype_variant(List.rev $2), None) }
   | EQUAL BAR constructor_declarations
       { (Ptype_variant(List.rev $3), None) }
   | EQUAL LBRACE label_declarations opt_semi RBRACE
       { (Ptype_record(List.rev $3), None) }
-  | EQUAL core_type EQUAL opt_bar constructor_declarations %prec prec_type_def
-      { (Ptype_variant(List.rev $5), Some $2) }
-  | EQUAL core_type EQUAL LBRACE label_declarations opt_semi RBRACE
-    %prec prec_type_def
-      { (Ptype_record(List.rev $5), Some $2) }
+  <<[[rule type_kind]] cases>>
 ;
 type_parameters:
     /*empty*/                                   { [] }
@@ -1967,14 +1986,6 @@ label_declaration:
 @
 %$
 
-<<extra rules>>=
-/* "with" constraints (additional type equations over signature components) */
-
-constraints:
-       /* empty */                             { [] }
-;
-@
-%todo: delete, and maybe Ptyp_constr too
 
 \subsection{Variants}
 
@@ -2268,9 +2279,6 @@ lbl_pattern_list:
 
 \subsubsection{Loops}
 
-<<type Asttypes.direction_flag>>=
-type direction_flag = Upto | Downto
-@
 
 \section{Helpers}=
 
@@ -2475,8 +2483,6 @@ type type_declaration =
     type_manifest: type_expr option }
 @
 % diff type_params string list -> type_expr list
-% and the ptype_cstrs are not here anymore, but inlined where they are used.
-% useless here as type_declaration don't generate any code
 
 <<type Types.type_kind>>=
 and type_kind =
@@ -4137,7 +4143,33 @@ let builtin_values =
 
 \subsection{Abstract types}
 
-\subsection{Type aliases}
+% type t (in .mli, and no = after)
+
+<<[[Parsetree.type_kind]] cases>>=
+| Ptype_abstract
+@
+
+<<[[rule type_kind]] cases>>=
+|  /*empty*/
+    { (Ptype_abstract, None) }
+@
+
+\subsection{Manifest types}
+
+% it's also for type x = y = z
+% not sure it's very useful
+
+<<[[Parsetree.type_declaration]] other fields>>=
+ptype_manifest: core_type option;
+@
+
+
+<<[[rule type_kind]] cases>>=
+| EQUAL core_type %prec prec_type_def
+    { (Ptype_abstract, Some $2) }
+@
+%$
+
 
 % in ctype.ml before unify
 
@@ -4185,6 +4217,46 @@ let check_recursive_abbrev env (name, sdecl) (id, decl) =
       then raise(Error(sdecl.ptype_loc, Recursive_abbrev name))
   | _ -> ()
 @
+
+
+
+%there is also this, but is it useful?
+<<[[rule type_kind]] cases>>=
+| EQUAL core_type EQUAL opt_bar constructor_declarations %prec prec_type_def
+    { (Ptype_variant(List.rev $5), Some $2) }
+| EQUAL core_type EQUAL LBRACE label_declarations opt_semi RBRACE
+  %prec prec_type_def
+    { (Ptype_record(List.rev $5), Some $2) }
+@
+
+\subsection{Type any}
+% _
+%todo: remove?
+
+<<[[Parsetree.core_type_desc]] cases>>=
+| Ptyp_any
+@
+
+<<[[rule simple_core_type]] cases>>=
+| UNDERSCORE
+    { mktyp(Ptyp_any) }
+@
+
+\subsection{Type aliases}
+% type t = x as 'a ????
+%todo: remove? what is that?
+
+<<[[Parsetree.core_type_desc]] cases>>=
+| Ptyp_alias of core_type * string
+@
+% not what you think ...
+
+<<[[rule core_type]] cases>>=
+| core_type AS type_parameter
+    { mktyp(Ptyp_alias($1, $3)) }
+@
+
+
 
 \subsection{Printf}
 
@@ -4252,6 +4324,13 @@ let type_format loc fmt =
 % things got so much more complicated with objects ...
 % huge change in the typechecker, ctype.ml from 400LOC to 1200LOC
 % and actually should also count the new btype.ml
+
+% there was
+%  'constraints' in type declarations
+
+\subsection{Module type and functors}
+
+% things got more complicated also with functors ...
 
 
 \chapter{Checking}
