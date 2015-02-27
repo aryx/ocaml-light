@@ -68,33 +68,40 @@ type expression =
 
 (*s: type Parsetree.expression_desc *)
 and expression_desc =
-    Pexp_ident of Longident.t
   | Pexp_constant of Asttypes.constant
 
   | Pexp_tuple of expression list
   | Pexp_construct of Longident.t * expression option
   (* todo: Pexp_record_with *)
   | Pexp_record of (Longident.t * expression) list
-  | Pexp_array of expression list
+
+  (* lambda calcul! abs and app *)
+  | Pexp_function of (pattern * expression) list
+  | Pexp_apply of expression * expression list
 
   | Pexp_field of expression * Longident.t
   | Pexp_setfield of expression * Longident.t * expression
 
-  | Pexp_apply of expression * expression list
-
   | Pexp_let of rec_flag * (pattern * expression) list * expression
-  | Pexp_function of (pattern * expression) list
+  | Pexp_ident of Longident.t
+
   | Pexp_match of expression * (pattern * expression) list
   (* todo? not only in match? *)
   | Pexp_when of expression * expression
 
-  | Pexp_try of expression * (pattern * expression) list
-  | Pexp_ifthenelse of expression * expression * expression option
+  | Pexp_constraint of expression * core_type
+
+  (*s: [[Parsetree.expression_desc]] cases *)
   | Pexp_sequence of expression * expression
+
+  | Pexp_ifthenelse of expression * expression * expression option
   | Pexp_while of expression * expression
   | Pexp_for of string * expression * expression * direction_flag * expression
 
-  | Pexp_constraint of expression * core_type
+  | Pexp_try of expression * (pattern * expression) list
+  (*x: [[Parsetree.expression_desc]] cases *)
+  | Pexp_array of expression list
+  (*e: [[Parsetree.expression_desc]] cases *)
 (*e: type Parsetree.expression_desc *)
 
 (*s: type Parsetree.value_description *)

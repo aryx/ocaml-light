@@ -262,9 +262,10 @@ rule token = parse
   | "!=" { INFIXOP0 "!=" }
   | "<"  { LESS } | ">"  { GREATER }
   (*x: [[Lexer.token()]] operator cases *)
-  | "&"  { AMPERSAND }
   | "&&" { AMPERAMPER }
   | "||" { BARBAR }
+  (*x: [[Lexer.token()]] operator cases *)
+  | "&"  { AMPERSAND }
   (*x: [[Lexer.token()]] operator cases *)
   | "-"  { SUBTRACTIVE "-" }
   | "-." { SUBTRACTIVE "-." }
