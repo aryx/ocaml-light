@@ -215,9 +215,6 @@ those parts are copyright by INRIA.
 (***********************************************************************)
 @
 
-The prose is mine and is licensed under the GNU Free Documentation
-License.
-
 \ifallcode
 <<copyright header0>>=
 (***********************************************************************)
@@ -233,6 +230,11 @@ License.
 @
 % for typing/
 \fi
+
+
+The prose is mine and is licensed under the GNU Free Documentation
+License.
+
 
 \section{Acknowledgments}
 
@@ -3045,13 +3047,13 @@ let add_modtype id ty s =
 let rec type_expr s = function
     Tvar{tvar_link = None} as ty -> ty
   | Tvar{tvar_link = Some ty} -> type_expr s ty
+  (* boilerplate *)
   | Tarrow(t1, t2) -> Tarrow(type_expr s t1, type_expr s t2)
   | Ttuple tl -> Ttuple(List.map (type_expr s) tl)
   | Tconstr(p, []) -> Tconstr(type_path s p, [])
   | Tconstr(p, tl) -> Tconstr(type_path s p, List.map (type_expr s) tl)
 @
 % follow link!
-% rest is boilerplate
 
 <<function Subst.type_path>>=
 let type_path s = function
@@ -5262,6 +5264,9 @@ let record_event ev =
 
 
 \chapter{Advanced Features}
+
+% objects?
+% functors? can be interesting to understand how it's compiled
 
 \section{Floats}
 
