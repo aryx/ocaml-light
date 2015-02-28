@@ -15,12 +15,17 @@
 open Format
 
 (*s: type Ident.t *)
-type t = { mutable stamp: int; mutable name: string; mutable global: bool }
+type t = { 
+  mutable name: string; 
+  mutable stamp: int; 
+  (*s: [[Ident.t]] other fields *)
+  mutable global: bool 
+  (*e: [[Ident.t]] other fields *)
+}
 (*e: type Ident.t *)
 
 (*s: constant Ident.currentstamp *)
 (* A stamp of 0 denotes a persistent identifier *)
-
 let currentstamp = ref 0
 (*e: constant Ident.currentstamp *)
 
@@ -36,7 +41,8 @@ let create_persistent s =
 (*e: function Ident.create_persistent *)
 
 (*s: function Ident.name *)
-let name i = i.name
+let name i = 
+  i.name
 (*e: function Ident.name *)
 
 (*s: function Ident.unique_name *)
@@ -52,7 +58,8 @@ let equal i1 i2 = i1.name = i2.name
 (*e: function Ident.equal *)
 
 (*s: function Ident.same *)
-let same i1 i2 = i1 = i2
+let same i1 i2 = 
+  i1 = i2
   (* Possibly more efficient version (with a real compiler, at least):
        if i1.stamp <> 0
        then i1.stamp = i2.stamp

@@ -34,22 +34,26 @@ let identity =
 (*s: function Subst.add_type *)
 let add_type id p s =
   { types = Ident.add id p s.types;
+    (* boilerplate, with record *)
     modules = s.modules;
     modtypes = s.modtypes }
 (*e: function Subst.add_type *)
 
 (*s: function Subst.add_module *)
 let add_module id p s =
-  { types = s.types;
-    modules = Ident.add id p s.modules;
+  { modules = Ident.add id p s.modules;
+    (* boilerplate, with record *)
+    types = s.types;
     modtypes = s.modtypes }
 (*e: function Subst.add_module *)
 
 (*s: function Subst.add_modtype *)
 let add_modtype id ty s =
-  { types = s.types;
+  { modtypes = Ident.add id ty s.modtypes;
+    (* boilerplate, with record *)
     modules = s.modules;
-    modtypes = Ident.add id ty s.modtypes }
+    types = s.types;
+  }
 (*e: function Subst.add_modtype *)
 
 (*s: function Subst.module_path *)
@@ -72,7 +76,7 @@ let type_path s = function
 let rec type_expr s = function
     Tvar{tvar_link = None} as ty -> ty
   | Tvar{tvar_link = Some ty} -> type_expr s ty
-  (* boilerplate *)
+  (* boilerplate mapper *)
   | Tarrow(t1, t2) -> Tarrow(type_expr s t1, type_expr s t2)
   | Ttuple tl -> Ttuple(List.map (type_expr s) tl)
   | Tconstr(p, []) -> Tconstr(type_path s p, [])
@@ -90,7 +94,8 @@ let type_declaration s decl =
   { type_params = decl.type_params;
     type_arity = decl.type_arity;
     type_kind =
-      begin match decl.type_kind with
+      begin match decl.type_kind with 
+       (* boilerplate mapper *)
         Type_abstract -> Type_abstract
       | Type_variant cstrs ->
           Type_variant(List.map (fun (n, args) -> (n, List.map (type_expr s) args))

@@ -50,12 +50,12 @@ and path_format = Pident ident_format
 (*e: constants Predef.path_xxx *)
 
 (*s: constants Predef.type_xxx *)
-let type_int = Tconstr(path_int, [])
-and type_char = Tconstr(path_char, [])
-and type_string = Tconstr(path_string, [])
-and type_float = Tconstr(path_float, [])
-and type_bool = Tconstr(path_bool, [])
-and type_unit = Tconstr(path_unit, [])
+let type_int     = Tconstr(path_int, [])
+and type_char    = Tconstr(path_char, [])
+and type_string  = Tconstr(path_string, [])
+and type_float   = Tconstr(path_float, [])
+and type_bool    = Tconstr(path_bool, [])
+and type_unit    = Tconstr(path_unit, [])
 
 and type_list t = Tconstr(path_list, [t])
 and type_array t = Tconstr(path_array, [t])
@@ -65,15 +65,15 @@ and type_exn = Tconstr(path_exn, [])
 
 
 (*s: constants Predef.ident_exn_xxx *)
-let ident_match_failure = Ident.create "Match_failure"
-and ident_out_of_memory = Ident.create "Out_of_memory"
+let ident_match_failure    = Ident.create "Match_failure"
+and ident_out_of_memory    = Ident.create "Out_of_memory"
 and ident_invalid_argument = Ident.create "Invalid_argument"
-and ident_failure = Ident.create "Failure"
-and ident_not_found = Ident.create "Not_found"
-and ident_sys_error = Ident.create "Sys_error"
-and ident_end_of_file = Ident.create "End_of_file"
+and ident_failure          = Ident.create "Failure"
+and ident_not_found        = Ident.create "Not_found"
+and ident_sys_error        = Ident.create "Sys_error"
+and ident_end_of_file      = Ident.create "End_of_file"
 and ident_division_by_zero = Ident.create "Division_by_zero"
-and ident_stack_overflow = Ident.create "Stack_overflow"
+and ident_stack_overflow   = Ident.create "Stack_overflow"
 (*e: constants Predef.ident_exn_xxx *)
 
 (*s: constant Predef.path_match_failure *)
@@ -85,63 +85,82 @@ let build_initial_env add_type add_exception empty_env =
   let newvar() =
     (* Cannot call the real newvar from ctype here
        because ctype imports predef via env *)
-    Tvar{tvar_level = -1 (*generic_level*); tvar_link = None} in
-  let decl_abstr =
-    {type_params = [];
-     type_arity = 0;
-     type_kind = Type_abstract;
-     type_manifest = None}
-  and decl_bool =
+    Tvar{tvar_level = -1 (*generic_level*); tvar_link = None} 
+  in
+
+  (*s: [[Predef.build_initial_env()]] decls *)
+  let decl_bool =
     {type_params = [];
      type_arity = 0;
      type_kind = Type_variant["false",[]; "true",[]];
      type_manifest = None}
-  and decl_unit =
+  in
+  let decl_unit =
     {type_params = []; 
      type_arity = 0;
      type_kind = Type_variant["()",[]];
      type_manifest = None}
-  and decl_exn =
-    {type_params = [];
-     type_arity = 0;
-     type_kind = Type_variant [];
-     type_manifest = None}
-  and decl_array =
-    let tvar = newvar() in
-    {type_params = [tvar];
-     type_arity = 1;
-     type_kind = Type_abstract;
-     type_manifest = None}
-  and decl_list =
+  in
+  (*x: [[Predef.build_initial_env()]] decls *)
+  let decl_list =
     let tvar = newvar() in
     {type_params = [tvar];
      type_arity = 1;
      type_kind = Type_variant["[]", []; "::", [tvar; type_list tvar]];
      type_manifest = None}
-  and decl_format =
+  in
+  (*x: [[Predef.build_initial_env()]] decls *)
+  let decl_abstr =
+    {type_params = [];
+     type_arity = 0;
+     type_kind = Type_abstract;
+     type_manifest = None}
+  in
+  (*x: [[Predef.build_initial_env()]] decls *)
+  let decl_exn =
+    {type_params = [];
+     type_arity = 0;
+     type_kind = Type_variant [];
+     type_manifest = None}
+  in
+  (*x: [[Predef.build_initial_env()]] decls *)
+  let decl_format =
     {type_params = [newvar(); newvar(); newvar()];
      type_arity = 3;
      type_kind = Type_abstract;
-     type_manifest = None} in
-
+     type_manifest = None} 
+  in
+  (*x: [[Predef.build_initial_env()]] decls *)
+  let decl_array =
+    let tvar = newvar() in
+    {type_params = [tvar];
+     type_arity = 1;
+     type_kind = Type_abstract;
+     type_manifest = None}
+  in
+  (*e: [[Predef.build_initial_env()]] decls *)
   (*s: [[Predef.build_initial_env()]] adding exceptions *)
-    add_exception ident_match_failure [Ttuple[type_string; type_int; type_int]] (
-    add_exception ident_out_of_memory [] (
-    add_exception ident_stack_overflow [] (
-    add_exception ident_invalid_argument [type_string] (
-    add_exception ident_failure [type_string] (
-    add_exception ident_not_found [] (
-    add_exception ident_sys_error [type_string] (
-    add_exception ident_end_of_file [] (
-    add_exception ident_division_by_zero [] (
+  add_exception ident_match_failure [Ttuple[type_string; type_int; type_int]] (
+  add_exception ident_out_of_memory [] (
+  add_exception ident_stack_overflow [] (
+  add_exception ident_invalid_argument [type_string] (
+  add_exception ident_failure [type_string] (
+  add_exception ident_not_found [] (
+  add_exception ident_sys_error [type_string] (
+  add_exception ident_end_of_file [] (
+  add_exception ident_division_by_zero [] (
   (*e: [[Predef.build_initial_env()]] adding exceptions *)
 
   add_type ident_format decl_format (
+
   add_type ident_list decl_list (
   add_type ident_array decl_array (
+
   add_type ident_exn decl_exn (
+
   add_type ident_unit decl_unit (
   add_type ident_bool decl_bool (
+
   add_type ident_float decl_abstr (
   add_type ident_string decl_abstr (
   add_type ident_char decl_abstr (

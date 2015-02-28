@@ -46,10 +46,13 @@ type constructor_description =
   { cstr_res: type_expr;                (* Type of the result *)
     cstr_args: type_expr list;          (* Type of the arguments *)
     cstr_arity: int;                    (* Number of arguments *)
-    cstr_tag: constructor_tag;          (* Tag for heap blocks *)
 
+    (*s: [[Types.constructor_description]] other fields *)
+    cstr_tag: constructor_tag;          (* Tag for heap blocks *)
     cstr_consts: int;                   (* Number of constant constructors *)
-    cstr_nonconsts: int }               (* Number of non-const constructors *)
+    cstr_nonconsts: int;               (* Number of non-const constructors *)
+    (*e: [[Types.constructor_description]] other fields *)
+   }
 (*e: type Types.constructor_description *)
 
 (*s: type Types.constructor_tag *)
@@ -66,9 +69,13 @@ type label_description =
   { lbl_res: type_expr;                 (* Type of the result *)
     lbl_arg: type_expr;                 (* Type of the argument *)
     lbl_mut: mutable_flag;              (* Is this a mutable field? *)
+
+    (*s: [[Types.label_description]] other fields *)
     lbl_pos: int;                       (* Position in block *)
     lbl_all: label_description array;   (* All the labels in this type *)
-    lbl_repres: record_representation } (* Representation for this record *)
+    lbl_repres: record_representation;  (* Representation for this record *)
+    (*e: [[Types.label_description]] other fields *)
+  }
 (*e: type Types.label_description *)
 
 (*s: type Types.record_representation *)
@@ -82,17 +89,21 @@ and record_representation =
 (*s: type Types.type_declaration *)
 type type_declaration =
   { type_params: type_expr list;
-    type_arity: int;
+    type_arity: int; (* List.length td.type_params *)
     type_kind: type_kind;
-
-    type_manifest: type_expr option }
+    (*s: [[Types.type_declaration]] other fields *)
+    type_manifest: type_expr option 
+    (*e: [[Types.type_declaration]] other fields *)
+  }
 (*e: type Types.type_declaration *)
 
 (*s: type Types.type_kind *)
 and type_kind =
-    Type_abstract
   | Type_variant of (string * type_expr list) list
   | Type_record of (string * mutable_flag * type_expr) list
+  (*s: [[Types.type_kind]] cases *)
+  | Type_abstract
+  (*e: [[Types.type_kind]] cases *)
 (*e: type Types.type_kind *)
 
 (*s: type Types.exception_declaration *)

@@ -21,6 +21,7 @@ open Asttypes
 open Longident
 open Parsetree
 
+/*(*s: functions Parser.mkxxx *)*/
 let mktyp d =
   { ptyp_desc = d; ptyp_loc = Location.symbol_loc() }
 let mkpat d =
@@ -35,6 +36,7 @@ let mkmod d =
   { pmod_desc = d; pmod_loc = Location.symbol_loc() }
 let mkstr d =
   { pstr_desc = d; pstr_loc = Location.symbol_loc() }
+/*(*e: functions Parser.mkxxx *)*/
 
 let mkoperator name pos =
   { pexp_desc = Pexp_ident(Lident name); pexp_loc = rhs_loc pos }
@@ -82,6 +84,7 @@ let mkuminus name arg =
   | _ ->
       mkexp(Pexp_apply(mkoperator ("~" ^ name) 1, [arg]))
 
+/*(*s: [[Parser.mklistexp()]] *)*/
 let rec mklistexp = function
     [] ->
       mkexp(Pexp_construct(Lident "[]", None))
@@ -89,6 +92,8 @@ let rec mklistexp = function
       mkexp(Pexp_construct(Lident "::",
                            Some(mkexp(Pexp_tuple[e1; mklistexp el]))
                            ))
+/*(*e: [[Parser.mklistexp()]] *)*/
+
 let rec mklistpat = function
     [] ->
       mkpat(Ppat_construct(Lident "[]", None))
@@ -290,10 +295,12 @@ structure_item:
         | _ -> mkstr(Pstr_value($2, List.rev $3)) }
   | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
       { mkstr(Pstr_primitive($2, {pval_type = $4; pval_prim = $6})) }
+
   | TYPE type_declarations
       { mkstr(Pstr_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
+
   | MODULE UIDENT module_binding
       { mkstr(Pstr_module($2, $3)) }
   | OPEN mod_longident
@@ -342,10 +349,12 @@ signature_item:
       { mksig(Psig_value($2, {pval_type = $4; pval_prim = []})) }
   | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
       { mksig(Psig_value($2, {pval_type = $4; pval_prim = $6})) }
+
   | TYPE type_declarations
       { mksig(Psig_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
       { mksig(Psig_exception($2, $3)) }
+
   | MODULE UIDENT module_declaration
       { mksig(Psig_module($2, $3)) }
   | OPEN mod_longident
@@ -415,26 +424,32 @@ expr:
       { mkinfix $1 $2 $3 }
   | expr INFIXOP4 expr
       { mkinfix $1 $2 $3 }
+
   | expr SUBTRACTIVE expr
       { mkinfix $1 $2 $3 } 
   | expr STAR expr
       { mkinfix $1 "*" $3 } 
+
   | expr EQUAL expr
       { mkinfix $1 "=" $3 } 
   | expr LESS expr
       { mkinfix $1 "<" $3 } 
   | expr GREATER expr
       { mkinfix $1 ">" $3 } 
-  | expr OR expr
-      { mkinfix $1 "or" $3 }
+
   | expr BARBAR expr
       { mkinfix $1 "||" $3 }
-  | expr AMPERSAND expr
-      { mkinfix $1 "&" $3 }
   | expr AMPERAMPER expr
       { mkinfix $1 "&&" $3 }
+
   | expr COLONEQUAL expr
       { mkinfix $1 ":=" $3 }
+  /*(*x: rule expr cases *)*/
+  | expr OR expr
+      { mkinfix $1 "or" $3 }
+  | expr AMPERSAND expr
+      { mkinfix $1 "&" $3 }
+
   /*(*x: rule expr cases *)*/
   | SUBTRACTIVE expr %prec prec_unary_minus
       { mkuminus $1 $2 }
@@ -447,15 +462,15 @@ expr:
   | IF seq_expr THEN expr %prec prec_if
       { mkexp(Pexp_ifthenelse($2, $4, None)) }
   /*(*x: rule expr cases *)*/
-  | TRY seq_expr WITH opt_bar match_cases %prec prec_try
-      { mkexp(Pexp_try($2, List.rev $5)) }
-  | TRY seq_expr WITH error %prec prec_try
-      { syntax_error() }
-  /*(*x: rule expr cases *)*/
   | WHILE seq_expr DO seq_expr DONE
       { mkexp(Pexp_while($2, $4)) }
   | FOR val_ident EQUAL seq_expr direction_flag seq_expr DO seq_expr DONE
       { mkexp(Pexp_for($2, $4, $6, $5, $8)) }
+  /*(*x: rule expr cases *)*/
+  | TRY seq_expr WITH opt_bar match_cases %prec prec_try
+      { mkexp(Pexp_try($2, List.rev $5)) }
+  | TRY seq_expr WITH error %prec prec_try
+      { syntax_error() }
   /*(*x: rule expr cases *)*/
   | simple_expr DOT LPAREN seq_expr RPAREN LESSMINUS expr
       { mkexp(Pexp_apply(mkexp(Pexp_ident(array_function "Array" "set")),
@@ -534,10 +549,22 @@ simple_expr:
 ;
 /*(*x: expression rules *)*/
 lbl_expr_list:
-    label_longident EQUAL expr %prec prec_list
+                       label_longident EQUAL expr %prec prec_list
       { [$1,$3] }
   | lbl_expr_list SEMI label_longident EQUAL expr %prec prec_list
       { ($3, $5) :: $1 }
+;
+/*(*x: expression rules *)*/
+fun_def:
+    match_action                                { $1 }
+  | simple_pattern fun_def                      { mkexp(Pexp_function[$1,$2]) }
+;
+/*(*x: expression rules *)*/
+let_binding:
+    val_ident fun_binding
+      { ({ppat_desc = Ppat_var $1; ppat_loc = rhs_loc 1}, $2) }
+  | pattern EQUAL seq_expr %prec prec_let
+      { ($1, $3) }
 ;
 /*(*x: expression rules *)*/
 fun_binding:
@@ -551,16 +578,9 @@ fun_binding:
   /*(*e: rule fun_binding cases *)*/
 ;
 /*(*x: expression rules *)*/
-let_binding:
-    val_ident fun_binding
-      { ({ppat_desc = Ppat_var $1; ppat_loc = rhs_loc 1}, $2) }
-  | pattern EQUAL seq_expr %prec prec_let
-      { ($1, $3) }
-;
-/*(*x: expression rules *)*/
-fun_def:
-    match_action                                { $1 }
-  | simple_pattern fun_def                      { mkexp(Pexp_function[$1,$2]) }
+type_constraint:
+    COLON core_type                             { ($2) }
+  | COLON error                                 { syntax_error() }
 ;
 /*(*x: expression rules *)*/
 match_cases:
@@ -570,11 +590,6 @@ match_cases:
 match_action:
     MINUSGREATER seq_expr                       { $2 }
   | WHEN seq_expr MINUSGREATER seq_expr         { mkexp(Pexp_when($2, $4)) }
-;
-/*(*x: expression rules *)*/
-type_constraint:
-    COLON core_type                             { ($2) }
-  | COLON error                                 { syntax_error() }
 ;
 /*(*x: expression rules *)*/
 seq_expr:
@@ -590,16 +605,17 @@ seq_expr:
 pattern:
     simple_pattern
       { $1 }
-  | pattern AS val_ident
-      { mkpat(Ppat_alias($1, $3)) }
 
-  | pattern_comma_list
-      { mkpat(Ppat_tuple(List.rev $1)) }
   | constr_longident pattern %prec prec_constr_appl
       { mkpat(Ppat_construct($1, Some $2)) }
   | pattern COLONCOLON pattern
       { mkpat(Ppat_construct(Lident "::", Some(mkpat(Ppat_tuple[$1;$3]))
                              )) }
+  | pattern_comma_list
+      { mkpat(Ppat_tuple(List.rev $1)) }
+
+  | pattern AS val_ident
+      { mkpat(Ppat_alias($1, $3)) }
   | pattern BAR pattern
       { mkpat(Ppat_or($1, $3)) }
 ;
@@ -607,14 +623,16 @@ pattern:
 simple_pattern:
   | signed_constant
       { mkpat(Ppat_constant $1) }
-  | val_ident
-      { mkpat(Ppat_var $1) }
-  | UNDERSCORE
-      { mkpat(Ppat_any) }
   | constr_longident
       { mkpat(Ppat_construct($1, None)) }
   | LBRACE lbl_pattern_list opt_semi RBRACE
       { mkpat(Ppat_record(List.rev $2)) }
+
+  | val_ident
+      { mkpat(Ppat_var $1) }
+  | UNDERSCORE
+      { mkpat(Ppat_any) }
+
   | LBRACKET pattern_semi_list opt_semi RBRACKET
       { mklistpat(List.rev $2) }
 

@@ -570,11 +570,14 @@ let type_binding env rec_flag spat_sexp_list =
 let type_expression env sexp =
   reset_def();
   Typetexp.reset_type_variables();
+
   begin_def();
   let exp = type_exp env sexp in
   end_def();
+
   if is_nonexpansive exp 
   then generalize exp.exp_type;
+
   exp
 (*e: function Typecore.type_expression *)
 

@@ -1044,14 +1044,6 @@ val equal: t -> t -> bool
         (* Compare identifiers by name. *)      
 @
 
-<<signature Ident.same>>=
-val same: t -> t -> bool
-        (* Compare identifiers by binding location.
-           Two identifiers are the same either if they are both
-           non-persistent and have been created by the same call to
-           [new], or if they are both persistent and have the same
-           name. *)
-@
 
 <<signature Ident.identify>>=
 val identify: t -> t -> (unit -> 'a) -> 'a
@@ -1059,17 +1051,7 @@ val identify: t -> t -> (unit -> 'a) -> 'a
            during the evaluation of [f ()]. *)
 @
 
-<<signature Ident.hide>>=
-val hide: t -> t
-        (* Return an identifier with same name as the given identifier,
-           but stamp different from any stamp returns by new.
-           When put in a 'a tbl, this identifier can only be looked
-           up by name. *)
-@
 
-<<signature Ident.make_global>>=
-val make_global: t -> unit
-@
 
 <<signature Ident.global>>=
 val global: t -> bool
@@ -1151,26 +1133,13 @@ type 'a tbl
 \subsection*{[[./typing/ident.ml]]}
 
 
-<<constant Ident.currentstamp>>=
-(* A stamp of 0 denotes a persistent identifier *)
 
-let currentstamp = ref 0
-@
-
-<<function Ident.create>>=
-let create s =
-  incr currentstamp;
-  { name = s; stamp = !currentstamp; global = false }
-@
 
 <<function Ident.create_persistent>>=
 let create_persistent s =
   { name = s; stamp = 0; global = true }
 @
 
-<<function Ident.name>>=
-let name i = i.name
-@
 
 <<function Ident.unique_name>>=
 let unique_name i = i.name ^ "_" ^ string_of_int i.stamp
@@ -1184,13 +1153,6 @@ let persistent i = (i.stamp = 0)
 let equal i1 i2 = i1.name = i2.name
 @
 
-<<function Ident.same>>=
-let same i1 i2 = i1 = i2
-  (* Possibly more efficient version (with a real compiler, at least):
-       if i1.stamp <> 0
-       then i1.stamp = i2.stamp
-       else i2.stamp = 0 & i1.name = i2.name *)
-@
 
 <<function Ident.identify>>=
 let identify i1 i2 f =
@@ -1208,15 +1170,7 @@ let identify i1 i2 f =
     raise x
 @
 
-<<function Ident.hide>>=
-let hide i =
-  { stamp = -1; name = i.name; global = i.global }
-@
 
-<<function Ident.make_global>>=
-let make_global i =
-  i.global <- true
-@
 
 <<function Ident.global>>=
 let global i =
@@ -1461,9 +1415,6 @@ open Format
 \subsection*{[[./typing/path.mli]]}
 
 
-<<signature Path.same>>=
-val same: t -> t -> bool
-@
 
 <<signature Path.isfree>>=
 val isfree: Ident.t -> t -> bool
@@ -1494,13 +1445,6 @@ val nopos: int
 let nopos = -1
 @
 
-<<function Path.same>>=
-let rec same p1 p2 =
-  match (p1, p2) with
-    (Pident id1, Pident id2) -> Ident.same id1 id2
-  | (Pdot(p1, s1, pos1), Pdot(p2, s2, pos2)) -> s1 = s2 & same p1 p2
-  | (_, _) -> false
-@
 
 <<function Path.isfree>>=
 let rec isfree id = function
@@ -1757,20 +1701,7 @@ val add_signature: signature -> t -> t
 
 
 
-<<signature Env.reset_cache>>=
-(* Reset the cache of in-core module interfaces.
-   To be called in particular when load_path changes. *)
 
-val reset_cache: unit -> unit
-@
-
-<<signature Env.read_signature>>=
-(* Read, save a signature to/from a file *)
-
-val read_signature: string -> string -> signature * Digest.t
-        (* Arguments: module name, file name.
-           Results: signature, CRC. *)
-@
 
 <<signature Env.save_signature>>=
 val save_signature: signature -> string -> string -> Digest.t
@@ -1778,11 +1709,6 @@ val save_signature: signature -> string -> string -> Digest.t
            Result: CRC. *)
 @
 
-<<signature Env.imported_units>>=
-(* Return the set of compilation units imported, with their CRC *)
-
-val imported_units: unit -> (string * Digest.t) list
-@
 
 
 
@@ -1866,17 +1792,11 @@ open Types
 \subsection*{[[./typing/env.ml]]}
 
 
-
-
-
-
-
-
-
 <<constant Env.check_modtype_inclusion>>=
 let check_modtype_inclusion =
   (* to be filled with includemod.check_modtype_inclusion *)
   ref ((fun env mty1 mty2 -> fatal_error "Env.include_modtypes") :
+       t -> module_type -> module_type -> unit)
 @
 
 <<function Env.find_module_descr>>=
@@ -1901,44 +1821,8 @@ let rec find_module_descr path env =
       end
 @
 
-<<function Env.find>>=
-let find proj1 proj2 path env =
-  match path with
-    Pident id ->
-      let (p, data) = Ident.find_same id (proj1 env)
-      in data
-  | Pdot(p, s, pos) ->
-      begin match find_module_descr p env with
-        Structure_comps c ->
-          let (data, pos) = Tbl.find s (proj2 c) in data
-      end
-@
 
-<<function Env.lookup>>=
-let lookup proj1 proj2 lid env =
-  match lid with
-    Lident s ->
-      Ident.find_name s (proj1 env)
-  | Ldot(l, s) ->
-      begin match lookup_module_descr l env with
-       (p, Structure_comps c) ->
-      let (data, pos) = Tbl.find s (proj2 c) in
-          (Pdot(p, s, pos), data)
-      end
-@
 
-<<function Env.lookup_simple>>=
-let lookup_simple proj1 proj2 lid env =
-  match lid with
-    Lident s ->
-      Ident.find_name s (proj1 env)
-  | Ldot(l, s) ->
-      begin match lookup_module_descr l env with
-       (p, Structure_comps c) ->
-      let (data, pos) = Tbl.find s (proj2 c) in
-          data
-      end
-@
 
 <<function Env.scrape_modtype>>=
 (* Scrape a module type *)
@@ -1955,6 +1839,7 @@ let rec scrape_modtype mty env =
 *)
   | _ -> mty
 @
+% dead?
 
 <<function Env.constructors_of_type>>=
 (* Compute constructor descriptions *)
@@ -1976,32 +1861,6 @@ let labels_of_type ty_path decl =
   | _ -> []
 @
 
-<<function Env.prefix_idents>>=
-(* Given a signature and a root path, prefix all idents in the signature
-   by the root path and build the corresponding substitution. *)
-
-let rec prefix_idents root pos sub = function
-    [] -> ([], sub)
-  | Tsig_value(id, decl) :: rem ->
-      let p = Pdot(root, Ident.name id, pos) in
-      let nextpos = match decl.val_prim with None -> pos+1 | Some _ -> pos in
-      let (pl, final_sub) = prefix_idents root nextpos sub rem in
-      (p::pl, final_sub)
-  | Tsig_type(id, decl) :: rem ->
-      let p = Pdot(root, Ident.name id, nopos) in
-      let (pl, final_sub) =
-        prefix_idents root pos (Subst.add_type id p sub) rem in
-      (p::pl, final_sub)
-  | Tsig_exception(id, decl) :: rem ->
-      let p = Pdot(root, Ident.name id, pos) in
-      let (pl, final_sub) = prefix_idents root (pos+1) sub rem in
-      (p::pl, final_sub)
-  | Tsig_module(id, mty) :: rem ->
-      let p = Pdot(root, Ident.name id, pos) in
-      let (pl, final_sub) =
-        prefix_idents root (pos+1) (Subst.add_module id p sub) rem in
-      (p::pl, final_sub)
-@
 
 <<constant Env.funappl_memo>>=
 (* Memoized function to compute the components of a functor application
@@ -2011,12 +1870,6 @@ let funappl_memo =
   (Hashtbl.create 17 : (Path.t, module_components) Hashtbl.t)
 @
 
-<<function Env.enter>>=
-(* Insertion of bindings by name *)
-
-let enter store_fun name data env =
-  let id = Ident.create name in (id, store_fun id (Pident id) data env)
-@
 
 <<function Env.add_signature_component>>=
 (* Insertion of all components of a signature *)
@@ -2034,29 +1887,9 @@ let add_signature sg env =
   List.fold_left add_signature_component env sg
 @
 
-<<function Env.open_signature>>=
-(* Open a signature path *)
 
-let open_signature root sg env =
-  (* First build the paths and substitution *)
-  let (pl, sub) = prefix_idents root 0 Subst.identity sg in
-  (* Then enter the components in the environment after substitution *)
-  List.fold_left2
-    (fun env item p ->
-      match item with
-        Tsig_value(id, decl) ->
-          store_value (Ident.hide id) p
-                      (Subst.value_description sub decl) env
-      | Tsig_type(id, decl) ->
-          store_type (Ident.hide id) p
-                     (Subst.type_declaration sub decl) env
-      | Tsig_exception(id, decl) ->
-          store_exception (Ident.hide id) p
-                          (Subst.exception_declaration sub decl) env
-      | Tsig_module(id, mty) ->
-          store_module (Ident.hide id) p (Subst.modtype sub mty) env
-    )
-    env sg pl
+<<signature Env.open_pers_signature>>=
+val open_pers_signature: string -> t -> t
 @
 
 <<function Env.open_pers_signature>>=
@@ -2110,11 +1943,14 @@ open Types
 
 <<exception Env.Error>>
 
+
 <<type Env.t>>
 
 <<type Env.module_components>>
 
 <<type Env.structure_components>>
+
+
 
 <<constant Env.empty>>
 
@@ -2131,14 +1967,14 @@ open Types
 <<function Env.reset_cache>>
 
 <<constant Env.check_modtype_inclusion>>
-       t -> module_type -> module_type -> unit)
 
 <<function Env.find_module_descr>>
 
 <<function Env.find>>
 
-let find_value = find (fun env -> env.values) (fun sc -> sc.comp_values)
-and find_type = find (fun env -> env.types) (fun sc -> sc.comp_types)
+<<function Env.find_value>>
+<<function Env.find_type>>
+
 
 (* Lookup by name *)
 
@@ -2179,14 +2015,11 @@ and lookup_module lid env =
 
 <<function Env.lookup_simple>>
 
-let lookup_value =
-  lookup (fun env -> env.values) (fun sc -> sc.comp_values)
-and lookup_constructor =
-  lookup_simple (fun env -> env.constrs) (fun sc -> sc.comp_constrs)
-and lookup_label =
-  lookup_simple (fun env -> env.labels) (fun sc -> sc.comp_labels)
-and lookup_type =
-  lookup (fun env -> env.types) (fun sc -> sc.comp_types)
+<<function Env.lookup_value>>
+<<function Env.lookup_type>>
+
+<<function Env.lookup_constructor>>
+<<function Env.lookup_label>>
 
 <<function Env.scrape_modtype>>
 
@@ -2257,80 +2090,30 @@ let rec components_of_module env sub path mty =
 
 (* Insertion of bindings by identifier + path *)
 
-and store_value id path decl env =
-  { values = Ident.add id (path, decl) env.values;
-    constrs = env.constrs;
-    labels = env.labels;
-    types = env.types;
-    modules = env.modules;
-    components = env.components }
+<<function Env.store_value>>
 
-and store_type id path info env =
-  { values = env.values;
-    constrs =
-      List.fold_right
-        (fun (name, descr) constrs ->
-          Ident.add (Ident.create name) descr constrs)
-        (constructors_of_type path info)
-        env.constrs;
-    labels =
-      List.fold_right
-        (fun (name, descr) labels ->
-          Ident.add (Ident.create name) descr labels)
-        (labels_of_type path info)
-        env.labels;
-    types = Ident.add id (path, info) env.types;
-    modules = env.modules;
-    components = env.components }
+<<function Env.store_type>>
 
-and store_exception id path decl env =
-  { values = env.values;
-    constrs = Ident.add id (Datarepr.exception_descr path decl) env.constrs;
-    labels = env.labels;
-    types = env.types;
-    modules = env.modules;
-    components = env.components }
+<<function Env.store_exceptions>>
 
-and store_module id path mty env =
-  { values = env.values;
-    constrs = env.constrs;
-    labels = env.labels;
-    types = env.types;
-    modules = Ident.add id (path, mty) env.modules;
-    components =
-      Ident.add id (path, components_of_module env Subst.identity path mty)
-                   env.components }
+<<function Env.store_module>>
 
-and store_components id path comps env =
-  { values = env.values;
-    constrs = env.constrs;
-    labels = env.labels;
-    types = env.types;
-    modules = env.modules;
-    components = Ident.add id (path, comps) env.components }
+<<function Env.store_components>>
+
 
 <<constant Env.funappl_memo>>
 
 (* Insertion of bindings by identifier *)
 
-let add_value id desc env =
-  store_value id (Pident id) desc env
+<<function Env.add_value>>
+<<function Env.add_type>>
+<<function Env.add_exception>>
+<<function Env.add_module>>
 
-and add_type id info env =
-  store_type id (Pident id) info env
-
-and add_exception id decl env =
-  store_exception id (Pident id) decl env
-
-and add_module id mty env =
-  store_module id (Pident id) mty env
 
 <<function Env.enter>>
 
-let enter_value = enter store_value
-and enter_type = enter store_type
-and enter_exception = enter store_exception
-and enter_module = enter store_module
+<<functions Env.enter_xxx>>
 
 <<function Env.add_signature_component>>
 
@@ -2581,11 +2364,6 @@ val nondep_type: Env.t -> Ident.t -> type_expr -> type_expr
            if no such type exists. *)
 @
 
-<<signature Ctype.free_type_ident>>=
-val free_type_ident: Env.t -> Ident.t list -> type_expr -> bool
-        (* Test whether one of the given type identifiers occur free
-           in the given type expression. *)
-@
 
 <<signature Ctype.is_generic>>=
 val is_generic: type_expr -> bool
@@ -2764,11 +2542,6 @@ let substitute params args body =
   ty
 @
 
-<<exception Ctype.Cannot_expand>>=
-(* Unification *)
-
-exception Cannot_expand
-@
 
 
 
@@ -2904,28 +2677,6 @@ let rec nondep_type env id ty =
         Tconstr(p, List.map (nondep_type env id) tl)
 @
 
-<<function Ctype.free_type_ident>>=
-let rec free_type_ident env ids ty =
-  match repr ty with
-    Tvar _ -> false
-  | Tarrow(t1, t2) ->
-      free_type_ident env ids t1 or free_type_ident env ids t2
-  | Ttuple tl ->
-      List.exists (free_type_ident env ids) tl
-  | Tconstr((Pident id as p), tl) ->
-      List.exists (Ident.same id) ids or begin
-        try
-          free_type_ident env (id::ids) (expand_abbrev env p tl)
-        with Cannot_expand ->
-          List.exists (free_type_ident env ids) tl
-      end
-  | Tconstr(p, tl) ->
-      begin try
-        free_type_ident env ids (expand_abbrev env p tl)
-      with Cannot_expand ->
-        List.exists (free_type_ident env ids) tl
-      end
-@
 
 <<function Ctype.closed_schema>>=
 (* Miscellaneous *)
@@ -9311,6 +9062,19 @@ let init_path () =
   load_path := "" :: List.rev (Config.standard_library :: dirs);
   Env.reset_cache()
 @
+
+<<signature Env.reset_cache>>=
+(* Reset the cache of in-core module interfaces.
+   To be called in particular when load_path changes. *)
+val reset_cache: unit -> unit
+@
+% init_path | -> <> ??
+<<function Env.reset_cache>>=
+let reset_cache() =
+  Hashtbl.clear persistent_structures;
+  imported_units := []
+@
+
 
 <<function Compile.initial_env>>=
 (* Return the initial environment in which compilation proceeds. *)

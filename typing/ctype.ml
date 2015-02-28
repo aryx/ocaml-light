@@ -31,13 +31,16 @@ let generic_level = (-1)
 (*e: constant Ctype.generic_level *)
 
 (*s: function Ctype.reset_def *)
-let reset_def () = current_level := 0
+let reset_def () = 
+  current_level := 0
 (*e: function Ctype.reset_def *)
 (*s: function Ctype.begin_def *)
-let begin_def () = incr current_level
+let begin_def () = 
+  incr current_level
 (*e: function Ctype.begin_def *)
 (*s: function Ctype.end_def *)
-let end_def () = decr current_level
+let end_def () = 
+  decr current_level
 (*e: function Ctype.end_def *)
 
 (*s: function Ctype.newvar *)
@@ -54,7 +57,8 @@ let new_global_var () =
 let rec repr = function
     Tvar({tvar_link = Some ty} as v) ->
       let r = repr ty in
-      if r != ty then v.tvar_link <- Some r;
+      if r != ty 
+      then v.tvar_link <- Some r;
       r
   | t -> t
 (*e: function Ctype.repr *)
@@ -181,24 +185,29 @@ let expand_abbrev env path args =
 let rec occur tvar ty =
   match repr ty with
     Tvar v ->
-      if v == tvar then raise Unify;
-      if v.tvar_level > tvar.tvar_level then v.tvar_level <- tvar.tvar_level
+      if v == tvar 
+      then raise Unify; (* occur check fail *)
+      if v.tvar_level > tvar.tvar_level 
+      then v.tvar_level <- tvar.tvar_level
+  (* boilerplate visitor *)
   | Tarrow(t1, t2) ->
       occur tvar t1; occur tvar t2
   | Ttuple tl ->
       List.iter (occur tvar) tl
-  | Tconstr(p, []) ->
-      ()
-  | Tconstr(p, tl) ->
+  | Tconstr(_p, tl) ->
       List.iter (occur tvar) tl
 (*e: function Ctype.occur *)
 
 (*s: function Ctype.unify *)
 let rec unify env t1 t2 =
-  if t1 == t2 then () else begin
+  if t1 == t2 
+  then () 
+  else begin
     let t1 = repr t1 in
     let t2 = repr t2 in
-    if t1 == t2 then () else begin
+    if t1 == t2 
+    then () 
+    else begin
       match (t1, t2) with
         (Tvar v, _) ->
           occur v t2; v.tvar_link <- Some t2
@@ -209,17 +218,20 @@ let rec unify env t1 t2 =
       | (Ttuple tl1, Ttuple tl2) ->
           unify_list env tl1 tl2
       | (Tconstr(p1, tl1), Tconstr(p2, tl2)) ->
-          if Path.same p1 p2 then
-            unify_list env tl1 tl2
+          if Path.same p1 p2 
+          then unify_list env tl1 tl2
           else begin
+            (*s: [[Ctype.unify()]] if p1 or p2 are abbreviation type paths *)
             try
               unify env (expand_abbrev env p1 tl1) t2
             with Cannot_expand ->
-            try
-              unify env t1 (expand_abbrev env p2 tl2)
-            with Cannot_expand ->
-              raise Unify
+              try
+                unify env t1 (expand_abbrev env p2 tl2)
+              with Cannot_expand ->
+            (*e: [[Ctype.unify()]] if p1 or p2 are abbreviation type paths *)
+                raise Unify
           end
+      (*s: [[Ctype.unify()]] match t1 t2 other cases *)
       | (Tconstr(p1, tl1), _) ->
           begin try
             unify env (expand_abbrev env p1 tl1) t2
@@ -232,6 +244,7 @@ let rec unify env t1 t2 =
           with Cannot_expand ->
             raise Unify
           end
+      (*e: [[Ctype.unify()]] match t1 t2 other cases *)
       | (_, _) ->
           raise Unify
     end
@@ -240,7 +253,9 @@ let rec unify env t1 t2 =
 and unify_list env tl1 tl2 =
   match (tl1, tl2) with
     ([], []) -> ()
-  | (t1::r1, t2::r2) -> unify env t1 t2; unify_list env r1 r2
+  | (t1::r1, t2::r2) -> 
+      unify env t1 t2; 
+      unify_list env r1 r2
   | (_, _) -> raise Unify
 (*e: function Ctype.unify *)
 
@@ -429,10 +444,6 @@ let rec nondep_type env id ty =
 let rec free_type_ident env ids ty =
   match repr ty with
     Tvar _ -> false
-  | Tarrow(t1, t2) ->
-      free_type_ident env ids t1 or free_type_ident env ids t2
-  | Ttuple tl ->
-      List.exists (free_type_ident env ids) tl
   | Tconstr((Pident id as p), tl) ->
       List.exists (Ident.same id) ids or begin
         try
@@ -446,6 +457,11 @@ let rec free_type_ident env ids ty =
       with Cannot_expand ->
         List.exists (free_type_ident env ids) tl
       end
+  (* boilerplate folder *)
+  | Tarrow(t1, t2) ->
+      free_type_ident env ids t1 || free_type_ident env ids t2
+  | Ttuple tl ->
+      List.exists (free_type_ident env ids) tl
 (*e: function Ctype.free_type_ident *)
 
 (*s: function Ctype.closed_schema *)

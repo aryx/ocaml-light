@@ -47,7 +47,8 @@ let reset_type_variables () =
 (*s: function Typetexp.enter_type_variable *)
 let enter_type_variable name =
   try
-    Tbl.find name !type_variables; raise Already_bound
+    Tbl.find name !type_variables; 
+    raise Already_bound
   with Not_found ->
     let v = new_global_var() in
     type_variables := Tbl.add name v !type_variables;
@@ -69,21 +70,23 @@ let rec transl_simple_type env fixed styp =
           v
         end
       end
-  | Ptyp_arrow(st1, st2) ->
-      Tarrow(transl_simple_type env fixed st1,
-             transl_simple_type env fixed st2)
-  | Ptyp_tuple stl ->
-      Ttuple(List.map (transl_simple_type env fixed) stl)
   | Ptyp_constr(lid, stl) ->
       let (path, decl) =
         try
           Env.lookup_type lid env
         with Not_found ->
           raise(Error(styp.ptyp_loc, Unbound_type_constructor lid)) in
-      if List.length stl <> decl.type_arity then
+      if List.length stl <> decl.type_arity 
+      then
         raise(Error(styp.ptyp_loc, Type_arity_mismatch(lid, decl.type_arity,
                                                            List.length stl)));
       Tconstr(path, List.map (transl_simple_type env fixed) stl)
+  (* boilerplate mapper *)
+  | Ptyp_arrow(st1, st2) ->
+      Tarrow(transl_simple_type env fixed st1,
+             transl_simple_type env fixed st2)
+  | Ptyp_tuple stl ->
+      Ttuple(List.map (transl_simple_type env fixed) stl)
 (*e: function Typetexp.transl_simple_type *)
 
 (*s: function Typetexp.transl_type_scheme *)
