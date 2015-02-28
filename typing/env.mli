@@ -99,14 +99,13 @@ val enter_module: string -> module_type -> t -> Ident.t * t
 (*s: signature Env.reset_cache *)
 (* Reset the cache of in-core module interfaces.
    To be called in particular when load_path changes. *)
-
 val reset_cache: unit -> unit
 (*e: signature Env.reset_cache *)
 
 (*s: signature Env.read_signature *)
 (* Read, save a signature to/from a file *)
 
-val read_signature: string -> string -> signature * Digest.t
+val read_signature: string -> string -> Types.signature * Digest.t
         (* Arguments: module name, file name.
            Results: signature, CRC. *)
 (*e: signature Env.read_signature *)
@@ -117,6 +116,10 @@ val save_signature: signature -> string -> string -> Digest.t
 (*e: signature Env.save_signature *)
 
 (*s: signature Env.imported_units *)
+(* Return the set of compilation units imported, with their CRC *)
+
+val imported_units: unit -> (string * Digest.t) list
+(*x: signature Env.imported_units *)
 (* Return the set of compilation units imported, with their CRC *)
 
 val imported_units: unit -> (string * Digest.t) list

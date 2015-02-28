@@ -59,19 +59,23 @@ module StringSet = Set
 let transl_declaration env (name, sdecl) id =
   Ctype.begin_def();
   reset_type_variables();
+
   let params =
     try
       List.map enter_type_variable sdecl.ptype_params
     with Already_bound ->
       raise(Error(sdecl.ptype_loc, Repeated_parameter)) in
+
   let decl =
     { type_params = params;
       type_arity = List.length params;
       type_kind =
-        begin match sdecl.ptype_kind with
+        (match sdecl.ptype_kind with
+        (* boilerplate mapper Pxxx -> Xxx *)
           Ptype_abstract ->
             Type_abstract
         | Ptype_variant cstrs ->
+            (*s: [[Typedecl.transl_declaration()]] sanity check when variant case *)
             let all_constrs = ref StringSet.empty in
             List.iter
               (fun (name, args) ->
@@ -81,11 +85,13 @@ let transl_declaration env (name, sdecl) id =
               cstrs;
             if List.length cstrs > Config.max_tag then
               raise(Error(sdecl.ptype_loc, Too_many_constructors));
+            (*e: [[Typedecl.transl_declaration()]] sanity check when variant case *)
             Type_variant(List.map
               (fun (name, args) ->
                       (name, List.map (transl_simple_type env true) args))
               cstrs)
         | Ptype_record lbls ->
+            (*s: [[Typedecl.transl_declaration()]] sanity check when record case *)
             let all_labels = ref StringSet.empty in
             List.iter
               (fun (name, mut, arg) ->
@@ -93,25 +99,30 @@ let transl_declaration env (name, sdecl) id =
                   raise(Error(sdecl.ptype_loc, Duplicate_label name));
                 all_labels := StringSet.add name !all_labels)
               lbls;
+            (*e: [[Typedecl.transl_declaration()]] sanity check when record case *)
             Type_record(List.map
               (fun (name, mut, arg) ->
                       (name, mut, transl_simple_type env true arg))
               lbls)
-        end;
+        );
       type_manifest =
-        begin match sdecl.ptype_manifest with
-          None -> None
+        (match sdecl.ptype_manifest with
+        | None -> None
         | Some sty -> Some(transl_simple_type env true sty)
-        end } in
+        ); 
+  } in
   Ctype.end_def();
+
   List.iter Ctype.generalize params;
+
+  (*s: [[Typedecl.transl_declaration()]] sanity check decl *)
   (* If both a variant/record definition and a type equation are given,
      need to check that the equation refers to a type of the same kind
      with the same constructors and labels *)
-  begin match decl with
+  (match decl with
     {type_kind = (Type_variant _ | Type_record _); type_manifest = Some ty} ->
-      begin match ty with
-        Tconstr(path, args) ->
+      (match ty with
+       | Tconstr(path, args) ->
           begin try
             let decl' = Env.find_type path env in
             if args = params & Includecore.type_declarations env id decl decl'
@@ -121,9 +132,10 @@ let transl_declaration env (name, sdecl) id =
             raise(Error(sdecl.ptype_loc, Definition_mismatch ty))
           end
       | _ -> raise(Error(sdecl.ptype_loc, Definition_mismatch ty))
-      end
+      )
   | _ -> ()
-  end;
+  );
+  (*e: [[Typedecl.transl_declaration()]] sanity check decl *)
   (id, decl)
 (*e: function Typedecl.transl_declaration *)
 
@@ -153,15 +165,18 @@ let transl_type_decl env name_sdecl_list =
         (* Enter the types as abstract *)
         let (id_list, temp_env) = enter_types env name_sdecl_list in
         (* Translate each declaration *)
-        List.map2 (transl_declaration temp_env) name_sdecl_list id_list in
+        List.map2 (transl_declaration temp_env) name_sdecl_list id_list 
+  in
   (* Build the final env *)
   let newenv =
     List.fold_right
       (fun (id, decl) env -> Env.add_type id decl env)
       decls env in
+  (*s: [[Typedecl.transl_type_decl()]] check recursive abbrevs *)
   (* Check for recursive abbrevs *)
   List.iter2 (check_recursive_abbrev newenv) name_sdecl_list decls;
   (* Done *)
+  (*e: [[Typedecl.transl_type_decl()]] check recursive abbrevs *)
   (decls, newenv)
 (*e: function Typedecl.transl_type_decl *)
 
@@ -171,6 +186,7 @@ let transl_type_decl env name_sdecl_list =
 let transl_exception env excdecl =
   Ctype.reset_def();
   reset_type_variables();
+
   List.map (transl_simple_type env true) excdecl
 (*e: function Typedecl.transl_exception *)
 

@@ -29,15 +29,16 @@ type pattern =
 
 (*s: type Typedtree.pattern_desc *)
 and pattern_desc =
-    Tpat_any
+  | Tpat_any
   | Tpat_var of Ident.t
-  | Tpat_alias of pattern * Ident.t
 
   | Tpat_constant of constant
-  | Tpat_tuple of pattern list
   | Tpat_construct of constructor_description * pattern list
   | Tpat_record of (label_description * pattern) list
 
+  | Tpat_tuple of pattern list
+
+  | Tpat_alias of pattern * Ident.t
   | Tpat_or of pattern * pattern
 (*e: type Typedtree.pattern_desc *)
 
@@ -50,21 +51,20 @@ type expression =
 
 (*s: type Typedtree.expression_desc *)
 and expression_desc =
-    Texp_ident of Path.t * value_description
   | Texp_constant of constant
-
-  | Texp_tuple of expression list
   | Texp_construct of constructor_description * expression list
   | Texp_record of (label_description * expression) list
-  | Texp_array of expression list
+  | Texp_tuple of expression list
+
+  | Texp_function of (pattern * expression) list
+  | Texp_apply of expression * expression list
 
   | Texp_field of expression * label_description
   | Texp_setfield of expression * label_description * expression
 
-  | Texp_apply of expression * expression list
-
   | Texp_let of rec_flag * (pattern * expression) list * expression
-  | Texp_function of (pattern * expression) list
+  | Texp_ident of Path.t * value_description
+
   | Texp_match of expression * (pattern * expression) list
   | Texp_when of expression * expression
 
@@ -74,6 +74,10 @@ and expression_desc =
   | Texp_while of expression * expression
   | Texp_for of
       Ident.t * expression * expression * direction_flag * expression
+
+  (*s: [[Typedtree.expression_desc]] cases *)
+  | Texp_array of expression list
+  (*e: [[Typedtree.expression_desc]] cases *)
 (*e: type Typedtree.expression_desc *)
 
 
