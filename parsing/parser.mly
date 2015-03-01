@@ -105,14 +105,21 @@ let rec mklistpat = function
 let mkstrexp e =
   { pstr_desc = Pstr_eval e; pstr_loc = e.pexp_loc }
 
+/*(*s: [[Parser.array_function()]] *)*/
 let array_function str name =
   Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))
+/*(*e: [[Parser.array_function()]] *)*/
 
+/*(*s: [[Parser.mkrangepat()]] *)*/
 let rec mkrangepat c1 c2 =
-  if c1 > c2 then mkrangepat c2 c1 else
-  if c1 = c2 then mkpat(Ppat_constant(Const_char c1)) else
-  mkpat(Ppat_or(mkpat(Ppat_constant(Const_char c1)),
-                mkrangepat (Char.chr(Char.code c1 + 1)) c2))
+  if c1 > c2 
+  then mkrangepat c2 c1 
+  else
+    if c1 = c2 
+    then mkpat(Ppat_constant(Const_char c1)) 
+    else mkpat(Ppat_or(mkpat(Ppat_constant(Const_char c1)),
+                       mkrangepat (Char.chr(Char.code c1 + 1)) c2))
+/*(*e: [[Parser.mkrangepat()]] *)*/
 
 let syntax_error () =
   raise Syntaxerr.Escape_error
@@ -639,10 +646,12 @@ simple_pattern:
   | LPAREN pattern RPAREN
       { $2 }
 
-  | CHAR DOTDOT CHAR
-      { mkrangepat $1 $3 }
   | LPAREN pattern COLON core_type RPAREN
       { mkpat(Ppat_constraint($2, $4)) }
+  /*(*s: rule simple_pattern other cases *)*/
+  | CHAR DOTDOT CHAR
+      { mkrangepat $1 $3 }
+  /*(*e: rule simple_pattern other cases *)*/
   /*(*s: rule simple_pattern error cases *)*/
   | LBRACE lbl_pattern_list opt_semi error
       { unclosed "{" 1 "}" 4 }

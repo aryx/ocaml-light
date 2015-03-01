@@ -42,11 +42,12 @@ and path_bool = Pident ident_bool
 and path_unit = Pident ident_unit
 
 and path_list = Pident ident_list
-and path_array = Pident ident_array
 (*x: constants Predef.path_xxx *)
 and path_exn = Pident ident_exn
 (*x: constants Predef.path_xxx *)
 and path_format = Pident ident_format
+(*x: constants Predef.path_xxx *)
+and path_array = Pident ident_array
 (*e: constants Predef.path_xxx *)
 
 (*s: constants Predef.type_xxx *)
@@ -58,9 +59,10 @@ and type_bool    = Tconstr(path_bool, [])
 and type_unit    = Tconstr(path_unit, [])
 
 and type_list t = Tconstr(path_list, [t])
-and type_array t = Tconstr(path_array, [t])
 (*x: constants Predef.type_xxx *)
 and type_exn = Tconstr(path_exn, [])
+(*x: constants Predef.type_xxx *)
+and type_array t = Tconstr(path_array, [t])
 (*e: constants Predef.type_xxx *)
 
 
