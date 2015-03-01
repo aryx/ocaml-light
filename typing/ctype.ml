@@ -45,7 +45,11 @@ let end_def () =
 
 (*s: function Ctype.newvar *)
 let newvar () =
-  Tvar { tvar_level = !current_level; tvar_link = None }
+  Tvar { tvar_link = None; 
+         (*s: [[Ctype.newvar()]] set other fields *)
+         tvar_level = !current_level;  
+         (*e: [[Ctype.newvar()]] set other fields *)
+       }
 (*e: function Ctype.newvar *)
 
 (*s: function Ctype.new_global_var *)
@@ -187,8 +191,10 @@ let rec occur tvar ty =
     Tvar v ->
       if v == tvar 
       then raise Unify; (* occur check fail *)
+      (*s: [[Ctype.occur()]] in Tvar case, adjust levels if needed *)
       if v.tvar_level > tvar.tvar_level 
       then v.tvar_level <- tvar.tvar_level
+      (*e: [[Ctype.occur()]] in Tvar case, adjust levels if needed *)
   (* boilerplate visitor *)
   | Tarrow(t1, t2) ->
       occur tvar t1; occur tvar t2
@@ -210,9 +216,11 @@ let rec unify env t1 t2 =
     else begin
       match (t1, t2) with
         (Tvar v, _) ->
-          occur v t2; v.tvar_link <- Some t2
+          occur v t2; 
+          v.tvar_link <- Some t2
       | (_, Tvar v) ->
-          occur v t1; v.tvar_link <- Some t1
+          occur v t1; 
+          v.tvar_link <- Some t1
       | (Tarrow(t1, u1), Tarrow(t2, u2)) ->
           unify env t1 t2; unify env u1 u2
       | (Ttuple tl1, Ttuple tl2) ->
@@ -263,18 +271,20 @@ and unify_list env tl1 tl2 =
 let rec filter_arrow env t =
   match repr t with
     Tvar v ->
-      let t1 = Tvar { tvar_level = v.tvar_level; tvar_link = None }
-      and t2 = Tvar { tvar_level = v.tvar_level; tvar_link = None } in
+      let t1 = Tvar { tvar_level = v.tvar_level; tvar_link = None } in
+      let t2 = Tvar { tvar_level = v.tvar_level; tvar_link = None } in
       v.tvar_link <- Some(Tarrow(t1, t2));
       (t1, t2)
   | Tarrow(t1, t2) ->
       (t1, t2)
+  (*s: [[Ctype.filter_arrow()]] other cases *)
   | Tconstr(p, tl) ->
       begin try
         filter_arrow env (expand_abbrev env p tl)
       with Cannot_expand ->
         raise Unify
       end
+  (*e: [[Ctype.filter_arrow()]] other cases *)
   | _ ->
       raise Unify
 (*e: function Ctype.filter_arrow *)

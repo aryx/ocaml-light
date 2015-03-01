@@ -2333,10 +2333,6 @@ val instance_label: label_description -> type_expr * type_expr
 @
 
 
-<<signature Ctype.filter_arrow>>=
-val filter_arrow: Env.t -> type_expr -> type_expr * type_expr
-        (* A special case of unification (with 'a -> 'b). *)
-@
 
 <<signature Ctype.moregeneral>>=
 val moregeneral: Env.t -> type_expr -> type_expr -> bool
@@ -2545,25 +2541,6 @@ let substitute params args body =
 
 
 
-<<function Ctype.filter_arrow>>=
-let rec filter_arrow env t =
-  match repr t with
-    Tvar v ->
-      let t1 = Tvar { tvar_level = v.tvar_level; tvar_link = None }
-      and t2 = Tvar { tvar_level = v.tvar_level; tvar_link = None } in
-      v.tvar_link <- Some(Tarrow(t1, t2));
-      (t1, t2)
-  | Tarrow(t1, t2) ->
-      (t1, t2)
-  | Tconstr(p, tl) ->
-      begin try
-        filter_arrow env (expand_abbrev env p tl)
-      with Cannot_expand ->
-        raise Unify
-      end
-  | _ ->
-      raise Unify
-@
 
 <<function Ctype.moregen_occur>>=
 (* Matching between type schemes *)
@@ -4255,15 +4232,6 @@ let rec is_nonexpansive exp =
 @
 
 
-<<function Typecore.unify_exp>>=
-(* Typing of expressions *)
-
-let unify_exp env exp expected_ty =
-  try
-    unify env exp.exp_type expected_ty
-  with Unify ->
-    raise(Error(exp.exp_loc, Expr_type_clash(exp.exp_type, expected_ty)))
-@
 
 <<function Typecore.type_binding>>=
 (* Typing of toplevel bindings *)
@@ -4317,6 +4285,14 @@ open Ctype
 <<function Typecore.unify_exp>>
 
 <<function Typecore.type_exp>>
+
+<<function Typecode.type_expect>>
+
+<<function Typecore.type_statement>>
+
+<<function Typecore.type_cases>>
+
+<<function Typecode.type_let>>
 
 <<function Typecore.type_binding>>
 

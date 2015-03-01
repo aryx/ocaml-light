@@ -26,9 +26,12 @@ type type_expr =
 (*e: type Types.type_expr *)
 
 (*s: type Types.type_variable *)
-and type_variable =
-    { mutable tvar_level: int;
-      mutable tvar_link: type_expr option }
+and type_variable = 
+  { mutable tvar_link: type_expr option;
+    (*s: [[Types.type_variable]] other fields *)
+    mutable tvar_level: int;
+    (*e: [[Types.type_variable]] other fields *)
+  }
 (*e: type Types.type_variable *)
 
 (*s: type Types.value_description *)

@@ -85,7 +85,12 @@ let build_initial_env add_type add_exception empty_env =
   let newvar() =
     (* Cannot call the real newvar from ctype here
        because ctype imports predef via env *)
-    Tvar{tvar_level = -1 (*generic_level*); tvar_link = None} 
+    Tvar{
+      tvar_link = None; 
+      (*s: [[Predef.build_initial_env()]] set other fields in local newvar *)
+      tvar_level = -1 (*generic_level*); 
+      (*e: [[Predef.build_initial_env()]] set other fields in local newvar *)
+    } 
   in
 
   (*s: [[Predef.build_initial_env()]] decls *)
