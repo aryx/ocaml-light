@@ -593,8 +593,9 @@ and type_let env rec_flag spat_sexp_list =
   begin_def();
   (*e: [[Typecode.type_let()]] before typing *)
   let (pat_list, new_env) =
-    type_pattern_list env 
-      (List.map (fun (spat, sexp) -> spat) spat_sexp_list) 
+    spat_sexp_list 
+    |> List.map (fun (spat, sexp) -> spat)
+    |> type_pattern_list env 
   in
   let exp_env =
     match rec_flag with 

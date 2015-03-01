@@ -325,3 +325,5 @@ let exit retcode =
   do_at_exit ();
   sys_exit retcode
 
+let (|>) o f =
+  f o
