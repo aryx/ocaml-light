@@ -273,92 +273,38 @@ let unify_exp env exp expected_ty =
 (*s: function Typecore.type_exp *)
 let rec type_exp env sexp =
   match sexp.pexp_desc with
-    Pexp_ident lid ->
-      begin try
-        let (path, desc) = Env.lookup_value lid env in
-        { exp_desc = Texp_ident(path, desc);
-          exp_loc = sexp.pexp_loc;
-          exp_type = instance desc.val_type }
-      with Not_found ->
-        raise(Error(sexp.pexp_loc, Unbound_value lid))
-      end
+  (*s: [[Typecore.type_exp()]] match cases *)
   | Pexp_constant cst ->
       { exp_desc = Texp_constant cst;
         exp_loc = sexp.pexp_loc;
         exp_type = type_constant cst }
-  | Pexp_let(rec_flag, spat_sexp_list, sbody) ->
-      let (pat_exp_list, new_env) = type_let env rec_flag spat_sexp_list in
-      let body = type_exp new_env sbody in
-      { exp_desc = Texp_let(rec_flag, pat_exp_list, body);
-        exp_loc = sexp.pexp_loc;
-        exp_type = body.exp_type }
-  | Pexp_function caselist ->
-      let ty_arg = newvar() and ty_res = newvar() in
-      let cases = type_cases env ty_arg ty_res caselist in
-      Parmatch.check_unused cases;
-      Parmatch.check_partial sexp.pexp_loc cases;
-      { exp_desc = Texp_function cases;
-        exp_loc = sexp.pexp_loc;
-        exp_type = Tarrow(ty_arg, ty_res) }
-  | Pexp_apply(sfunct, sargs) ->
-      let funct = type_exp env sfunct in
-      let rec type_args ty_fun = function
-        [] ->
-          ([], ty_fun)
-      | sarg1 :: sargl ->
-          let (ty1, ty2) =
-            try
-              filter_arrow env ty_fun
-            with Unify ->
-              raise(Error(sfunct.pexp_loc,
-                          Apply_non_function funct.exp_type)) in
-          let arg1 = type_expect env sarg1 ty1 in
-          let (argl, ty_res) = type_args ty2 sargl in
-          (arg1 :: argl, ty_res) in
-      let (args, ty_res) = type_args funct.exp_type sargs in
-      { exp_desc = Texp_apply(funct, args);
-        exp_loc = sexp.pexp_loc;
-        exp_type = ty_res }
-  | Pexp_match(sarg, caselist) ->
-      let arg = type_exp env sarg in
-      let ty_res = newvar() in
-      let cases = type_cases env arg.exp_type ty_res caselist in
-      Parmatch.check_unused cases;
-      Parmatch.check_partial sexp.pexp_loc cases;
-      { exp_desc = Texp_match(arg, cases);
-        exp_loc = sexp.pexp_loc;
-        exp_type = ty_res }
-  | Pexp_try(sbody, caselist) ->
-      let body = type_exp env sbody in
-      let cases = type_cases env Predef.type_exn body.exp_type caselist in
-      Parmatch.check_unused cases;
-      { exp_desc = Texp_try(body, cases);
-        exp_loc = sexp.pexp_loc;
-        exp_type = body.exp_type }
-  | Pexp_tuple sexpl ->
-      let expl = List.map (type_exp env) sexpl in
-      { exp_desc = Texp_tuple expl;
-        exp_loc = sexp.pexp_loc;
-        exp_type = Ttuple(List.map (fun exp -> exp.exp_type) expl) }
+  (*x: [[Typecore.type_exp()]] match cases *)
   | Pexp_construct(lid, sarg) ->
       let constr =
         try
           Env.lookup_constructor lid env
         with Not_found ->
-          raise(Error(sexp.pexp_loc, Unbound_constructor lid)) in
+          raise(Error(sexp.pexp_loc, Unbound_constructor lid)) 
+      in
       let sargs =
         match sarg with
           None -> []
         | Some {pexp_desc = Pexp_tuple sel} when constr.cstr_arity > 1 -> sel
-        | Some se -> [se] in
-      if List.length sargs <> constr.cstr_arity then
+        | Some se -> [se] 
+      in
+      (*s: [[Typecore.type_exp()]] constructor case, sanity check *)
+      if List.length sargs <> constr.cstr_arity 
+      then
         raise(Error(sexp.pexp_loc, Constructor_arity_mismatch(lid,
                                        constr.cstr_arity, List.length sargs)));
+      (*e: [[Typecore.type_exp()]] constructor case, sanity check *)
+
       let (ty_args, ty_res) = instance_constructor constr in
       let args = List.map2 (type_expect env) sargs ty_args in
       { exp_desc = Texp_construct(constr, args);
         exp_loc = sexp.pexp_loc;
         exp_type = ty_res }
+  (*x: [[Typecore.type_exp()]] match cases *)
   | Pexp_record lid_sexp_list ->
       let ty = newvar() in
       let num_fields = ref 0 in
@@ -367,66 +313,84 @@ let rec type_exp env sexp =
           try
             Env.lookup_label lid env
           with Not_found ->
-            raise(Error(sexp.pexp_loc, Unbound_label lid)) in
+            raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+        in
         let (ty_arg, ty_res) = instance_label label in
-        begin try
+        (try
           unify env ty_res ty
         with Unify ->
           raise(Error(sexp.pexp_loc, Label_mismatch(lid, ty_res, ty)))
-        end;
+        );
         let arg = type_expect env sarg ty_arg in
         num_fields := Array.length label.lbl_all;
-        (label, arg) in
+        (label, arg) 
+      in
       let lbl_exp_list = List.map type_label_exp lid_sexp_list in
+      (*s: [[Typecore.type_exp()]] record case, sanity check duplicates and missing *)
       let rec check_duplicates = function
         [] -> ()
       | (lid, sarg) :: remainder ->
           if List.mem_assoc lid remainder
           then raise(Error(sexp.pexp_loc, Label_multiply_defined lid))
-          else check_duplicates remainder in
+          else check_duplicates remainder 
+      in
       check_duplicates lid_sexp_list;
-      if List.length lid_sexp_list <> !num_fields then
-        raise(Error(sexp.pexp_loc, Label_missing));
+
+      if List.length lid_sexp_list <> !num_fields 
+      then raise(Error(sexp.pexp_loc, Label_missing));
+      (*e: [[Typecore.type_exp()]] record case, sanity check duplicates and missing *)
       { exp_desc = Texp_record lbl_exp_list;
         exp_loc = sexp.pexp_loc;
         exp_type = ty }
+  (*x: [[Typecore.type_exp()]] match cases *)
   | Pexp_field(sarg, lid) ->
       let arg = type_exp env sarg in
       let label =
         try
           Env.lookup_label lid env
         with Not_found ->
-          raise(Error(sexp.pexp_loc, Unbound_label lid)) in
+          raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+      in
       let (ty_arg, ty_res) = instance_label label in
       unify_exp env arg ty_res;
       { exp_desc = Texp_field(arg, label);
         exp_loc = sexp.pexp_loc;
         exp_type = ty_arg }
+  (*x: [[Typecore.type_exp()]] match cases *)
   | Pexp_setfield(srecord, lid, snewval) ->
       let record = type_exp env srecord in
       let label =
         try
           Env.lookup_label lid env
         with Not_found ->
-          raise(Error(sexp.pexp_loc, Unbound_label lid)) in
-      if label.lbl_mut = Immutable then
-        raise(Error(sexp.pexp_loc, Label_not_mutable lid));
+          raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+      in
+      if label.lbl_mut = Immutable 
+      then raise(Error(sexp.pexp_loc, Label_not_mutable lid));
       let (ty_arg, ty_res) = instance_label label in
       unify_exp env record ty_res;
       let newval = type_expect env snewval ty_arg in
       { exp_desc = Texp_setfield(record, label, newval);
         exp_loc = sexp.pexp_loc;
         exp_type = Predef.type_unit }
-  | Pexp_array(sargl) ->
-      let ty = newvar() in
-      let argl = List.map (fun sarg -> type_expect env sarg ty) sargl in
-      { exp_desc = Texp_array argl;
+  (*x: [[Typecore.type_exp()]] match cases *)
+  | Pexp_tuple sexpl ->
+      let expl = List.map (type_exp env) sexpl in
+      { exp_desc = Texp_tuple expl;
         exp_loc = sexp.pexp_loc;
-        exp_type = Predef.type_array ty }
+        exp_type = Ttuple(List.map (fun exp -> exp.exp_type) expl) }
+  (*x: [[Typecore.type_exp()]] match cases *)
+  | Pexp_sequence(sexp1, sexp2) ->
+      let exp1 = type_statement env sexp1 in
+      let exp2 = type_exp env sexp2 in
+      { exp_desc = Texp_sequence(exp1, exp2);
+        exp_loc = sexp.pexp_loc;
+        exp_type = exp2.exp_type }
+  (*x: [[Typecore.type_exp()]] match cases *)
   | Pexp_ifthenelse(scond, sifso, sifnot) ->
       let cond = type_expect env scond Predef.type_bool in
-      begin match sifnot with
-        None ->
+      (match sifnot with
+      | None ->
           let ifso = type_expect env sifso Predef.type_unit in
           { exp_desc = Texp_ifthenelse(cond, ifso, None);
             exp_loc = sexp.pexp_loc;
@@ -437,48 +401,145 @@ let rec type_exp env sexp =
           { exp_desc = Texp_ifthenelse(cond, ifso, Some ifnot);
             exp_loc = sexp.pexp_loc;
             exp_type = ifso.exp_type }
-      end
-  | Pexp_sequence(sexp1, sexp2) ->
-      let exp1 = type_statement env sexp1 in
-      let exp2 = type_exp env sexp2 in
-      { exp_desc = Texp_sequence(exp1, exp2);
-        exp_loc = sexp.pexp_loc;
-        exp_type = exp2.exp_type }
+      )
+  (*x: [[Typecore.type_exp()]] match cases *)
   | Pexp_while(scond, sbody) ->
       let cond = type_expect env scond Predef.type_bool in
       let body = type_statement env sbody in
       { exp_desc = Texp_while(cond, body);
         exp_loc = sexp.pexp_loc;
         exp_type = Predef.type_unit }
+  (*x: [[Typecore.type_exp()]] match cases *)
   | Pexp_for(param, slow, shigh, dir, sbody) ->
       let low = type_expect env slow Predef.type_int in
       let high = type_expect env shigh Predef.type_int in
       let (id, new_env) =
         Env.enter_value param {val_type = Predef.type_int;
-                                val_prim = None} env in
+                                val_prim = None} env 
+      in
       let body = type_statement new_env sbody in
       { exp_desc = Texp_for(id, low, high, dir, body);
         exp_loc = sexp.pexp_loc;
         exp_type = Predef.type_unit }
-  | Pexp_constraint(sarg, sty) ->
-      let ty = Typetexp.transl_simple_type env false sty in
-      let arg = type_expect env sarg ty in
-      { exp_desc = arg.exp_desc;
-        exp_loc = arg.exp_loc;
-        exp_type = ty }
+  (*x: [[Typecore.type_exp()]] match cases *)
+  | Pexp_try(sbody, caselist) ->
+      let body = type_exp env sbody in
+      let cases = type_cases env Predef.type_exn body.exp_type caselist in
+      Parmatch.check_unused cases;
+      { exp_desc = Texp_try(body, cases);
+        exp_loc = sexp.pexp_loc;
+        exp_type = body.exp_type }
+  (*x: [[Typecore.type_exp()]] match cases *)
+  | Pexp_match(sarg, caselist) ->
+      let arg = type_exp env sarg in
+      let ty_res = newvar() in
+      let cases = type_cases env arg.exp_type ty_res caselist in
+      (*s: [[Typecore.type_exp()]] match case, sanity check unused or partial *)
+      Parmatch.check_unused cases;
+      Parmatch.check_partial sexp.pexp_loc cases;
+      (*e: [[Typecore.type_exp()]] match case, sanity check unused or partial *)
+      { exp_desc = Texp_match(arg, cases);
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty_res }
+  (*x: [[Typecore.type_exp()]] match cases *)
   | Pexp_when(scond, sbody) ->
       let cond = type_expect env scond Predef.type_bool in
       let body = type_exp env sbody in
       { exp_desc = Texp_when(cond, body);
         exp_loc = sexp.pexp_loc;
         exp_type = body.exp_type }
-      
+  (*x: [[Typecore.type_exp()]] match cases *)
+  | Pexp_function caselist ->
+      let ty_arg = newvar() in
+      let ty_res = newvar() in
+      let cases = type_cases env ty_arg ty_res caselist in
+      (*s: [[Typecore.type_exp()]] match case, sanity check unused or partial *)
+      Parmatch.check_unused cases;
+      Parmatch.check_partial sexp.pexp_loc cases;
+      (*e: [[Typecore.type_exp()]] match case, sanity check unused or partial *)
+      { exp_desc = Texp_function cases;
+        exp_loc = sexp.pexp_loc;
+        exp_type = Tarrow(ty_arg, ty_res) }
+  (*x: [[Typecore.type_exp()]] match cases *)
+  | Pexp_apply(sfunct, sargs) ->
+      let funct = type_exp env sfunct in
+
+      let rec type_args ty_fun = function
+      | [] ->
+          ([], ty_fun)
+      | sarg1 :: sargl ->
+          let (ty1, ty2) =
+            try
+              filter_arrow env ty_fun
+            with Unify ->
+              raise(Error(sfunct.pexp_loc,
+                          Apply_non_function funct.exp_type)) 
+          in
+          let arg1 = type_expect env sarg1 ty1 in
+          let (argl, ty_res) = type_args ty2 sargl in
+          (arg1 :: argl, ty_res) 
+      in
+
+      let (args, ty_res) = type_args funct.exp_type sargs in
+      { exp_desc = Texp_apply(funct, args);
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty_res }
+  (*x: [[Typecore.type_exp()]] match cases *)
+  | Pexp_constraint(sarg, sty) ->
+      let ty = Typetexp.transl_simple_type env false sty in
+      let arg = type_expect env sarg ty in
+      { exp_desc = arg.exp_desc;
+        exp_loc = arg.exp_loc;
+        exp_type = ty }
+  (*x: [[Typecore.type_exp()]] match cases *)
+  | Pexp_let(rec_flag, spat_sexp_list, sbody) ->
+      let (pat_exp_list, new_env) = type_let env rec_flag spat_sexp_list in
+      let body = type_exp new_env sbody in
+      { exp_desc = Texp_let(rec_flag, pat_exp_list, body);
+        exp_loc = sexp.pexp_loc;
+        exp_type = body.exp_type }
+  (*x: [[Typecore.type_exp()]] match cases *)
+  |  Pexp_ident lid ->
+      begin try
+        let (path, desc) = Env.lookup_value lid env in
+        { exp_desc = Texp_ident(path, desc);
+          exp_loc = sexp.pexp_loc;
+          exp_type = instance desc.val_type }
+      with Not_found ->
+        raise(Error(sexp.pexp_loc, Unbound_value lid))
+      end
+  (*x: [[Typecore.type_exp()]] match cases *)
+  | Pexp_array(sargl) ->
+      let ty = newvar() in
+      let argl = List.map (fun sarg -> type_expect env sarg ty) sargl in
+      { exp_desc = Texp_array argl;
+        exp_loc = sexp.pexp_loc;
+        exp_type = Predef.type_array ty }
+  (*e: [[Typecore.type_exp()]] match cases *)
+(*e: function Typecore.type_exp *)
+
+(*s: function Typecode.type_expect *)
 (* Typing of an expression with an expected type.
    Some constructs are treated specially to provide better error messages. *)
 
 and type_expect env sexp ty_expected =
   match sexp.pexp_desc with
-    Pexp_constant(Const_string s as cst) ->
+  (*s: [[Typecode.type_expect()]] match cases *)
+  | Pexp_sequence(sexp1, sexp2) ->
+      let exp1 = type_statement env sexp1 in
+      let exp2 = type_expect env sexp2 ty_expected in
+      { exp_desc = Texp_sequence(exp1, exp2);
+        exp_loc = sexp.pexp_loc;
+        exp_type = exp2.exp_type }
+  (*x: [[Typecode.type_expect()]] match cases *)
+  | Pexp_let(rec_flag, spat_sexp_list, sbody) ->
+      let (pat_exp_list, new_env) = type_let env rec_flag spat_sexp_list in
+      let body = type_expect new_env sbody ty_expected in
+      { exp_desc = Texp_let(rec_flag, pat_exp_list, body);
+        exp_loc = sexp.pexp_loc;
+        exp_type = body.exp_type }
+  (*x: [[Typecode.type_expect()]] match cases *)
+  |  Pexp_constant(Const_string s as cst) ->
       let exp =
         { exp_desc = Texp_constant cst;
           exp_loc = sexp.pexp_loc;
@@ -490,23 +551,14 @@ and type_expect env sexp ty_expected =
             | _ -> Predef.type_string } in
       unify_exp env exp ty_expected;
       exp
-  | Pexp_let(rec_flag, spat_sexp_list, sbody) ->
-      let (pat_exp_list, new_env) = type_let env rec_flag spat_sexp_list in
-      let body = type_expect new_env sbody ty_expected in
-      { exp_desc = Texp_let(rec_flag, pat_exp_list, body);
-        exp_loc = sexp.pexp_loc;
-        exp_type = body.exp_type }
-  | Pexp_sequence(sexp1, sexp2) ->
-      let exp1 = type_statement env sexp1 in
-      let exp2 = type_expect env sexp2 ty_expected in
-      { exp_desc = Texp_sequence(exp1, exp2);
-        exp_loc = sexp.pexp_loc;
-        exp_type = exp2.exp_type }
+  (*e: [[Typecode.type_expect()]] match cases *)
   | _ ->
       let exp = type_exp env sexp in
       unify_exp env exp ty_expected;
       exp
+(*e: function Typecode.type_expect *)
 
+(*s: function Typecore.type_statement *)
 (* Typing of statements (expressions whose values are discarded) *)
 
 and type_statement env sexp =
@@ -518,42 +570,61 @@ and type_statement env sexp =
            maybe some arguments are missing.";
         exp
     | _ -> exp
+(*e: function Typecore.type_statement *)
 
+(*s: function Typecore.type_cases *)
 (* Typing of match cases *)
 
 and type_cases env ty_arg ty_res caselist =
-  List.map
-    (fun (spat, sexp) ->
+  List.map (fun (spat, sexp) ->
       let (pat, ext_env) = type_pattern env spat in
       unify_pat env pat ty_arg;
       let exp = type_expect ext_env sexp ty_res in
-      (pat, exp))
-    caselist
+      (pat, exp)
+  ) caselist
+(*e: function Typecore.type_cases *)
 
+(*s: function Typecode.type_let *)
 (* Typing of let bindings *)
 
 and type_let env rec_flag spat_sexp_list =
+
+  (*s: [[Typecode.type_let()]] before typing *)
   begin_def();
+  (*e: [[Typecode.type_let()]] before typing *)
   let (pat_list, new_env) =
-    type_pattern_list env (List.map (fun (spat, sexp) -> spat) spat_sexp_list) in
+    type_pattern_list env 
+      (List.map (fun (spat, sexp) -> spat) spat_sexp_list) 
+  in
   let exp_env =
-    match rec_flag with Nonrecursive -> env | Recursive -> new_env in
+    match rec_flag with 
+    | Nonrecursive -> env 
+    | Recursive -> new_env 
+  in
   let exp_list =
     List.map2
-      (fun (spat, sexp) pat -> type_expect exp_env sexp pat.pat_type)
+      (fun (_spat, sexp) pat -> type_expect exp_env sexp pat.pat_type)
       spat_sexp_list pat_list in
+  (*s: [[Typecode.type_let()]] sanity check partial patterns *)
   List.iter2
     (fun pat exp -> Parmatch.check_partial pat.pat_loc [pat, exp])
     pat_list exp_list;
+  (*e: [[Typecode.type_let()]] sanity check partial patterns *)
+  (*s: [[Typecode.type_let()]] after typing *)
   end_def();
-  List.iter
-    (fun exp -> if not (is_nonexpansive exp) then make_nongen exp.exp_type)
-    exp_list;
-  List.iter
-    (fun exp -> generalize exp.exp_type)
-    exp_list;
+  (*s: [[Typecode.type_let()]] after end_def, generalize or not *)
+  List.iter (fun exp -> 
+    if not (is_nonexpansive exp) 
+    then make_nongen exp.exp_type
+  ) exp_list;
+  List.iter (fun exp -> 
+    generalize exp.exp_type
+  ) exp_list;
+  (*e: [[Typecode.type_let()]] after end_def, generalize or not *)
+  (*e: [[Typecode.type_let()]] after typing *)
+
   (List.combine pat_list exp_list, new_env)
-(*e: function Typecore.type_exp *)
+(*e: function Typecode.type_let *)
 
 (*s: function Typecore.type_binding *)
 (* Typing of toplevel bindings *)
@@ -568,16 +639,20 @@ let type_binding env rec_flag spat_sexp_list =
 (* Typing of toplevel expressions *)
 
 let type_expression env sexp =
+  (*s: [[Typecode.type_expression()]] before type_exp *)
   reset_def();
   Typetexp.reset_type_variables();
 
   begin_def();
+  (*e: [[Typecode.type_expression()]] before type_exp *)
   let exp = type_exp env sexp in
+  (*s: [[Typecode.type_expression()]] after type_exp *)
   end_def();
-
+  (*s: [[Typecode.type_expression()]] after end_def, generalize or not *)
   if is_nonexpansive exp 
   then generalize exp.exp_type;
-
+  (*e: [[Typecode.type_expression()]] after end_def, generalize or not *)
+  (*e: [[Typecode.type_expression()]] after type_exp *)
   exp
 (*e: function Typecore.type_expression *)
 

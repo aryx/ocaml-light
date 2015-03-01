@@ -60,10 +60,6 @@ let equal i1 i2 = i1.name = i2.name
 (*s: function Ident.same *)
 let same i1 i2 = 
   i1 = i2
-  (* Possibly more efficient version (with a real compiler, at least):
-       if i1.stamp <> 0
-       then i1.stamp = i2.stamp
-       else i2.stamp = 0 & i1.name = i2.name *)
 (*e: function Ident.same *)
 
 (*s: function Ident.identify *)

@@ -119,10 +119,6 @@ val save_signature: signature -> string -> string -> Digest.t
 (* Return the set of compilation units imported, with their CRC *)
 
 val imported_units: unit -> (string * Digest.t) list
-(*x: signature Env.imported_units *)
-(* Return the set of compilation units imported, with their CRC *)
-
-val imported_units: unit -> (string * Digest.t) list
 (*e: signature Env.imported_units *)
 
 (*s: type Env.error *)
