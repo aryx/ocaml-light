@@ -422,14 +422,6 @@ let rec type_exp env sexp =
         exp_loc = sexp.pexp_loc;
         exp_type = Predef.type_unit }
   (*x: [[Typecore.type_exp()]] match cases *)
-  | Pexp_try(sbody, caselist) ->
-      let body = type_exp env sbody in
-      let cases = type_cases env Predef.type_exn body.exp_type caselist in
-      Parmatch.check_unused cases;
-      { exp_desc = Texp_try(body, cases);
-        exp_loc = sexp.pexp_loc;
-        exp_type = body.exp_type }
-  (*x: [[Typecore.type_exp()]] match cases *)
   | Pexp_match(sarg, caselist) ->
       let arg = type_exp env sarg in
       let ty_res = newvar() in
@@ -508,6 +500,14 @@ let rec type_exp env sexp =
       with Not_found ->
         raise(Error(sexp.pexp_loc, Unbound_value lid))
       end
+  (*x: [[Typecore.type_exp()]] match cases *)
+  | Pexp_try(sbody, caselist) ->
+      let body = type_exp env sbody in
+      let cases = type_cases env Predef.type_exn body.exp_type caselist in
+      Parmatch.check_unused cases;
+      { exp_desc = Texp_try(body, cases);
+        exp_loc = sexp.pexp_loc;
+        exp_type = body.exp_type }
   (*x: [[Typecore.type_exp()]] match cases *)
   | Pexp_array(sargl) ->
       let ty = newvar() in

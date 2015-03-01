@@ -735,10 +735,6 @@ core_type:
       { mktyp(Ptyp_arrow($1, $3)) }
   | core_type_tuple
       { mktyp(Ptyp_tuple(List.rev $1)) }
-  /*(*s: rule core_type cases *)*/
-  | core_type AS type_parameter
-      { mktyp(Ptyp_alias($1, $3)) }
-  /*(*e: rule core_type cases *)*/
 ;
 
 simple_core_type:
@@ -755,10 +751,6 @@ simple_core_type:
 
   | LPAREN core_type RPAREN
       { $2 }
-  /*(*s: rule simple_core_type cases *)*/
-  | UNDERSCORE
-      { mktyp(Ptyp_any) }
-  /*(*e: rule simple_core_type cases *)*/
 ;
 core_type_tuple:
     simple_core_type STAR simple_core_type      { [$3; $1] }

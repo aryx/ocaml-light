@@ -441,8 +441,8 @@ and core_type_desc =
   | Ptyp_arrow of core_type * core_type
   | Ptyp_tuple of core_type list
   | Ptyp_constr of Longident.t * core_type list
-  <<[[Parsetree.core_type_desc]] cases>>
 @
+%  <<[[Parsetree.core_type_desc]] cases>>
 %less: how represent base type? like int? 
 % it will be Ptyp_constr "int" [] ??
 %see later: any? it's _, I think I can remove it
@@ -857,7 +857,6 @@ val initial_env: unit -> Env.t
 
 
 <<function Compile.implementation>>=
-let (|>) o f = f o
 let implementation sourcefile =
   init_path();
   let prefixname = Filename.chop_extension sourcefile in
@@ -1949,7 +1948,6 @@ core_type:
       { mktyp(Ptyp_arrow($1, $3)) }
   | core_type_tuple
       { mktyp(Ptyp_tuple(List.rev $1)) }
-  <<rule core_type cases>>
 ;
 
 simple_core_type:
@@ -1966,7 +1964,6 @@ simple_core_type:
 
   | LPAREN core_type RPAREN
       { $2 }
-  <<rule simple_core_type cases>>
 ;
 core_type_tuple:
     simple_core_type STAR simple_core_type      { [$3; $1] }
@@ -1978,6 +1975,8 @@ core_type_list:
 ;
 @
 %less: diff core_type_tuple and core_type_list?
+%old:  <<rule core_type cases>>
+%old:  <<rule simple_core_type cases>>
 
 <<ebnf rules>>=
 core_type_comma_list:
@@ -2625,6 +2624,8 @@ direction_flag:
     { syntax_error() }
 @
 
+% see also exception declaration
+
 \section{Helpers}
 
 
@@ -2771,6 +2772,9 @@ let create s =
   incr currentstamp;
   { name = s; stamp = !currentstamp; global = false }
 @
+% this is never decremented.
+% see also make_global() and create_persistent()
+%todo: why need global and stamp?
 
 %ex: unit test?
 %let ident_int = Ident.create "int"
@@ -3045,7 +3049,7 @@ and module_coercion =
 % examples!!
 
 \subsection{Builtin types}
-% and exceptions
+% (and exceptions but exceptions are LP splitted and presented later)
 
 %(* Predefined type constructors (with special typing rules in typecore) *)
 
@@ -3498,16 +3502,6 @@ and store_type id path info env =
     components = env.components }
 @
 
-<<function Env.store_exceptions>>=
-and store_exception id path decl env =
-  { constrs = Ident.add id (Datarepr.exception_descr path decl) env.constrs;
-    (* boilerplate, with record *)
-    values = env.values;
-    labels = env.labels;
-    types = env.types;
-    modules = env.modules;
-    components = env.components }
-@
 
 <<function Env.store_module>>=
 and store_module id path mty env =
@@ -3544,9 +3538,6 @@ val add_value: Ident.t -> value_description -> t -> t
 <<signature Env.add_type>>=
 val add_type: Ident.t -> type_declaration -> t -> t
 @
-<<signature Env.add_exception>>=
-val add_exception: Ident.t -> exception_declaration -> t -> t
-@
 <<signature Env.add_module>>=
 val add_module: Ident.t -> module_type -> t -> t
 @
@@ -3560,10 +3551,6 @@ let add_value id desc env =
 <<function Env.add_type>>=
 and add_type id info env =
   store_type id (Pident id) info env
-@
-<<function Env.add_exception>>=
-and add_exception id decl env =
-  store_exception id (Pident id) decl env
 @
 <<function Env.add_module>>=
 and add_module id mty env =
@@ -3582,9 +3569,6 @@ val enter_value: string -> value_description -> t -> Ident.t * t
 <<signature Env.enter_type>>=
 val enter_type: string -> type_declaration -> t -> Ident.t * t
 @
-<<signature Env.enter_exception>>=
-val enter_exception: string -> exception_declaration -> t -> Ident.t * t
-@
 <<signature Env.enter_module>>=
 val enter_module: string -> module_type -> t -> Ident.t * t
 @
@@ -3601,7 +3585,6 @@ let enter store_fun name data env =
 <<functions Env.enter_xxx>>=
 let enter_value     = enter store_value
 and enter_type      = enter store_type
-and enter_exception = enter store_exception
 and enter_module    = enter store_module
 @
 
@@ -3798,9 +3781,6 @@ val value_description: t -> value_description -> value_description
 <<signature Subst.type_declaration>>=
 val type_declaration: t -> type_declaration -> type_declaration
 @
-<<signature Subst.exception_declaration>>=
-val exception_declaration: t -> exception_declaration -> exception_declaration
-@
 <<signature Subst.modtype>>=
 val modtype: t -> module_type -> module_type
 @
@@ -3869,10 +3849,6 @@ let type_declaration s decl =
   }
 @
 
-<<function Subst.exception_declaration>>=
-let exception_declaration s tyl =
-  List.map (type_expr s) tyl
-@
 
 <<function Subst.modtype>>=
 let rec modtype s = function
@@ -4424,15 +4400,6 @@ and type_statement env sexp =
       exp_type = Predef.type_unit }
 @
 
-<<[[Typecore.type_exp()]] match cases>>=
-| Pexp_try(sbody, caselist) ->
-    let body = type_exp env sbody in
-    let cases = type_cases env Predef.type_exn body.exp_type caselist in
-    Parmatch.check_unused cases;
-    { exp_desc = Texp_try(body, cases);
-      exp_loc = sexp.pexp_loc;
-      exp_type = body.exp_type }
-@
 
 
 
@@ -4586,8 +4553,9 @@ and type_let env rec_flag spat_sexp_list =
 
   <<[[Typecode.type_let()]] before typing>>
   let (pat_list, new_env) =
-    type_pattern_list env 
-      (List.map (fun (spat, sexp) -> spat) spat_sexp_list) 
+    spat_sexp_list 
+    |> List.map (fun (spat, sexp) -> spat)
+    |> type_pattern_list env 
   in
   let exp_env =
     match rec_flag with 
@@ -4807,10 +4775,6 @@ val transl_type_decl:
                          (Ident.t * Types.type_declaration) list * Env.t
 @
 
-<<signature Typedecl.transl_exception>>=
-val transl_exception:
-        Env.t -> Parsetree.exception_declaration -> Types.exception_declaration
-@
 
 
 
@@ -4996,15 +4960,6 @@ List.iter
 
 
 
-<<function Typedecl.transl_exception>>=
-(* Translate an exception declaration *)
-
-let transl_exception env excdecl =
-  Ctype.reset_def();
-  reset_type_variables();
-
-  List.map (transl_simple_type env true) excdecl
-@
 
 
 \subsection{Modules}
@@ -5042,10 +4997,13 @@ let transl_value_decl env valdecl =
 
 % those are the reasons the typechecker got so complicated?
 
-\subsection{References}
+\subsection{References, [['_a]]}
 % _a
 
 \subsection{Exceptions}
+
+% exn are really like an open variant, a variant that
+% can be extended in different files.
 
 % builtin exceptions
 
@@ -5072,7 +5030,27 @@ let decl_exn =
    type_manifest = None}
 in
 @
-% variant with no cases
+% variant with no cases, but really it's more a variant
+% with many cases, added in a cross-cutting way in different
+% files. 
+
+
+<<[[Typecore.type_exp()]] match cases>>=
+| Pexp_try(sbody, caselist) ->
+    let body = type_exp env sbody in
+    let cases = type_cases env Predef.type_exn body.exp_type caselist in
+    Parmatch.check_unused cases;
+    { exp_desc = Texp_try(body, cases);
+      exp_loc = sexp.pexp_loc;
+      exp_type = body.exp_type }
+@
+% no check_partial here!
+
+
+
+
+
+
 
 
 <<signature Predef.path_match_failure>>=
@@ -5094,7 +5072,8 @@ and ident_end_of_file      = Ident.create "End_of_file"
 and ident_division_by_zero = Ident.create "Division_by_zero"
 and ident_stack_overflow   = Ident.create "Stack_overflow"
 @
-% why not in pervasives? 
+% why not in pervasives? because used in the compiler itself?
+
 
 <<[[Predef.build_initial_env()]] adding exceptions>>=
 add_exception ident_match_failure [Ttuple[type_string; type_int; type_int]] (
@@ -5107,6 +5086,31 @@ add_exception ident_sys_error [type_string] (
 add_exception ident_end_of_file [] (
 add_exception ident_division_by_zero [] (
 @
+
+
+
+
+<<signature Env.add_exception>>=
+val add_exception: Ident.t -> exception_declaration -> t -> t
+@
+<<function Env.add_exception>>=
+and add_exception id decl env =
+  store_exception id (Pident id) decl env
+@
+
+<<function Env.store_exceptions>>=
+and store_exception id path decl env =
+  { constrs = Ident.add id (Datarepr.exception_descr path decl) env.constrs;
+    (* boilerplate, with record *)
+    values = env.values;
+    labels = env.labels;
+    types = env.types;
+    modules = env.modules;
+    components = env.components }
+@
+
+
+
 
 <<signature Predef.builtin_values>>=
 (* To initialize linker tables *)
@@ -5134,9 +5138,48 @@ let make_global i =
 <<[[Ident.t]] other fields>>=
 mutable global: bool 
 @
-% what is it for?
+% what is it for? for Ident.name! to create something really unique.
 % make sure they don't interface with names defined by user?
-% need that?
+% but need that? the stamp in ident is not enough?
+% create_persistent() not enough?
+
+
+
+
+<<signature Typedecl.transl_exception>>=
+val transl_exception:
+        Env.t -> Parsetree.exception_declaration -> Types.exception_declaration
+@
+
+<<function Typedecl.transl_exception>>=
+(* Translate an exception declaration *)
+
+let transl_exception env excdecl =
+  Ctype.reset_def();
+  reset_type_variables();
+
+  List.map (transl_simple_type env true) excdecl
+@
+
+
+
+<<signature Env.enter_exception>>=
+val enter_exception: string -> exception_declaration -> t -> Ident.t * t
+@
+
+<<functions Env.enter_xxx>>=
+and enter_exception = enter store_exception
+@
+
+<<signature Subst.exception_declaration>>=
+val exception_declaration: t -> exception_declaration -> exception_declaration
+@
+<<function Subst.exception_declaration>>=
+let exception_declaration s tyl =
+  List.map (type_expr s) tyl
+@
+
+
 
 \subsection{Abstract types}
 
@@ -5325,33 +5368,6 @@ let rec free_type_ident env ids ty =
     { (Ptype_record(List.rev $5), Some $2) }
 @
 
-\subsection{Type any}
-% _
-%todo: remove?
-
-<<[[Parsetree.core_type_desc]] cases>>=
-| Ptyp_any
-@
-
-<<rule simple_core_type cases>>=
-| UNDERSCORE
-    { mktyp(Ptyp_any) }
-@
-
-\subsection{Type aliases}
-% type t = x as 'a ????
-%todo: remove? what is that?
-
-<<[[Parsetree.core_type_desc]] cases>>=
-| Ptyp_alias of core_type * string
-@
-% not what you think ...
-
-<<rule core_type cases>>=
-| core_type AS type_parameter
-    { mktyp(Ptyp_alias($1, $3)) }
-@
-
 
 
 \subsection{Printf}
@@ -5456,6 +5472,33 @@ let type_format loc fmt =
 
 % things got more complicated also with functors ...
 
+
+%\subsection{Type any}
+%% '_' in types, but not that useful.
+%%It was actually never matched ... probably because backported raw
+% typing/ and didn't forward ported this feature
+%
+%<<[[Parsetree.core_type_desc]] cases>>=
+%| Ptyp_any
+%@
+%
+%<<rule simple_core_type cases>>=
+%| UNDERSCORE
+%    { mktyp(Ptyp_any) }
+%@
+
+%\subsection{Type aliases}
+%% type t = x as 'a ????
+%
+%<<[[Parsetree.core_type_desc]] cases>>=
+%| Ptyp_alias of core_type * string
+%@
+%% not what you think ...
+%
+%<<rule core_type cases>>=
+%| core_type AS type_parameter
+%    { mktyp(Ptyp_alias($1, $3)) }
+%@
 
 
 \chapter{Checking}
