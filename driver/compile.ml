@@ -137,7 +137,6 @@ let print_if flag printer arg =
 (*e: function Compile.print_if *)
 
 (*s: function Compile.implementation *)
-let (|>) o f = f o
 let implementation sourcefile =
   init_path();
   let prefixname = Filename.chop_extension sourcefile in

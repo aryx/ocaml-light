@@ -35,19 +35,22 @@
         (* The type of booleans (truth values). *)
 (*- type unit = () *)
         (* The type of the unit value. *)
+
 (*- type exn *)
         (* The type of exception values. *)
 (*- type 'a array *)
         (* The type of arrays whose elements have type ['a]. *)
 (*- type 'a list = [] | :: of 'a * 'a list *)
         (* The type of lists whose elements have type ['a]. *)
-type 'a option = None | Some of 'a
-        (* The type of optional values. *)
+
 (*- type ('a, 'b, 'c) format *)
         (* The type of format strings. ['a] is the type of the parameters
            of the format, ['c] is the result type for the [printf]-style
            function, and ['b] is the type of the first argument given to
            [%a] and [%t] printing functions (see module [Printf]). *)
+
+type 'a option = None | Some of 'a
+        (* The type of optional values. *)
 
 (*** Exceptions *)
 
@@ -63,6 +66,7 @@ exception Assert_failure of (string * int * int)
            the location of the pattern-matching in the source code
            (file name, position of first character, position of last
            character). *)
+
 (*- exception Invalid_argument of string *)
         (* Exception raised by library functions to signal that the given
            arguments do not make sense. *)
@@ -88,6 +92,7 @@ exception Assert_failure of (string * int * int)
 (*- exception Division_by_zero *)
         (* Exception raised by division and remainder operations
            when their second argument is null. *)
+
 exception Exit
         (* This exception is not raised by any library function.  It is
            provided for use in your programs. *)
@@ -143,16 +148,17 @@ external (!=) : 'a -> 'a -> bool = "%noteq"
 
 external not : bool -> bool = "%boolnot"
         (* The boolean negation. *)
-external (&) : bool -> bool -> bool = "%sequand"
 external (&&) : bool -> bool -> bool = "%sequand"
         (* The boolean ``and''. Evaluation is sequential, left-to-right:
            in [e1 & e2], [e1] is evaluated first, and if it returns [false],
            [e2] is not evaluated at all. *)
-external (or) : bool -> bool -> bool = "%sequor"
 external (||) : bool -> bool -> bool = "%sequor"
         (* The boolean ``or''. Evaluation is sequential, left-to-right:
            in [e1 or e2], [e1] is evaluated first, and if it returns [true],
            [e2] is not evaluated at all. *)
+
+external (&) : bool -> bool -> bool = "%sequand"
+external (or) : bool -> bool -> bool = "%sequor"
 
 (*** Integer arithmetic *)
 
@@ -574,6 +580,13 @@ val at_exit: (unit -> unit) -> unit
            terminates because of an uncaught exception. *)
 
 (*--*)
+
+val ( |> ) : 'a -> ('a -> 'b) -> 'b
+(** Reverse-application operator: [x |> f |> g] is exactly equivalent
+ to [g (f (x))].
+   @since 4.01
+*)
+
 
 (*** For system use only, not for the casual user *)
 
