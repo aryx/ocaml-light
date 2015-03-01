@@ -38,10 +38,12 @@ let mkstr d =
   { pstr_desc = d; pstr_loc = Location.symbol_loc() }
 /*(*e: functions Parser.mkxxx *)*/
 
+/*(*s: functions Parser.mkoperator *)*/
 let mkoperator name pos =
   { pexp_desc = Pexp_ident(Lident name); pexp_loc = rhs_loc pos }
+/*(*e: functions Parser.mkoperator *)*/
 
-/*(*s: [[Parser.mkassert()]] *)*/
+/*(*s: function Parser.mkassert *)*/
 let mkassert e =
   let {loc_start = st; loc_end = en} = Location.symbol_loc () in
   let triple = mkexp (Pexp_tuple
@@ -58,10 +60,9 @@ let mkassert e =
   | _ -> if !Clflags.noassert
          then un
          else mkexp (Pexp_ifthenelse (e, un, Some raiser))
-/*(*e: [[Parser.mkassert()]] *)*/
-;;
+/*(*e: function Parser.mkassert *)*/
 
-/*(*s: [[Parser.mklazy()]] *)*/
+/*(*s: function Parser.mklazy *)*/
 let mklazy e =
   let void_pat = mkpat (Ppat_construct (Lident "()", None)) in
   let f = mkexp (Pexp_function ([void_pat, e])) in
@@ -69,12 +70,14 @@ let mklazy e =
   let df = mkexp (Pexp_construct (delayed, Some f)) in
   let r = mkexp (Pexp_ident (Ldot (Lident "Pervasives", "ref"))) in
   mkexp (Pexp_apply (r, [df]))
-/*(*e: [[Parser.mklazy()]] *)*/
-;;
+/*(*e: function Parser.mklazy *)*/
 
+/*(*s: function Parser.mkinfix *)*/
 let mkinfix arg1 name arg2 =
   mkexp(Pexp_apply(mkoperator name 2, [arg1; arg2]))
+/*(*e: function Parser.mkinfix *)*/
 
+/*(*s: function Parser.mkuminus *)*/
 let mkuminus name arg =
   match arg.pexp_desc with
     Pexp_constant(Const_int n) ->
@@ -83,8 +86,9 @@ let mkuminus name arg =
       mkexp(Pexp_constant(Const_float("-" ^ f)))
   | _ ->
       mkexp(Pexp_apply(mkoperator ("~" ^ name) 1, [arg]))
+/*(*e: function Parser.mkuminus *)*/
 
-/*(*s: [[Parser.mklistexp()]] *)*/
+/*(*s: function Parser.mklistexp *)*/
 let rec mklistexp = function
     [] ->
       mkexp(Pexp_construct(Lident "[]", None))
@@ -92,8 +96,9 @@ let rec mklistexp = function
       mkexp(Pexp_construct(Lident "::",
                            Some(mkexp(Pexp_tuple[e1; mklistexp el]))
                            ))
-/*(*e: [[Parser.mklistexp()]] *)*/
+/*(*e: function Parser.mklistexp *)*/
 
+/*(*s: function Parser.mklistpat *)*/
 let rec mklistpat = function
     [] ->
       mkpat(Ppat_construct(Lident "[]", None))
@@ -101,16 +106,19 @@ let rec mklistpat = function
       mkpat(Ppat_construct(Lident "::",
                            Some(mkpat(Ppat_tuple[p1; mklistpat pl]))
                            ))
+/*(*e: function Parser.mklistpat *)*/
 
+/*(*s: function Parser.mkstrexp *)*/
 let mkstrexp e =
   { pstr_desc = Pstr_eval e; pstr_loc = e.pexp_loc }
+/*(*e: function Parser.mkstrexp *)*/
 
-/*(*s: [[Parser.array_function()]] *)*/
+/*(*s: function Parser.array_function *)*/
 let array_function str name =
   Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))
-/*(*e: [[Parser.array_function()]] *)*/
+/*(*e: function Parser.array_function *)*/
 
-/*(*s: [[Parser.mkrangepat()]] *)*/
+/*(*s: function Parser.mkrangepat *)*/
 let rec mkrangepat c1 c2 =
   if c1 > c2 
   then mkrangepat c2 c1 
@@ -119,7 +127,7 @@ let rec mkrangepat c1 c2 =
     then mkpat(Ppat_constant(Const_char c1)) 
     else mkpat(Ppat_or(mkpat(Ppat_constant(Const_char c1)),
                        mkrangepat (Char.chr(Char.code c1 + 1)) c2))
-/*(*e: [[Parser.mkrangepat()]] *)*/
+/*(*e: function Parser.mkrangepat *)*/
 
 let syntax_error () =
   raise Syntaxerr.Escape_error
@@ -476,8 +484,6 @@ expr:
   /*(*x: rule expr cases *)*/
   | TRY seq_expr WITH opt_bar match_cases %prec prec_try
       { mkexp(Pexp_try($2, List.rev $5)) }
-  | TRY seq_expr WITH error %prec prec_try
-      { syntax_error() }
   /*(*x: rule expr cases *)*/
   | simple_expr DOT LPAREN seq_expr RPAREN LESSMINUS expr
       { mkexp(Pexp_apply(mkexp(Pexp_ident(array_function "Array" "set")),
@@ -493,6 +499,10 @@ expr:
   | LAZY simple_expr %prec prec_appl
       { mklazy $2 }
   /*(*e: rule expr cases *)*/
+  /*(*s: rule expr error cases *)*/
+  | TRY seq_expr WITH error %prec prec_try
+      { syntax_error() }
+  /*(*e: rule expr error cases *)*/
 ;
 /*(*x: expression rules *)*/
 simple_expr:
@@ -630,6 +640,7 @@ pattern:
 simple_pattern:
   | signed_constant
       { mkpat(Ppat_constant $1) }
+
   | constr_longident
       { mkpat(Ppat_construct($1, None)) }
   | LBRACE lbl_pattern_list opt_semi RBRACE
@@ -640,15 +651,15 @@ simple_pattern:
   | UNDERSCORE
       { mkpat(Ppat_any) }
 
-  | LBRACKET pattern_semi_list opt_semi RBRACKET
-      { mklistpat(List.rev $2) }
-
   | LPAREN pattern RPAREN
       { $2 }
 
   | LPAREN pattern COLON core_type RPAREN
       { mkpat(Ppat_constraint($2, $4)) }
   /*(*s: rule simple_pattern other cases *)*/
+    | LBRACKET pattern_semi_list opt_semi RBRACKET
+        { mklistpat(List.rev $2) }
+  /*(*x: rule simple_pattern other cases *)*/
   | CHAR DOTDOT CHAR
       { mkrangepat $1 $3 }
   /*(*e: rule simple_pattern other cases *)*/
@@ -820,6 +831,7 @@ type_longident:
 /*(*x: name rules *)*/
 constr_ident:
     UIDENT                                      { $1 }
+
   | LBRACKET RBRACKET                           { "[]" }
   | LPAREN RPAREN                               { "()" }
   | COLONCOLON                                  { "::" }
@@ -829,6 +841,7 @@ constr_ident:
 /*(*x: name rules *)*/
 constr_longident:
     mod_longident                               { $1 }
+
   | LBRACKET RBRACKET                           { Lident "[]" }
   | LPAREN RPAREN                               { Lident "()" }
   | FALSE                                       { Lident "false" }

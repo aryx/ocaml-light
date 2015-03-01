@@ -5,8 +5,7 @@
 %******************************************************************************
 \newif\iffinal
 \newif\ifverbose
-\finaltrue\verbosefalse
-% see also other newif in Macros.tex
+\finaltrue\verbosefalse % see also other newif in Macros.tex
 
 %------------------------------------------------------------------------------
 %history: 
@@ -354,31 +353,6 @@ let nopervasives = ref false            (* -nopervasives *)
 
 \section{Abstract syntax tree}
 
-\subsection{Names}
-
-<<type Longident.t>>=
-(* Long identifiers, used in parsetree. *)
-
-type t =
-    Lident of string
-  | Ldot of t * string
-@
-%note: like a list, but enforce have at least one element
-
-%<<signature Longident.flatten>>=
-%val flatten: t -> string list
-%@
-%% dead, maybe dead because removed functors, module type, etc
-%
-%<<function Longident.flat>>=
-%let rec flat accu = function
-%    Lident s -> s :: accu
-%  | Ldot(lid, s) -> flat (s :: accu) lid
-%@
-%<<function Longident.flatten>>=
-%let flatten lid = flat [] lid
-%@
-
 \subsection{Positions}
 
 <<type Location.t>>=
@@ -419,6 +393,31 @@ let input_name = ref ""
 
 
 
+
+\subsection{Names}
+
+<<type Longident.t>>=
+(* Long identifiers, used in parsetree. *)
+
+type t =
+    Lident of string
+  | Ldot of t * string
+@
+%note: like a list, but enforce have at least one element
+
+%<<signature Longident.flatten>>=
+%val flatten: t -> string list
+%@
+%% dead, maybe dead because removed functors, module type, etc
+%
+%<<function Longident.flat>>=
+%let rec flat accu = function
+%    Lident s -> s :: accu
+%  | Ldot(lid, s) -> flat (s :: accu) lid
+%@
+%<<function Longident.flatten>>=
+%let flatten lid = flat [] lid
+%@
 
 \subsection{Types}
 
@@ -1367,7 +1366,7 @@ let keyword_table =
 %$
 %different priorities, mimicing the smaller version
 %less: factorize ?
-%less: why special case for ** ?
+%less: why special case for **, it's exponentiation, different associativity?
 
 % in ocaml 4.00
 %  | "!" symbolchar +
@@ -1397,9 +1396,9 @@ let keyword_table =
 
 <<[[Lexer.token()]] integer case>>=
 | ['0'-'9']+
-  | '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f']+
-  | '0' ['o' 'O'] ['0'-'7']+
-  | '0' ['b' 'B'] ['0'-'1']+
+| '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f']+
+| '0' ['o' 'O'] ['0'-'7']+
+| '0' ['b' 'B'] ['0'-'1']+
     { INT (int_of_string(Lexing.lexeme lexbuf)) }
 @
 %int_of_string from pervasives handles many format
@@ -1443,15 +1442,17 @@ let char_for_backslash =
 | "'" '\\' ['0'-'9'] ['0'-'9'] ['0'-'9'] "'"
     { CHAR(char_for_decimal_code lexbuf 2) }
 @
-
+% it's actually what is used above in char_for_backslash :) bootstrapping!
 
 <<Lexer escape sequences related functions>>=
 let char_for_decimal_code lexbuf i =
-  let c = 100 * (Char.code(Lexing.lexeme_char lexbuf i) - 48) +
+  let c = 100 * (Char.code(Lexing.lexeme_char lexbuf (i+0)) - 48) +
            10 * (Char.code(Lexing.lexeme_char lexbuf (i+1)) - 48) +
-                (Char.code(Lexing.lexeme_char lexbuf (i+2)) - 48) in  
+                (Char.code(Lexing.lexeme_char lexbuf (i+2)) - 48) 
+  in  
   Char.chr(c land 0xFF)
 @
+
 
 \section{Strings}
 
@@ -1479,13 +1480,15 @@ and string = parse
         string lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
       { store_string_char(char_for_decimal_code lexbuf 1);
-         string lexbuf }
+        string lexbuf }
   | eof
       { raise (Error(Unterminated_string, !start_pos, !start_pos+1)) }
   | _
       { store_string_char(Lexing.lexeme_char lexbuf 0);
         string lexbuf }
 @
+
+% what about unicode?
 
 <<Lexer string related functions>>=
 let initial_string_buffer = String.create 256
@@ -1744,6 +1747,13 @@ structure_tail:
 ;
 @
 %$
+% remove seq_expr? need? for directives? #open stuff?
+
+<<function Parser.mkstrexp>>=
+let mkstrexp e =
+  { pstr_desc = Pstr_eval e; pstr_loc = e.pexp_loc }
+@
+% mv that only for toplevel?
 
 <<structure rules>>=
 structure_item:
@@ -1853,6 +1863,8 @@ module_type:
 
 @
 %$
+%less: delete mty_longident, no module_type since removed functors,
+% they make less sense then
 
 <<extra rules>>=
 primitive_declaration:
@@ -2090,6 +2102,7 @@ constructor_arguments:
 <<name rules>>=
 constr_ident:
     UIDENT                                      { $1 }
+
   | LBRACKET RBRACKET                           { "[]" }
   | LPAREN RPAREN                               { "()" }
   | COLONCOLON                                  { "::" }
@@ -2098,7 +2111,8 @@ constr_ident:
 ;
 @
 %$
-    
+% useful to have those builtins here? anyway
+% we don't let user redefined them no?    
 
 \subsection{Records, product types}
 
@@ -2138,6 +2152,7 @@ expr:
     simple_expr
       { $1 }
   <<rule expr cases>>
+  <<rule expr error cases>>
 ;
 @
 %$
@@ -2199,6 +2214,7 @@ signed_constant:
 <<name rules>>=
 constr_longident:
     mod_longident                               { $1 }
+
   | LBRACKET RBRACKET                           { Lident "[]" }
   | LPAREN RPAREN                               { Lident "()" }
   | FALSE                                       { Lident "false" }
@@ -2206,7 +2222,9 @@ constr_longident:
 ;
 @
 %$
-
+% and why not :: here? because constr_longident can appear
+% in pattern context and in that case :: is not a prefix but infix
+% and so there is a special rule to pattern match ::
 
 \subsection{Lists}
 
@@ -2223,7 +2241,7 @@ constr_longident:
 %$
 % of Pexp_tuple! extra boxing?
 
-<<[[Parser.mklistexp()]]>>=
+<<function Parser.mklistexp>>=
 let rec mklistexp = function
     [] ->
       mkexp(Pexp_construct(Lident "[]", None))
@@ -2443,6 +2461,11 @@ val_longident:
 
 @
 
+<<function Parser.mkinfix>>=
+let mkinfix arg1 name arg2 =
+  mkexp(Pexp_apply(mkoperator name 2, [arg1; arg2]))
+@
+
 \subsubsection{Prefix operators}
 
 <<rule expr cases>>=
@@ -2451,11 +2474,35 @@ val_longident:
 @
 % not sure why can't be merged with next case
 
+<<function Parser.mkuminus>>=
+let mkuminus name arg =
+  match arg.pexp_desc with
+    Pexp_constant(Const_int n) ->
+      mkexp(Pexp_constant(Const_int(-n)))
+  | Pexp_constant(Const_float f) ->
+      mkexp(Pexp_constant(Const_float("-" ^ f)))
+  | _ ->
+      mkexp(Pexp_apply(mkoperator ("~" ^ name) 1, [arg]))
+@
+
 <<rule simple_expr cases>>=
 | PREFIXOP simple_expr
     { mkexp(Pexp_apply(mkoperator $1 1, [$2])) }
 @
 
+<<functions Parser.mkoperator>>=
+let mkoperator name pos =
+  { pexp_desc = Pexp_ident(Lident name); pexp_loc = rhs_loc pos }
+@
+
+
+<<signature Location.rhs_loc>>=
+val rhs_loc: int -> t
+@
+<<function Location.rhs_loc>>=
+let rhs_loc n =
+  { loc_start = Parsing.rhs_start n; loc_end = Parsing.rhs_end n }
+@
 
 \subsection{Casts}
 
@@ -2528,6 +2575,7 @@ pattern:
 simple_pattern:
   | signed_constant
       { mkpat(Ppat_constant $1) }
+
   | constr_longident
       { mkpat(Ppat_construct($1, None)) }
   | LBRACE lbl_pattern_list opt_semi RBRACE
@@ -2538,9 +2586,6 @@ simple_pattern:
   | UNDERSCORE
       { mkpat(Ppat_any) }
 
-  | LBRACKET pattern_semi_list opt_semi RBRACKET
-      { mklistpat(List.rev $2) }
-
   | LPAREN pattern RPAREN
       { $2 }
 
@@ -2550,6 +2595,7 @@ simple_pattern:
   <<rule simple_pattern error cases>>
 ;
 @
+%$
 % another special case of lists
 
 
@@ -2578,7 +2624,21 @@ pattern_semi_list:
 @
 %$
 
+<<rule simple_pattern other cases>>=
+  | LBRACKET pattern_semi_list opt_semi RBRACKET
+      { mklistpat(List.rev $2) }
+@
+%$
 
+<<function Parser.mklistpat>>=
+let rec mklistpat = function
+    [] ->
+      mkpat(Ppat_construct(Lident "[]", None))
+  | p1 :: pl ->
+      mkpat(Ppat_construct(Lident "::",
+                           Some(mkpat(Ppat_tuple[p1; mklistpat pl]))
+                           ))
+@
 
 \section{Statements}
 
@@ -2626,14 +2686,11 @@ direction_flag:
 <<rule expr cases>>=
 | TRY seq_expr WITH opt_bar match_cases %prec prec_try
     { mkexp(Pexp_try($2, List.rev $5)) }
-| TRY seq_expr WITH error %prec prec_try
-    { syntax_error() }
 @
 
 % see also exception declaration
 
 \section{Helpers}
-
 
 <<functions Parser.mkxxx>>=
 let mktyp d =
@@ -2661,43 +2718,25 @@ open Parsetree
 
 <<functions Parser.mkxxx>>
 
-let mkoperator name pos =
-  { pexp_desc = Pexp_ident(Lident name); pexp_loc = rhs_loc pos }
+<<functions Parser.mkoperator>>
 
-<<[[Parser.mkassert()]]>>
-;;
+<<function Parser.mkassert>>
 
-<<[[Parser.mklazy()]]>>
-;;
+<<function Parser.mklazy>>
 
-let mkinfix arg1 name arg2 =
-  mkexp(Pexp_apply(mkoperator name 2, [arg1; arg2]))
+<<function Parser.mkinfix>>
 
-let mkuminus name arg =
-  match arg.pexp_desc with
-    Pexp_constant(Const_int n) ->
-      mkexp(Pexp_constant(Const_int(-n)))
-  | Pexp_constant(Const_float f) ->
-      mkexp(Pexp_constant(Const_float("-" ^ f)))
-  | _ ->
-      mkexp(Pexp_apply(mkoperator ("~" ^ name) 1, [arg]))
+<<function Parser.mkuminus>>
 
-<<[[Parser.mklistexp()]]>>
+<<function Parser.mklistexp>>
 
-let rec mklistpat = function
-    [] ->
-      mkpat(Ppat_construct(Lident "[]", None))
-  | p1 :: pl ->
-      mkpat(Ppat_construct(Lident "::",
-                           Some(mkpat(Ppat_tuple[p1; mklistpat pl]))
-                           ))
+<<function Parser.mklistpat>>
 
-let mkstrexp e =
-  { pstr_desc = Pstr_eval e; pstr_loc = e.pexp_loc }
+<<function Parser.mkstrexp>>
 
-<<[[Parser.array_function()]]>>
+<<function Parser.array_function>>
 
-<<[[Parser.mkrangepat()]]>>
+<<function Parser.mkrangepat>>
 
 let syntax_error () =
   raise Syntaxerr.Escape_error
@@ -2708,15 +2747,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 
 @
 
-
-
-<<signature Location.rhs_loc>>=
-val rhs_loc: int -> t
-@
-<<function Location.rhs_loc>>=
-let rhs_loc n =
-  { loc_start = Parsing.rhs_start n; loc_end = Parsing.rhs_end n }
-@
 
 
 
@@ -6679,6 +6709,8 @@ let record_event ev =
 %  gen chapter :)
 % functors? can be interesting to understand how it's compiled
 
+% could put when here
+
 \section{Floats}
 
 \section{Arrays}
@@ -6773,7 +6805,7 @@ let fast = ref false                    (* -unsafe *)
       " No bounds checking on array and string access";
 @
 
-<<[[Parser.array_function()]]>>=
+<<function Parser.array_function>>=
 let array_function str name =
   Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))
 @
@@ -6789,7 +6821,7 @@ let array_function str name =
     { mkrangepat $1 $3 }
 @
 
-<<[[Parser.mkrangepat()]]>>=
+<<function Parser.mkrangepat>>=
 let rec mkrangepat c1 c2 =
   if c1 > c2 
   then mkrangepat c2 c1 
@@ -6830,7 +6862,7 @@ let rec mkrangepat c1 c2 =
 %$
 
 % assert x --> ()  |   raise Assert_failure ... if noassert flag is set
-<<[[Parser.mkassert()]]>>=
+<<function Parser.mkassert>>=
 let mkassert e =
   let {loc_start = st; loc_end = en} = Location.symbol_loc () in
   let triple = mkexp (Pexp_tuple
@@ -6871,7 +6903,7 @@ let noassert = ref false                (* -noassert *)
 %$
 
 % lazy x --> ?
-<<[[Parser.mklazy()]]>>=
+<<function Parser.mklazy>>=
 let mklazy e =
   let void_pat = mkpat (Ppat_construct (Lident "()", None)) in
   let f = mkexp (Pexp_function ([void_pat, e])) in
@@ -8104,6 +8136,10 @@ let report_error = function
     { unclosed "[" 1 "]" 4 }
 @
 
+<<rule expr error cases>>=
+| TRY seq_expr WITH error %prec prec_try
+    { syntax_error() }
+@
 
 <<rule simple_pattern error cases>>=
 | LBRACE lbl_pattern_list opt_semi error
