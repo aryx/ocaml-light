@@ -141,9 +141,10 @@ let char_for_backslash =
   | x -> fatal_error "Lexer: unknown system type"
 (*x: Lexer escape sequences related functions *)
 let char_for_decimal_code lexbuf i =
-  let c = 100 * (Char.code(Lexing.lexeme_char lexbuf i) - 48) +
+  let c = 100 * (Char.code(Lexing.lexeme_char lexbuf (i+0)) - 48) +
            10 * (Char.code(Lexing.lexeme_char lexbuf (i+1)) - 48) +
-                (Char.code(Lexing.lexeme_char lexbuf (i+2)) - 48) in  
+                (Char.code(Lexing.lexeme_char lexbuf (i+2)) - 48) 
+  in  
   Char.chr(c land 0xFF)
 (*e: Lexer escape sequences related functions *)
 
@@ -198,9 +199,9 @@ rule token = parse
 
   (*s: [[Lexer.token()]] integer case *)
   | ['0'-'9']+
-    | '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f']+
-    | '0' ['o' 'O'] ['0'-'7']+
-    | '0' ['b' 'B'] ['0'-'1']+
+  | '0' ['x' 'X'] ['0'-'9' 'A'-'F' 'a'-'f']+
+  | '0' ['o' 'O'] ['0'-'7']+
+  | '0' ['b' 'B'] ['0'-'1']+
       { INT (int_of_string(Lexing.lexeme lexbuf)) }
   (*e: [[Lexer.token()]] integer case *)
   (*s: [[Lexer.token()]] float case *)
@@ -344,7 +345,7 @@ and string = parse
         string lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
       { store_string_char(char_for_decimal_code lexbuf 1);
-         string lexbuf }
+        string lexbuf }
   | eof
       { raise (Error(Unterminated_string, !start_pos, !start_pos+1)) }
   | _
