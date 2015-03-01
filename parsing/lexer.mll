@@ -69,9 +69,6 @@ let keyword_table =
     "try", TRY;
     "exception", EXCEPTION;
 
-    "lazy", LAZY;
-    "assert", ASSERT;
-
     "type", TYPE;
     "of", OF;
     "val", VAL;
@@ -83,16 +80,22 @@ let keyword_table =
     "struct", STRUCT;
     "open", OPEN;
 
+    "mod",  INFIXOP3("mod");
+    "land", INFIXOP3("land");
+    "lor",  INFIXOP3("lor");
+    "lxor", INFIXOP3("lxor");
+    "lsl",  INFIXOP4("lsl");
+    "lsr",  INFIXOP4("lsr");
+    "asr",  INFIXOP4("asr");
+
+    (*s: [[Lexer.keyword_table]] elements *)
     "and", AND;
     "or", OR;
-
-    "mod", INFIXOP3("mod");
-    "land", INFIXOP3("land");
-    "lor", INFIXOP3("lor");
-    "lxor", INFIXOP3("lxor");
-    "lsl", INFIXOP4("lsl");
-    "lsr", INFIXOP4("lsr");
-    "asr", INFIXOP4("asr")
+    (*x: [[Lexer.keyword_table]] elements *)
+    "assert", ASSERT;
+    (*x: [[Lexer.keyword_table]] elements *)
+    "lazy", LAZY;
+    (*e: [[Lexer.keyword_table]] elements *)
 ]
 (*e: constant Lexer.keyword_table *)
 
@@ -242,7 +245,6 @@ rule token = parse
   | "("  { LPAREN } | ")"  { RPAREN }
   | "{"  { LBRACE } | "}"  { RBRACE }
   | "["  { LBRACKET } | "]"  { RBRACKET }
-  | "[|" { LBRACKETBAR } | "|]" { BARRBRACKET }
   (*x: [[Lexer.token()]] operator cases *)
   | "|"  { BAR }
   | "*"  { STAR }
@@ -251,7 +253,6 @@ rule token = parse
   | ","  { COMMA }
   | "->" { MINUSGREATER }
   | "."  { DOT }
-  | ".." { DOTDOT }
   | ":"  { COLON }
   | "::" { COLONCOLON }
   | ":=" { COLONEQUAL }
@@ -289,6 +290,10 @@ rule token = parse
   | ['*' '/' '%']
     ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
             { INFIXOP3(Lexing.lexeme lexbuf) }
+  (*x: [[Lexer.token()]] operator cases *)
+  | "[|" { LBRACKETBAR } | "|]" { BARRBRACKET }
+  (*x: [[Lexer.token()]] operator cases *)
+  | ".." { DOTDOT }
   (*x: [[Lexer.token()]] operator cases *)
   | ";;" { SEMISEMI }
   (*e: [[Lexer.token()]] operator cases *)

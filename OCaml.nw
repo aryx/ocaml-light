@@ -1256,7 +1256,6 @@ let keyword_table =
     "try", TRY;
     "exception", EXCEPTION;
 
-
     "type", TYPE;
     "of", OF;
     "val", VAL;
@@ -1268,16 +1267,13 @@ let keyword_table =
     "struct", STRUCT;
     "open", OPEN;
 
-    "and", AND;
-    "or", OR;
-
-    "mod", INFIXOP3("mod");
+    "mod",  INFIXOP3("mod");
     "land", INFIXOP3("land");
-    "lor", INFIXOP3("lor");
+    "lor",  INFIXOP3("lor");
     "lxor", INFIXOP3("lxor");
-    "lsl", INFIXOP4("lsl");
-    "lsr", INFIXOP4("lsr");
-    "asr", INFIXOP4("asr");
+    "lsl",  INFIXOP4("lsl");
+    "lsr",  INFIXOP4("lsr");
+    "asr",  INFIXOP4("asr");
 
     <<[[Lexer.keyword_table]] elements>>
 ]
@@ -1289,6 +1285,12 @@ let keyword_table =
 | "_"  { UNDERSCORE }
 @
 % special rule, not an identifier!
+
+<<[[Lexer.keyword_table]] elements>>=
+"and", AND;
+"or", OR;
+@
+% obsolete? delete?
 
 \section{Operators}
 
@@ -1307,11 +1309,11 @@ let keyword_table =
 % | for patterns, * for type tuples, ' for polymorphic types
 
 
+
 <<[[Lexer.token()]] operator cases>>=
 | ","  { COMMA }
 | "->" { MINUSGREATER }
 | "."  { DOT }
-| ".." { DOTDOT }
 | ":"  { COLON }
 | "::" { COLONCOLON }
 | ":=" { COLONEQUAL }
@@ -2542,14 +2544,14 @@ simple_pattern:
   | LPAREN pattern RPAREN
       { $2 }
 
-  | CHAR DOTDOT CHAR
-      { mkrangepat $1 $3 }
   | LPAREN pattern COLON core_type RPAREN
       { mkpat(Ppat_constraint($2, $4)) }
+  <<rule simple_pattern other cases>>
   <<rule simple_pattern error cases>>
 ;
 @
 % another special case of lists
+
 
 <<pattern rules>>=
 lbl_pattern_list:
@@ -2695,11 +2697,7 @@ let mkstrexp e =
 
 <<[[Parser.array_function()]]>>
 
-let rec mkrangepat c1 c2 =
-  if c1 > c2 then mkrangepat c2 c1 else
-  if c1 = c2 then mkpat(Ppat_constant(Const_char c1)) else
-  mkpat(Ppat_or(mkpat(Ppat_constant(Const_char c1)),
-                mkrangepat (Char.chr(Char.code c1 + 1)) c2))
+<<[[Parser.mkrangepat()]]>>
 
 let syntax_error () =
   raise Syntaxerr.Escape_error
@@ -6780,6 +6778,27 @@ let array_function str name =
   Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))
 @
 
+\section{Character ranges}
+
+<<[[Lexer.token()]] operator cases>>=
+| ".." { DOTDOT }
+@
+
+<<rule simple_pattern other cases>>=
+| CHAR DOTDOT CHAR
+    { mkrangepat $1 $3 }
+@
+
+<<[[Parser.mkrangepat()]]>>=
+let rec mkrangepat c1 c2 =
+  if c1 > c2 
+  then mkrangepat c2 c1 
+  else
+    if c1 = c2 
+    then mkpat(Ppat_constant(Const_char c1)) 
+    else mkpat(Ppat_or(mkpat(Ppat_constant(Const_char c1)),
+                       mkrangepat (Char.chr(Char.code c1 + 1)) c2))
+@
 
 \section{String indexing}
 

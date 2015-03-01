@@ -112,12 +112,12 @@ let main () =
        (*x: [[Main.main()]] command line options *)
        "-g", Arg.Set debug, " Save debugging information";
        (*x: [[Main.main()]] command line options *)
+       "-unsafe", Arg.Set fast,
+             " No bounds checking on array and string access";
+       (*x: [[Main.main()]] command line options *)
        "-noassert", Arg.Set noassert, " Don't compile assertion checks";
        (*x: [[Main.main()]] command line options *)
        "-i", Arg.Set print_types, " Print the types";
-       (*x: [[Main.main()]] command line options *)
-       "-unsafe", Arg.Set fast,
-             " No bounds checking on array and string access";
        (*x: [[Main.main()]] command line options *)
        "-thread", Arg.Set thread_safe, " Use thread-safe standard library";
        (*x: [[Main.main()]] command line options *)
