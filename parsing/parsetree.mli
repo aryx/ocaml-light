@@ -30,11 +30,6 @@ and core_type_desc =
   | Ptyp_arrow of core_type * core_type
   | Ptyp_tuple of core_type list
   | Ptyp_constr of Longident.t * core_type list
-  (*s: [[Parsetree.core_type_desc]] cases *)
-  | Ptyp_any
-  (*x: [[Parsetree.core_type_desc]] cases *)
-  | Ptyp_alias of core_type * string
-  (*e: [[Parsetree.core_type_desc]] cases *)
 (*e: type Parsetree.core_type_desc *)
 
 (* Value expressions for the core language *)

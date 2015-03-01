@@ -1142,15 +1142,18 @@ let create_persistent s =
 
 
 <<function Ident.unique_name>>=
-let unique_name i = i.name ^ "_" ^ string_of_int i.stamp
+let unique_name i = 
+  i.name ^ "_" ^ string_of_int i.stamp
 @
 
 <<function Ident.persistent>>=
-let persistent i = (i.stamp = 0)
+let persistent i = 
+  (i.stamp = 0)
 @
 
 <<function Ident.equal>>=
-let equal i1 i2 = i1.name = i2.name
+let equal i1 i2 = 
+  i1.name = i2.name
 @
 
 

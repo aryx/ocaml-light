@@ -46,15 +46,18 @@ let name i =
 (*e: function Ident.name *)
 
 (*s: function Ident.unique_name *)
-let unique_name i = i.name ^ "_" ^ string_of_int i.stamp
+let unique_name i = 
+  i.name ^ "_" ^ string_of_int i.stamp
 (*e: function Ident.unique_name *)
 
 (*s: function Ident.persistent *)
-let persistent i = (i.stamp = 0)
+let persistent i = 
+  (i.stamp = 0)
 (*e: function Ident.persistent *)
 
 (*s: function Ident.equal *)
-let equal i1 i2 = i1.name = i2.name
+let equal i1 i2 = 
+  i1.name = i2.name
 (*e: function Ident.equal *)
 
 (*s: function Ident.same *)

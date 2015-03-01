@@ -511,8 +511,9 @@ let enter store_fun name data env =
 (*s: functions Env.enter_xxx *)
 let enter_value     = enter store_value
 and enter_type      = enter store_type
-and enter_exception = enter store_exception
 and enter_module    = enter store_module
+(*x: functions Env.enter_xxx *)
+and enter_exception = enter store_exception
 (*e: functions Env.enter_xxx *)
 
 (*s: function Env.add_signature_component *)
