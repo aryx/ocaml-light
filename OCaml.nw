@@ -1256,8 +1256,6 @@ let keyword_table =
     "try", TRY;
     "exception", EXCEPTION;
 
-    "lazy", LAZY;
-    "assert", ASSERT;
 
     "type", TYPE;
     "of", OF;
@@ -1279,7 +1277,9 @@ let keyword_table =
     "lxor", INFIXOP3("lxor");
     "lsl", INFIXOP4("lsl");
     "lsr", INFIXOP4("lsr");
-    "asr", INFIXOP4("asr")
+    "asr", INFIXOP4("asr");
+
+    <<[[Lexer.keyword_table]] elements>>
 ]
 @
 %old: was sorted originally
@@ -1296,7 +1296,6 @@ let keyword_table =
 | "("  { LPAREN } | ")"  { RPAREN }
 | "{"  { LBRACE } | "}"  { RBRACE }
 | "["  { LBRACKET } | "]"  { RBRACKET }
-| "[|" { LBRACKETBAR } | "|]" { BARRBRACKET }
 @
 % paren for expressions, brace for records, bracket for lists
 
@@ -1726,7 +1725,7 @@ opt_semi:
 @
 
 
-\section{Structures}
+\section{Structures ([[.ml]])}
 % the .ml
 % Implementation
 
@@ -1802,7 +1801,7 @@ module_expr:
 %less: legacy, could remove
 \fi
 
-\section{Signatures}
+\section{Signatures ([[.mli]])}
 % the .mli
 % Ininterface
 
@@ -1934,11 +1933,16 @@ operator:
 
 
 
-\section{Type expressions}
+\section{Types}
+
+\subsection{Type expressions}
 % type expressions?
 
 % ?complex?, core, simple, 
 
+% simple_xxx when have no -> or tuples, so certain atomic elts
+% have priorities. -> is less priority than type application for
+% instance.
 <<type expression rules>>=
 
 core_type:
@@ -1995,7 +1999,7 @@ type_longident:
 %old: was mod_ex_longident
 %$
 
-\section{Type declarations}
+\subsection{Type declarations}
 
 <<type declaration rules>>=
 type_declarations:
@@ -2334,7 +2338,7 @@ simple_expr_list:
 @
 %$
 
-\subsection{Let, entity definitions}
+\subsection{[[let]], entity definitions}
 
 <<rule expr cases>>=
 | LET rec_flag let_bindings IN seq_expr %prec prec_let
@@ -2576,7 +2580,7 @@ pattern_semi_list:
 
 \section{Statements}
 
-\subsection{Sequence}
+\subsection{Sequences}
 
 <<expression rules>>=
 seq_expr:
@@ -2689,8 +2693,7 @@ let rec mklistpat = function
 let mkstrexp e =
   { pstr_desc = Pstr_eval e; pstr_loc = e.pexp_loc }
 
-let array_function str name =
-  Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))
+<<[[Parser.array_function()]]>>
 
 let rec mkrangepat c1 c2 =
   if c1 > c2 then mkrangepat c2 c1 else
@@ -3062,7 +3065,6 @@ val type_bool   : type_expr
 val type_unit   : type_expr
 
 val type_list  : type_expr -> type_expr
-val type_array : type_expr -> type_expr
 @
 
 
@@ -3075,7 +3077,6 @@ and type_bool    = Tconstr(path_bool, [])
 and type_unit    = Tconstr(path_unit, [])
 
 and type_list t = Tconstr(path_list, [t])
-and type_array t = Tconstr(path_array, [t])
 @
 
 
@@ -3090,7 +3091,6 @@ val path_bool: Path.t
 val path_unit: Path.t
 
 val path_list: Path.t
-val path_array: Path.t
 @
 
 <<constants Predef.path_xxx>>=
@@ -3102,7 +3102,6 @@ and path_bool = Pident ident_bool
 and path_unit = Pident ident_unit
 
 and path_list = Pident ident_list
-and path_array = Pident ident_array
 @
 
 
@@ -3277,8 +3276,9 @@ let parse_declaration arity decl =
 @
 
 
-\section{The (typed, named) symbol table, [[Env.t]]}
+\section{The (typed, named) symbol table}
 % The typed, resolved symbol table
+%, [[Env.t]]
 
 \subsection{[[Env.t]]}
 
@@ -3872,7 +3872,7 @@ and signature_item s = function
 @
 
 
-\section{Reading [[.cmi]]}
+\section{Reading typed [[.cmi]] interface files}
 
 <<signature Env.read_signature>>=
 (* Read, save a signature to/from a file *)
@@ -4520,7 +4520,7 @@ let rec filter_arrow env t =
 
 % link with next section where type types ...
 
-\section{Typing let}
+\section{Typing [[let]]}
 % complex, new_env again! like for For, because introduce new
 % entities
 
@@ -4707,7 +4707,7 @@ val type_binding:
 @
 
 
-\subsection{Type expressions}
+\subsection{Typing type expressions}
 % this is mostly to build the environment that will then
 % be used when typing expressions!
 
@@ -4766,7 +4766,7 @@ let rec transl_simple_type env fixed styp =
 
 
 
-\subsection{Type declarations}
+\subsection{Typing type declarations}
 
 
 <<signature Typedecl.transl_type_decl>>=
@@ -4962,7 +4962,7 @@ List.iter
 
 
 
-\subsection{Modules}
+\subsection{Typing modules}
 
 <<signature Typemod.transl_signature>>=
 val transl_signature:
@@ -5000,7 +5000,7 @@ let transl_value_decl env valdecl =
 \subsection{References, [['_a]]}
 % _a
 
-\subsection{Exceptions}
+\subsection{Exceptions, [[exn]]}
 
 % exn are really like an open variant, a variant that
 % can be extended in different files.
@@ -5370,7 +5370,7 @@ let rec free_type_ident env ids ty =
 
 
 
-\subsection{Printf}
+\subsection{Printf and [[format]]}
 
 <<constants Predef.ident_xxx>>=
 and ident_format = Ident.create "format"
@@ -5468,7 +5468,7 @@ let type_format loc fmt =
 % there was
 %  'constraints' in type declarations
 
-\subsection{Module type and functors}
+\subsection{Module types and functors}
 
 % things got more complicated also with functors ...
 
@@ -5517,15 +5517,17 @@ let type_format loc fmt =
 
 %includecore.ml
 
-\section{Partial pattern matches}
+\section{Partial pattern matches (exhaustive check)}
 % parmatch.ml
+
+% very very useful! especially in refactoring context!
 
 <<signature Parmatch.check_partial>>=
 val check_partial: 
   Location.t -> (Typedtree.pattern * Typedtree.expression) list -> unit
 @
 
-\section{Unused pattern matches}
+\section{Unused pattern matches (dead code)}
 
 <<signature Parmatch.check_unused>>=
 val check_unused: 
@@ -6671,15 +6673,19 @@ let record_event ev =
 % actually there is no flag for profiling in ocamlc?
 
 
-\chapter{Advanced Features}
+\chapter{Extra Features}
+% advanced? hmm not really more advanced, very often it's just sugar
+% but I can't use "extensions" either
 
-% objects?
+% objects? meh can do with records, even super, self, cf native code
+%  gen chapter :)
 % functors? can be interesting to understand how it's compiled
 
 \section{Floats}
 
 \section{Arrays}
 
+% AST
 <<[[Parsetree.expression_desc]] cases>>=
 | Pexp_array of expression list
 @
@@ -6688,6 +6694,13 @@ let record_event ev =
 @
 
 
+% Lexer
+<<[[Lexer.token()]] operator cases>>=
+| "[|" { LBRACKETBAR } | "|]" { BARRBRACKET }
+@
+
+
+% Parser
 <<rule simple_expr cases>>=
 | LBRACKETBAR expr_semi_list opt_semi BARRBRACKET
     { mkexp(Pexp_array(List.rev $2)) }
@@ -6695,7 +6708,6 @@ let record_event ev =
     { mkexp(Pexp_array []) }
 @
 %$
-
 % sugar
 <<rule simple_expr cases>>=
 | simple_expr DOT LPAREN seq_expr RPAREN
@@ -6703,7 +6715,6 @@ let record_event ev =
                        [$1; $4])) }
 @
 %$
-
 <<rule expr cases>>=
 | simple_expr DOT LPAREN seq_expr RPAREN LESSMINUS expr
     { mkexp(Pexp_apply(mkexp(Pexp_ident(array_function "Array" "set")),
@@ -6712,6 +6723,20 @@ let record_event ev =
 %$
 
 
+%Typer
+<<signatures Predef.type_xxx>>=
+val type_array : type_expr -> type_expr
+@
+<<constants Predef.type_xxx>>=
+and type_array t = Tconstr(path_array, [t])
+@
+<<signatures Predef.path_xxx>>=
+val path_array: Path.t
+@
+<<constants Predef.path_xxx>>=
+and path_array = Pident ident_array
+@
+%and ident_array = Ident.create "array"
 
 <<[[Predef.build_initial_env()]] decls>>=
 let decl_array =
@@ -6722,7 +6747,7 @@ let decl_array =
    type_manifest = None}
 in
 @
-
+%  add_type ident_array decl_array (
 
 <<[[Typecore.type_exp()]] match cases>>=
 | Pexp_array(sargl) ->
@@ -6733,16 +6758,32 @@ in
       exp_type = Predef.type_array ty }
 @
 
-
+%Compiler
 <<type Lambda.array_kind>>=
 and array_kind =
     Pgenarray | Paddrarray | Pintarray | Pfloatarray
 @
 
+\subsection{[[-unsafe]]}
+
+<<constant Clflags.fast>>=
+let fast = ref false                    (* -unsafe *)
+@
+
+<<[[Main.main()]] command line options>>=
+"-unsafe", Arg.Set fast,
+      " No bounds checking on array and string access";
+@
+
+<<[[Parser.array_function()]]>>=
+let array_function str name =
+  Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))
+@
+
 
 \section{String indexing}
 
-% sugar
+% sugar, .[], .[] <-
 <<rule simple_expr cases>>=
 | simple_expr DOT LBRACKET seq_expr RBRACKET
     { mkexp(Pexp_apply(mkexp(Pexp_ident(array_function "String" "get")),
@@ -6755,8 +6796,13 @@ and array_kind =
                        [$1; $4; $7])) }
 @
 %$
+% meh
 
 \section{Assert, and [[-noassert]]}
+
+<<[[Lexer.keyword_table]] elements>>=
+"assert", ASSERT;
+@
 
 <<rule expr cases>>=
 | ASSERT simple_expr %prec prec_appl
@@ -6795,6 +6841,10 @@ let noassert = ref false                (* -noassert *)
 
 \section{Lazy}
 
+<<[[Lexer.keyword_table]] elements>>=
+"lazy", LAZY;
+@
+
 <<rule expr cases>>=
 | LAZY simple_expr %prec prec_appl
     { mklazy $2 }
@@ -6831,16 +6881,6 @@ let print_types = ref false             (* -i *)
 @
 
 
-\section{[[-unsafe]]}
-
-<<constant Clflags.fast>>=
-let fast = ref false                    (* -unsafe *)
-@
-
-<<[[Main.main()]] command line options>>=
-"-unsafe", Arg.Set fast,
-      " No bounds checking on array and string access";
-@
 
 \section{Threads}
 
@@ -8158,7 +8198,7 @@ let report_error = function
 
 \section{Typing errors}
 
-\subsection{Types}
+\subsection*{Types}
 
 <<type Typetexp.error>>=
 type error =
@@ -8194,7 +8234,7 @@ let report_error = function
       close_box()
 @
 
-\subsection{Modules}
+\subsection*{Modules}
 
 <<type Typemod.error>>=
 type error =
@@ -8330,7 +8370,7 @@ let report_error errlist =
       close_box()
 @
 
-\subsection{Declarations}
+\subsection*{Declarations}
 
 <<type Typedecl.error>>=
 type error =
@@ -8373,7 +8413,7 @@ let report_error = function
 @
 
 
-\subsection{Expressions}
+\subsection*{Expressions}
 
 <<type Typecore.error>>=
 type error =
