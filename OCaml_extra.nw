@@ -2,66 +2,6 @@
 
 \subsection*{[[./utils/config.mli]]}
 
-<<signature Config.version>>=
-(* System configuration *)
-
-val version: string
-        (* The current version number of the system *)
-@
-
-<<signature Config.standard_library>>=
-val standard_library: string
-        (* The directory containing the standard libraries *)
-@
-
-
-
-<<signature Config.native_partial_linker>>=
-val native_partial_linker: string
-        (* The linker to use for partial links (-output-obj option) *)
-@
-
-
-
-
-<<signature Config.exec_magic_number>>=
-val exec_magic_number: string
-        (* Magic number for bytecode executable files *)
-@
-
-
-<<signature Config.cmo_magic_number>>=
-val cmo_magic_number: string
-        (* Magic number for object bytecode files *)
-@
-
-<<signature Config.cma_magic_number>>=
-val cma_magic_number: string
-        (* Magic number for archive files *)
-@
-
-<<signature Config.cmx_magic_number>>=
-val cmx_magic_number: string
-        (* Magic number for compilation unit descriptions *)
-@
-
-<<signature Config.cmxa_magic_number>>=
-val cmxa_magic_number: string
-        (* Magic number for libraries of compilation unit descriptions *)
-@
-
-
-
-<<signature Config.ast_intf_magic_number>>=
-val ast_intf_magic_number: string
-        (* Magic number for file holding an interface syntax tree *)
-@
-
-<<signature Config.ast_impl_magic_number>>=
-val ast_impl_magic_number: string
-        (* Magic number for file holding an implementation syntax tree *)
-@
-
 <<signature Config.max_tag>>=
 val max_tag: int
         (* Biggest tag that can be stored in the header of a block. *)
@@ -109,6 +49,8 @@ val ext_lib: string
 <<./utils/config.mli>>=
 
 <<copyright header>>
+
+(* System configuration *)
 
 <<signature Config.version>>
 
@@ -2303,31 +2245,8 @@ val new_global_var: unit -> type_expr
 @
 
 
-<<signature Ctype.generalize>>=
-val generalize: type_expr -> unit
-        (* Generalize in-place the given type *)
-@
 
-<<signature Ctype.make_nongen>>=
-val make_nongen: type_expr -> unit
-        (* Make non-generalizable the given type *)
-@
 
-<<signature Ctype.instance>>=
-val instance: type_expr -> type_expr
-        (* Take an instance of a type scheme *)
-@
-
-<<signature Ctype.instance_constructor>>=
-val instance_constructor:
-        constructor_description -> type_expr list * type_expr
-        (* Same, for a constructor *)
-@
-
-<<signature Ctype.instance_label>>=
-val instance_label: label_description -> type_expr * type_expr
-        (* Same, for a label *)
-@
 
 
 
@@ -2430,95 +2349,11 @@ let new_global_var () =
 let none = Ttuple []                  (* Clearly ill-formed type *)
 @
 
-<<function Ctype.generalize>>=
-(* Type generalization *)
 
-let rec generalize ty =
-  match repr ty with
-    Tvar v ->
-      if v.tvar_level > !current_level then v.tvar_level <- generic_level
-  (* boilerplate *)
-  | Tarrow(t1, t2) ->
-      generalize t1; generalize t2
-  | Ttuple tl ->
-      List.iter generalize tl
-  | Tconstr(p, []) ->
-      ()
-  | Tconstr(p, tl) ->
-      List.iter generalize tl
-@
-% why special [] case? List.iter will work ...
 
-<<function Ctype.make_nongen>>=
-let rec make_nongen ty =
-  match repr ty with
-    Tvar v ->
-      if v.tvar_level > !current_level then v.tvar_level <- !current_level
-  (* boilerplate *)
-  | Tarrow(t1, t2) ->
-      make_nongen t1; make_nongen t2
-  | Ttuple tl ->
-      List.iter make_nongen tl
-  | Tconstr(p, []) ->
-      ()
-  | Tconstr(p, tl) ->
-      List.iter make_nongen tl
-@
 
-<<constant Ctype.inst_subst>>=
-(* Taking instances of type schemes *)
 
-let inst_subst = ref ([] : (type_expr * type_expr) list)
-@
 
-<<function Ctype.copy>>=
-let rec copy ty =
-  match repr ty with
-    Tvar v as t ->
-      if v.tvar_level = generic_level then begin
-        try
-          List.assq t !inst_subst
-        with Not_found ->
-          let t' = newvar() in
-          inst_subst := (t, t') :: !inst_subst;
-          t'
-      end else t
-  (* boilerplate *)
-  | Tarrow(t1, t2) ->
-      Tarrow(copy t1, copy t2)
-  | Ttuple tl ->
-      Ttuple(List.map copy tl)
-  | Tconstr(p, []) as t ->
-      t
-  | Tconstr(p, tl) ->
-      Tconstr(p, List.map copy tl)
-@
-
-<<function Ctype.instance>>=
-let instance sch =
-  inst_subst := [];
-  let ty = copy sch in
-  inst_subst := [];
-  ty
-@
-
-<<function Ctype.instance_constructor>>=
-let instance_constructor cstr =
-  inst_subst := [];
-  let ty_res = copy cstr.cstr_res in
-  let ty_args = List.map copy cstr.cstr_args in
-  inst_subst := [];
-  (ty_args, ty_res)
-@
-
-<<function Ctype.instance_label>>=
-let instance_label lbl =
-  inst_subst := [];
-  let ty_res = copy lbl.lbl_res in
-  let ty_arg = copy lbl.lbl_arg in
-  inst_subst := [];
-  (ty_arg, ty_res)
-@
 
 
 
@@ -4189,29 +4024,6 @@ let type_pattern_list env spatl =
   let patl = List.map (type_pat env) spatl in
   let new_env = add_pattern_variables env in
   (patl, new_env)
-@
-
-<<function Typecore.is_nonexpansive>>=
-(* Generalization criterion for expressions *)
-
-let rec is_nonexpansive exp =
-  match exp.exp_desc with
-    Texp_ident(_,_) -> true
-  | Texp_constant _ -> true
-  | Texp_let(rec_flag, pat_exp_list, body) ->
-      List.for_all (fun (pat, exp) -> is_nonexpansive exp) pat_exp_list &
-      is_nonexpansive body
-  | Texp_function _ -> true
-  | Texp_tuple el ->
-      List.for_all is_nonexpansive el
-  | Texp_construct(_, el) ->
-      List.for_all is_nonexpansive el
-  | Texp_record lbl_exp_list ->
-      List.for_all (fun (lbl, exp) -> lbl.lbl_mut = Immutable & is_nonexpansive exp)
-              lbl_exp_list
-  | Texp_field(exp, lbl) -> is_nonexpansive exp
-  | Texp_array [] -> true
-  | _ -> false
 @
 
 
@@ -8661,6 +8473,14 @@ let link_archive output_fun currpos_fun file_name units_required =
   with x -> close_in inchan; raise x
 @
 
+<<type Bytelink.link_action>>=
+type link_action =
+    Link_object of string * compilation_unit
+      (* Name of .cmo file and descriptor of the unit *)
+  | Link_archive of string * compilation_unit list
+      (* Name of .cma file and descriptors of the units to be linked. *)
+@
+
 <<function Bytelink.link_file>>=
 (* Link in a .cmo or .cma file *)
 
@@ -8671,63 +8491,6 @@ let link_file output_fun currpos_fun = function
       link_archive output_fun currpos_fun file_name units
 @
 
-<<function Bytelink.link_bytecode>>=
-(* Create a bytecode executable file *)
-
-let link_bytecode objfiles exec_name copy_header =
-  let tolink = List.fold_right scan_file objfiles [] in
-  if Sys.os_type = "MacOS" then begin
-    (* Create it as a text file for bytecode scripts *)
-    let c = open_out_gen [Open_wronly; Open_creat] 0o777 exec_name in
-    close_out c
-  end;
-  let outchan = open_out_gen [Open_wronly; Open_trunc; Open_creat; Open_binary]
-                             0o777 exec_name in
-  try
-    (* Copy the header *)
-    if copy_header then begin
-      try
-        let inchan = open_in_bin (find_in_path !load_path "camlheader") in
-        copy_file inchan outchan;
-        close_in inchan
-      with Not_found | Sys_error _ -> ()
-    end;
-    (* The bytecode *)
-    let pos1 = pos_out outchan in
-    Symtable.init();
-    Hashtbl.clear crc_interfaces;
-    let output_fun = output_string outchan
-    and currpos_fun () = pos_out outchan - pos1 in
-    List.iter (link_file output_fun currpos_fun) tolink;
-    (* The final STOP instruction *)
-    output_byte outchan Opcodes.opSTOP;
-    output_byte outchan 0; output_byte outchan 0; output_byte outchan 0;
-    (* The names of all primitives *)
-    let pos2 = pos_out outchan in
-    Symtable.output_primitive_names outchan;
-    (* The table of global data *)
-    let pos3 = pos_out outchan in
-    output_value outchan (Symtable.initial_global_table());
-    (* The map of global identifiers *)
-    let pos4 = pos_out outchan in
-    Symtable.output_global_map outchan;
-    (* Debug info *)
-    let pos5 = pos_out outchan in
-    if !Clflags.debug then output_value outchan !debug_info;
-    (* The trailer *)
-    let pos6 = pos_out outchan in
-    output_binary_int outchan (pos2 - pos1);
-    output_binary_int outchan (pos3 - pos2);
-    output_binary_int outchan (pos4 - pos3);
-    output_binary_int outchan (pos5 - pos4);
-    output_binary_int outchan (pos6 - pos5);
-    output_string outchan exec_magic_number;
-    close_out outchan
-  with x ->
-    close_out outchan;
-    remove_file exec_name;
-    raise x
-@
 
 <<constant Bytelink.output_code_string_counter>>=
 (* Output a string as a C array of unsigned ints *)
@@ -8839,45 +8602,6 @@ let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
 let fix_exec_name name =
   match Sys.os_type with
   | _ -> name
-@
-
-<<function Bytelink.link>>=
-(* Main entry point (build a custom runtime if needed) *)
-
-let link objfiles =
-  let objfiles = "stdlib.cma" :: (objfiles @ ["std_exit.cmo"]) in
-  if not !Clflags.custom_runtime then
-    link_bytecode objfiles !Clflags.exec_name true
-  else if not !Clflags.output_c_object then begin
-    let bytecode_name = Filename.temp_file "camlcode" "" in
-    let prim_name = Filename.temp_file "camlprim" ".c" in
-    try
-      link_bytecode objfiles bytecode_name false;
-      let poc = open_out prim_name in
-      Symtable.output_primitive_table poc;
-      close_out poc;
-      let exec_name = fix_exec_name !Clflags.exec_name in
-      if build_custom_runtime prim_name exec_name <> 0
-      then raise(Error Custom_runtime);
-      append_bytecode_and_cleanup bytecode_name exec_name prim_name
-    with x ->
-      remove_file bytecode_name;
-      remove_file prim_name;
-      raise x
-  end else begin
-    let c_file =
-      Filename.chop_suffix !Clflags.object_name Config.ext_obj ^ ".c" in
-    if Sys.file_exists c_file then raise(Error(File_exists c_file));
-    try
-      link_bytecode_as_c objfiles c_file;
-      if Ccomp.compile_file_bytecode c_file <> 0
-      then raise(Error Custom_runtime);
-      remove_file c_file
-    with x ->
-      remove_file c_file;
-      remove_file !Clflags.object_name;
-      raise x
-  end
 @
 
 
@@ -9031,39 +8755,6 @@ let initial_env () =
 
 exception Outdated_version
 @
-
-<<function Compile.parse_file>>=
-let parse_file inputfile parse_fun ast_magic =
-  let ic = open_in_bin inputfile in
-  let is_ast_file =
-    try
-      let buffer = String.create (String.length ast_magic) in
-      really_input ic buffer 0 (String.length ast_magic);
-      if buffer = ast_magic then true
-      else if String.sub buffer 0 9 = String.sub ast_magic 0 9 then
-        raise Outdated_version
-      else false
-    with
-      Outdated_version ->
-        fatal_error "Ocaml and preprocessor have incompatible versions"
-    | _ -> false
-  in
-  let ast =
-    try
-      if is_ast_file then begin
-        Location.input_name := input_value ic;
-        input_value ic
-      end else begin
-        seek_in ic 0;
-        Location.input_name := inputfile;
-        parse_fun (Lexing.from_channel ic)
-      end
-    with x -> close_in ic; raise x
-  in
-  close_in ic;
-  ast
-@
-
 
 <<function Compile.print_if>>=
 (* Compile a .ml file *)
@@ -18917,6 +18608,11 @@ let call_linker file_list startup_file =
             startup_file
             (String.concat " " (List.rev file_list))
   in if Ccomp.command cmd <> 0 then raise(Error Linking_error)
+@
+
+<<signature Config.native_partial_linker>>=
+val native_partial_linker: string
+        (* The linker to use for partial links (-output-obj option) *)
 @
 
 <<function Asmlink.object_file_name>>=

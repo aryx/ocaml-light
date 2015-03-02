@@ -79,6 +79,7 @@ exception Outdated_version
 (*s: function Compile.parse_file *)
 let parse_file inputfile parse_fun ast_magic =
   let ic = open_in_bin inputfile in
+  (*s: [[Compile.parse_file()]] let is_ast_file *)
   let is_ast_file =
     try
       let buffer = String.create (String.length ast_magic) in
@@ -92,12 +93,16 @@ let parse_file inputfile parse_fun ast_magic =
         fatal_error "Ocaml and preprocessor have incompatible versions"
     | _ -> false
   in
+  (*e: [[Compile.parse_file()]] let is_ast_file *)
   let ast =
     try
+      (*s: [[Compile.parse_file()]] if is_ast_file *)
       if is_ast_file then begin
         Location.input_name := input_value ic;
         input_value ic
-      end else begin
+      end 
+      (*e: [[Compile.parse_file()]] if is_ast_file *)
+      else begin
         seek_in ic 0;
         Location.input_name := inputfile;
         parse_fun (Lexing.from_channel ic)

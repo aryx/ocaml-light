@@ -76,7 +76,6 @@ let type_path s = function
 let rec type_expr s = function
     Tvar{tvar_link = None} as ty -> ty
   | Tvar{tvar_link = Some ty} -> type_expr s ty
-  | Tconstr(p, []) -> Tconstr(type_path s p, [])
   | Tconstr(p, tl) -> Tconstr(type_path s p, List.map (type_expr s) tl)
   (* boilerplate mapper *)
   | Tarrow(t1, t2) -> Tarrow(type_expr s t1, type_expr s t2)

@@ -17,7 +17,7 @@
 
 type t =
     Pident of Ident.t
-  | Pdot of t * string * int
+  | Pdot of t *  string * int
 (*e: type Path.t *)
 
 (*s: signature Path.same *)
