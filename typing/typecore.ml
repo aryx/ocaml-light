@@ -220,19 +220,21 @@ let rec is_nonexpansive exp =
 
 let type_format loc fmt =
   let len = String.length fmt in
-  let ty_input = newvar()
-  and ty_result = newvar() in
+  let ty_input = newvar() in
+  let ty_result = newvar() in
   let rec skip_args j =
     if j >= len then j else
       match fmt.[j] with
         '0' .. '9' | ' ' | '.' | '-' -> skip_args (j+1)
       | _ -> j in
   let rec scan_format i =
-    if i >= len then ty_result else
-    match fmt.[i] with
+    if i >= len 
+    then ty_result 
+    else
+     match fmt.[i] with
       '%' ->
         let j = skip_args(i+1) in
-        begin match String.unsafe_get fmt j with
+        (match String.unsafe_get fmt j with
         (* We're using unsafe_get here so that if j = String.length fmt,
            we'll fall in the catch-all case of the match *)
           '%' ->
@@ -255,7 +257,7 @@ let type_format loc fmt =
             Tarrow(Tarrow(ty_input, ty_result), scan_format (j+1))
         | c ->
             raise(Error(loc, Bad_format(String.sub fmt i (j-i))))
-        end
+        )
     | _ -> scan_format (i+1) in
   Tconstr(Predef.path_format, [scan_format 0; ty_input; ty_result])
 (*e: function Typecore.type_format *)
@@ -614,13 +616,12 @@ and type_let env rec_flag spat_sexp_list =
   (*s: [[Typecode.type_let()]] after typing *)
   end_def();
   (*s: [[Typecode.type_let()]] after end_def, generalize or not *)
-  List.iter (fun exp -> 
+  exp_list |> List.iter (fun exp -> 
     if not (is_nonexpansive exp) 
     then make_nongen exp.exp_type
-  ) exp_list;
-  List.iter (fun exp -> 
-    generalize exp.exp_type
-  ) exp_list;
+  );
+  exp_list |> List.iter (fun exp -> 
+    generalize exp.exp_type);
   (*e: [[Typecode.type_let()]] after end_def, generalize or not *)
   (*e: [[Typecode.type_let()]] after typing *)
 
@@ -641,9 +642,10 @@ let type_binding env rec_flag spat_sexp_list =
 
 let type_expression env sexp =
   (*s: [[Typecode.type_expression()]] before type_exp *)
+  (*s: [[Typecode.type_expression()]] before begin_def, reset *)
   reset_def();
   Typetexp.reset_type_variables();
-
+  (*e: [[Typecode.type_expression()]] before begin_def, reset *)
   begin_def();
   (*e: [[Typecode.type_expression()]] before type_exp *)
   let exp = type_exp env sexp in

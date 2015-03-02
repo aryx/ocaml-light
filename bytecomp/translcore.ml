@@ -86,15 +86,19 @@ let comparisons_table = create_hashtable 11 [
 (*s: constant Translcore.primitives_table *)
 let primitives_table = create_hashtable 31 [
   "%identity", Pidentity;
+
   "%field0", Pfield 0;
   "%field1", Pfield 1;
   "%setfield0", Psetfield(0, true);
   "%makeblock", Pmakeblock(0, Immutable);
   "%makemutable", Pmakeblock(0, Mutable);
+
   "%raise", Praise;
+
   "%sequand", Psequand;
   "%sequor", Psequor;
   "%boolnot", Pnot;
+
   "%negint", Pnegint;
   "%succint", Poffsetint 1;
   "%predint", Poffsetint(-1);
@@ -109,14 +113,17 @@ let primitives_table = create_hashtable 31 [
   "%lslint", Plslint;
   "%lsrint", Plsrint;
   "%asrint", Pasrint;
+
   "%eq", Pintcomp Ceq;
   "%noteq", Pintcomp Cneq;
   "%ltint", Pintcomp Clt;
   "%leint", Pintcomp Cle;
   "%gtint", Pintcomp Cgt;
   "%geint", Pintcomp Cge;
+
   "%incr", Poffsetref(1);
   "%decr", Poffsetref(-1);
+
   "%intoffloat", Pintoffloat;
   "%floatofint", Pfloatofint;
   "%negfloat", Pnegfloat;
@@ -131,11 +138,13 @@ let primitives_table = create_hashtable 31 [
   "%lefloat", Pfloatcomp Cle;
   "%gtfloat", Pfloatcomp Cgt;
   "%gefloat", Pfloatcomp Cge;
+
   "%string_length", Pstringlength;
   "%string_safe_get", Pstringrefs;
   "%string_safe_set", Pstringsets;
   "%string_unsafe_get", Pstringrefu;
   "%string_unsafe_set", Pstringsetu;
+
   "%array_length", Parraylength Pgenarray;
   "%array_safe_get", Parrayrefs Pgenarray;
   "%array_safe_set", Parraysets Pgenarray;

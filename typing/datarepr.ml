@@ -21,11 +21,12 @@ open Types
 
 (*s: function Datarepr.constructor_descrs *)
 let constructor_descrs ty_res cstrs =
-  let num_consts = ref 0 and num_nonconsts = ref 0 in
-  List.iter
-    (function (name, []) -> incr num_consts
-            | (name, _)  -> incr num_nonconsts)
-    cstrs;
+  let num_consts = ref 0 in
+  let num_nonconsts = ref 0 in
+  cstrs |> List.iter (function 
+    | (name, []) -> incr num_consts
+    | (name, _)  -> incr num_nonconsts
+  );
   let rec describe_constructors idx_const idx_nonconst = function
       [] -> []
     | (name, ty_args) :: rem ->
@@ -34,14 +35,16 @@ let constructor_descrs ty_res cstrs =
             [] -> (Cstr_constant idx_const,
                    describe_constructors (idx_const+1) idx_nonconst rem)
           | _  -> (Cstr_block idx_nonconst,
-                   describe_constructors idx_const (idx_nonconst+1) rem) in
+                   describe_constructors idx_const (idx_nonconst+1) rem) 
+        in
         let cstr =
           { cstr_res = ty_res;
             cstr_args = ty_args;
             cstr_arity = List.length ty_args;
             cstr_tag = tag;
             cstr_consts = !num_consts;
-            cstr_nonconsts = !num_nonconsts } in
+            cstr_nonconsts = !num_nonconsts } 
+        in
         (name, cstr) :: descr_rem in
   describe_constructors 0 0 cstrs
 (*e: function Datarepr.constructor_descrs *)

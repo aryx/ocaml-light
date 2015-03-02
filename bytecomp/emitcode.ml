@@ -42,9 +42,12 @@ type compilation_unit =
     cu_reloc: (reloc_info * int) list;  (* Relocation information *)
     cu_imports: (string * Digest.t) list; (* Names and CRC of intfs imported *)
     cu_primitives: string list;         (* Primitives declared inside *)
+
     mutable cu_force_link: bool;        (* Must be linked even if unref'ed *)
+
     mutable cu_debug: int;              (* Position of debugging info, or 0 *)
-    cu_debugsize: int }                 (* Length of debugging info *)
+    cu_debugsize: int;                  (* Length of debugging info *)
+ }
 (*e: type Emitcode.compilation_unit *)
 
 (* Format of a .cmo file:
@@ -337,6 +340,7 @@ let rec emit = function
 
 let to_file outchan unit_name code =
   init();
+
   output_string outchan cmo_magic_number;
   let pos_depl = pos_out outchan in
   output_binary_int outchan 0;
@@ -349,7 +353,8 @@ let to_file outchan unit_name code =
       output_value outchan !events;
       (p, pos_out outchan - p)
     end else
-      (0, 0) in
+      (0, 0) 
+  in
   let compunit =
     { cu_name = unit_name;
       cu_pos = pos_code;
