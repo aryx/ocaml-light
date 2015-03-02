@@ -2755,21 +2755,19 @@ let unclosed opening_name opening_num closing_name closing_num =
 \chapter{Typing}
 % Naming and typing
 
-% note that this phase build a global environment,
-% and will load .cmi of other files!
-
 % reput 'type_expr' def from core DS chapter
 
-% will do naming and typing, interwinded thing.
-% can't do typing if don't know precisely to which
+% This phase will build an environment, will load .cmi of other files
+% Will do naming and typing, interwinded thing.
+% You can't do typing if you don't know precisely to which
 % entity an identifier refers to.
 
 \section{Resolving names}
 %Naming? A special section? nast
 
-% there is open in ocaml, and even if was forbidding it,
-% there will be the implicit open pervasives, so
-% need to resolve identifiers.
+% there is 'open' in ocaml, and even if I was forbidding it,
+% there will still be the implicit 'open pervasives', so
+% you need to resolve identifiers.
 
 % resolving? fully qualifying every idents?
 
@@ -2780,6 +2778,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 % In the same way can reuse the same identifier in patterns
 % in different rules, or have different functions sharing
 % parameters. Anyway, convenient to "resolve" names.
+% At some point when generate assembly you will need unique names!
 
 <<type Ident.t>>=
 type t = { 
@@ -2790,7 +2789,7 @@ type t = {
 @
 % what global is for?
 
-% ?? for builtins and more? -> <>
+% for builtins, toplevel things, local let, everything -> <>
 <<signature Ident.create>>=
 val create: string -> t
 @
@@ -2805,7 +2804,7 @@ let create s =
 @
 % this is never decremented.
 % see also make_global() and create_persistent()
-%todo: why need global and stamp?
+%todo: why need global? stamp not enough?
 
 %ex: unit test?
 %let ident_int = Ident.create "int"
@@ -2837,6 +2836,10 @@ type t =
   | Pdot of t * string * int
 @
 % int? when multiple occurents of same name? like let x = ... in let x = ...?
+%  why not simply Pdot of t * Ident.t?
+%  the int is a 'pos' see prefix_idents, so is it compiler-oriented?
+%  to know some offset? for instance type in .cmi have no associated
+%  pos! it's using nopos!
 
 %ex: unit test?
 %let path_int = Pident ident_int,  not even Pervasives! higher than that
@@ -2977,6 +2980,7 @@ type constructor_description =
     <<[[Types.constructor_description]] other fields>>
    }
 @
+% a constructor is kinda like a function, it has args and return a type
 % diff with before? from a Longident.t to full information about
 % the constructor!
 
@@ -3065,7 +3069,8 @@ and structure_item =
   | Tstr_module of Ident.t * module_expr
   | Tstr_open of Path.t
 @
-% why keep str_open info?
+%less: why keep str_open info in typed tree? everything is resolved
+% anyway
 
 <<type Typedtree.module_coercion>>=
 and module_coercion =
@@ -3073,7 +3078,7 @@ and module_coercion =
   | Tcoerce_structure of (int * module_coercion) list
   | Tcoerce_primitive of Primitive.description
 @
-%delete?
+%todo: delete?
 
 \section{Builtins}
 
@@ -3216,6 +3221,8 @@ let build_initial_env add_type add_exception empty_env =
   )))))))))))))))))))
 @
 
+% where all of this is stored? in an environment,
+% will see Env.t soon
 
 <<[[Predef.build_initial_env()]] decls>>=
 let decl_bool =
@@ -3258,6 +3265,7 @@ let decl_abstr =
    type_manifest = None}
 in
 @
+
 
 
 \subsection{Primitives}
@@ -3313,6 +3321,7 @@ let parse_declaration arity decl =
 <<signature type Env.t>>=
 type t
 @
+% abstract type!
 
 % Associate to Ident in env in scope the full information about it, that is
 % its full path, and it's type.
@@ -3357,12 +3366,14 @@ and structure_components = {
   mutable comp_labels     : (string, (label_description * int))       Tbl.t;
 }
 @
+%Why need that in typing context? Env.modules not enough?
+% because .cmi are also used for separate compilation! to know
+% offsets of external entities! this is what probably the int is for above.
 %todo: replace by just Env.t itself no?
 % no because the purpose is different. The key are string here!
 % before they are Ident and they return a pair of Path and the value.
 %todo: what is the int above? like in Ident, to handle dupe names in one modul?
 %todo: this is also in the .cmi
-%todo: why need that in typing context? Env.modules not enough?
 
 <<signature Env.empty>>=
 val empty: t
@@ -3385,6 +3396,7 @@ let empty = {
 val initial: t
 @
 
+% compile? -> <>
 <<constant Env.initial>>=
 (* Make the initial environment *)
 
@@ -3419,8 +3431,7 @@ let open_signature root sg env =
   let (pl, sub) = prefix_idents root 0 Subst.identity sg in
 
   (* Then enter the components in the environment after substitution *)
-  List.fold_left2
-    (fun env item p ->
+  pl |> List.fold_left2 (fun env item p ->
       match item with
       (* boilerplate and overloading *)
       | Tsig_value(id, decl) ->
@@ -3436,7 +3447,7 @@ let open_signature root sg env =
           store_module (Ident.hide id) p 
                        (Subst.modtype sub mty) env
     )
-    env sg pl
+    env sg
 @
 % no need subst the id returned by Ident.hide since it appears
 % only on the left. In a .mli there are no recursive things,
@@ -3486,6 +3497,14 @@ let rec prefix_idents root pos sub = function
 % pos? what for? for primitives??
 
 
+<<signature Path.nopos>>=
+val nopos: int
+@
+<<constant Path.nopos>>=
+let nopos = -1
+@
+
+
 
 
 
@@ -3511,19 +3530,13 @@ and store_value id path decl env =
 and store_type id path info env =
   { types = Ident.add id (path, info) env.types;
     constrs =
-      List.fold_right
-        (fun (name, descr) constrs ->
+      env.constrs |> List.fold_right (fun (name, descr) constrs ->
           Ident.add (Ident.create name) descr constrs
-        )
-        (constructors_of_type path info)
-        env.constrs;
+      ) (constructors_of_type path info);
     labels =
-      List.fold_right
-        (fun (name, descr) labels ->
+      env.labels |> List.fold_right (fun (name, descr) labels ->
           Ident.add (Ident.create name) descr labels
-        )
-        (labels_of_type path info)
-        env.labels;
+        ) (labels_of_type path info);
     (* boilerplate, with record *)
     values = env.values;
     modules = env.modules;
@@ -3822,11 +3835,11 @@ val signature: t -> signature -> signature
 let rec type_expr s = function
     Tvar{tvar_link = None} as ty -> ty
   | Tvar{tvar_link = Some ty} -> type_expr s ty
+  | Tconstr(p, []) -> Tconstr(type_path s p, [])
+  | Tconstr(p, tl) -> Tconstr(type_path s p, List.map (type_expr s) tl)
   (* boilerplate mapper *)
   | Tarrow(t1, t2) -> Tarrow(type_expr s t1, type_expr s t2)
   | Ttuple tl -> Ttuple(List.map (type_expr s) tl)
-  | Tconstr(p, []) -> Tconstr(type_path s p, [])
-  | Tconstr(p, tl) -> Tconstr(type_path s p, List.map (type_expr s) tl)
 @
 % follow link!
 
@@ -3863,11 +3876,11 @@ let type_declaration s decl =
        (* boilerplate mapper *)
         Type_abstract -> Type_abstract
       | Type_variant cstrs ->
-          Type_variant(List.map (fun (n, args) -> (n, List.map (type_expr s) args))
-                           cstrs)
+          Type_variant(cstrs |> List.map (fun (n, args) -> 
+                          (n, List.map (type_expr s) args)))
       | Type_record lbls ->
-          Type_record(List.map (fun (n, mut, arg) -> (n, mut, type_expr s arg))
-                          lbls)
+          Type_record(lbls |> List.map (fun (n, mut, arg) -> 
+                          (n, mut, type_expr s arg)))
       end;
     type_manifest =
       begin match decl.type_manifest with
@@ -3926,8 +3939,10 @@ type pers_struct =
     ps_sig: signature;
     ps_comps: module_components }
 @
-% have module_components in a .cmi?? redundant with signature no?
-% just a hashed version of ps_sig?
+% Have module_components in a .cmi? redundant with signature?
+% Just a hashed version of ps_sig? 
+% No! because for separate compilation we need to know not just the type
+%  of an external entity but also possibly its offset, its shape, etc.
 
 <<function Env.read_pers_struct>>=
 let read_pers_struct modname filename =
@@ -4623,6 +4638,9 @@ List.iter2
 
 \subsection{Type levels}
 
+% rational? use?
+% http://okmij.org/ftp/ML/generalization.html
+
 <<[[Typecode.type_let()]] before typing>>=
 begin_def();
 @
@@ -4634,9 +4652,7 @@ end_def();
 
 
 <<[[Typecode.type_expression()]] before type_exp>>=
-reset_def();
-Typetexp.reset_type_variables();
-
+<<[[Typecode.type_expression()]] before begin_def, reset>>
 begin_def();
 @
 
@@ -4646,14 +4662,9 @@ end_def();
 @
 
 
-
+%The current nesting level of lets? that's the comment in caml light
 <<constant Ctype.current_level>>=
 let current_level = ref 0
-@
-
-<<function Ctype.reset_def>>=
-let reset_def () = 
-  current_level := 0
 @
 
 <<function Ctype.begin_def>>=
@@ -4698,6 +4709,17 @@ then v.tvar_level <- tvar.tvar_level
 
 
 
+
+<<function Ctype.reset_def>>=
+let reset_def () = 
+  current_level := 0
+@
+
+<<[[Typecode.type_expression()]] before begin_def, reset>>=
+reset_def();
+Typetexp.reset_type_variables();
+@
+
 \subsection{Non expansive}
 
 \subsection{Instanciation}
@@ -4710,13 +4732,12 @@ then generalize exp.exp_type;
 @
 
 <<[[Typecode.type_let()]] after end_def, generalize or not>>=
-List.iter (fun exp -> 
+exp_list |> List.iter (fun exp -> 
   if not (is_nonexpansive exp) 
   then make_nongen exp.exp_type
-) exp_list;
-List.iter (fun exp -> 
-  generalize exp.exp_type
-) exp_list;
+);
+exp_list |> List.iter (fun exp -> 
+  generalize exp.exp_type);
 @
 
 
@@ -4790,9 +4811,6 @@ let rec transl_simple_type env fixed styp =
   | Ptyp_tuple stl ->
       Ttuple(List.map (transl_simple_type env fixed) stl)
 @
-
-
-
 
 \subsection{Typing type declarations}
 
@@ -4943,24 +4961,22 @@ let rec enter_types env = function
 
 <<[[Typedecl.transl_declaration()]] sanity check when variant case>>=
 let all_constrs = ref StringSet.empty in
-List.iter
-  (fun (name, args) ->
+cstrs |> List.iter (fun (name, args) ->
     if StringSet.mem name !all_constrs then
       raise(Error(sdecl.ptype_loc, Duplicate_constructor name));
-    all_constrs := StringSet.add name !all_constrs)
-  cstrs;
+    all_constrs := StringSet.add name !all_constrs
+);
 if List.length cstrs > Config.max_tag then
   raise(Error(sdecl.ptype_loc, Too_many_constructors));
 @
 
 <<[[Typedecl.transl_declaration()]] sanity check when record case>>=
 let all_labels = ref StringSet.empty in
-List.iter
-  (fun (name, mut, arg) ->
+lbls |> List.iter (fun (name, mut, arg) ->
     if StringSet.mem name !all_labels then
       raise(Error(sdecl.ptype_loc, Duplicate_label name));
-    all_labels := StringSet.add name !all_labels)
-  lbls;
+    all_labels := StringSet.add name !all_labels
+);
 @
 
 <<[[Typedecl.transl_declaration()]] sanity check decl>>=
@@ -4984,9 +5000,6 @@ List.iter
 | _ -> ()
 );
 @
-
-
-
 
 
 
@@ -5236,28 +5249,35 @@ let exception_declaration s tyl =
 
 \subsection{Type abbreviations}
 % Manifest types
-% Type aliases (but actually it's used for something else in ocaml)
+% ("Type aliases" is actually used for something else in ocaml)
 
-% it's also for type x = y = z
-% not sure it's very useful
+% it's also for type x = y = z, not sure it's very useful
 
 <<rule type_kind cases>>=
 | EQUAL core_type %prec prec_type_def
     { (Ptype_abstract, Some $2) }
 @
 %$
-% use abstract, why? 
+% use abstract, why? because not a variant, not a record, but
+% could have picked a Ptype_abbrev
 
 <<[[Parsetree.type_declaration]] other fields>>=
 ptype_manifest: core_type option;
 @
-
 <<[[Types.type_declaration]] other fields>>=
 type_manifest: type_expr option 
 @
 
 
-% in ctype.ml before unify
+
+<<exception Ctype.Cannot_expand>>=
+(* Unification *)
+
+exception Cannot_expand
+@
+
+
+% in ctype.ml before unify()
 
 %   1. When unifying two non-abbreviated types, one type is made a link
 %      to the other. When unifying an abbreviated type with a
@@ -5282,21 +5302,6 @@ type_manifest: type_expr option
 %      information is indeed lost, but it probably does not worth it.
 
 
-<<exception Ctype.Cannot_expand>>=
-(* Unification *)
-
-exception Cannot_expand
-@
-
-<<[[Ctype.unify()]] if p1 or p2 are abbreviation type paths>>=
-try
-  unify env (expand_abbrev env p1 tl1) t2
-with Cannot_expand ->
-  try
-    unify env t1 (expand_abbrev env p2 tl2)
-  with Cannot_expand ->
-@
-
 % p1 or p2 are possible paths to abbriviation types
 <<[[Ctype.unify()]] match t1 t2 other cases>>=
 | (Tconstr(p1, tl1), _) ->
@@ -5313,15 +5318,17 @@ with Cannot_expand ->
     end
 @
 
-
-<<[[Ctype.filter_arrow()]] other cases>>=
-| Tconstr(p, tl) ->
-    begin try
-      filter_arrow env (expand_abbrev env p tl)
-    with Cannot_expand ->
-      raise Unify
-    end
+<<[[Ctype.unify()]] if p1 or p2 are abbreviation type paths>>=
+try
+  unify env (expand_abbrev env p1 tl1) t2
+with Cannot_expand ->
+  try
+    unify env t1 (expand_abbrev env p2 tl2)
+  with Cannot_expand ->
 @
+% then will raise unify
+
+
 
 <<function Ctype.expand_abbrev>>=
 let expand_abbrev env path args =
@@ -5333,6 +5340,35 @@ let expand_abbrev env path args =
   with Not_found ->
     raise Cannot_expand
 @
+
+<<signature Ctype.substitute>>=
+val substitute:
+        type_expr list -> type_expr list -> type_expr -> type_expr
+        (* [substitute [v1...vN] [t1...tN] t]
+           returns a copy of [t] where the [vi] are replaced
+           by the [ti]. *)
+@
+
+<<function Ctype.substitute>>=
+let substitute params args body =
+  inst_subst := List.combine params args;
+  let ty = copy body in
+  inst_subst := [];
+  ty
+@
+
+
+
+
+<<[[Ctype.filter_arrow()]] other cases>>=
+| Tconstr(p, tl) ->
+    begin try
+      filter_arrow env (expand_abbrev env p tl)
+    with Cannot_expand ->
+      raise Unify
+    end
+@
+
 
 
 
@@ -5395,7 +5431,7 @@ let rec free_type_ident env ids ty =
   %prec prec_type_def
     { (Ptype_record(List.rev $5), Some $2) }
 @
-
+%todo: delete?
 
 
 \subsection{Printf and [[format]]}
@@ -5407,13 +5443,12 @@ and ident_format = Ident.create "format"
 <<signatures Predef.path_xxx>>=
 val path_format: Path.t
 @
-
 <<constants Predef.path_xxx>>=
 and path_format = Pident ident_format
 @
 
 
-
+% ('a, 'b, 'c) format
 <<[[Predef.build_initial_env()]] decls>>=
 let decl_format =
   {type_params = [newvar(); newvar(); newvar()];
@@ -5431,19 +5466,21 @@ in
 
 let type_format loc fmt =
   let len = String.length fmt in
-  let ty_input = newvar()
-  and ty_result = newvar() in
+  let ty_input = newvar() in
+  let ty_result = newvar() in
   let rec skip_args j =
     if j >= len then j else
       match fmt.[j] with
         '0' .. '9' | ' ' | '.' | '-' -> skip_args (j+1)
       | _ -> j in
   let rec scan_format i =
-    if i >= len then ty_result else
-    match fmt.[i] with
+    if i >= len 
+    then ty_result 
+    else
+     match fmt.[i] with
       '%' ->
         let j = skip_args(i+1) in
-        begin match String.unsafe_get fmt j with
+        (match String.unsafe_get fmt j with
         (* We're using unsafe_get here so that if j = String.length fmt,
            we'll fall in the catch-all case of the match *)
           '%' ->
@@ -5466,7 +5503,7 @@ let type_format loc fmt =
             Tarrow(Tarrow(ty_input, ty_result), scan_format (j+1))
         | c ->
             raise(Error(loc, Bad_format(String.sub fmt i (j-i))))
-        end
+        )
     | _ -> scan_format (i+1) in
   Tconstr(Predef.path_format, [scan_format 0; ty_input; ty_result])
 @
@@ -5536,7 +5573,7 @@ let type_format loc fmt =
 %  - typing (e.g. was expecting an int, also arity checks)
 % but there are other sanity checks done on the program
 % (see sanity check chunknames before):
-%  - partial app in sequence
+%  - dangerous partial application in a sequence (probably bug)
 %  - ???
 
 \section{Interface/Implementation consistency}
@@ -5606,7 +5643,8 @@ and record_representation =
   | Record_float                        (* All fields are floats *)
 @
 
-
+% also have seen many *int in module_components, useful
+% in compilation context too.
 
 
 
@@ -5620,7 +5658,6 @@ val constructor_descrs:
 val exception_descr:
   Path.t -> type_expr list -> constructor_description
 @
-
 <<signature Datarepr.label_descrs>>=
 val label_descrs:
   type_expr -> (string * mutable_flag * type_expr) list ->
@@ -5633,11 +5670,12 @@ val label_descrs:
 
 <<function Datarepr.constructor_descrs>>=
 let constructor_descrs ty_res cstrs =
-  let num_consts = ref 0 and num_nonconsts = ref 0 in
-  List.iter
-    (function (name, []) -> incr num_consts
-            | (name, _)  -> incr num_nonconsts)
-    cstrs;
+  let num_consts = ref 0 in
+  let num_nonconsts = ref 0 in
+  cstrs |> List.iter (function 
+    | (name, []) -> incr num_consts
+    | (name, _)  -> incr num_nonconsts
+  );
   let rec describe_constructors idx_const idx_nonconst = function
       [] -> []
     | (name, ty_args) :: rem ->
@@ -5646,14 +5684,16 @@ let constructor_descrs ty_res cstrs =
             [] -> (Cstr_constant idx_const,
                    describe_constructors (idx_const+1) idx_nonconst rem)
           | _  -> (Cstr_block idx_nonconst,
-                   describe_constructors idx_const (idx_nonconst+1) rem) in
+                   describe_constructors idx_const (idx_nonconst+1) rem) 
+        in
         let cstr =
           { cstr_res = ty_res;
             cstr_args = ty_args;
             cstr_arity = List.length ty_args;
             cstr_tag = tag;
             cstr_consts = !num_consts;
-            cstr_nonconsts = !num_nonconsts } in
+            cstr_nonconsts = !num_nonconsts } 
+        in
         (name, cstr) :: descr_rem in
   describe_constructors 0 0 cstrs
 @
@@ -5723,9 +5763,10 @@ let label_descrs ty_res lbls =
 type lambda =
     Lvar of Ident.t
   | Lconst of structured_constant
-  | Lapply of lambda * lambda list
 
+  | Lapply of lambda * lambda list
   | Lfunction of function_kind * Ident.t list * lambda
+
   | Llet of let_kind * Ident.t * lambda * lambda
   | Lletrec of (Ident.t * lambda) list * lambda
 
@@ -5733,15 +5774,17 @@ type lambda =
 
   | Lswitch of lambda * lambda_switch
   | Lstaticfail
+
   | Lcatch of lambda * lambda
   | Ltrywith of lambda * Ident.t * lambda
+
   | Lifthenelse of lambda * lambda * lambda
   | Lsequence of lambda * lambda
   | Lwhile of lambda * lambda
   | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
   | Lassign of Ident.t * lambda
 
-  | Levent of lambda * lambda_event
+  <<[[Lambda.lambda]] other cases>>
 @
 
 <<type Lambda.lambda_switch>>=
@@ -5761,14 +5804,28 @@ type function_kind = Curried | Tupled
 <<type Lambda.let_kind>>=
 type let_kind = Strict | Alias | StrictOpt
 @
+% ??
 
 <<type Lambda.shared_code>>=
 type shared_code = (int * int) list     (* stack size -> code label *)
 @
 % ???
 
+\subsubsection{Structured constants}
+
+<<type Lambda.structured_constant>>=
+type structured_constant =
+    Const_base of Asttypes.constant
+  | Const_pointer of int
+  | Const_block of int * structured_constant list
+  <<[[Lambda.structured_constant]] other cases>>
+@
+
+
 \subsubsection{Primitives}
 
+% primitives? good name? but then there is Pccall, so there
+% is lambda/bytecode primitives (%xxx) and then C primitives (caml_xxx)
 <<type Lambda.primitive>>=
 type primitive =
     Pidentity
@@ -5779,10 +5836,11 @@ type primitive =
 
   (* Operations on heap blocks *)
   | Pmakeblock of int * mutable_flag
+
   | Pfield of int
   | Psetfield of int * bool
-  | Pfloatfield of int
-  | Psetfloatfield of int
+
+  <<[[Lambda.primitive]] operations on heap blocks other cases>>
 
   (* External call *)
   | Pccall of Primitive.description
@@ -5797,26 +5855,20 @@ type primitive =
   | Pnegint | Paddint | Psubint | Pmulint | Pdivint | Pmodint
   | Pandint | Porint | Pxorint
   | Plslint | Plsrint | Pasrint
+
   | Pintcomp of comparison
+
   | Poffsetint of int
   | Poffsetref of int
 
   (* Float operations *)
-  | Pintoffloat | Pfloatofint
-  | Pnegfloat | Pabsfloat
-  | Paddfloat | Psubfloat | Pmulfloat | Pdivfloat
-  | Pfloatcomp of comparison
+  <<[[Lambda.primitive]] float operations cases>>
 
   (* String operations *)
   | Pstringlength | Pstringrefu | Pstringsetu | Pstringrefs | Pstringsets
 
   (* Array operations *)
-  | Pmakearray of array_kind
-  | Parraylength of array_kind
-  | Parrayrefu of array_kind
-  | Parraysetu of array_kind
-  | Parrayrefs of array_kind
-  | Parraysets of array_kind
+  <<[[Lambda.primitive]] array operations cases>>
 
   (* Bitvect operations *)
   | Pbittest
@@ -5828,36 +5880,105 @@ and comparison =
 @
 
 
-\subsubsection{Structured constants}
-
-<<type Lambda.structured_constant>>=
-type structured_constant =
-    Const_base of constant
-  | Const_pointer of int
-  | Const_block of int * structured_constant list
-  | Const_float_array of string list
-@
-
-
-
 \subsection{Primitives, [[Translcore.transl_primitive()]]}
 
 <<signature Translcore.transl_primitive>>=
 val transl_primitive: Primitive.description -> lambda
 @
 
-<<signature Translcore.transl_exception>>=
-val transl_exception: Ident.t -> exception_declaration -> lambda
+
+
+<<constant Translcore.primitives_table>>=
+let primitives_table = create_hashtable 31 [
+  "%identity", Pidentity;
+
+  "%field0", Pfield 0;
+  "%field1", Pfield 1;
+  "%setfield0", Psetfield(0, true);
+  "%makeblock", Pmakeblock(0, Immutable);
+  "%makemutable", Pmakeblock(0, Mutable);
+
+  "%raise", Praise;
+
+  "%sequand", Psequand;
+  "%sequor", Psequor;
+  "%boolnot", Pnot;
+
+  "%negint", Pnegint;
+  "%succint", Poffsetint 1;
+  "%predint", Poffsetint(-1);
+  "%addint", Paddint;
+  "%subint", Psubint;
+  "%mulint", Pmulint;
+  "%divint", Pdivint;
+  "%modint", Pmodint;
+  "%andint", Pandint;
+  "%orint", Porint;
+  "%xorint", Pxorint;
+  "%lslint", Plslint;
+  "%lsrint", Plsrint;
+  "%asrint", Pasrint;
+
+  "%eq", Pintcomp Ceq;
+  "%noteq", Pintcomp Cneq;
+  "%ltint", Pintcomp Clt;
+  "%leint", Pintcomp Cle;
+  "%gtint", Pintcomp Cgt;
+  "%geint", Pintcomp Cge;
+
+  "%incr", Poffsetref(1);
+  "%decr", Poffsetref(-1);
+
+  "%intoffloat", Pintoffloat;
+  "%floatofint", Pfloatofint;
+  "%negfloat", Pnegfloat;
+  "%absfloat", Pabsfloat;
+  "%addfloat", Paddfloat;
+  "%subfloat", Psubfloat;
+  "%mulfloat", Pmulfloat;
+  "%divfloat", Pdivfloat;
+  "%eqfloat", Pfloatcomp Ceq;
+  "%noteqfloat", Pfloatcomp Cneq;
+  "%ltfloat", Pfloatcomp Clt;
+  "%lefloat", Pfloatcomp Cle;
+  "%gtfloat", Pfloatcomp Cgt;
+  "%gefloat", Pfloatcomp Cge;
+
+  "%string_length", Pstringlength;
+  "%string_safe_get", Pstringrefs;
+  "%string_safe_set", Pstringsets;
+  "%string_unsafe_get", Pstringrefu;
+  "%string_unsafe_set", Pstringsetu;
+
+  "%array_length", Parraylength Pgenarray;
+  "%array_safe_get", Parrayrefs Pgenarray;
+  "%array_safe_set", Parraysets Pgenarray;
+  "%array_unsafe_get", Parrayrefu Pgenarray;
+  "%array_unsafe_set", Parraysetu Pgenarray;
+  "%obj_size", Parraylength Paddrarray;
+  "%obj_field", Parrayrefu Paddrarray;
+  "%obj_set_field", Parraysetu Paddrarray
+]
 @
 
-
+% type? it's for overloaded operators? 
+% - general, 
+% - int, 
+% - float, 
+% - string
 
 
 
 <<signature Translmod.primitive_declarations>>=
 val primitive_declarations: string list ref
 @
+<<constant Translmod.primitive_declarations>>=
+(* Record the primitive declarations occuring in the module compiled *)
 
+let primitive_declarations = ref ([] : string list)
+@
+
+\subsection{Overloaded comparisons}
 
 <<constant Translcore.comparisons_table>>=
 (* Translation of primitives *)
@@ -5909,69 +6030,8 @@ let comparisons_table = create_hashtable 11 [
 ]
 @
 
-<<constant Translcore.primitives_table>>=
-let primitives_table = create_hashtable 31 [
-  "%identity", Pidentity;
-  "%field0", Pfield 0;
-  "%field1", Pfield 1;
-  "%setfield0", Psetfield(0, true);
-  "%makeblock", Pmakeblock(0, Immutable);
-  "%makemutable", Pmakeblock(0, Mutable);
-  "%raise", Praise;
-  "%sequand", Psequand;
-  "%sequor", Psequor;
-  "%boolnot", Pnot;
-  "%negint", Pnegint;
-  "%succint", Poffsetint 1;
-  "%predint", Poffsetint(-1);
-  "%addint", Paddint;
-  "%subint", Psubint;
-  "%mulint", Pmulint;
-  "%divint", Pdivint;
-  "%modint", Pmodint;
-  "%andint", Pandint;
-  "%orint", Porint;
-  "%xorint", Pxorint;
-  "%lslint", Plslint;
-  "%lsrint", Plsrint;
-  "%asrint", Pasrint;
-  "%eq", Pintcomp Ceq;
-  "%noteq", Pintcomp Cneq;
-  "%ltint", Pintcomp Clt;
-  "%leint", Pintcomp Cle;
-  "%gtint", Pintcomp Cgt;
-  "%geint", Pintcomp Cge;
-  "%incr", Poffsetref(1);
-  "%decr", Poffsetref(-1);
-  "%intoffloat", Pintoffloat;
-  "%floatofint", Pfloatofint;
-  "%negfloat", Pnegfloat;
-  "%absfloat", Pabsfloat;
-  "%addfloat", Paddfloat;
-  "%subfloat", Psubfloat;
-  "%mulfloat", Pmulfloat;
-  "%divfloat", Pdivfloat;
-  "%eqfloat", Pfloatcomp Ceq;
-  "%noteqfloat", Pfloatcomp Cneq;
-  "%ltfloat", Pfloatcomp Clt;
-  "%lefloat", Pfloatcomp Cle;
-  "%gtfloat", Pfloatcomp Cgt;
-  "%gefloat", Pfloatcomp Cge;
-  "%string_length", Pstringlength;
-  "%string_safe_get", Pstringrefs;
-  "%string_safe_set", Pstringsets;
-  "%string_unsafe_get", Pstringrefu;
-  "%string_unsafe_set", Pstringsetu;
-  "%array_length", Parraylength Pgenarray;
-  "%array_safe_get", Parrayrefs Pgenarray;
-  "%array_safe_set", Parraysets Pgenarray;
-  "%array_unsafe_get", Parrayrefu Pgenarray;
-  "%array_unsafe_set", Parraysetu Pgenarray;
-  "%obj_size", Parraylength Paddrarray;
-  "%obj_field", Parrayrefu Paddrarray;
-  "%obj_set_field", Parraysetu Paddrarray
-]
-@
+
+
 
 \subsection{Expressions, [[Translcore.transl_exp()]]}
 
@@ -6002,6 +6062,13 @@ val transl_store_implementation:
 @
 %? variant?
 
+
+\subsection{Other elements}
+
+<<signature Translcore.transl_exception>>=
+val transl_exception: Ident.t -> exception_declaration -> lambda
+@
+
 \section{Lambda simplifications}
 
 <<signature Simplif.simplify_lambda>>=
@@ -6012,6 +6079,17 @@ val simplify_lambda: lambda -> lambda
 %   Also transform let-bound references into variables. *)
 
 \section{Pattern matching compilation}
+
+%(*  See Peyton-Jones, "The Implementation of functional programming
+%    languages", chapter 5. *)
+
+
+<<signature Matching.for_multiple_match>>=
+val for_multiple_match:
+        Location.t -> lambda list -> (pattern * lambda) list -> lambda
+@
+% main one no?
+
 
 <<signature Matching.for_function>>=
 val for_function:
@@ -6029,10 +6107,6 @@ val for_let:
         Location.t -> lambda -> pattern -> lambda -> lambda
 @
 
-<<signature Matching.for_multiple_match>>=
-val for_multiple_match:
-        Location.t -> lambda list -> (pattern * lambda) list -> lambda
-@
 
 <<signature Matching.for_tupled_function>>=
 val for_tupled_function:
@@ -6040,8 +6114,6 @@ val for_tupled_function:
 @
 
 
-%(*  See Peyton-Jones, "The Implementation of functional programming
-%    languages", chapter 5. *)
 
 
 \section{[[Lambda]] calcul to bytecode}
@@ -6054,6 +6126,7 @@ val for_tupled_function:
 
 type label = int                        (* Symbolic code labels *)
 @
+% = label like in asm?
 
 <<type Instruct.instruction>>=
 type instruction =
@@ -6108,10 +6181,11 @@ type instruction =
 <<signature Instruct.immed_min>>=
 val immed_min: int
 @
-
+% ?
 <<signature Instruct.immed_max>>=
 val immed_max: int
 @
+% ?
 
 \subsection{[[Bytegen.compile_implementation()]]}
 
@@ -6127,16 +6201,6 @@ val compile_implementation: string -> lambda -> instruction list
 %     block of relocatable bytecode
 %     compilation unit descriptor *)
 
-<<type Emitcode.reloc_info>>=
-(* Relocation information *)
-
-type reloc_info =
-    Reloc_literal of structured_constant    (* structured constant *)
-  | Reloc_getglobal of Ident.t              (* reference to a global *)
-  | Reloc_setglobal of Ident.t              (* definition of a global *)
-  | Reloc_primitive of string               (* C primitive number *)
-@
-
 <<type Emitcode.compilation_unit>>=
 (* Descriptor for compilation units *)
 
@@ -6147,10 +6211,27 @@ type compilation_unit =
     cu_reloc: (reloc_info * int) list;  (* Relocation information *)
     cu_imports: (string * Digest.t) list; (* Names and CRC of intfs imported *)
     cu_primitives: string list;         (* Primitives declared inside *)
+
     mutable cu_force_link: bool;        (* Must be linked even if unref'ed *)
+
     mutable cu_debug: int;              (* Position of debugging info, or 0 *)
-    cu_debugsize: int }                 (* Length of debugging info *)
+    cu_debugsize: int;                  (* Length of debugging info *)
+ }
 @
+%todo: LP split
+
+<<type Emitcode.reloc_info>>=
+(* Relocation information *)
+
+type reloc_info =
+    Reloc_literal of structured_constant    (* structured constant *)
+  | Reloc_getglobal of Ident.t              (* reference to a global *)
+  | Reloc_setglobal of Ident.t              (* definition of a global *)
+  | Reloc_primitive of string               (* C primitive number *)
+@
+
+
+
 
 
 \subsection{[[Emitcode.to_file()]]}
@@ -6175,6 +6256,7 @@ val to_file: out_channel -> string -> instruction list -> unit
 
 let to_file outchan unit_name code =
   init();
+
   output_string outchan cmo_magic_number;
   let pos_depl = pos_out outchan in
   output_binary_int outchan 0;
@@ -6187,7 +6269,8 @@ let to_file outchan unit_name code =
       output_value outchan !events;
       (p, pos_out outchan - p)
     end else
-      (0, 0) in
+      (0, 0) 
+  in
   let compunit =
     { cu_name = unit_name;
       cu_pos = pos_code;
@@ -6207,6 +6290,26 @@ let to_file outchan unit_name code =
   output_binary_int outchan pos_compunit
 @
 
+
+<<function Emitcode.init>>=
+(* Initialization *)
+
+let init () =
+  out_position := 0;
+  label_table := Array.create 16 (Label_undefined []);
+  reloc_info := [];
+  events := []
+@
+
+<<constant Emitcode.label_table>>=
+let label_table  = ref ([| |] : label_definition array)
+@
+
+<<constant Emitcode.reloc_info>>=
+(* Relocation information *)
+
+let reloc_info = ref ([] : (reloc_info * int) list)
+@
 
 
 <<signature Env.imported_units>>=
@@ -6592,29 +6695,32 @@ let debug_info = ref ([] : debug_event list list)
 @
 
 
-
 <<constant Bytelink.debug_info (./bytecomp/bytelink.ml)>>=
 (* Relocate and record compilation events *)
 
 let debug_info = ref ([] : debug_event list list)
 @
+% dupe??
 
 <<function Bytelink.record_events>>=
 let record_events orig evl =
   if evl <> [] then begin
-    List.iter
-      (fun ev ->
+    evl |> List.iter (fun ev ->
          ev.ev_pos <- orig + ev.ev_pos;
-         begin match ev.ev_repr with
-           Event_parent repr -> repr := ev.ev_pos
+         (match ev.ev_repr with
+         |  Event_parent repr -> repr := ev.ev_pos
          | _                 -> ()
-         end)
-      evl;
+         )
+    );
     debug_info := evl :: !debug_info
   end
 @
 
 \subsection{Lambda events}
+
+<<[[Lambda.lambda]] other cases>>=
+| Levent of lambda * lambda_event
+@
 
 <<type Lambda.lambda_event>>=
 and lambda_event =
@@ -6711,8 +6817,6 @@ let record_event ev =
 
 % could put when here
 
-\section{Floats}
-
 \section{Arrays}
 
 % AST
@@ -6789,9 +6893,21 @@ in
 @
 
 %Compiler
+<<[[Lambda.primitive]] array operations cases>>=
+| Pmakearray of array_kind
+| Parraylength of array_kind
+| Parrayrefu of array_kind
+| Parraysetu of array_kind
+| Parrayrefs of array_kind
+| Parraysets of array_kind
+@
+
 <<type Lambda.array_kind>>=
 and array_kind =
-    Pgenarray | Paddrarray | Pintarray | Pfloatarray
+  | Pgenarray 
+  | Paddrarray 
+  | Pintarray 
+  | Pfloatarray
 @
 
 \subsection{[[-unsafe]]}
@@ -6808,6 +6924,26 @@ let fast = ref false                    (* -unsafe *)
 <<function Parser.array_function>>=
 let array_function str name =
   Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))
+@
+
+\section{Floats}
+
+<<[[Lambda.primitive]] float operations cases>>=
+| Pintoffloat | Pfloatofint
+| Pnegfloat | Pabsfloat
+| Paddfloat | Psubfloat | Pmulfloat | Pdivfloat
+| Pfloatcomp of comparison
+@
+
+\subsection{Floats array optimisation}
+
+<<[[Lambda.structured_constant]] other cases>>=
+| Const_float_array of string list
+@
+
+<<[[Lambda.primitive]] operations on heap blocks other cases>>=
+| Pfloatfield of int
+| Psetfloatfield of int
 @
 
 \section{Character ranges}

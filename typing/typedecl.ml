@@ -77,12 +77,11 @@ let transl_declaration env (name, sdecl) id =
         | Ptype_variant cstrs ->
             (*s: [[Typedecl.transl_declaration()]] sanity check when variant case *)
             let all_constrs = ref StringSet.empty in
-            List.iter
-              (fun (name, args) ->
+            cstrs |> List.iter (fun (name, args) ->
                 if StringSet.mem name !all_constrs then
                   raise(Error(sdecl.ptype_loc, Duplicate_constructor name));
-                all_constrs := StringSet.add name !all_constrs)
-              cstrs;
+                all_constrs := StringSet.add name !all_constrs
+            );
             if List.length cstrs > Config.max_tag then
               raise(Error(sdecl.ptype_loc, Too_many_constructors));
             (*e: [[Typedecl.transl_declaration()]] sanity check when variant case *)
@@ -93,12 +92,11 @@ let transl_declaration env (name, sdecl) id =
         | Ptype_record lbls ->
             (*s: [[Typedecl.transl_declaration()]] sanity check when record case *)
             let all_labels = ref StringSet.empty in
-            List.iter
-              (fun (name, mut, arg) ->
+            lbls |> List.iter (fun (name, mut, arg) ->
                 if StringSet.mem name !all_labels then
                   raise(Error(sdecl.ptype_loc, Duplicate_label name));
-                all_labels := StringSet.add name !all_labels)
-              lbls;
+                all_labels := StringSet.add name !all_labels
+            );
             (*e: [[Typedecl.transl_declaration()]] sanity check when record case *)
             Type_record(List.map
               (fun (name, mut, arg) ->

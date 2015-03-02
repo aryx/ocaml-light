@@ -26,10 +26,14 @@ type primitive =
 
   (* Operations on heap blocks *)
   | Pmakeblock of int * mutable_flag
+
   | Pfield of int
   | Psetfield of int * bool
+
+  (*s: [[Lambda.primitive]] operations on heap blocks other cases *)
   | Pfloatfield of int
   | Psetfloatfield of int
+  (*e: [[Lambda.primitive]] operations on heap blocks other cases *)
 
   (* External call *)
   | Pccall of Primitive.description
@@ -44,26 +48,32 @@ type primitive =
   | Pnegint | Paddint | Psubint | Pmulint | Pdivint | Pmodint
   | Pandint | Porint | Pxorint
   | Plslint | Plsrint | Pasrint
+
   | Pintcomp of comparison
+
   | Poffsetint of int
   | Poffsetref of int
 
   (* Float operations *)
+  (*s: [[Lambda.primitive]] float operations cases *)
   | Pintoffloat | Pfloatofint
   | Pnegfloat | Pabsfloat
   | Paddfloat | Psubfloat | Pmulfloat | Pdivfloat
   | Pfloatcomp of comparison
+  (*e: [[Lambda.primitive]] float operations cases *)
 
   (* String operations *)
   | Pstringlength | Pstringrefu | Pstringsetu | Pstringrefs | Pstringsets
 
   (* Array operations *)
+  (*s: [[Lambda.primitive]] array operations cases *)
   | Pmakearray of array_kind
   | Parraylength of array_kind
   | Parrayrefu of array_kind
   | Parraysetu of array_kind
   | Parrayrefs of array_kind
   | Parraysets of array_kind
+  (*e: [[Lambda.primitive]] array operations cases *)
 
   (* Bitvect operations *)
   | Pbittest
@@ -76,15 +86,20 @@ and comparison =
 
 (*s: type Lambda.array_kind *)
 and array_kind =
-    Pgenarray | Paddrarray | Pintarray | Pfloatarray
+  | Pgenarray 
+  | Paddrarray 
+  | Pintarray 
+  | Pfloatarray
 (*e: type Lambda.array_kind *)
 
 (*s: type Lambda.structured_constant *)
 type structured_constant =
-    Const_base of constant
+    Const_base of Asttypes.constant
   | Const_pointer of int
   | Const_block of int * structured_constant list
+  (*s: [[Lambda.structured_constant]] other cases *)
   | Const_float_array of string list
+  (*e: [[Lambda.structured_constant]] other cases *)
 (*e: type Lambda.structured_constant *)
 
 (*s: type Lambda.function_kind *)
@@ -103,9 +118,10 @@ type shared_code = (int * int) list     (* stack size -> code label *)
 type lambda =
     Lvar of Ident.t
   | Lconst of structured_constant
-  | Lapply of lambda * lambda list
 
+  | Lapply of lambda * lambda list
   | Lfunction of function_kind * Ident.t list * lambda
+
   | Llet of let_kind * Ident.t * lambda * lambda
   | Lletrec of (Ident.t * lambda) list * lambda
 
@@ -113,15 +129,19 @@ type lambda =
 
   | Lswitch of lambda * lambda_switch
   | Lstaticfail
+
   | Lcatch of lambda * lambda
   | Ltrywith of lambda * Ident.t * lambda
+
   | Lifthenelse of lambda * lambda * lambda
   | Lsequence of lambda * lambda
   | Lwhile of lambda * lambda
   | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
   | Lassign of Ident.t * lambda
 
+  (*s: [[Lambda.lambda]] other cases *)
   | Levent of lambda * lambda_event
+  (*e: [[Lambda.lambda]] other cases *)
 (*e: type Lambda.lambda *)
 
 (*s: type Lambda.lambda_switch *)

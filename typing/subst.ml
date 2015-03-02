@@ -76,11 +76,11 @@ let type_path s = function
 let rec type_expr s = function
     Tvar{tvar_link = None} as ty -> ty
   | Tvar{tvar_link = Some ty} -> type_expr s ty
+  | Tconstr(p, []) -> Tconstr(type_path s p, [])
+  | Tconstr(p, tl) -> Tconstr(type_path s p, List.map (type_expr s) tl)
   (* boilerplate mapper *)
   | Tarrow(t1, t2) -> Tarrow(type_expr s t1, type_expr s t2)
   | Ttuple tl -> Ttuple(List.map (type_expr s) tl)
-  | Tconstr(p, []) -> Tconstr(type_path s p, [])
-  | Tconstr(p, tl) -> Tconstr(type_path s p, List.map (type_expr s) tl)
 (*e: function Subst.type_expr *)
 
 (*s: function Subst.value_description *)
@@ -98,11 +98,11 @@ let type_declaration s decl =
        (* boilerplate mapper *)
         Type_abstract -> Type_abstract
       | Type_variant cstrs ->
-          Type_variant(List.map (fun (n, args) -> (n, List.map (type_expr s) args))
-                           cstrs)
+          Type_variant(cstrs |> List.map (fun (n, args) -> 
+                          (n, List.map (type_expr s) args)))
       | Type_record lbls ->
-          Type_record(List.map (fun (n, mut, arg) -> (n, mut, type_expr s arg))
-                          lbls)
+          Type_record(lbls |> List.map (fun (n, mut, arg) -> 
+                          (n, mut, type_expr s arg)))
       end;
     type_manifest =
       begin match decl.type_manifest with

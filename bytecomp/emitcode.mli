@@ -37,9 +37,12 @@ type compilation_unit =
     cu_reloc: (reloc_info * int) list;  (* Relocation information *)
     cu_imports: (string * Digest.t) list; (* Names and CRC of intfs imported *)
     cu_primitives: string list;         (* Primitives declared inside *)
+
     mutable cu_force_link: bool;        (* Must be linked even if unref'ed *)
+
     mutable cu_debug: int;              (* Position of debugging info, or 0 *)
-    cu_debugsize: int }                 (* Length of debugging info *)
+    cu_debugsize: int;                  (* Length of debugging info *)
+ }
 (*e: type Emitcode.compilation_unit *)
 
 (*s: signature Emitcode.to_file *)

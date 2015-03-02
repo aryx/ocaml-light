@@ -1423,9 +1423,6 @@ open Format
 val isfree: Ident.t -> t -> bool
 @
 
-<<signature Path.nopos>>=
-val nopos: int
-@
 
 
 %-------------------------------------------------------------
@@ -1444,9 +1441,6 @@ val nopos: int
 
 \subsection*{[[./typing/path.ml]]}
 
-<<constant Path.nopos>>=
-let nopos = -1
-@
 
 
 <<function Path.isfree>>=
@@ -2379,13 +2373,6 @@ val none: type_expr
         (* A dummy type expression *)
 @
 
-<<signature Ctype.substitute>>=
-val substitute:
-        type_expr list -> type_expr list -> type_expr -> type_expr
-        (* [substitute [v1...vN] [t1...tN] t]
-           returns a copy of [t] where the [vi] are replaced
-           by the [ti]. *)
-@
 
 
 
@@ -2533,13 +2520,6 @@ let instance_label lbl =
   (ty_arg, ty_res)
 @
 
-<<function Ctype.substitute>>=
-let substitute params args body =
-  inst_subst := List.combine params args;
-  let ty = copy body in
-  inst_subst := [];
-  ty
-@
 
 
 
@@ -7249,11 +7229,6 @@ let rec compose_coercions c1 c2 =
       fatal_error "Translmod.compose_coercions"
 @
 
-<<constant Translmod.primitive_declarations>>=
-(* Record the primitive declarations occuring in the module compiled *)
-
-let primitive_declarations = ref ([] : string list)
-@
 
 <<function Translmod.transl_implementation>>=
 (* Compile an implementation *)
@@ -7613,9 +7588,6 @@ type label_definition =
   | Label_undefined of (int * int) list
 @
 
-<<constant Emitcode.label_table>>=
-let label_table  = ref ([| |] : label_definition array)
-@
 
 <<function Emitcode.extend_label_table>>=
 let extend_label_table needed =
@@ -7662,11 +7634,6 @@ let out_label_with_orig orig lbl =
 let out_label l = out_label_with_orig !out_position l
 @
 
-<<constant Emitcode.reloc_info>>=
-(* Relocation information *)
-
-let reloc_info = ref ([] : (reloc_info * int) list)
-@
 
 <<function Emitcode.enter>>=
 let enter info =
@@ -7674,15 +7641,6 @@ let enter info =
 @
 
 
-<<function Emitcode.init>>=
-(* Initialization *)
-
-let init () =
-  out_position := 0;
-  label_table := Array.create 16 (Label_undefined []);
-  reloc_info := [];
-  events := []
-@
 
 <<constant Emitcode.emit_instr>>=
 (* Emission of one instruction *)

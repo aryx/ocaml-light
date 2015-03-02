@@ -415,19 +415,13 @@ and store_value id path decl env =
 and store_type id path info env =
   { types = Ident.add id (path, info) env.types;
     constrs =
-      List.fold_right
-        (fun (name, descr) constrs ->
+      env.constrs |> List.fold_right (fun (name, descr) constrs ->
           Ident.add (Ident.create name) descr constrs
-        )
-        (constructors_of_type path info)
-        env.constrs;
+      ) (constructors_of_type path info);
     labels =
-      List.fold_right
-        (fun (name, descr) labels ->
+      env.labels |> List.fold_right (fun (name, descr) labels ->
           Ident.add (Ident.create name) descr labels
-        )
-        (labels_of_type path info)
-        env.labels;
+        ) (labels_of_type path info);
     (* boilerplate, with record *)
     values = env.values;
     modules = env.modules;
@@ -540,8 +534,7 @@ let open_signature root sg env =
   let (pl, sub) = prefix_idents root 0 Subst.identity sg in
 
   (* Then enter the components in the environment after substitution *)
-  List.fold_left2
-    (fun env item p ->
+  pl |> List.fold_left2 (fun env item p ->
       match item with
       (* boilerplate and overloading *)
       | Tsig_value(id, decl) ->
@@ -557,7 +550,7 @@ let open_signature root sg env =
           store_module (Ident.hide id) p 
                        (Subst.modtype sub mty) env
     )
-    env sg pl
+    env sg
 (*e: function Env.open_signature *)
 
 (*s: function Env.open_pers_signature *)
