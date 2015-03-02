@@ -77,14 +77,16 @@ let none = Ttuple []                  (* Clearly ill-formed type *)
 let rec generalize ty =
   match repr ty with
     Tvar v ->
-      if v.tvar_level > !current_level then v.tvar_level <- generic_level
-  (* boilerplate *)
+      if 
+        (*s: [[Ctype.generalize()]] generalization criteria *)
+        v.tvar_level > !current_level
+        (*e: [[Ctype.generalize()]] generalization criteria *)
+      then v.tvar_level <- generic_level
+  (* boilerplate visitor *)
   | Tarrow(t1, t2) ->
       generalize t1; generalize t2
   | Ttuple tl ->
       List.iter generalize tl
-  | Tconstr(p, []) ->
-      ()
   | Tconstr(p, tl) ->
       List.iter generalize tl
 (*e: function Ctype.generalize *)
@@ -93,14 +95,13 @@ let rec generalize ty =
 let rec make_nongen ty =
   match repr ty with
     Tvar v ->
-      if v.tvar_level > !current_level then v.tvar_level <- !current_level
-  (* boilerplate *)
+      if v.tvar_level > !current_level 
+      then v.tvar_level <- !current_level
+  (* boilerplate visitor *)
   | Tarrow(t1, t2) ->
       make_nongen t1; make_nongen t2
   | Ttuple tl ->
       List.iter make_nongen tl
-  | Tconstr(p, []) ->
-      ()
   | Tconstr(p, tl) ->
       List.iter make_nongen tl
 (*e: function Ctype.make_nongen *)
@@ -123,13 +124,11 @@ let rec copy ty =
           inst_subst := (t, t') :: !inst_subst;
           t'
       end else t
-  (* boilerplate *)
+  (* boilerplate mapper *)
   | Tarrow(t1, t2) ->
       Tarrow(copy t1, copy t2)
   | Ttuple tl ->
       Ttuple(List.map copy tl)
-  | Tconstr(p, []) as t ->
-      t
   | Tconstr(p, tl) ->
       Tconstr(p, List.map copy tl)
 (*e: function Ctype.copy *)

@@ -13,9 +13,9 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Config.version *)
 (* System configuration *)
 
+(*s: signature Config.version *)
 val version: string
         (* The current version number of the system *)
 (*e: signature Config.version *)

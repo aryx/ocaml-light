@@ -241,11 +241,6 @@ let link_file output_fun currpos_fun = function
 
 let link_bytecode objfiles exec_name copy_header =
   let tolink = List.fold_right scan_file objfiles [] in
-  if Sys.os_type = "MacOS" then begin
-    (* Create it as a text file for bytecode scripts *)
-    let c = open_out_gen [Open_wronly; Open_creat] 0o777 exec_name in
-    close_out c
-  end;
   let outchan = open_out_gen [Open_wronly; Open_trunc; Open_creat; Open_binary]
                              0o777 exec_name in
   try
@@ -257,28 +252,35 @@ let link_bytecode objfiles exec_name copy_header =
         close_in inchan
       with Not_found | Sys_error _ -> ()
     end;
+
     (* The bytecode *)
     let pos1 = pos_out outchan in
     Symtable.init();
     Hashtbl.clear crc_interfaces;
     let output_fun = output_string outchan
     and currpos_fun () = pos_out outchan - pos1 in
-    List.iter (link_file output_fun currpos_fun) tolink;
+    tolink |> List.iter (link_file output_fun currpos_fun);
+
     (* The final STOP instruction *)
     output_byte outchan Opcodes.opSTOP;
     output_byte outchan 0; output_byte outchan 0; output_byte outchan 0;
+
     (* The names of all primitives *)
     let pos2 = pos_out outchan in
     Symtable.output_primitive_names outchan;
+
     (* The table of global data *)
     let pos3 = pos_out outchan in
     output_value outchan (Symtable.initial_global_table());
+
     (* The map of global identifiers *)
     let pos4 = pos_out outchan in
     Symtable.output_global_map outchan;
+
     (* Debug info *)
     let pos5 = pos_out outchan in
     if !Clflags.debug then output_value outchan !debug_info;
+
     (* The trailer *)
     let pos6 = pos_out outchan in
     output_binary_int outchan (pos2 - pos1);
@@ -288,6 +290,7 @@ let link_bytecode objfiles exec_name copy_header =
     output_binary_int outchan (pos6 - pos5);
     output_string outchan exec_magic_number;
     close_out outchan
+
   with x ->
     close_out outchan;
     remove_file exec_name;
@@ -437,38 +440,41 @@ let fix_exec_name name =
 
 let link objfiles =
   let objfiles = "stdlib.cma" :: (objfiles @ ["std_exit.cmo"]) in
-  if not !Clflags.custom_runtime then
-    link_bytecode objfiles !Clflags.exec_name true
-  else if not !Clflags.output_c_object then begin
-    let bytecode_name = Filename.temp_file "camlcode" "" in
-    let prim_name = Filename.temp_file "camlprim" ".c" in
-    try
-      link_bytecode objfiles bytecode_name false;
-      let poc = open_out prim_name in
-      Symtable.output_primitive_table poc;
-      close_out poc;
-      let exec_name = fix_exec_name !Clflags.exec_name in
-      if build_custom_runtime prim_name exec_name <> 0
-      then raise(Error Custom_runtime);
-      append_bytecode_and_cleanup bytecode_name exec_name prim_name
-    with x ->
-      remove_file bytecode_name;
-      remove_file prim_name;
-      raise x
-  end else begin
-    let c_file =
-      Filename.chop_suffix !Clflags.object_name Config.ext_obj ^ ".c" in
-    if Sys.file_exists c_file then raise(Error(File_exists c_file));
-    try
-      link_bytecode_as_c objfiles c_file;
-      if Ccomp.compile_file_bytecode c_file <> 0
-      then raise(Error Custom_runtime);
-      remove_file c_file
-    with x ->
-      remove_file c_file;
-      remove_file !Clflags.object_name;
-      raise x
-  end
+  if not !Clflags.custom_runtime 
+  then link_bytecode objfiles !Clflags.exec_name true
+  else 
+   (*s: [[Bytelink.link()]] if custom runtime *)
+   if not !Clflags.output_c_object then begin
+     let bytecode_name = Filename.temp_file "camlcode" "" in
+     let prim_name = Filename.temp_file "camlprim" ".c" in
+     try
+       link_bytecode objfiles bytecode_name false;
+       let poc = open_out prim_name in
+       Symtable.output_primitive_table poc;
+       close_out poc;
+       let exec_name = fix_exec_name !Clflags.exec_name in
+       if build_custom_runtime prim_name exec_name <> 0
+       then raise(Error Custom_runtime);
+       append_bytecode_and_cleanup bytecode_name exec_name prim_name
+     with x ->
+       remove_file bytecode_name;
+       remove_file prim_name;
+       raise x
+   end else begin
+     let c_file =
+       Filename.chop_suffix !Clflags.object_name Config.ext_obj ^ ".c" in
+     if Sys.file_exists c_file then raise(Error(File_exists c_file));
+     try
+       link_bytecode_as_c objfiles c_file;
+       if Ccomp.compile_file_bytecode c_file <> 0
+       then raise(Error Custom_runtime);
+       remove_file c_file
+     with x ->
+       remove_file c_file;
+       remove_file !Clflags.object_name;
+       raise x
+   end
+   (*e: [[Bytelink.link()]] if custom runtime *)
 (*e: function Bytelink.link *)
 
 (* Error report *)

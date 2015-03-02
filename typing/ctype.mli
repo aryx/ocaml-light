@@ -54,8 +54,7 @@ val instance: type_expr -> type_expr
         (* Take an instance of a type scheme *)
 (*e: signature Ctype.instance *)
 (*s: signature Ctype.instance_constructor *)
-val instance_constructor:
-        constructor_description -> type_expr list * type_expr
+val instance_constructor: constructor_description -> type_expr list * type_expr
         (* Same, for a constructor *)
 (*e: signature Ctype.instance_constructor *)
 (*s: signature Ctype.instance_label *)

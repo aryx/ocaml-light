@@ -380,6 +380,7 @@ let symbol_loc () =
 @
 % ?? global?
 
+% Compile.parse_file -> <>
 <<signature Location.input_name>>=
 val input_name: string ref
 @
@@ -775,6 +776,7 @@ let main () =
 @
 % see report_error in appendix
 
+% Bytegen.link -> <>
 <<constant Clflags.exec_name>>=
 let exec_name = ref "a.out"             (* -o *)
 @
@@ -801,6 +803,17 @@ let print_version_number () =
   print_string Config.version; print_newline();
   print_string "Standard library directory: ";
   print_string Config.standard_library; print_newline()
+@
+
+
+<<signature Config.version>>=
+val version: string
+        (* The current version number of the system *)
+@
+
+<<signature Config.standard_library>>=
+val standard_library: string
+        (* The directory containing the standard libraries *)
 @
 
 \section{[[Main.process_file()]]}
@@ -922,7 +935,7 @@ let implementation sourcefile =
 %*)
 %todo: crc seems unused later, why? and actually we don't use it here
 
-% ast_impl_magic_number ???
+% ast_impl_magic_number, see in advanced topics section
 
 <<signature Config.load_path>>=
 val load_path: string list ref
@@ -1542,18 +1555,15 @@ let get_stored_string () =
 
 \chapter{Parsing}
 
+\section{Overview}
+
+
+% parse_file -> Parse.impementation (= wrap Parser.implementation) -> 
+%  Parser_implementation
+
+
 % Again, see lex&yacc tutorial, even ocamllex/ocamlyacc tutorial.
 % bootstrapping issue? no for ocamlyacc as it's written in C.
-
-<<signature Parse.implementation>>=
-val implementation : Lexing.lexbuf -> Parsetree.structure
-@
-
-<<signature Parse.interface>>=
-val interface : Lexing.lexbuf -> Parsetree.signature
-@
-
-
 
 <<./parsing/parser.mly>>=
 <<copyright header C>>
@@ -1583,6 +1593,9 @@ val interface : Lexing.lexbuf -> Parsetree.signature
 
 @
 
+% put tokens in previous chapter on Lexing, but it's
+% actually defined in the grammar file because it's the
+% interface
 
 <<Parser precedences and associativities>>=
 %right prec_let                         /* let ... in ... */
@@ -1612,59 +1625,6 @@ val interface : Lexing.lexbuf -> Parsetree.signature
 @
 %todo: fix many conflicts by forwardporting from 4.00
 % argh, ugly list above
-
-<<function Parse.wrap>>=
-let wrap parsing_fun lexbuf =
-  try
-    let ast = parsing_fun Lexer.token lexbuf in
-    Parsing.clear_parser();
-    ast
-  with
-    | Parsing.Parse_error | Syntaxerr.Escape_error ->
-        let loc = { loc_start = Lexing.lexeme_start lexbuf;
-                    loc_end = Lexing.lexeme_end lexbuf } in
-        if !Location.input_name = "" 
-        then maybe_skip_phrase lexbuf;
-        raise (Syntaxerr.Error(Syntaxerr.Other loc))
-
-    | Lexer.Error(Lexer.Unterminated_comment, _, _) as err -> raise err
-    | Lexer.Error(Lexer.Unterminated_string, _, _) as err -> raise err
-    | Lexer.Error(_, _, _) as err ->
-        if !Location.input_name = "" 
-        then skip_phrase lexbuf;
-        raise err
-    | Syntaxerr.Error _ as err ->
-        if !Location.input_name = "" 
-        then maybe_skip_phrase lexbuf;
-        raise err
-@
-%todo: factorize and aspectize maybe_skip_phrase
-
-<<function Parse.implementation>>=
-let implementation = wrap Parser.implementation
-@
-
-<<function Parse.interface>>=
-let interface = wrap Parser.interface
-@
-
-<<Parser entry points types>>=
-%start implementation                   /* for implementation files */
-%type <Parsetree.structure> implementation
-%start interface                        /* for interface files */
-%type <Parsetree.signature> interface
-@
-
-
-<<entry points rules>>=
-implementation:
-    structure EOF                        { $1 }
-;
-interface:
-    signature EOF                        { List.rev $1 }
-;
-@
-
 
 
 <<grammar>>=
@@ -1729,8 +1689,93 @@ opt_semi:
 ;
 @
 
+\section{[[Compile.parse_file()]]}
 
-\section{Structures ([[.ml]])}
+%  let ast = parse_file inputfile Parse.implementation ast_impl_magic_number in
+%  let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
+
+<<function Compile.parse_file>>=
+let parse_file inputfile parse_fun ast_magic =
+  let ic = open_in_bin inputfile in
+  <<[[Compile.parse_file()]] let is_ast_file>>
+  let ast =
+    try
+      <<[[Compile.parse_file()]] if is_ast_file>>
+      else begin
+        seek_in ic 0;
+        Location.input_name := inputfile;
+        parse_fun (Lexing.from_channel ic)
+      end
+    with x -> close_in ic; raise x
+  in
+  close_in ic;
+  ast
+@
+
+<<signature Parse.implementation>>=
+val implementation : Lexing.lexbuf -> Parsetree.structure
+@
+<<signature Parse.interface>>=
+val interface : Lexing.lexbuf -> Parsetree.signature
+@
+
+<<function Parse.implementation>>=
+let implementation = wrap Parser.implementation
+@
+<<function Parse.interface>>=
+let interface = wrap Parser.interface
+@
+
+
+<<function Parse.wrap>>=
+let wrap parsing_fun lexbuf =
+  try
+    let ast = parsing_fun Lexer.token lexbuf in
+    Parsing.clear_parser();
+    ast
+  with
+    | Parsing.Parse_error | Syntaxerr.Escape_error ->
+        let loc = { loc_start = Lexing.lexeme_start lexbuf;
+                    loc_end = Lexing.lexeme_end lexbuf } in
+        if !Location.input_name = "" 
+        then maybe_skip_phrase lexbuf;
+        raise (Syntaxerr.Error(Syntaxerr.Other loc))
+
+    | Lexer.Error(Lexer.Unterminated_comment, _, _) as err -> raise err
+    | Lexer.Error(Lexer.Unterminated_string, _, _) as err -> raise err
+    | Lexer.Error(_, _, _) as err ->
+        if !Location.input_name = "" 
+        then skip_phrase lexbuf;
+        raise err
+    | Syntaxerr.Error _ as err ->
+        if !Location.input_name = "" 
+        then maybe_skip_phrase lexbuf;
+        raise err
+@
+%todo: factorize and aspectize maybe_skip_phrase
+
+\section{The grammar entry points}
+
+<<Parser entry points types>>=
+%start implementation                   /* for implementation files */
+%type <Parsetree.structure> implementation
+%start interface                        /* for interface files */
+%type <Parsetree.signature> interface
+@
+
+
+<<entry points rules>>=
+implementation:
+    structure EOF                        { $1 }
+;
+interface:
+    signature EOF                        { List.rev $1 }
+;
+@
+
+
+
+\subsection{Structures ([[.ml]])}
 % the .ml
 % Implementation
 
@@ -1813,7 +1858,7 @@ module_expr:
 %less: legacy, could remove
 \fi
 
-\section{Signatures ([[.mli]])}
+\subsection{Signatures ([[.mli]])}
 % the .mli
 % Ininterface
 
@@ -2758,7 +2803,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 % reput 'type_expr' def from core DS chapter
 
 % This phase will build an environment, will load .cmi of other files
-% Will do naming and typing, interwinded thing.
+% Will do naming and typing; interwinded thing.
 % You can't do typing if you don't know precisely to which
 % entity an identifier refers to.
 
@@ -2769,7 +2814,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 % there will still be the implicit 'open pervasives', so
 % you need to resolve identifiers.
 
-% resolving? fully qualifying every idents?
+% fully qualifying every identifiers!
 
 \subsection{[[Ident]]}
 
@@ -2818,7 +2863,7 @@ let name i =
   i.name
 @
 
-% persistent??
+% persistent?? global??
 
 
 \subsection{[[Path]]}
@@ -2833,13 +2878,14 @@ let name i =
 
 type t =
     Pident of Ident.t
-  | Pdot of t * string * int
+  | Pdot of t *  string * int
 @
 % int? when multiple occurents of same name? like let x = ... in let x = ...?
 %  why not simply Pdot of t * Ident.t?
 %  the int is a 'pos' see prefix_idents, so is it compiler-oriented?
 %  to know some offset? for instance type in .cmi have no associated
-%  pos! it's using nopos!
+%  pos! it's using nopos! and you need that only for external
+%  entity, for local entity Ident.t is enough
 
 %ex: unit test?
 %let path_int = Pident ident_int,  not even Pervasives! higher than that
@@ -3835,13 +3881,13 @@ val signature: t -> signature -> signature
 let rec type_expr s = function
     Tvar{tvar_link = None} as ty -> ty
   | Tvar{tvar_link = Some ty} -> type_expr s ty
-  | Tconstr(p, []) -> Tconstr(type_path s p, [])
   | Tconstr(p, tl) -> Tconstr(type_path s p, List.map (type_expr s) tl)
   (* boilerplate mapper *)
   | Tarrow(t1, t2) -> Tarrow(type_expr s t1, type_expr s t2)
   | Ttuple tl -> Ttuple(List.map (type_expr s) tl)
 @
 % follow link!
+%old:  | Tconstr(p, []) -> Tconstr(type_path s p, [])
 
 <<function Subst.type_path>>=
 let type_path s = function
@@ -4141,14 +4187,14 @@ let rec repr = function
 % stores the end of the chain each time when can.
 % so further calls to repr with the same var will go faster.
 
-\subsection{Instantiation}
-% type scheme? see later too?
-
 \subsection{Generalization}
 % will see later
 
+\subsection{Instantiation}
+% type scheme? see later too?
 
 \section{Typing expressions}
+% and patterns?
 
 % string -> Ident.t -> Path.t
 % Longident.t -> Path.t
@@ -4165,9 +4211,11 @@ val type_expression:
 (* Typing of toplevel expressions *)
 
 let type_expression env sexp =
-  <<[[Typecode.type_expression()]] before type_exp>>
+  <<[[Typecore.type_expression()]] before type_exp>>
   let exp = type_exp env sexp in
-  <<[[Typecode.type_expression()]] after type_exp>>
+  <<[[Typecore.type_expression()]] after type_exp>>
+  <<[[Typecore.type_expression()]] after type_exp, generalize or not>>
+
   exp
 @
 
@@ -4229,8 +4277,9 @@ let newvar () =
       exp_loc = sexp.pexp_loc;
       exp_type = ty_res }
 @
+% will talk about instance_constructor later!
 
-% list has been desugard in constructor already
+%note: list has been desugard in constructor already.
 
 <<[[Typecore.type_exp()]] constructor case, sanity check>>=
 if List.length sargs <> constr.cstr_arity 
@@ -4298,6 +4347,7 @@ let unify_exp env exp expected_ty =
       exp_loc = sexp.pexp_loc;
       exp_type = ty }
 @
+% again will talk about instance_label later
 
 
 <<[[Typecore.type_exp()]] record case, sanity check duplicates and missing>>=
@@ -4381,7 +4431,9 @@ then raise(Error(sexp.pexp_loc, Label_missing));
       exp_loc = sexp.pexp_loc;
       exp_type = exp2.exp_type }
 @
-% how this is better than the default case of type_Expect?
+% how this is better than the default case of type_Expect
+% because it distributes type_expect! so the unify_exp 
+% will happen for sexp2 and the error message il be clearer
 
 
 <<function Typecore.type_statement>>=
@@ -4564,9 +4616,11 @@ let rec filter_arrow env t =
 % link with next section where type types ...
 
 \section{Typing [[let]]}
+
+% Def
+
 % complex, new_env again! like for For, because introduce new
 % entities
-
 <<[[Typecore.type_exp()]] match cases>>=
 | Pexp_let(rec_flag, spat_sexp_list, sbody) ->
     let (pat_exp_list, new_env) = type_let env rec_flag spat_sexp_list in
@@ -4576,7 +4630,6 @@ let rec filter_arrow env t =
       exp_type = body.exp_type }
 @
 
-% if allcode?
 <<[[Typecode.type_expect()]] match cases>>=
 | Pexp_let(rec_flag, spat_sexp_list, sbody) ->
     let (pat_exp_list, new_env) = type_let env rec_flag spat_sexp_list in
@@ -4586,9 +4639,14 @@ let rec filter_arrow env t =
       exp_type = body.exp_type }
 @
 % how this is better than the default case of type_Expect?
-% because distribute the expected type error message?
+% again because distribute the expected type error message!
+% instead of having the error at the let level, we will have it
+% at the body level
 
 
+% let x = e and y = f in ... [x=2; y=f]
+% where x can actually be a pattern and so be like let 1 = 1
+% so the type of the pattern must match the type of the expression
 <<function Typecode.type_let>>=
 (* Typing of let bindings *)
 
@@ -4611,6 +4669,7 @@ and type_let env rec_flag spat_sexp_list =
       spat_sexp_list pat_list in
   <<[[Typecode.type_let()]] sanity check partial patterns>>
   <<[[Typecode.type_let()]] after typing>>
+  <<[[Typecode.type_let()]] after typing, generalize or not>>
 
   (List.combine pat_list exp_list, new_env)
 @
@@ -4621,7 +4680,7 @@ List.iter2
   pat_list exp_list;
 @
 
-
+% Use
 
 <<[[Typecore.type_exp()]] match cases>>=
 |  Pexp_ident lid ->
@@ -4635,11 +4694,216 @@ List.iter2
     end
 @
 % instance!
+% have seen already instance_constructor, instance_label
+% will explain a bit more below
 
-\subsection{Type levels}
+\subsection{Type schemas and generalizations}
 
-% rational? use?
-% http://okmij.org/ftp/ML/generalization.html
+% see http://okmij.org/ftp/ML/generalization.html !
+
+% we want this code:
+%  let f x = x in 
+%  f 1, f "foo"
+% to work, but if we do the naive type inference,
+% f will have first type 'a -> 'a, but at the first call
+% to f 1, then 'a will be bound to an int, and we then will not
+% be able to apply it to foo. 
+% In the same way entities defined in a module as polymorphic should
+% be used in different context with different types!
+
+% To have polymorphism, we need each time we lookup for 'f' in the environment
+% to generate a fresh 'a -> 'a, and so to make the original type 'a -> 'a
+% a type "schema" that will generate fresh instances.
+% we want forall a. 'a -> 'a.
+% hence the call to instance instance decl.val_type for
+% the Ident case and the call to generalize below.
+
+% after typing, and also after end_def()
+<<[[Typecode.type_let()]] after typing, generalize or not>>=
+<<[[Typecode.type_let()]] generalization criteria action>>
+exp_list |> List.iter (fun exp -> 
+  generalize exp.exp_type);
+@
+
+% and after end_def() too
+<<[[Typecore.type_expression()]] after type_exp, generalize or not>>=
+if 
+  <<[[Typecore.type_expression()]] generalization criteria>>
+then generalize exp.exp_type;
+@
+
+
+<<signature Ctype.generalize>>=
+val generalize: type_expr -> unit
+        (* Generalize in-place the given type *)
+@
+
+
+<<function Ctype.generalize>>=
+(* Type generalization *)
+
+let rec generalize ty =
+  match repr ty with
+    Tvar v ->
+      if 
+        <<[[Ctype.generalize()]] generalization criteria>>
+      then v.tvar_level <- generic_level
+  (* boilerplate visitor *)
+  | Tarrow(t1, t2) ->
+      generalize t1; generalize t2
+  | Ttuple tl ->
+      List.iter generalize tl
+  | Tconstr(p, tl) ->
+      List.iter generalize tl
+@
+% why special [] case? List.iter will work ...
+%old:  | Tconstr(p, []) ->
+%      ()
+
+
+<<constant Ctype.generic_level>>=
+let generic_level = (-1)
+@
+% kinda forall, it's for type schema
+% a special mark in the type
+%todo: could have instead a tvar_is_type_schema? instead
+% of abusing tval_level for everything no? a bit
+% ugly to abuse int like that
+
+
+%"The current nesting level of lets" that's the comment in caml light
+<<constant Ctype.current_level>>=
+let current_level = ref 0
+@
+
+<<[[Types.type_variable]] other fields>>=
+mutable tvar_level: int;
+@
+
+<<[[Ctype.newvar()]] set other fields>>=
+tvar_level = !current_level;  
+@
+
+
+
+
+<<[[Predef.build_initial_env()]] set other fields in local newvar>>=
+tvar_level = -1 (*generic_level*); 
+@
+
+
+
+
+
+\subsection{Instanciations}
+
+% now that have the special generic_level mark,
+% when lookup for type of ident in env, can
+% create a fresh copy for all universally quantified
+% type variables!
+
+<<signature Ctype.instance>>=
+val instance: type_expr -> type_expr
+        (* Take an instance of a type scheme *)
+@
+
+<<signature Ctype.instance_constructor>>=
+val instance_constructor: constructor_description -> type_expr list * type_expr
+        (* Same, for a constructor *)
+@
+
+<<signature Ctype.instance_label>>=
+val instance_label: label_description -> type_expr * type_expr
+        (* Same, for a label *)
+@
+
+
+
+<<function Ctype.instance>>=
+let instance sch =
+  inst_subst := [];
+  let ty = copy sch in
+  inst_subst := [];
+  ty
+@
+
+<<constant Ctype.inst_subst>>=
+(* Taking instances of type schemes *)
+
+let inst_subst = ref ([] : (type_expr * type_expr) list)
+@
+
+
+<<function Ctype.copy>>=
+let rec copy ty =
+  match repr ty with
+    Tvar v as t ->
+      if v.tvar_level = generic_level then begin
+        try
+          List.assq t !inst_subst
+        with Not_found ->
+          let t' = newvar() in
+          inst_subst := (t, t') :: !inst_subst;
+          t'
+      end else t
+  (* boilerplate mapper *)
+  | Tarrow(t1, t2) ->
+      Tarrow(copy t1, copy t2)
+  | Ttuple tl ->
+      Ttuple(List.map copy tl)
+  | Tconstr(p, tl) ->
+      Tconstr(p, List.map copy tl)
+@
+%old:
+%  | Tconstr(p, []) as t ->
+%      t
+
+
+
+
+<<function Ctype.instance_constructor>>=
+let instance_constructor cstr =
+  inst_subst := [];
+  let ty_res = copy cstr.cstr_res in
+  let ty_args = List.map copy cstr.cstr_args in
+  inst_subst := [];
+  (ty_args, ty_res)
+@
+
+<<function Ctype.instance_label>>=
+let instance_label lbl =
+  inst_subst := [];
+  let ty_res = copy lbl.lbl_res in
+  let ty_arg = copy lbl.lbl_arg in
+  inst_subst := [];
+  (ty_arg, ty_res)
+@
+
+
+\subsection{Generalization criterias}
+% criterias!
+
+% complicated,
+% again see http://okmij.org/ftp/ML/generalization.html
+
+\subsubsection{Type levels}
+
+%   fun x -> let y = x in y
+% don't want infer 'a -> 'b, because hole
+% in the type system! someone writes this function and
+% no guarantee! (ok Obj.magic does that but we want to avoid it actually)
+
+
+<<[[Ctype.generalize()]] generalization criteria>>=
+v.tvar_level > !current_level
+@
+% means this type variable has been created when processing
+% the let, not before in the context of the let
+
+%"The current nesting level of lets" that's the comment in caml light
+%<<constant Ctype.current_level>>=
+%let current_level = ref 0
+%@
 
 <<[[Typecode.type_let()]] before typing>>=
 begin_def();
@@ -4647,24 +4911,6 @@ begin_def();
 
 <<[[Typecode.type_let()]] after typing>>=
 end_def();
-<<[[Typecode.type_let()]] after end_def, generalize or not>>
-@
-
-
-<<[[Typecode.type_expression()]] before type_exp>>=
-<<[[Typecode.type_expression()]] before begin_def, reset>>
-begin_def();
-@
-
-<<[[Typecode.type_expression()]] after type_exp>>=
-end_def();
-<<[[Typecode.type_expression()]] after end_def, generalize or not>>
-@
-
-
-%The current nesting level of lets? that's the comment in caml light
-<<constant Ctype.current_level>>=
-let current_level = ref 0
 @
 
 <<function Ctype.begin_def>>=
@@ -4676,73 +4922,112 @@ let begin_def () =
 let end_def () = 
   decr current_level
 @
-% why need that? just increment always, why need to decrement?
+% why need that? quite tricky
+% see http://okmij.org/ftp/ML/generalization.html !
 
 
-<<[[Types.type_variable]] other fields>>=
-mutable tvar_level: int;
+
+<<[[Typecore.type_expression()]] before type_exp>>=
+<<[[Typecore.type_expression()]] before begin_def, reset>>
+begin_def();
 @
-<<[[Ctype.newvar()]] set other fields>>=
-tvar_level = !current_level;  
+
+<<[[Typecore.type_expression()]] after type_exp>>=
+end_def();
 @
 
-
-
-
-
-<<constant Ctype.generic_level>>=
-let generic_level = (-1)
-@
-% ???
-% it's for type scheme?
-
-<<[[Predef.build_initial_env()]] set other fields in local newvar>>=
-tvar_level = -1 (*generic_level*); 
-@
 
 
 <<[[Ctype.occur()]] in Tvar case, adjust levels if needed>>=
 if v.tvar_level > tvar.tvar_level 
 then v.tvar_level <- tvar.tvar_level
 @
+% when test if v occurs in t, it's because we want to unify
+% v to t, and so v should get the minimum level of any
+% type variables in t
 
 
 
-
+<<[[Typecore.type_expression()]] before begin_def, reset>>=
+reset_def();
+Typetexp.reset_type_variables();
+@
+% need reset_def? should be fine no without?
 
 <<function Ctype.reset_def>>=
 let reset_def () = 
   current_level := 0
 @
 
-<<[[Typecode.type_expression()]] before begin_def, reset>>=
-reset_def();
-Typetexp.reset_type_variables();
+
+\subsubsection{Value restriction, [[is_nonexpansive()]]}
+
+<<[[Typecore.type_expression()]] generalization criteria>>=
+is_nonexpansive exp 
 @
 
-\subsection{Non expansive}
+% mv later? with the _a advanced typing issue?
 
-\subsection{Instanciation}
+<<function Typecore.is_nonexpansive>>=
+(* Generalization criterion for expressions *)
 
-\subsection{Generalization}
+let rec is_nonexpansive exp =
+  match exp.exp_desc with
+  | Texp_record lbl_exp_list ->
+      lbl_exp_list |> List.for_all (fun (lbl, exp) -> 
+        lbl.lbl_mut = Immutable & is_nonexpansive exp
+       )
+  | Texp_ident(_,_) -> true
+  | Texp_constant _ -> true
+  | Texp_let(rec_flag, pat_exp_list, body) ->
+      List.for_all (fun (pat, exp) -> is_nonexpansive exp) pat_exp_list &
+      is_nonexpansive body
+  | Texp_function _ -> true
+  | Texp_tuple el ->
+      List.for_all is_nonexpansive el
+  | Texp_construct(_, el) ->
+      List.for_all is_nonexpansive el
+              
+  | Texp_field(exp, lbl) -> is_nonexpansive exp
+  | Texp_array [] -> true
 
-<<[[Typecode.type_expression()]] after end_def, generalize or not>>=
-if is_nonexpansive exp 
-then generalize exp.exp_type;
+  | _ -> false
 @
+% immutable check! reference have a mutable field! that's
+% how you get side effects! 'a ref = { mutable x: 'a }
 
-<<[[Typecode.type_let()]] after end_def, generalize or not>>=
+
+<<[[Typecode.type_let()]] generalization criteria action>>=
 exp_list |> List.iter (fun exp -> 
   if not (is_nonexpansive exp) 
-  then make_nongen exp.exp_type
+  then Ctype.make_nongen exp.exp_type
 );
-exp_list |> List.iter (fun exp -> 
-  generalize exp.exp_type);
+@
+% nonexpansive means has not mutable, so not nonexpansive
+% means it has some mutable! and so we should not generalize!
+
+<<signature Ctype.make_nongen>>=
+val make_nongen: type_expr -> unit
+        (* Make non-generalizable the given type *)
 @
 
 
-
-
+<<function Ctype.make_nongen>>=
+let rec make_nongen ty =
+  match repr ty with
+    Tvar v ->
+      if v.tvar_level > !current_level 
+      then v.tvar_level <- !current_level
+  (* boilerplate visitor *)
+  | Tarrow(t1, t2) ->
+      make_nongen t1; make_nongen t2
+  | Ttuple tl ->
+      List.iter make_nongen tl
+  | Tconstr(p, tl) ->
+      List.iter make_nongen tl
+@
+%old:  | Tconstr(p, []) ->
+%      ()
 
 \section{Typing other elements}
 
@@ -5040,6 +5325,11 @@ let transl_value_decl env valdecl =
 
 \subsection{References, [['_a]]}
 % _a
+
+% because do not generalize! so the type stays
+% a 'a but not a forall.'a! so throughout the
+% whole file it will get more instantiated!
+% it will not be copy!
 
 \subsection{Exceptions, [[exn]]}
 
@@ -5523,6 +5813,8 @@ let type_format loc fmt =
     unify_exp env exp ty_expected;
     exp
 @
+
+\subsection{[[Obj.magic()]]}
 
 \subsection{Objects}
 
@@ -6290,6 +6582,12 @@ let to_file outchan unit_name code =
   output_binary_int outchan pos_compunit
 @
 
+<<signature Config.cmo_magic_number>>=
+val cmo_magic_number: string
+        (* Magic number for object bytecode files *)
+@
+
+
 
 <<function Emitcode.init>>=
 (* Initialization *)
@@ -6349,20 +6647,8 @@ let include_dirs = ref ([] : string list)(* -I *)
 @
 
 
-
-
-
-
-
-
-
-<<type Bytelink.link_action>>=
-type link_action =
-    Link_object of string * compilation_unit
-      (* Name of .cmo file and descriptor of the unit *)
-  | Link_archive of string * compilation_unit list
-      (* Name of .cma file and descriptors of the units to be linked. *)
-@
+% reput section on linking in the main() chapter
+% and the call to bytelink.link()
 
 \section{Basic linking}
 
@@ -6372,6 +6658,85 @@ type link_action =
 val link: string list -> unit
 @
 
+% main -> <>
+<<function Bytelink.link>>=
+(* Main entry point (build a custom runtime if needed) *)
+
+let link objfiles =
+  let objfiles = "stdlib.cma" :: (objfiles @ ["std_exit.cmo"]) in
+  if not !Clflags.custom_runtime 
+  then link_bytecode objfiles !Clflags.exec_name true
+  else 
+   <<[[Bytelink.link()]] if custom runtime>>
+@
+
+
+
+<<function Bytelink.link_bytecode>>=
+(* Create a bytecode executable file *)
+
+let link_bytecode objfiles exec_name copy_header =
+  let tolink = List.fold_right scan_file objfiles [] in
+  let outchan = open_out_gen [Open_wronly; Open_trunc; Open_creat; Open_binary]
+                             0o777 exec_name in
+  try
+    (* Copy the header *)
+    if copy_header then begin
+      try
+        let inchan = open_in_bin (find_in_path !load_path "camlheader") in
+        copy_file inchan outchan;
+        close_in inchan
+      with Not_found | Sys_error _ -> ()
+    end;
+
+    (* The bytecode *)
+    let pos1 = pos_out outchan in
+    Symtable.init();
+    Hashtbl.clear crc_interfaces;
+    let output_fun = output_string outchan
+    and currpos_fun () = pos_out outchan - pos1 in
+    tolink |> List.iter (link_file output_fun currpos_fun);
+
+    (* The final STOP instruction *)
+    output_byte outchan Opcodes.opSTOP;
+    output_byte outchan 0; output_byte outchan 0; output_byte outchan 0;
+
+    (* The names of all primitives *)
+    let pos2 = pos_out outchan in
+    Symtable.output_primitive_names outchan;
+
+    (* The table of global data *)
+    let pos3 = pos_out outchan in
+    output_value outchan (Symtable.initial_global_table());
+
+    (* The map of global identifiers *)
+    let pos4 = pos_out outchan in
+    Symtable.output_global_map outchan;
+
+    (* Debug info *)
+    let pos5 = pos_out outchan in
+    if !Clflags.debug then output_value outchan !debug_info;
+
+    (* The trailer *)
+    let pos6 = pos_out outchan in
+    output_binary_int outchan (pos2 - pos1);
+    output_binary_int outchan (pos3 - pos2);
+    output_binary_int outchan (pos4 - pos3);
+    output_binary_int outchan (pos5 - pos4);
+    output_binary_int outchan (pos6 - pos5);
+    output_string outchan exec_magic_number;
+    close_out outchan
+
+  with x ->
+    close_out outchan;
+    remove_file exec_name;
+    raise x
+@
+
+<<signature Config.exec_magic_number>>=
+val exec_magic_number: string
+        (* Magic number for bytecode executable files *)
+@
 
 
 
@@ -6447,6 +6812,11 @@ val create_archive: string list -> string -> unit
 %      blocks of relocatable bytecode
 %      content table = list of compilation units
 %*)
+
+<<signature Config.cma_magic_number>>=
+val cma_magic_number: string
+        (* Magic number for archive files *)
+@
 
 \section{Linking with C}
 
@@ -6580,6 +6950,40 @@ let custom_runtime = ref false          (* -custom *)
 "-custom", Arg.Set custom_runtime, " Link in custom mode";
 @
 
+
+<<[[Bytelink.link()]] if custom runtime>>=
+if not !Clflags.output_c_object then begin
+  let bytecode_name = Filename.temp_file "camlcode" "" in
+  let prim_name = Filename.temp_file "camlprim" ".c" in
+  try
+    link_bytecode objfiles bytecode_name false;
+    let poc = open_out prim_name in
+    Symtable.output_primitive_table poc;
+    close_out poc;
+    let exec_name = fix_exec_name !Clflags.exec_name in
+    if build_custom_runtime prim_name exec_name <> 0
+    then raise(Error Custom_runtime);
+    append_bytecode_and_cleanup bytecode_name exec_name prim_name
+  with x ->
+    remove_file bytecode_name;
+    remove_file prim_name;
+    raise x
+end else begin
+  let c_file =
+    Filename.chop_suffix !Clflags.object_name Config.ext_obj ^ ".c" in
+  if Sys.file_exists c_file then raise(Error(File_exists c_file));
+  try
+    link_bytecode_as_c objfiles c_file;
+    if Ccomp.compile_file_bytecode c_file <> 0
+    then raise(Error Custom_runtime);
+    remove_file c_file
+  with x ->
+    remove_file c_file;
+    remove_file !Clflags.object_name;
+    raise x
+end
+@
+
 <<function Bytelink.build_custom_runtime>>=
 let build_custom_runtime prim_name exec_name =
   let libname = "libcamlrun" ^ ext_lib in
@@ -6675,6 +7079,15 @@ let keep_asm_file = ref false           (* -S *)
 @
 
 
+<<signature Config.cmx_magic_number>>=
+val cmx_magic_number: string
+        (* Magic number for compilation unit descriptions *)
+@
+
+<<signature Config.cmxa_magic_number>>=
+val cmxa_magic_number: string
+        (* Magic number for libraries of compilation unit descriptions *)
+@
 
 \chapter{Debugging Support}
 
@@ -7134,6 +7547,45 @@ val for_position: string -> int -> string * int * int
            Third result is position of beginning of that line in [file]. *)
 @
 % in linenum.mll
+
+\section{AST files}
+% useful?
+
+%  let ast = parse_file inputfile Parse.implementation ast_impl_magic_number in
+%  let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
+
+<<signature Config.ast_impl_magic_number>>=
+val ast_impl_magic_number: string
+        (* Magic number for file holding an implementation syntax tree *)
+@
+<<signature Config.ast_intf_magic_number>>=
+val ast_intf_magic_number: string
+        (* Magic number for file holding an interface syntax tree *)
+@
+% ???
+
+<<[[Compile.parse_file()]] let is_ast_file>>=
+let is_ast_file =
+  try
+    let buffer = String.create (String.length ast_magic) in
+    really_input ic buffer 0 (String.length ast_magic);
+    if buffer = ast_magic then true
+    else if String.sub buffer 0 9 = String.sub ast_magic 0 9 then
+      raise Outdated_version
+    else false
+  with
+    Outdated_version ->
+      fatal_error "Ocaml and preprocessor have incompatible versions"
+  | _ -> false
+in
+@
+
+<<[[Compile.parse_file()]] if is_ast_file>>=
+if is_ast_file then begin
+  Location.input_name := input_value ic;
+  input_value ic
+end 
+@
 
 \section{Toplevel}
 

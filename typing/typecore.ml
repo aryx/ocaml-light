@@ -197,7 +197,11 @@ let type_pattern_list env spatl =
 
 let rec is_nonexpansive exp =
   match exp.exp_desc with
-    Texp_ident(_,_) -> true
+  | Texp_record lbl_exp_list ->
+      lbl_exp_list |> List.for_all (fun (lbl, exp) -> 
+        lbl.lbl_mut = Immutable & is_nonexpansive exp
+       )
+  | Texp_ident(_,_) -> true
   | Texp_constant _ -> true
   | Texp_let(rec_flag, pat_exp_list, body) ->
       List.for_all (fun (pat, exp) -> is_nonexpansive exp) pat_exp_list &
@@ -207,11 +211,10 @@ let rec is_nonexpansive exp =
       List.for_all is_nonexpansive el
   | Texp_construct(_, el) ->
       List.for_all is_nonexpansive el
-  | Texp_record lbl_exp_list ->
-      List.for_all (fun (lbl, exp) -> lbl.lbl_mut = Immutable & is_nonexpansive exp)
-              lbl_exp_list
+              
   | Texp_field(exp, lbl) -> is_nonexpansive exp
   | Texp_array [] -> true
+
   | _ -> false
 (*e: function Typecore.is_nonexpansive *)
 
@@ -615,15 +618,17 @@ and type_let env rec_flag spat_sexp_list =
   (*e: [[Typecode.type_let()]] sanity check partial patterns *)
   (*s: [[Typecode.type_let()]] after typing *)
   end_def();
-  (*s: [[Typecode.type_let()]] after end_def, generalize or not *)
+  (*e: [[Typecode.type_let()]] after typing *)
+  (*s: [[Typecode.type_let()]] after typing, generalize or not *)
+  (*s: [[Typecode.type_let()]] generalization criteria action *)
   exp_list |> List.iter (fun exp -> 
     if not (is_nonexpansive exp) 
-    then make_nongen exp.exp_type
+    then Ctype.make_nongen exp.exp_type
   );
+  (*e: [[Typecode.type_let()]] generalization criteria action *)
   exp_list |> List.iter (fun exp -> 
     generalize exp.exp_type);
-  (*e: [[Typecode.type_let()]] after end_def, generalize or not *)
-  (*e: [[Typecode.type_let()]] after typing *)
+  (*e: [[Typecode.type_let()]] after typing, generalize or not *)
 
   (List.combine pat_list exp_list, new_env)
 (*e: function Typecode.type_let *)
@@ -641,21 +646,25 @@ let type_binding env rec_flag spat_sexp_list =
 (* Typing of toplevel expressions *)
 
 let type_expression env sexp =
-  (*s: [[Typecode.type_expression()]] before type_exp *)
-  (*s: [[Typecode.type_expression()]] before begin_def, reset *)
+  (*s: [[Typecore.type_expression()]] before type_exp *)
+  (*s: [[Typecore.type_expression()]] before begin_def, reset *)
   reset_def();
   Typetexp.reset_type_variables();
-  (*e: [[Typecode.type_expression()]] before begin_def, reset *)
+  (*e: [[Typecore.type_expression()]] before begin_def, reset *)
   begin_def();
-  (*e: [[Typecode.type_expression()]] before type_exp *)
+  (*e: [[Typecore.type_expression()]] before type_exp *)
   let exp = type_exp env sexp in
-  (*s: [[Typecode.type_expression()]] after type_exp *)
+  (*s: [[Typecore.type_expression()]] after type_exp *)
   end_def();
-  (*s: [[Typecode.type_expression()]] after end_def, generalize or not *)
-  if is_nonexpansive exp 
+  (*e: [[Typecore.type_expression()]] after type_exp *)
+  (*s: [[Typecore.type_expression()]] after type_exp, generalize or not *)
+  if 
+    (*s: [[Typecore.type_expression()]] generalization criteria *)
+    is_nonexpansive exp 
+    (*e: [[Typecore.type_expression()]] generalization criteria *)
   then generalize exp.exp_type;
-  (*e: [[Typecode.type_expression()]] after end_def, generalize or not *)
-  (*e: [[Typecode.type_expression()]] after type_exp *)
+  (*e: [[Typecore.type_expression()]] after type_exp, generalize or not *)
+
   exp
 (*e: function Typecore.type_expression *)
 
