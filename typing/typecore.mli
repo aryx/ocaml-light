@@ -23,6 +23,7 @@ val type_binding:
           (Parsetree.pattern * Parsetree.expression) list -> 
             (Typedtree.pattern * Typedtree.expression) list * Env.t
 (*e: signature Typecore.type_binding *)
+
 (*s: signature Typecore.type_expression *)
 val type_expression:
         Env.t -> Parsetree.expression -> Typedtree.expression

@@ -121,6 +121,7 @@ let simplify_structure_coercion cc =
     Tcoerce_structure cc
 (*e: function Includemod.simplify_structure_coercion *)
 
+(*s: function Includemod.modtypes *)
 (* Inclusion between module types. 
    Return the restriction that transforms a value of the smaller type
    into a value of the bigger type. *)
@@ -146,7 +147,9 @@ and try_modtypes env mty1 mty2 =
       signatures env sig1 sig2
   | (_, _) ->
       raise Dont_match
+(*e: function Includemod.modtypes *)
 
+(*s: function Includemod.signatures *)
 (* Inclusion between signatures *)
 
 and signatures env sig1 sig2 =
@@ -192,19 +195,22 @@ and signatures env sig1 sig2 =
         with Not_found ->
           pair_components paired (Missing_field id2 :: unpaired) rem
         end in
+
   (* Do the pairing and checking, and return the final coercion *)
   simplify_structure_coercion(pair_components [] [] sig2)
+(*e: function Includemod.signatures *)
 
+(*s: function Includemod.signature_components *)
 (* Inclusion between signature components *)
 
 and signature_components env = function
     [] -> []
   | (Tsig_value(id1, valdecl1), Tsig_value(id2, valdecl2), pos) :: rem ->
       let cc = value_descriptions env id1 valdecl1 valdecl2 in
-      begin match valdecl2.val_prim with
-        None -> (pos, cc) :: signature_components env rem
+      (match valdecl2.val_prim with
+      | None -> (pos, cc) :: signature_components env rem
       | Some p -> signature_components env rem
-      end
+      )
   | (Tsig_type(id1, tydecl1), Tsig_type(id2, tydecl2), pos) :: rem ->
       type_declarations env id1 tydecl1 tydecl2;
       signature_components env rem
@@ -212,11 +218,13 @@ and signature_components env = function
     :: rem ->
       exception_declarations env id1 excdecl1 excdecl2;
       (pos, Tcoerce_none) :: signature_components env rem
+
   | (Tsig_module(id1, mty1), Tsig_module(id2, mty2), pos) :: rem ->
       let cc = modtypes env mty1 mty2 in
       (pos, cc) :: signature_components env rem
   | _ ->
       fatal_error "Includemod.signature_components"
+(*e: function Includemod.signature_components *)
 
 (*s: function Includemod.check_modtype_inclusion *)
 (* Simplified inclusion check between module types *)

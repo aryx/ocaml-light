@@ -31,10 +31,6 @@ val unique_name: t -> string
 (*s: signature Ident.persistent *)
 val persistent: t -> bool
 (*e: signature Ident.persistent *)
-(*s: signature Ident.equal *)
-val equal: t -> t -> bool
-        (* Compare identifiers by name. *)      
-(*e: signature Ident.equal *)
 (*s: signature Ident.same *)
 val same: t -> t -> bool
         (* Compare identifiers by binding location.

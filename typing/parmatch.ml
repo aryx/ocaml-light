@@ -254,6 +254,7 @@ let rec initial_matrix = function
        else [pat] :: initial_matrix rem
 (*e: function Parmatch.initial_matrix *)
 
+(*s: function Parmatch.le_pat *)
 let rec le_pat p q =
   match (p.pat_desc, q.pat_desc) with
     (Tpat_var _ | Tpat_any), _ -> true
@@ -274,6 +275,7 @@ and le_pats ps qs =
   match ps,qs with
     p::ps, q::qs -> le_pat p q & le_pats ps qs
   | _, _         -> true
+(*e: function Parmatch.le_pat *)
 
 (*s: function Parmatch.get_mins *)
 let get_mins ps =

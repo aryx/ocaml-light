@@ -197,6 +197,7 @@ and find_type =
 
 (* Lookup by name *)
 
+(*s: function Env.lookup_module_descr *)
 let rec lookup_module_descr lid env =
   match lid with
     Lident s ->
@@ -207,12 +208,14 @@ let rec lookup_module_descr lid env =
       end
   | Ldot(l, s) ->
       let (p, descr) = lookup_module_descr l env in
-      begin match descr with
+      (match descr with
        Structure_comps c ->
       let (descr, pos) = Tbl.find s c.comp_components in
           (Pdot(p, s, pos), descr)
-      end
+      )
+(*e: function Env.lookup_module_descr *)
 
+(*s: function Env.lookup_module *)
 and lookup_module lid env =
   match lid with
     Lident s ->
@@ -229,6 +232,8 @@ and lookup_module lid env =
           let (data, pos) = Tbl.find s c.comp_modules in
           (Pdot(p, s, pos), data)
       end
+(*e: function Env.lookup_module *)
+
 
 (*s: function Env.lookup *)
 let lookup proj1 proj2 lid env =
@@ -249,11 +254,11 @@ let lookup_simple proj1 proj2 lid env =
     Lident s ->
       Ident.find_name s (proj1 env)
   | Ldot(l, s) ->
-      begin match lookup_module_descr l env with
+      (match lookup_module_descr l env with
        (p, Structure_comps c) ->
       let (data, pos) = Tbl.find s (proj2 c) in
-          data
-      end
+      data
+      )
 (*e: function Env.lookup_simple *)
 
 (*s: function Env.lookup_value *)
@@ -341,6 +346,7 @@ let rec prefix_idents root pos sub = function
 
 (* Compute structure descriptions *)
 
+(*s: function Env.components_of_module *)
 let rec components_of_module env sub path mty =
   match scrape_modtype mty env with
     Tmty_signature sg ->
@@ -397,6 +403,7 @@ let rec components_of_module env sub path mty =
           comp_labels = Tbl.empty; comp_types = Tbl.empty;
           comp_modules = Tbl.empty;
           comp_components = Tbl.empty }
+(*e: function Env.components_of_module *)
 
 (* Insertion of bindings by identifier + path *)
 
@@ -465,14 +472,6 @@ and store_components id path comps env =
   }
 (*e: function Env.store_components *)
 
-
-(*s: constant Env.funappl_memo *)
-(* Memoized function to compute the components of a functor application
-   in a path. *)
-
-let funappl_memo =
-  (Hashtbl.create 17 : (Path.t, module_components) Hashtbl.t)
-(*e: constant Env.funappl_memo *)
 
 (* Insertion of bindings by identifier *)
 
@@ -578,7 +577,8 @@ let save_signature sg modname filename =
       ps_sig = sg;
       ps_comps =
         components_of_module empty Subst.identity
-            (Pident(Ident.create_persistent modname)) (Tmty_signature sg) } in
+            (Pident(Ident.create_persistent modname)) (Tmty_signature sg) } 
+  in
   let oc = open_out_bin filename in
   output_string oc cmi_magic_number;
   output_value oc ps;
