@@ -227,8 +227,4 @@ let print_tbl print_elt tbl =
   close_box()
 (*e: function Ident.print_tbl *)
 
-
-(*s: function Ident.current_time *)
-let current_time _ = 1
-(*e: function Ident.current_time *)
 (*e: ./typing/ident.ml *)

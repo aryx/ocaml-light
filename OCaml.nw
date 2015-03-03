@@ -29,7 +29,8 @@
 % - TODO how a gc works
 % - TODO how values are represented at runtime, the Obj module
 % - TODO how compiler backends work (register, liveness, etc)
-% - SEMI how type inference works in caml itself, monomorphic limitations?
+% - SEMI how type inference works in caml itself,
+%        value restriction, type schema, generalization, instantiation
 
 %history LP-ization:
 % - skeleton, mostly copy paste of Template.nw skeleton
@@ -2800,7 +2801,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 \chapter{Typing}
 % Naming and typing
 
-% reput 'type_expr' def from core DS chapter
+% reput 'type_expr' def from core DS chapter?
 
 % This phase will build an environment, will load .cmi of other files
 % Will do naming and typing; interwinded thing.
@@ -2842,6 +2843,7 @@ val create: string -> t
 (* A stamp of 0 denotes a persistent identifier *)
 let currentstamp = ref 0
 @
+% will see later that a persistent identifier is
 <<function Ident.create>>=
 let create s =
   incr currentstamp;
@@ -3359,8 +3361,7 @@ let parse_declaration arity decl =
 
 
 \section{The (typed, named) symbol table}
-% The typed, resolved symbol table
-%, [[Env.t]]
+% The typed, resolved symbol table [[Env.t]]
 
 \subsection{[[Env.t]]}
 
@@ -3619,6 +3620,8 @@ and store_components id path comps env =
 \subsubsection{By [[Ident]]}
 % (* Insertion by identifier *)
 
+% why need that too? not enough by Ident and Path?
+
 <<signature Env.add_value>>=
 val add_value: Ident.t -> value_description -> t -> t
 @
@@ -3646,8 +3649,10 @@ and add_module id mty env =
 
 
 \subsubsection{By name}
-
 % (* Insertion by name *)
+
+% why need that too? not enough by Ident and Path?
+
 
 % Typecore.type_exp (case For, which introduces a local) -> <>
 <<signature Env.enter_value>>=
@@ -3668,6 +3673,7 @@ let enter store_fun name data env =
   let id = Ident.create name in 
   (id, store_fun id (Pident id) data env)
 @
+% ???
 
 <<functions Env.enter_xxx>>=
 let enter_value     = enter store_value
@@ -3701,12 +3707,12 @@ let find proj1 proj2 path env =
           data
       )
 @
+% will see find_module_descr later
 
 <<function Env.find_value>>=
 let find_value = 
   find (fun env -> env.values) (fun sc -> sc.comp_values)
 @
-
 <<function Env.find_type>>=
 and find_type = 
   find (fun env -> env.types) (fun sc -> sc.comp_types)
@@ -3714,6 +3720,7 @@ and find_type =
 
 
 \subsubsection{By [[Longident]]}
+% why need that? access by path not enough?
 
 % by Longident
 
@@ -3729,6 +3736,16 @@ val lookup_module: Longident.t -> t -> Path.t * Types.module_type
 % rename lookup_module_type?
 
 
+<<function Env.lookup_value>>=
+let lookup_value =
+  lookup (fun env -> env.values) (fun sc -> sc.comp_values)
+@
+<<function Env.lookup_type>>=
+and lookup_type =
+  lookup (fun env -> env.types) (fun sc -> sc.comp_types)
+@
+
+
 <<function Env.lookup>>=
 let lookup proj1 proj2 lid env =
   match lid with
@@ -3741,16 +3758,10 @@ let lookup proj1 proj2 lid env =
            (Pdot(p, s, pos), data)
       )
 @
+% will see lookup_module_descr later
 
 
-<<function Env.lookup_value>>=
-let lookup_value =
-  lookup (fun env -> env.values) (fun sc -> sc.comp_values)
-@
-<<function Env.lookup_type>>=
-and lookup_type =
-  lookup (fun env -> env.types) (fun sc -> sc.comp_types)
-@
+
 
 
 <<signature Env.lookup_constructor>>=
@@ -3760,7 +3771,14 @@ val lookup_constructor: Longident.t -> t -> Types.constructor_description
 val lookup_label: Longident.t -> t -> Types.label_description
 @
 
-
+<<function Env.lookup_constructor>>=
+and lookup_constructor =
+  lookup_simple (fun env -> env.constrs) (fun sc -> sc.comp_constrs)
+@
+<<function Env.lookup_label>>=
+and lookup_label =
+  lookup_simple (fun env -> env.labels) (fun sc -> sc.comp_labels)
+@
 
 <<function Env.lookup_simple>>=
 let lookup_simple proj1 proj2 lid env =
@@ -3773,15 +3791,6 @@ let lookup_simple proj1 proj2 lid env =
       let (data, pos) = Tbl.find s (proj2 c) in
           data
       end
-@
-
-<<function Env.lookup_constructor>>=
-and lookup_constructor =
-  lookup_simple (fun env -> env.constrs) (fun sc -> sc.comp_constrs)
-@
-<<function Env.lookup_label>>=
-and lookup_label =
-  lookup_simple (fun env -> env.labels) (fun sc -> sc.comp_labels)
 @
 
 
@@ -3961,21 +3970,64 @@ and signature_item s = function
 
 \section{Reading typed [[.cmi]] interface files}
 
-<<signature Env.read_signature>>=
-(* Read, save a signature to/from a file *)
 
-val read_signature: string -> string -> Types.signature * Digest.t
-        (* Arguments: module name, file name.
-           Results: signature, CRC. *)
+% Env.find -> <>
+<<function Env.find_module_descr>>=
+(* Lookup by identifier *)
+
+let rec find_module_descr path env =
+  match path with
+    Pident id ->
+      begin try
+        let (_p, desc) = Ident.find_same id env.components in
+        desc
+      with Not_found ->
+        if Ident.persistent id
+        then (find_pers_struct (Ident.name id)).ps_comps
+        else raise Not_found
+      end
+  | Pdot(p, s, pos) ->
+      begin match find_module_descr p env with
+       Structure_comps c ->
+          let (descr, pos) = Tbl.find s c.comp_components in
+          descr
+      end
 @
 
-<<function Env.read_signature>>=
-(* Read a signature from a file *)
+% X.Y.z -> Pdot(Pdot(X, "Y", 0), "z", 42)
 
-let read_signature modname filename =
-  let (ps, crc) = read_pers_struct modname filename in 
-  (ps.ps_sig, crc)
+\subsection{Persistent identifiers}
+
+% toplevel modules e.g. List.map 
+% are not in the initial environment. One can
+% add them via open, but it's not the only way, one
+% can also qualify in which case the signature is loaded.
+
+% toplevel identifiers refering to files are called
+% persistent identifiers!
+
+<<signature Ident.persistent>>=
+val persistent: t -> bool
 @
+<<function Ident.persistent>>=
+let persistent i = 
+  (i.stamp = 0)
+@
+%todo: ugly again, to abuse ints for everything
+% why not Local of int | Persistent | Global ... ?
+% also sometimes stamp = -1 for some special value again.
+% ugly all those int abuse
+
+% ??? -> <>
+<<signature Ident.create_persistent>>=
+val create_persistent: string -> t
+@
+<<function Ident.create_persistent>>=
+let create_persistent s =
+  { name = s; stamp = 0; global = true }
+@
+
+\subsection{Persistent structures}
 
 <<type Env.pers_struct>>=
 (* Persistent structure descriptions *)
@@ -3990,6 +4042,56 @@ type pers_struct =
 % No! because for separate compilation we need to know not just the type
 %  of an external entity but also possibly its offset, its shape, etc.
 
+
+
+
+% memoization
+<<constant Env.persistent_structures>>=
+let persistent_structures =
+  (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
+@
+% string is toplevel modname (which should lead to a unique file.cmi)
+
+% opti, memoize
+% less: could rewrite with Common.memoize or something?
+% Env.find -> Env.find_module_descr -> <>
+<<function Env.find_pers_struct>>=
+let find_pers_struct name =
+  try
+    Hashtbl.find persistent_structures name
+  with Not_found ->
+    let (ps, crc) =
+      read_pers_struct name
+        (find_in_path !load_path (String.lowercase name ^ ".cmi")) in
+    Hashtbl.add persistent_structures name ps;
+    <<[[Env.find_pers_struct()]] hook when read Name.cmi and its crc>>
+    ps
+@
+
+
+
+
+
+<<signature Env.read_signature>>=
+(* Read, save a signature to/from a file *)
+
+val read_signature: string -> string -> Types.signature * Digest.t
+        (* Arguments: module name, file name.
+           Results: signature, CRC. *)
+@
+% Compile.implementation | -> <>
+<<function Env.read_signature>>=
+(* Read a signature from a file *)
+
+let read_signature modname filename =
+  let (ps, crc) = read_pers_struct modname filename in 
+  (ps.ps_sig, crc)
+@
+
+
+\subsection{[[Env.read_pers_struct()]]}
+
+% find_pers_struct -> <>
 <<function Env.read_pers_struct>>=
 let read_pers_struct modname filename =
   let ic = open_in_bin filename in
@@ -4012,6 +4114,8 @@ let read_pers_struct modname filename =
     close_in ic;
     raise(Error(Corrupted_interface(filename)))
 @
+% marshall! ocaml power! factorize lots of code using Marshall.
+% no read reader/writer like in 5a/5c/5l
 
 <<signature Config.cmi_magic_number>>=
 val cmi_magic_number: string
@@ -4020,27 +4124,6 @@ val cmi_magic_number: string
 
 
 
-% memoization
-<<constant Env.persistent_structures>>=
-let persistent_structures =
-  (Hashtbl.create 17 : (string, pers_struct) Hashtbl.t)
-@
-% string is toplevel modname (which should lead to a unique file.cmi)
-
-% opti, memoize
-% less: could rewrite with Common.memoize or something?
-<<function Env.find_pers_struct>>=
-let find_pers_struct name =
-  try
-    Hashtbl.find persistent_structures name
-  with Not_found ->
-    let (ps, crc) =
-      read_pers_struct name
-        (find_in_path !load_path (String.lowercase name ^ ".cmi")) in
-    Hashtbl.add persistent_structures name ps;
-    <<[[Env.find_pers_struct()]] hook when read Name.cmi and its crc>>
-    ps
-@
 
 
 
@@ -4186,6 +4269,10 @@ let rec repr = function
 @
 % stores the end of the chain each time when can.
 % so further calls to repr with the same var will go faster.
+
+% so must take care to use Ctype.repr each time you want
+% to pattern match on a type! to follow the tvar if
+% it has been unified already!
 
 \subsection{Generalization}
 % will see later
@@ -4697,7 +4784,10 @@ List.iter2
 % have seen already instance_constructor, instance_label
 % will explain a bit more below
 
-\subsection{Type schemas and generalizations}
+
+
+
+\subsection{Generalizations and type schemas}
 
 % see http://okmij.org/ftp/ML/generalization.html !
 
@@ -4790,7 +4880,8 @@ tvar_level = !current_level;
 <<[[Predef.build_initial_env()]] set other fields in local newvar>>=
 tvar_level = -1 (*generic_level*); 
 @
-
+% builtin types like 'a list, are of course generic! want generalization
+% for them
 
 
 
@@ -4854,6 +4945,7 @@ let rec copy ty =
   | Tconstr(p, tl) ->
       Tconstr(p, List.map copy tl)
 @
+% newvar() call! fresh new var!
 %old:
 %  | Tconstr(p, []) as t ->
 %      t
@@ -4893,6 +4985,8 @@ let instance_label lbl =
 % in the type system! someone writes this function and
 % no guarantee! (ok Obj.magic does that but we want to avoid it actually)
 
+% see http://okmij.org/ftp/ML/generalization.html for full 
+% explanations, it's subtle.
 
 <<[[Ctype.generalize()]] generalization criteria>>=
 v.tvar_level > !current_level
@@ -4960,7 +5054,30 @@ let reset_def () =
 @
 
 
+
+<<signature Typecore.type_binding>>=
+val type_binding:
+        Env.t -> rec_flag ->
+          (Parsetree.pattern * Parsetree.expression) list -> 
+            (Typedtree.pattern * Typedtree.expression) list * Env.t
+@
+
+<<function Typecore.type_binding>>=
+(* Typing of toplevel bindings *)
+
+let type_binding env rec_flag spat_sexp_list =
+  reset_def();
+  Typetexp.reset_type_variables();
+  type_let env rec_flag spat_sexp_list
+@
+
+
 \subsubsection{Value restriction, [[is_nonexpansive()]]}
+
+% again see http://okmij.org/ftp/ML/generalization.html !
+% too subtle to explain here. Type theory! ensure
+% soundness in the presence of side effects.
+% see thesis of Leroy?
 
 <<[[Typecore.type_expression()]] generalization criteria>>=
 is_nonexpansive exp 
@@ -5010,7 +5127,10 @@ exp_list |> List.iter (fun exp ->
 val make_nongen: type_expr -> unit
         (* Make non-generalizable the given type *)
 @
-
+% why need that? can't just precondition the call to generalize
+% with is_nonexpansive instead of transforming the level
+% so that the call to generalize later will fail?
+% need to change the level? so faster at the upper level?
 
 <<function Ctype.make_nongen>>=
 let rec make_nongen ty =
@@ -5030,16 +5150,6 @@ let rec make_nongen ty =
 %      ()
 
 \section{Typing other elements}
-
-
-% the most complex I guess
-<<signature Typecore.type_binding>>=
-val type_binding:
-        Env.t -> rec_flag ->
-          (Parsetree.pattern * Parsetree.expression) list -> 
-            (Typedtree.pattern * Typedtree.expression) list * Env.t
-@
-
 
 \subsection{Typing type expressions}
 % this is mostly to build the environment that will then
@@ -5816,6 +5926,12 @@ let type_format loc fmt =
 
 \subsection{[[Obj.magic()]]}
 
+\subsection{Module types and functors}
+
+% things got more complicated also with functors ...
+
+
+
 \subsection{Objects}
 
 % things got so much more complicated with objects ...
@@ -5825,9 +5941,6 @@ let type_format loc fmt =
 % there was
 %  'constraints' in type declarations
 
-\subsection{Module types and functors}
-
-% things got more complicated also with functors ...
 
 
 %\subsection{Type any}
@@ -5873,6 +5986,20 @@ let type_format loc fmt =
 %includemod.ml
 
 %includecore.ml
+
+
+<<signature Env.check_modtype_inclusion>>=
+(* Forward declaration to break mutual recursion with includemod. *)
+
+val check_modtype_inclusion: (t -> module_type -> module_type -> unit) ref
+@
+<<constant Env.check_modtype_inclusion>>=
+let check_modtype_inclusion =
+  (* to be filled with includemod.check_modtype_inclusion *)
+  ref ((fun env mty1 mty2 -> fatal_error "Env.include_modtypes") :
+       t -> module_type -> module_type -> unit)
+@
+
 
 \section{Partial pattern matches (exhaustive check)}
 % parmatch.ml

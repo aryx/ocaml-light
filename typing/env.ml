@@ -156,8 +156,8 @@ let rec find_module_descr path env =
   match path with
     Pident id ->
       begin try
-        let (p, desc) = Ident.find_same id env.components
-        in desc
+        let (_p, desc) = Ident.find_same id env.components in
+        desc
       with Not_found ->
         if Ident.persistent id
         then (find_pers_struct (Ident.name id)).ps_comps
