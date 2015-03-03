@@ -242,7 +242,9 @@ let rec is_guarded = function
 (*s: constant Lambda.transl_path *)
 let rec transl_path = function
     Pident id ->
-      if Ident.global id then Lprim(Pgetglobal id, []) else Lvar id
+      if Ident.global id 
+      then Lprim(Pgetglobal id, []) 
+      else Lvar id
   | Pdot(p, s, pos) ->
       Lprim(Pfield pos, [transl_path p])
 (*e: constant Lambda.transl_path *)

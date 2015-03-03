@@ -13,7 +13,7 @@
 
 %thx to LP, changed for the better a few things:
 % - found deadcode in ocaml itself :) 
-%   (all.ml, codegen.ml, a few functions)
+%   (all.ml, codegen.ml, a few functions, Ident.equal)
 % 
 
 %thx to codemap/codegraph/scheck:
@@ -2833,7 +2833,8 @@ type t = {
   <<[[Ident.t]] other fields>>
 }
 @
-% what global is for?
+% what global is for? it's compiler semantic info, for
+% ident that are to be retrieved via Kgetglobal
 
 % for builtins, toplevel things, local let, everything -> <>
 <<signature Ident.create>>=
@@ -3120,13 +3121,6 @@ and structure_item =
 %less: why keep str_open info in typed tree? everything is resolved
 % anyway
 
-<<type Typedtree.module_coercion>>=
-and module_coercion =
-    Tcoerce_none
-  | Tcoerce_structure of (int * module_coercion) list
-  | Tcoerce_primitive of Primitive.description
-@
-%todo: delete?
 
 \section{Builtins}
 
@@ -3591,6 +3585,29 @@ and store_type id path info env =
 @
 
 
+<<function Env.constructors_of_type>>=
+(* Compute constructor descriptions *)
+
+let constructors_of_type ty_path decl =
+  match decl.type_kind with
+    Type_variant cstrs ->
+      Datarepr.constructor_descrs (Tconstr(ty_path, decl.type_params)) cstrs
+  | _ -> []
+@
+% Datarep.xxx adds more semantic info to it, but more compiler oriented,
+% so we will see it later
+
+<<function Env.labels_of_type>>=
+(* Compute label descriptions *)
+
+let labels_of_type ty_path decl =
+  match decl.type_kind with
+    Type_record labels ->
+      Datarepr.label_descrs (Tconstr(ty_path, decl.type_params)) labels
+  | _ -> []
+@
+
+
 <<function Env.store_module>>=
 and store_module id path mty env =
   { modules = Ident.add id (path, mty) env.modules;
@@ -3616,6 +3633,85 @@ and store_components id path comps env =
     modules = env.modules;
   }
 @
+
+
+
+<<function Env.components_of_module>>=
+let rec components_of_module env sub path mty =
+  match scrape_modtype mty env with
+    Tmty_signature sg ->
+      let c =
+        { comp_values = Tbl.empty; comp_constrs = Tbl.empty;
+          comp_labels = Tbl.empty; comp_types = Tbl.empty;
+          comp_modules = Tbl.empty; 
+          comp_components = Tbl.empty } in
+      let (pl, sub) = prefix_idents path 0 sub sg in
+      let env = ref env in
+      let pos = ref 0 in
+      List.iter2 (fun item path ->
+        match item with
+          Tsig_value(id, decl) ->
+            let decl' = Subst.value_description sub decl in
+            c.comp_values <-
+              Tbl.add (Ident.name id) (decl', !pos) c.comp_values;
+            begin match decl.val_prim with
+              None -> incr pos | Some _ -> ()
+            end
+        | Tsig_type(id, decl) ->
+            let decl' = Subst.type_declaration sub decl in
+            c.comp_types <-
+              Tbl.add (Ident.name id) (decl', nopos) c.comp_types;
+            List.iter
+              (fun (name, descr) ->
+                c.comp_constrs <- Tbl.add name (descr, nopos) c.comp_constrs)
+              (constructors_of_type path decl');
+            List.iter
+              (fun (name, descr) ->
+                c.comp_labels <- Tbl.add name (descr, nopos) c.comp_labels)
+              (labels_of_type path decl')
+        | Tsig_exception(id, decl) ->
+            let decl' = Subst.exception_declaration sub decl in
+            let cstr = Datarepr.exception_descr path decl' in
+            c.comp_constrs <-
+              Tbl.add (Ident.name id) (cstr, !pos) c.comp_constrs;
+            incr pos
+        | Tsig_module(id, mty) ->
+            let mty' = Subst.modtype sub mty in
+            c.comp_modules <-
+              Tbl.add (Ident.name id) (mty', !pos) c.comp_modules;
+            let comps = components_of_module !env sub path mty in
+            c.comp_components <-
+              Tbl.add (Ident.name id) (comps, !pos) c.comp_components;
+            env := store_components id path comps !env;
+            incr pos
+        )
+        sg pl;
+    Structure_comps c
+  | Tmty_ident p ->
+       Structure_comps {
+         comp_values = Tbl.empty; comp_constrs = Tbl.empty;
+          comp_labels = Tbl.empty; comp_types = Tbl.empty;
+          comp_modules = Tbl.empty;
+          comp_components = Tbl.empty }
+@
+
+<<function Env.scrape_modtype>>=
+(* Scrape a module type *)
+
+let rec scrape_modtype mty env =
+  match mty with
+    Tmty_ident path ->
+      failwith "Env.scrape_modtype:TODO"
+(*
+      begin match find_modtype path env with
+          Tmodtype_manifest mty -> scrape_modtype mty env
+        | Tmodtype_abstract -> mty
+      end
+*)
+  | _ -> mty
+@
+% dead?
+
 
 \subsubsection{By [[Ident]]}
 % (* Insertion by identifier *)
@@ -3684,9 +3780,115 @@ and enter_module    = enter store_module
 
 \subsection{Accessing the environment}
 
-\subsubsection{By [[Path]]}
+\subsubsection{By [[Longident]]}
 
-% by Path
+% this is used as we process the AST. The AST contains
+% Longident, and when we see Foo.x, we need
+% to lookup Foo and then its x component. 
+% Foo could be a module in the file, or a "persistent" external
+% module. In any case we want to return the resolved path of
+% this entity (e.g. Foo.x or Current.Foo.x)
+
+% Typecore.type_exp -> <>, when typecheck Pexp_ident, very important!
+<<signature Env.lookup_value>>=
+val lookup_value: Longident.t -> t -> Path.t * Types.value_description
+@
+% Typetexp.transl_simple_type -> <>, when typecheck a Ptyp_constr
+<<signature Env.lookup_type>>=
+val lookup_type: Longident.t -> t -> Path.t * Types.type_declaration
+@
+
+
+<<function Env.lookup_value>>=
+let lookup_value =
+  lookup (fun env -> env.values) (fun sc -> sc.comp_values)
+@
+<<function Env.lookup_type>>=
+and lookup_type =
+  lookup (fun env -> env.types) (fun sc -> sc.comp_types)
+@
+
+
+<<function Env.lookup>>=
+let lookup proj1 proj2 lid env =
+  match lid with
+    Lident s ->
+      Ident.find_name s (proj1 env)
+  | Ldot(l, s) ->
+      (match lookup_module_descr l env with
+       (p, Structure_comps c) ->
+        let (data, pos) = Tbl.find s (proj2 c) in
+           (Pdot(p, s, pos), data)
+      )
+@
+% will see lookup_module_descr later
+
+
+
+
+% does not return a Path.t here
+<<signature Env.lookup_constructor>>=
+val lookup_constructor: Longident.t -> t -> Types.constructor_description
+@
+<<signature Env.lookup_label>>=
+val lookup_label: Longident.t -> t -> Types.label_description
+@
+
+<<function Env.lookup_constructor>>=
+and lookup_constructor =
+  lookup_simple (fun env -> env.constrs) (fun sc -> sc.comp_constrs)
+@
+<<function Env.lookup_label>>=
+and lookup_label =
+  lookup_simple (fun env -> env.labels) (fun sc -> sc.comp_labels)
+@
+
+<<function Env.lookup_simple>>=
+let lookup_simple proj1 proj2 lid env =
+  match lid with
+    Lident s ->
+      Ident.find_name s (proj1 env)
+  | Ldot(l, s) ->
+      (match lookup_module_descr l env with
+       (p, Structure_comps c) ->
+      let (data, pos) = Tbl.find s (proj2 c) in
+      data
+      )
+@
+% diff with lookup? return just data, not Pdot ...
+% (why? why no need path for constr and label?)
+
+
+
+% used? for functors, but now?
+<<signature Env.lookup_module>>=
+val lookup_module: Longident.t -> t -> Path.t * Types.module_type
+@
+% rename lookup_module_type?
+
+<<function Env.lookup_module>>=
+and lookup_module lid env =
+  match lid with
+    Lident s ->
+      begin try
+        Ident.find_name s env.modules
+      with Not_found ->
+        (Pident(Ident.create_persistent s), 
+         Tmty_signature(find_pers_struct s).ps_sig)
+      end
+  | Ldot(l, s) ->
+      let (p, descr) = lookup_module_descr l env in
+      begin match descr with
+       Structure_comps c ->
+          let (data, pos) = Tbl.find s c.comp_modules in
+          (Pdot(p, s, pos), data)
+      end
+@
+
+\subsubsection{By [[Path]]}
+% why need that? it's once the naming has been done?
+
+% used when?
 <<signature Env.find_value>>=
 val find_value: Path.t -> t -> Types.value_description
 @
@@ -3717,86 +3919,6 @@ let find_value =
 and find_type = 
   find (fun env -> env.types) (fun sc -> sc.comp_types)
 @
-
-
-\subsubsection{By [[Longident]]}
-% why need that? access by path not enough?
-
-% by Longident
-
-<<signature Env.lookup_value>>=
-val lookup_value: Longident.t -> t -> Path.t * Types.value_description
-@
-<<signature Env.lookup_type>>=
-val lookup_type: Longident.t -> t -> Path.t * Types.type_declaration
-@
-<<signature Env.lookup_module>>=
-val lookup_module: Longident.t -> t -> Path.t * Types.module_type
-@
-% rename lookup_module_type?
-
-
-<<function Env.lookup_value>>=
-let lookup_value =
-  lookup (fun env -> env.values) (fun sc -> sc.comp_values)
-@
-<<function Env.lookup_type>>=
-and lookup_type =
-  lookup (fun env -> env.types) (fun sc -> sc.comp_types)
-@
-
-
-<<function Env.lookup>>=
-let lookup proj1 proj2 lid env =
-  match lid with
-    Lident s ->
-      Ident.find_name s (proj1 env)
-  | Ldot(l, s) ->
-      (match lookup_module_descr l env with
-       (p, Structure_comps c) ->
-        let (data, pos) = Tbl.find s (proj2 c) in
-           (Pdot(p, s, pos), data)
-      )
-@
-% will see lookup_module_descr later
-
-
-
-
-
-<<signature Env.lookup_constructor>>=
-val lookup_constructor: Longident.t -> t -> Types.constructor_description
-@
-<<signature Env.lookup_label>>=
-val lookup_label: Longident.t -> t -> Types.label_description
-@
-
-<<function Env.lookup_constructor>>=
-and lookup_constructor =
-  lookup_simple (fun env -> env.constrs) (fun sc -> sc.comp_constrs)
-@
-<<function Env.lookup_label>>=
-and lookup_label =
-  lookup_simple (fun env -> env.labels) (fun sc -> sc.comp_labels)
-@
-
-<<function Env.lookup_simple>>=
-let lookup_simple proj1 proj2 lid env =
-  match lid with
-    Lident s ->
-      Ident.find_name s (proj1 env)
-  | Ldot(l, s) ->
-      begin match lookup_module_descr l env with
-       (p, Structure_comps c) ->
-      let (data, pos) = Tbl.find s (proj2 c) in
-          data
-      end
-@
-
-
-
-
-
 
 
 \subsection{Substitutions}
@@ -3996,6 +4118,25 @@ let rec find_module_descr path env =
 
 % X.Y.z -> Pdot(Pdot(X, "Y", 0), "z", 42)
 
+% Env.lookup -> <>
+<<function Env.lookup_module_descr>>=
+let rec lookup_module_descr lid env =
+  match lid with
+    Lident s ->
+      begin try
+        Ident.find_name s env.components
+      with Not_found ->
+        (Pident(Ident.create_persistent s), (find_pers_struct s).ps_comps)
+      end
+  | Ldot(l, s) ->
+      let (p, descr) = lookup_module_descr l env in
+      (match descr with
+       Structure_comps c ->
+      let (descr, pos) = Tbl.find s c.comp_components in
+          (Pdot(p, s, pos), descr)
+      )
+@
+
 \subsection{Persistent identifiers}
 
 % toplevel modules e.g. List.map 
@@ -4026,6 +4167,7 @@ val create_persistent: string -> t
 let create_persistent s =
   { name = s; stamp = 0; global = true }
 @
+% why global = true?
 
 \subsection{Persistent structures}
 
@@ -4088,6 +4230,33 @@ let read_signature modname filename =
   (ps.ps_sig, crc)
 @
 
+
+<<signature Env.save_signature>>=
+val save_signature: signature -> string -> string -> Digest.t
+        (* Arguments: signature, module name, file name.
+           Result: CRC. *)
+@
+% Compile.implementation | Compile.interface -> <>
+<<function Env.save_signature>>=
+(* Save a signature to a file *)
+
+let save_signature sg modname filename =
+  let ps =
+    { ps_name = modname;
+      ps_sig = sg;
+      ps_comps =
+        components_of_module empty Subst.identity
+            (Pident(Ident.create_persistent modname)) (Tmty_signature sg) } 
+  in
+  let oc = open_out_bin filename in
+  output_string oc cmi_magic_number;
+  output_value oc ps;
+  flush oc;
+  let crc = Digest.file filename in
+  Digest.output oc crc;
+  close_out oc;
+  crc
+@
 
 \subsection{[[Env.read_pers_struct()]]}
 
@@ -5007,11 +5176,19 @@ begin_def();
 end_def();
 @
 
+<<signature Ctype.begin_def>>=
+val begin_def: unit -> unit
+        (* Raise the variable level by one at the beginning of a definition. *)
+@
 <<function Ctype.begin_def>>=
 let begin_def () = 
   incr current_level
 @
 
+<<signature Ctype.end_def>>=
+val end_def: unit -> unit
+        (* Lower the variable level by one at the end of a definition *)
+@
 <<function Ctype.end_def>>=
 let end_def () = 
   decr current_level
@@ -5048,6 +5225,10 @@ Typetexp.reset_type_variables();
 @
 % need reset_def? should be fine no without?
 
+<<signature Ctype.reset_def>>=
+val reset_def: unit -> unit
+        (* Reset (to 0) the variable level *)
+@
 <<function Ctype.reset_def>>=
 let reset_def () = 
   current_level := 0
@@ -5149,6 +5330,42 @@ let rec make_nongen ty =
 %old:  | Tconstr(p, []) ->
 %      ()
 
+\subsection{Toplevel entities}
+
+% val is a form of let, so we want generalization too!
+
+% val x: ...
+<<signature Typedecl.transl_value_decl>>=
+val transl_value_decl:
+        Env.t -> Parsetree.value_description -> Types.value_description
+@
+<<function Typedecl.transl_value_decl>>=
+(* Translate a value declaration *)
+
+let transl_value_decl env valdecl =
+  Ctype.reset_def();
+  let ty = Typetexp.transl_type_scheme env valdecl.pval_type in
+  { val_type = ty;
+    val_prim = Primitive.parse_declaration (Ctype.arity ty) valdecl.pval_prim }
+@
+
+
+
+<<signature Typetexp.transl_type_scheme>>=
+val transl_type_scheme:
+        Env.t -> Parsetree.core_type -> Types.type_expr
+@
+<<function Typetexp.transl_type_scheme>>=
+let transl_type_scheme env styp =
+  reset_type_variables();
+  begin_def();
+  let typ = transl_simple_type env false styp in
+  end_def();
+  generalize typ;
+  typ
+@
+% generalize!
+
 \section{Typing other elements}
 
 \subsection{Typing type expressions}
@@ -5172,7 +5389,8 @@ let type_variables = ref (Tbl.empty : (string, Types.type_expr) Tbl.t)
 @
 
 
-% fixed?
+% fixed? false when called fro Pexp_constraint, true when called
+%  from type definitions
 <<function Typetexp.transl_simple_type>>=
 let rec transl_simple_type env fixed styp =
   match styp.ptyp_desc with
@@ -5206,6 +5424,20 @@ let rec transl_simple_type env fixed styp =
   | Ptyp_tuple stl ->
       Ttuple(List.map (transl_simple_type env fixed) stl)
 @
+
+<<signature Ctype.new_global_var>>=
+val new_global_var: unit -> type_expr
+        (* Return a fresh variable, bound at toplevel
+           (as type variables ['a] in type constraints). *)
+@
+
+
+<<function Ctype.new_global_var>>=
+let new_global_var () =
+  Tvar { tvar_level = 1; tvar_link = None }
+@
+% newvar not enough? anyway have no begin_def when
+% processing type declarations no?
 
 \subsection{Typing type declarations}
 
@@ -5414,20 +5646,6 @@ val type_structure:
 
 
 
-<<signature Typedecl.transl_value_decl>>=
-val transl_value_decl:
-        Env.t -> Parsetree.value_description -> Types.value_description
-@
-
-<<function Typedecl.transl_value_decl>>=
-(* Translate a value declaration *)
-
-let transl_value_decl env valdecl =
-  Ctype.reset_def();
-  let ty = Typetexp.transl_type_scheme env valdecl.pval_type in
-  { val_type = ty;
-    val_prim = Primitive.parse_declaration (Ctype.arity ty) valdecl.pval_prim }
-@
 
 \section{Advanced typing issues}
 
@@ -5981,11 +6199,460 @@ let type_format loc fmt =
 %  - dangerous partial application in a sequence (probably bug)
 %  - ???
 
-\section{Interface/Implementation consistency}
+\section{Interface/Implementation agreement}
+% agreement?
 
-%includemod.ml
+%(* All functions "blah env x1 x2" check that x1 is included in x2,
+%   i.e. that x1 is the type of an implementation that fulfills the
+%   specification x2. If not, Error is raised with a backtrace of the error. *)
+
+% for type declarations it's equivalence (e.g. 'a -> 'a =~ 'b -> 'b)
+% for value it's more general ('a -> 'a more general than int -> int)
+% for modules it's inclusion (it's ok to define more than what is exported)
+
+<<exception Includecore.Dont_match>>=
+exception Dont_match
+@
+
+\subsection{More general implementation}
+
+<<signature Includecore.value_descriptions>>=
+val value_descriptions:
+        Env.t -> value_description -> value_description -> module_coercion
+@
+
+% vd1 = implem, vd2 = interface
+% implem must be more general, so if interface says int -> int
+% and implem is 'a -> 'a, then it's ok. If reverse then it's not!
+<<function Includecore.value_descriptions>>=
+let value_descriptions env vd1 vd2 =
+  if Ctype.moregeneral env vd1.val_type vd2.val_type then begin
+    match (vd1.val_prim, vd2.val_prim) with
+        (Some p1, Some p2) ->
+          if p1 = p2 
+          then Tcoerce_none 
+          else raise Dont_match
+      | (Some p, None) -> Tcoerce_primitive p
+      | (None, Some p) -> raise Dont_match
+      | (None, None) -> Tcoerce_none
+  end else
+    raise Dont_match
+@
+
+<<type Typedtree.module_coercion>>=
+and module_coercion =
+    Tcoerce_none
+  | Tcoerce_structure of (int * module_coercion) list
+  | Tcoerce_primitive of Primitive.description
+@
+%todo: delete?
+
+
+
+<<function Ctype.moregeneral>>=
+let moregeneral env sch1 sch2 =
+  begin_def();
+  try
+    moregen env (instance sch1) sch2;
+    end_def();
+    true
+  with Unify ->
+    end_def();
+    false
+@
+
+
+<<function Ctype.moregen>>=
+let rec moregen env t1 t2 =
+  if t1 == t2 
+  then () 
+  else 
+   begin
+    let t1 = repr t1 in
+    let t2 = repr t2 in
+    if t1 == t2 
+    then () 
+    else 
+     begin
+      match (t1, t2) with
+        (Tvar v, _) ->
+          if v.tvar_level = generic_level 
+          then raise Unify;
+          moregen_occur v t2;
+          v.tvar_link <- Some t2
+      | (Tarrow(t1, u1), Tarrow(t2, u2)) ->
+          moregen env t1 t2; moregen env u1 u2
+      | (Ttuple tl1, Ttuple tl2) ->
+          moregen_list env tl1 tl2
+      | (Tconstr(p1, tl1), Tconstr(p2, tl2)) ->
+          if Path.same p1 p2 then
+            moregen_list env tl1 tl2
+          else begin
+            try
+              moregen env (expand_abbrev env p1 tl1) t2
+            with Cannot_expand ->
+            try
+              moregen env t1 (expand_abbrev env p2 tl2)
+            with Cannot_expand ->
+              raise Unify
+          end
+      | (Tconstr(p1, tl1), _) ->
+          begin try
+            moregen env (expand_abbrev env p1 tl1) t2
+          with Cannot_expand ->
+            raise Unify
+          end
+      | (_, Tconstr(p2, tl2)) ->
+          begin try
+            moregen env t1 (expand_abbrev env p2 tl2)
+          with Cannot_expand ->
+            raise Unify
+          end
+      | (_, _) ->
+          raise Unify
+    end
+  end
+
+and moregen_list env tl1 tl2 =
+  match (tl1, tl2) with
+    ([], []) -> ()
+  | (t1::r1, t2::r2) -> moregen env t1 t2; moregen_list env r1 r2
+  | (_, _) -> raise Unify
+@
+% some abbrevs here too
+
+% moregen -> <>
+<<function Ctype.moregen_occur>>=
+(* Matching between type schemes *)
+
+let rec moregen_occur tvar ty =
+  match repr ty with
+    Tvar v ->
+      if v == tvar then raise Unify;
+      (* tvar has level = !current_level iff it is generic
+         in the original type scheme. In this case, it can be freely
+         instantiated. Otherwise, tvar is not generic
+         and cannot be instantiated by a type that contains
+         generic variables. *)
+      if v.tvar_level = generic_level & tvar.tvar_level < !current_level
+      then raise Unify
+  (* boilerplate iterator *)
+  | Tarrow(t1, t2) ->
+      moregen_occur tvar t1; moregen_occur tvar t2
+  | Ttuple tl ->
+      List.iter (moregen_occur tvar) tl
+  | Tconstr(p, tl) ->
+      List.iter (moregen_occur tvar) tl
+@
+%  | Tconstr(p, []) ->
+%      ()
+
+
+
+
+\subsection{Type equivalences}
 
 %includecore.ml
+
+<<signature Includecore.type_declarations>>=
+val type_declarations:
+        Env.t -> Ident.t -> type_declaration -> type_declaration -> bool
+@
+<<signature Includecore.exception_declarations>>=
+val exception_declarations:
+        Env.t -> exception_declaration -> exception_declaration -> bool
+@
+% return a bool here, does not thrown an exn
+
+
+<<function Includecore.type_declarations>>=
+(* Inclusion between type declarations *)
+
+let type_declarations env id decl1 decl2 =
+  decl1.type_arity = decl2.type_arity &
+  begin match (decl1.type_kind, decl2.type_kind) with
+      (_, Type_abstract) -> true
+    | (Type_variant cstrs1, Type_variant cstrs2) ->
+        for_all2
+          (fun (cstr1, arg1) (cstr2, arg2) ->
+            cstr1 = cstr2 &
+            for_all2
+              (fun ty1 ty2 ->
+                Ctype.equal env decl1.type_params ty1 decl2.type_params ty2)
+              arg1 arg2)
+          cstrs1 cstrs2
+    | (Type_record labels1, Type_record labels2) ->
+        for_all2
+          (fun (lbl1, mut1, ty1) (lbl2, mut2, ty2) ->
+            lbl1 = lbl2 & mut1 = mut2 &
+            Ctype.equal env decl1.type_params ty1 decl2.type_params ty2)
+          labels1 labels2
+    | (_, _) -> false
+  end &
+  begin match (decl1.type_manifest, decl2.type_manifest) with
+      (_, None) -> true
+    | (Some ty1, Some ty2) ->
+        Ctype.equal env decl1.type_params ty1 decl2.type_params ty2
+    | (None, Some ty2) ->
+        let ty1 = Tconstr(Pident id, decl2.type_params) in
+        Ctype.equal env [] ty1 [] ty2
+  end
+@
+
+<<function Includecore.exception_declarations>>=
+(* Inclusion between exception declarations *)
+
+let exception_declarations env ed1 ed2 =
+  for_all2 (fun ty1 ty2 -> Ctype.equal env [] ty1 [] ty2) ed1 ed2
+@
+
+
+
+<<function Ctype.equal>>=
+(* Equivalence between parameterized types *)
+
+let equal env params1 ty1 params2 ty2 =
+  let subst = List.combine params1 params2 in
+  let rec eqtype t1 t2 =
+    let t1 = repr t1 in
+    let t2 = repr t2 in
+    match (t1, t2) with
+      (Tvar _, Tvar _) ->
+        begin try
+          List.assq t1 subst == t2
+        with Not_found ->
+          fatal_error "Ctype.equal"
+        end
+    | (Tarrow(t1, u1), Tarrow(t2, u2)) ->
+        eqtype t1 t2 & eqtype u1 u2
+    | (Ttuple tl1, Ttuple tl2) ->
+        eqtype_list tl1 tl2
+    | (Tconstr(p1, tl1), Tconstr(p2, tl2)) ->
+        if Path.same p1 p2 then
+          eqtype_list tl1 tl2
+        else begin
+          try
+            eqtype (expand_abbrev env p1 tl1) t2
+          with Cannot_expand ->
+          try
+            eqtype t1 (expand_abbrev env p2 tl2)
+          with Cannot_expand ->
+            false
+        end
+    | (Tconstr(p1, tl1), _) ->
+        begin try
+          eqtype (expand_abbrev env p1 tl1) t2
+        with Cannot_expand ->
+          false
+        end
+    | (_, Tconstr(p2, tl2)) ->
+        begin try
+          eqtype t1 (expand_abbrev env p2 tl2)
+        with Cannot_expand ->
+          false
+        end
+    | (_, _) ->
+        false
+  and eqtype_list tl1 tl2 =
+    match (tl1, tl2) with
+      ([], []) -> true
+    | (t1::r1, t2::r2) -> eqtype t1 t2 & eqtype_list r1 r2
+    | (_, _) -> false
+  in
+    eqtype ty1 ty2
+@
+
+
+
+
+
+\subsection{Module inclusion}
+%includemod.ml
+
+% implem sig vs interface sig
+<<signature Includemod.compunit>>=
+val compunit: string -> signature -> string -> signature -> module_coercion
+@
+
+
+
+
+<<function Includemod.compunit>>=
+(* Check that an implementation of a compilation unit meets its
+   interface. *)
+
+let compunit impl_name impl_sig intf_name intf_sig =
+  try
+    signatures Env.initial impl_sig intf_sig
+  with Error reasons ->
+    raise(Error(Interface_mismatch(impl_name, intf_name) :: reasons))
+@
+
+
+
+<<signature Includemod.signatures>>=
+val signatures: Env.t -> signature -> signature -> module_coercion
+@
+<<signature Includemod.modtypes>>=
+val modtypes: Env.t -> module_type -> module_type -> module_coercion
+@
+
+<<function Includemod.signatures>>=
+(* Inclusion between signatures *)
+
+and signatures env sig1 sig2 =
+  (* Environment used to check inclusion of components *)
+  let new_env =
+    Env.add_signature sig1 env in
+  (* Build a table of the components of sig1, along with their positions.
+     The table is indexed by kind and name of component *)
+  let rec build_component_table pos tbl = function
+      [] -> tbl
+    | item :: rem ->
+        let (id, name) = item_ident_name item in
+        let nextpos =
+          match item with
+            Tsig_value(_,{val_prim = None})
+          | Tsig_exception(_,_)
+          | Tsig_module(_,_) -> pos+1
+          | Tsig_value(_,{val_prim = Some _})
+          | Tsig_type(_,_)
+          -> pos in
+        build_component_table nextpos
+                              (Tbl.add name (id, item, pos) tbl) rem in
+  let comps1 =
+    build_component_table 0 Tbl.empty sig1 in
+  (* Pair each component of sig2 with a component of sig1,
+     identifying the names along the way.
+     Return a coercion list indicating, for all run-time components
+     of sig2, the position of the matching run-time components of sig1
+     and the coercion to be applied to it. *)
+  let rec pair_components paired unpaired = function
+      [] ->
+        begin match unpaired with
+            [] -> signature_components new_env (List.rev paired)
+          | _  -> raise(Error unpaired)
+        end
+    | item2 :: rem ->
+        let (id2, name2) = item_ident_name item2 in
+        begin try
+          let (id1, item1, pos1) = Tbl.find name2 comps1 in
+          Ident.identify id1 id2
+            (fun () ->
+              pair_components ((item1, item2, pos1) :: paired) unpaired rem)
+        with Not_found ->
+          pair_components paired (Missing_field id2 :: unpaired) rem
+        end in
+
+  (* Do the pairing and checking, and return the final coercion *)
+  simplify_structure_coercion(pair_components [] [] sig2)
+@
+
+<<function Includemod.signature_components>>=
+(* Inclusion between signature components *)
+
+and signature_components env = function
+    [] -> []
+  | (Tsig_value(id1, valdecl1), Tsig_value(id2, valdecl2), pos) :: rem ->
+      let cc = value_descriptions env id1 valdecl1 valdecl2 in
+      (match valdecl2.val_prim with
+      | None -> (pos, cc) :: signature_components env rem
+      | Some p -> signature_components env rem
+      )
+  | (Tsig_type(id1, tydecl1), Tsig_type(id2, tydecl2), pos) :: rem ->
+      type_declarations env id1 tydecl1 tydecl2;
+      signature_components env rem
+  | (Tsig_exception(id1, excdecl1), Tsig_exception(id2, excdecl2), pos)
+    :: rem ->
+      exception_declarations env id1 excdecl1 excdecl2;
+      (pos, Tcoerce_none) :: signature_components env rem
+
+  | (Tsig_module(id1, mty1), Tsig_module(id2, mty2), pos) :: rem ->
+      let cc = modtypes env mty1 mty2 in
+      (pos, cc) :: signature_components env rem
+  | _ ->
+      fatal_error "Includemod.signature_components"
+@
+
+% mostly rewrap the error message
+<<function Includemod.value_descriptions>>=
+(* Inclusion between value descriptions *)
+
+let value_descriptions env id vd1 vd2 =
+  try
+    Includecore.value_descriptions env vd1 vd2
+  with Includecore.Dont_match ->
+    raise(Error[Value_descriptions(id, vd1, vd2)])
+@
+
+<<function Includemod.type_declarations>>=
+(* Inclusion between type declarations *)
+
+let type_declarations env id decl1 decl2 =
+  if Includecore.type_declarations env id decl1 decl2
+  then ()
+  else raise(Error[Type_declarations(id, decl1, decl2)])
+@
+
+<<function Includemod.exception_declarations>>=
+(* Inclusion between exception declarations *)
+
+let exception_declarations env id decl1 decl2 =
+  if Includecore.exception_declarations env decl1 decl2
+  then ()
+  else raise(Error[Exception_declarations(id, decl1, decl2)])
+@
+
+
+
+
+
+<<signature Env.add_signature>>=
+(* Insertion of all fields of a signature. *)
+
+val add_signature: signature -> t -> t
+@
+<<function Env.add_signature>>=
+let add_signature sg env =
+  List.fold_left add_signature_component env sg
+@
+
+<<function Env.add_signature_component>>=
+(* Insertion of all components of a signature *)
+
+let add_signature_component env comp =
+  match comp with
+    Tsig_value(id, decl) -> add_value id decl env
+  | Tsig_type(id, decl) -> add_type id decl env
+  | Tsig_exception(id, decl) -> add_exception id decl env
+  | Tsig_module(id, mty) -> add_module id mty env
+@
+
+
+
+
+<<signature Ident.identify>>=
+val identify: t -> t -> (unit -> 'a) -> 'a
+        (* [identify id1 id2 f] temporarily makes [id1] and [id2] the same
+           during the evaluation of [f ()]. *)
+@
+<<function Ident.identify>>=
+let identify i1 i2 f =
+  let name1 = i1.name and stamp1 = i1.stamp in
+  try
+    i1.name <- i2.name;
+    i1.stamp <- i2.stamp;
+    let res = f () in
+    i1.name <- name1;
+    i1.stamp <- stamp1;
+    res
+  with x ->
+    i1.name <- name1;
+    i1.stamp <- stamp1;
+    raise x
+@
+
+
 
 
 <<signature Env.check_modtype_inclusion>>=
@@ -6000,6 +6667,19 @@ let check_modtype_inclusion =
        t -> module_type -> module_type -> unit)
 @
 
+<<function Includemod.check_modtype_inclusion>>=
+(* Simplified inclusion check between module types *)
+
+let check_modtype_inclusion env mty1 mty2 =
+  try
+    modtypes env mty1 mty2; ()
+  with Error reasons ->
+    raise Not_found
+@
+
+<<toplevel Includemod._1>>=
+let _ = Env.check_modtype_inclusion := check_modtype_inclusion
+@
 
 \section{Partial pattern matches (exhaustive check)}
 % parmatch.ml
@@ -6466,6 +7146,266 @@ val transl_let:
       rec_flag -> (Typedtree.pattern * Typedtree.expression) list -> 
         lambda -> lambda
 @
+
+\subsubsection{Closures}
+
+<<function Closure.close>>=
+let rec close fenv cenv = function
+    Lvar id ->
+      (close_var cenv id, approx_var fenv id)
+  | Lconst cst ->
+      (Uconst cst, Value_unknown)
+  | Lfunction(kind, params, body) as funct ->
+      close_one_function fenv cenv (Ident.create "fun") funct
+  | Lapply(funct, args) ->
+      let nargs = List.length args in
+      begin match (close fenv cenv funct, close_list fenv cenv args) with
+        ((ufunct, Value_closure(fundesc, approx_res)),
+         [Uprim(Pmakeblock(_, _), uargs)])
+        when List.length uargs = - fundesc.fun_arity ->
+          (direct_apply fundesc funct ufunct uargs, approx_res)
+      | ((ufunct, Value_closure(fundesc, approx_res)), uargs)
+        when nargs = fundesc.fun_arity ->
+          (direct_apply fundesc funct ufunct uargs, approx_res)
+      | ((ufunct, Value_closure(fundesc, approx_res)), uargs)
+        when fundesc.fun_arity > 0 && nargs > fundesc.fun_arity ->
+          let (first_args, rem_args) = split_list fundesc.fun_arity uargs in
+          (Ugeneric_apply(direct_apply fundesc funct ufunct first_args,
+                          rem_args),
+           Value_unknown)
+      | ((ufunct, _), uargs) ->
+          (Ugeneric_apply(ufunct, uargs), Value_unknown)
+      end
+  | Llet(str, id, lam, body) ->
+      let (ulam, alam) = close_named fenv cenv id lam in
+      let (ubody, abody) = close (Tbl.add id alam fenv) cenv body in
+      (Ulet(id, ulam, ubody), abody)
+  | Lletrec(defs, body) ->
+      if List.for_all
+           (function (id, Lfunction(_, _, _)) -> true | _ -> false)
+           defs
+      then begin
+        (* Simple case: only function definitions *)
+        let (clos, infos) = close_functions fenv cenv defs in
+        let clos_ident = Ident.create "clos" in
+        let fenv_body =
+          List.fold_right
+            (fun (id, pos, approx) fenv -> Tbl.add id approx fenv)
+            infos fenv in
+        let (ubody, approx) = close fenv_body cenv body in
+        (Ulet(clos_ident, clos,
+              List.fold_right
+                (fun (id, pos, approx) body ->
+                    Ulet(id, Uoffset(Uvar clos_ident, pos), body))
+                infos ubody),
+         approx)
+      end else begin
+        (* General case: recursive definition of values *)
+        let rec clos_defs = function
+          [] -> ([], fenv)
+        | (id, lam) :: rem ->
+            let (udefs, fenv_body) = clos_defs rem in
+            let (ulam, approx) = close fenv cenv lam in
+            ((id, ulam) :: udefs, Tbl.add id approx fenv_body) in
+        let (udefs, fenv_body) = clos_defs defs in
+        let (ubody, approx) = close fenv_body cenv body in
+        (Uletrec(udefs, ubody), approx)
+      end
+  | Lprim(Pgetglobal id, []) ->
+      (Uprim(Pgetglobal id, []), Compilenv.global_approx id)
+  | Lprim(Pmakeblock(tag, mut) as prim, lams) ->
+      let (ulams, approxs) = List.split (List.map (close fenv cenv) lams) in
+      (Uprim(prim, ulams),
+       begin match mut with
+           Immutable -> Value_tuple(Array.of_list approxs)
+         | Mutable -> Value_unknown
+       end)
+  | Lprim(Pfield n, [lam]) ->
+      let (ulam, approx) = close fenv cenv lam in
+      (Uprim(Pfield n, [ulam]),
+       match approx with
+           Value_tuple a when n < Array.length a -> a.(n)
+         | _ -> Value_unknown)
+  | Lprim(Psetfield(n, _), [Lprim(Pgetglobal id, []); lam]) ->
+      let (ulam, approx) = close fenv cenv lam in
+      (!global_approx).(n) <- approx;
+      (Uprim(Psetfield(n, false), [Uprim(Pgetglobal id, []); ulam]),
+       Value_unknown)
+  | Lprim(p, args) ->
+      (Uprim(p, close_list fenv cenv args), Value_unknown)
+  | Lswitch(arg, sw) ->
+      let (uarg, _) = close fenv cenv arg in
+      let (const_index, const_cases) =
+        close_switch fenv cenv sw.sw_numconsts sw.sw_consts in
+      let (block_index, block_cases) =
+        close_switch fenv cenv sw.sw_numblocks sw.sw_blocks in
+      (Uswitch(uarg, 
+               {us_index_consts = const_index;
+                us_cases_consts = const_cases;
+                us_index_blocks = block_index;
+                us_cases_blocks = block_cases;
+                us_checked = sw.sw_checked}),
+       Value_unknown)
+  | Lstaticfail ->
+      (Ustaticfail, Value_unknown)
+  | Lcatch(body, handler) ->
+      let (ubody, _) = close fenv cenv body in
+      let (uhandler, _) = close fenv cenv handler in
+      (Ucatch(ubody, uhandler), Value_unknown)
+  | Ltrywith(body, id, handler) ->
+      let (ubody, _) = close fenv cenv body in
+      let (uhandler, _) = close fenv cenv handler in
+      (Utrywith(ubody, id, uhandler), Value_unknown)
+  | Lifthenelse(arg, ifso, ifnot) ->
+      let (uarg, _) = close fenv cenv arg in
+      let (uifso, _) = close fenv cenv ifso in
+      let (uifnot, _) = close fenv cenv ifnot in
+      (Uifthenelse(uarg, uifso, uifnot), Value_unknown)
+  | Lsequence(lam1, lam2) ->
+      let (ulam1, _) = close fenv cenv lam1 in
+      let (ulam2, approx) = close fenv cenv lam2 in
+      (Usequence(ulam1, ulam2), approx)
+  | Lwhile(cond, body) ->
+      let (ucond, _) = close fenv cenv cond in
+      let (ubody, _) = close fenv cenv body in
+      (Uwhile(ucond, ubody), Value_unknown)
+  | Lfor(id, lo, hi, dir, body) ->
+      let (ulo, _) = close fenv cenv lo in
+      let (uhi, _) = close fenv cenv hi in
+      let (ubody, _) = close fenv cenv body in
+      (Ufor(id, ulo, uhi, dir, ubody), Value_unknown)
+  | Lassign(id, lam) ->
+      let (ulam, _) = close fenv cenv lam in
+      (Uassign(id, ulam), Value_unknown)
+  | Levent _ -> assert false
+
+and close_list fenv cenv = function
+    [] -> []
+  | lam :: rem ->
+      let (ulam, _) = close fenv cenv lam in
+      ulam :: close_list fenv cenv rem
+
+and close_named fenv cenv id = function
+    Lfunction(kind, params, body) as funct ->
+      close_one_function fenv cenv id funct
+  | lam ->
+      close fenv cenv lam
+
+(* Build a shared closure for a set of mutually recursive functions *)
+
+and close_functions fenv cenv fun_defs =
+  (* Determine the free variables of the functions *)
+  let fv =
+    IdentSet.elements (free_variables (Lletrec(fun_defs, lambda_unit))) in
+  (* Build the function descriptors for the functions.
+     Initially all functions are assumed not to need their environment
+     parameter. *)
+  let uncurried_defs =
+    List.map
+      (function
+          (id, (Lfunction(kind, params, body) as def)) ->
+            let label =
+              Compilenv.current_unit_name() ^ "_" ^ Ident.unique_name id in
+            let arity = List.length params in
+            let fundesc =
+              {fun_label = label;
+               fun_arity = (if kind = Tupled then -arity else arity);
+               fun_closed = true;
+               fun_inline = None } in
+            (id, params, body, fundesc)
+        | (_, _) -> fatal_error "Closure.close_functions")
+      fun_defs in
+  (* Build an approximate fenv for compiling the functions *)
+  let fenv_rec =
+    List.fold_right
+      (fun (id, params, body, fundesc) fenv ->
+        Tbl.add id (Value_closure(fundesc, Value_unknown)) fenv)
+      uncurried_defs fenv in
+  (* Determine the offsets of each function's closure in the shared block *)
+  let env_pos = ref (-1) in
+  let clos_offsets =
+    List.map
+      (fun (id, params, body, fundesc) ->
+        let pos = !env_pos + 1 in
+        env_pos := !env_pos + 1 + (if fundesc.fun_arity <> 1 then 3 else 2);
+        pos)
+      uncurried_defs in
+  let fv_pos = !env_pos in
+  (* This reference will be set to false if the hypothesis that a function
+     does not use its environment parameter is invalidated. *)
+  let useless_env = ref true in
+  (* Translate each function definition *)
+  let clos_fundef (id, params, body, fundesc) env_pos =
+    let env_param = Ident.create "env" in
+    let cenv_fv =
+      build_closure_env env_param (fv_pos - env_pos) fv in
+    let cenv_body =
+      List.fold_right2
+        (fun (id, params, arity, body) pos env ->
+          Tbl.add id (Uoffset(Uvar env_param, pos - env_pos)) env)
+        uncurried_defs clos_offsets cenv_fv in
+    let (ubody, approx) = close fenv_rec cenv_body body in
+    if !useless_env & occurs_var env_param ubody then useless_env := false;
+    let fun_params = if !useless_env then params else params @ [env_param] in
+    ((fundesc.fun_label, fundesc.fun_arity, fun_params, ubody),
+     (id, env_pos, Value_closure(fundesc, approx))) in
+  (* Translate all function definitions. *)
+  let clos_info_list = 
+    let cl = List.map2 clos_fundef uncurried_defs clos_offsets in
+    (* If the hypothesis that the environment parameters are useless has been
+       invalidated, then set [fun_closed] to false in all descriptions and
+       recompile *)
+    if !useless_env then cl else begin
+      List.iter
+        (fun (id, params, body, fundesc) -> fundesc.fun_closed <- false)
+        uncurried_defs;
+      List.map2 clos_fundef uncurried_defs clos_offsets
+    end in
+  (* Return the Uclosure node and the list of all identifiers defined,
+     with offsets and approximations. *)
+  let (clos, infos) = List.split clos_info_list in
+  (Uclosure(clos, List.map (close_var cenv) fv), infos)
+
+(* Same, for one non-recursive function *)
+
+and close_one_function fenv cenv id funct =
+  match close_functions fenv cenv [id, funct] with
+      ((Uclosure([_, _, params, body], _) as clos),
+       [_, _, (Value_closure(fundesc, _) as approx)]) ->
+        (* See if the function can be inlined *)
+        if lambda_smaller body (!Clflags.inline_threshold + List.length params)
+        then fundesc.fun_inline <- Some(params, body);
+        (clos, approx)
+    | _ -> fatal_error "Closure.close_one_function"
+
+(* Close a switch *)
+
+and close_switch fenv cenv num_keys cases =
+  let index = Array.create num_keys 0 in
+  let ucases = ref []
+  and num_cases = ref 0 in
+  if List.length cases < num_keys then begin
+    num_cases := 1;
+    ucases := [Ustaticfail]
+  end;
+  List.iter
+    (function (key, lam) ->
+        let (ulam, _) = close fenv cenv lam in
+        ucases := ulam :: !ucases;
+        index.(key) <- !num_cases;
+        incr num_cases)
+    cases;
+  (index, Array.of_list(List.rev !ucases))
+@
+
+<<signature Ident.unique_name>>=
+val unique_name: t -> string
+@
+<<function Ident.unique_name>>=
+let unique_name i = 
+  i.name ^ "_" ^ string_of_int i.stamp
+@
+
 
 \subsection{Modules, [[transl_implementation()]]}
 %Translmod

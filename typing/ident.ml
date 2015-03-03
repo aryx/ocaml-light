@@ -55,11 +55,6 @@ let persistent i =
   (i.stamp = 0)
 (*e: function Ident.persistent *)
 
-(*s: function Ident.equal *)
-let equal i1 i2 = 
-  i1.name = i2.name
-(*e: function Ident.equal *)
-
 (*s: function Ident.same *)
 let same i1 i2 = 
   i1 = i2

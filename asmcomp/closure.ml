@@ -214,6 +214,7 @@ let approx_var fenv id =
   try Tbl.find id fenv with Not_found -> Value_unknown 
 (*e: function Closure.approx_var *)
 
+(*s: function Closure.close *)
 let rec close fenv cenv = function
     Lvar id ->
       (close_var cenv id, approx_var fenv id)
@@ -460,6 +461,7 @@ and close_switch fenv cenv num_keys cases =
         incr num_cases)
     cases;
   (index, Array.of_list(List.rev !ucases))
+(*e: function Closure.close *)
 
 (*s: function Closure.intro *)
 (* The entry point *)

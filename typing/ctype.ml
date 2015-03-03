@@ -302,24 +302,31 @@ let rec moregen_occur tvar ty =
          generic variables. *)
       if v.tvar_level = generic_level & tvar.tvar_level < !current_level
       then raise Unify
+  (* boilerplate iterator *)
   | Tarrow(t1, t2) ->
       moregen_occur tvar t1; moregen_occur tvar t2
   | Ttuple tl ->
       List.iter (moregen_occur tvar) tl
-  | Tconstr(p, []) ->
-      ()
   | Tconstr(p, tl) ->
       List.iter (moregen_occur tvar) tl
 (*e: function Ctype.moregen_occur *)
 
+(*s: function Ctype.moregen *)
 let rec moregen env t1 t2 =
-  if t1 == t2 then () else begin
+  if t1 == t2 
+  then () 
+  else 
+   begin
     let t1 = repr t1 in
     let t2 = repr t2 in
-    if t1 == t2 then () else begin
+    if t1 == t2 
+    then () 
+    else 
+     begin
       match (t1, t2) with
         (Tvar v, _) ->
-          if v.tvar_level = generic_level then raise Unify;
+          if v.tvar_level = generic_level 
+          then raise Unify;
           moregen_occur v t2;
           v.tvar_link <- Some t2
       | (Tarrow(t1, u1), Tarrow(t2, u2)) ->
@@ -360,6 +367,7 @@ and moregen_list env tl1 tl2 =
     ([], []) -> ()
   | (t1::r1, t2::r2) -> moregen env t1 t2; moregen_list env r1 r2
   | (_, _) -> raise Unify
+(*e: function Ctype.moregen *)
   
 (*s: function Ctype.moregeneral *)
 let moregeneral env sch1 sch2 =
