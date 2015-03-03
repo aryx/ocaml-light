@@ -40,6 +40,7 @@ exception Error of error
 (*s: type Env.t *)
 type t = {
   values     : (Path.t * Types.value_description) Ident.tbl;
+  (*s: [[Env.t]] other fields *)
   types      : (Path.t * Types.type_declaration)  Ident.tbl;
 
   modules    : (Path.t * Types.module_type)       Ident.tbl;
@@ -47,6 +48,7 @@ type t = {
 
   constrs    : Types.constructor_description      Ident.tbl;
   labels     : Types.label_description            Ident.tbl;
+  (*e: [[Env.t]] other fields *)
 }
 (*e: type Env.t *)
 
@@ -336,7 +338,6 @@ let rec prefix_idents root pos sub = function
       let p = Pdot(root, Ident.name id, pos) in
       let (pl, final_sub) = prefix_idents root (pos+1) sub rem in
       (p::pl, final_sub)
-
   | Tsig_module(id, mty) :: rem ->
       let p = Pdot(root, Ident.name id, pos) in
       let (pl, final_sub) =
@@ -539,6 +540,7 @@ let open_signature root sg env =
       | Tsig_value(id, decl) ->
           store_value (Ident.hide id) p
                       (Subst.value_description sub decl) env
+
       | Tsig_type(id, decl) ->
           store_type (Ident.hide id) p
                      (Subst.type_declaration sub decl) env

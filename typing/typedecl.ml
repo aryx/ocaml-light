@@ -192,7 +192,6 @@ let transl_exception env excdecl =
 (* Translate a value declaration *)
 
 let transl_value_decl env valdecl =
-  Ctype.reset_def();
   let ty = Typetexp.transl_type_scheme env valdecl.pval_type in
   { val_type = ty;
     val_prim = Primitive.parse_declaration (Ctype.arity ty) valdecl.pval_prim }

@@ -128,6 +128,7 @@ and signature = signature_item list
 (*s: type Types.signature_item *)
 and signature_item =
     Tsig_value of Ident.t * value_description
+
   | Tsig_type of Ident.t * type_declaration
   | Tsig_exception of Ident.t * exception_declaration
   | Tsig_module of Ident.t * module_type

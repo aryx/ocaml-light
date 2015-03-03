@@ -639,6 +639,7 @@ and type_let env rec_flag spat_sexp_list =
 let type_binding env rec_flag spat_sexp_list =
   reset_def();
   Typetexp.reset_type_variables();
+
   type_let env rec_flag spat_sexp_list
 (*e: function Typecore.type_binding *)
 
