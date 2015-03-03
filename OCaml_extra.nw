@@ -897,10 +897,16 @@ open Asttypes
 @
 
 
+
+
 \subsection*{[[./parsing/lexer.mll]]}
 
 
+
 \subsection*{[[./parsing/parser.mly]]}
+
+
+
 
 \subsection*{[[./parsing/lexer.mli]]}
 
@@ -968,18 +974,10 @@ open Location
 \subsection*{[[./typing/ident.mli]]}
 
 
-<<signature Ident.create_persistent>>=
-val create_persistent: string -> t
-@
-
-
 <<signature Ident.unique_name>>=
 val unique_name: t -> string
 @
 
-<<signature Ident.persistent>>=
-val persistent: t -> bool
-@
 
 <<signature Ident.equal>>=
 val equal: t -> t -> bool
@@ -1008,7 +1006,7 @@ val print: t -> unit
 
 
 
-
+% todo, again replace with Map?
 <<signature Ident.empty>>=
 val empty: 'a tbl
 @
@@ -1027,10 +1025,6 @@ val find_name: string -> 'a tbl -> 'a
 
 <<signature Ident.print_tbl>>=
 val print_tbl: ('a -> unit) -> 'a tbl -> unit
-@
-
-<<signature Ident.current_time>>=
-val current_time: unit -> int
 @
 
 
@@ -1068,7 +1062,6 @@ type 'a tbl
 
 <<signature Ident.print_tbl>>
 
-<<signature Ident.current_time>>
 @
 
 
@@ -1077,10 +1070,6 @@ type 'a tbl
 
 
 
-<<function Ident.create_persistent>>=
-let create_persistent s =
-  { name = s; stamp = 0; global = true }
-@
 
 
 <<function Ident.unique_name>>=
@@ -1088,10 +1077,6 @@ let unique_name i =
   i.name ^ "_" ^ string_of_int i.stamp
 @
 
-<<function Ident.persistent>>=
-let persistent i = 
-  (i.stamp = 0)
-@
 
 <<function Ident.equal>>=
 let equal i1 i2 = 
@@ -1253,10 +1238,15 @@ let print_tbl print_elt tbl =
   close_box()
 @
 
-<<function Ident.current_time>>=
-let current_time _ = 1
-@
-
+%<<signature Ident.current_time>>=
+%val current_time: unit -> int
+%@
+%% ???
+%
+%<<function Ident.current_time>>=
+%let current_time _ = 1
+%@
+% ???
 
 %-------------------------------------------------------------
 
@@ -1313,8 +1303,6 @@ open Format
 
 <<function Ident.print_tbl>>
 
-
-<<function Ident.current_time>>
 @
 
 
@@ -1360,13 +1348,6 @@ open Format
 \subsection*{[[./typing/path.mli]]}
 
 
-
-<<signature Path.isfree>>=
-val isfree: Ident.t -> t -> bool
-@
-
-
-
 %-------------------------------------------------------------
 
 <<./typing/path.mli>>=
@@ -1382,14 +1363,6 @@ val isfree: Ident.t -> t -> bool
 
 
 \subsection*{[[./typing/path.ml]]}
-
-
-
-<<function Path.isfree>>=
-let rec isfree id = function
-    Pident id' -> Ident.same id id'
-  | Pdot(p, s, pos) -> isfree id p
-@
 
 
 %-------------------------------------------------------------
@@ -1632,36 +1605,12 @@ open Types
 \subsection*{[[./typing/env.mli]]}
 
 
-<<signature Env.add_signature>>=
-(* Insertion of all fields of a signature. *)
-
-val add_signature: signature -> t -> t
-@
-
-
-
-
-
-<<signature Env.save_signature>>=
-val save_signature: signature -> string -> string -> Digest.t
-        (* Arguments: signature, module name, file name.
-           Result: CRC. *)
-@
-
-
-
-
-<<signature Env.check_modtype_inclusion>>=
-(* Forward declaration to break mutual recursion with includemod. *)
-
-val check_modtype_inclusion: (t -> module_type -> module_type -> unit) ref
-@
-
-<<type Env.summary>>=
-@
-
-<<signature Env.summary>>=
-@
+%<<type Env.summary>>=
+%@
+% was for debugger, but deleted for now
+%
+%<<signature Env.summary>>=
+%@
 
 
 %-------------------------------------------------------------
@@ -1721,46 +1670,10 @@ open Types
 
 <<signature Env.check_modtype_inclusion>>
 
-
-<<type Env.summary>>
-
-<<signature Env.summary>>
 @
 
 
 \subsection*{[[./typing/env.ml]]}
-
-
-<<constant Env.check_modtype_inclusion>>=
-let check_modtype_inclusion =
-  (* to be filled with includemod.check_modtype_inclusion *)
-  ref ((fun env mty1 mty2 -> fatal_error "Env.include_modtypes") :
-       t -> module_type -> module_type -> unit)
-@
-
-<<function Env.find_module_descr>>=
-(* Lookup by identifier *)
-
-let rec find_module_descr path env =
-  match path with
-    Pident id ->
-      begin try
-        let (p, desc) = Ident.find_same id env.components
-        in desc
-      with Not_found ->
-        if Ident.persistent id
-        then (find_pers_struct (Ident.name id)).ps_comps
-        else raise Not_found
-      end
-  | Pdot(p, s, pos) ->
-      begin match find_module_descr p env with
-       Structure_comps c ->
-          let (descr, pos) = Tbl.find s c.comp_components in
-          descr
-      end
-@
-
-
 
 
 <<function Env.scrape_modtype>>=
@@ -1779,6 +1692,9 @@ let rec scrape_modtype mty env =
   | _ -> mty
 @
 % dead?
+
+
+
 
 <<function Env.constructors_of_type>>=
 (* Compute constructor descriptions *)
@@ -1821,6 +1737,11 @@ let add_signature_component env comp =
   | Tsig_module(id, mty) -> add_module id mty env
 @
 
+<<signature Env.add_signature>>=
+(* Insertion of all fields of a signature. *)
+
+val add_signature: signature -> t -> t
+@
 <<function Env.add_signature>>=
 let add_signature sg env =
   List.fold_left add_signature_component env sg
@@ -1840,6 +1761,11 @@ let open_pers_signature name env =
 @
 
 
+<<signature Env.save_signature>>=
+val save_signature: signature -> string -> string -> Digest.t
+        (* Arguments: signature, module name, file name.
+           Result: CRC. *)
+@
 <<function Env.save_signature>>=
 (* Save a signature to a file *)
 
@@ -2448,6 +2374,16 @@ let equal env params1 ty1 params2 ty2 =
     | (_, _) -> false
   in
     eqtype ty1 ty2
+@
+
+<<signature Path.isfree>>=
+val isfree: Ident.t -> t -> bool
+@
+
+<<function Path.isfree>>=
+let rec isfree id = function
+    Pident id' -> Ident.same id id'
+  | Pdot(p, s, pos) -> isfree id p
 @
 
 <<function Ctype.nondep_type>>=
@@ -3494,6 +3430,7 @@ val modtypes: Env.t -> module_type -> module_type -> module_coercion
 val signatures: Env.t -> signature -> signature -> module_coercion
 @
 
+
 <<signature Includemod.compunit>>=
 val compunit: string -> signature -> string -> signature -> module_coercion
 @
@@ -4028,14 +3965,6 @@ let type_pattern_list env spatl =
 
 
 
-<<function Typecore.type_binding>>=
-(* Typing of toplevel bindings *)
-
-let type_binding env rec_flag spat_sexp_list =
-  reset_def();
-  Typetexp.reset_type_variables();
-  type_let env rec_flag spat_sexp_list
-@
 
 
 %-------------------------------------------------------------

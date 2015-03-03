@@ -87,7 +87,4 @@ val find_name: string -> 'a tbl -> 'a
 val print_tbl: ('a -> unit) -> 'a tbl -> unit
 (*e: signature Ident.print_tbl *)
 
-(*s: signature Ident.current_time *)
-val current_time: unit -> int
-(*e: signature Ident.current_time *)
 (*e: ./typing/ident.mli *)

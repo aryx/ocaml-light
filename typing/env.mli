@@ -144,10 +144,4 @@ val report_error: error -> unit
 val check_modtype_inclusion: (t -> module_type -> module_type -> unit) ref
 (*e: signature Env.check_modtype_inclusion *)
 
-
-(*s: type Env.summary *)
-(*e: type Env.summary *)
-
-(*s: signature Env.summary *)
-(*e: signature Env.summary *)
 (*e: ./typing/env.mli *)
