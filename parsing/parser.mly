@@ -158,10 +158,8 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token TRY EXCEPTION
 %token TYPE OF VAL EXTERNAL MUTABLE
 %token MODULE SIG STRUCT OPEN
-%token LAZY
-%token ASSERT
-%token AND
-%token OR
+%token LAZY ASSERT
+%token AND OR
 
 %token LPAREN RPAREN
 %token LBRACE RBRACE
@@ -882,6 +880,7 @@ constant:
   | STRING                                      { Const_string $1 }
   | FLOAT                                       { Const_float $1 }
 ;
+/*(*x: extra rules *)*/
 signed_constant:
     constant                                    { $1 }
   | SUBTRACTIVE INT                             { Const_int(- $2) }

@@ -704,8 +704,9 @@ type type_expr =
   | Tconstr of Path.t * type_expr list
 @
 % Tconstr, type "constructor"
-% diff with core_type_desc: no more Any, no more type aliases,
-%  no manifest
+% diff with core_type_desc: 
+% - no more Any, no more type aliases (but I removed them)
+% - no manifest (type abbreviations) (but I aspectized it)
 
 <<type Types.type_variable>>=
 and type_variable = 
@@ -713,10 +714,13 @@ and type_variable =
     <<[[Types.type_variable]] other fields>>
   }
 @
-% kinda use a "global", that's what prolog Does in some way.
+% kinda use a "global", that's what Prolog Does in some way
+% (and indeed oleg said the same in his article, "reference cells").
 % the variable carries its substitution, so no need to
 % return substitutions in unify, etc, simpler code (especially
 % in language with no monadic do syntax)
+%less: have also Qvar like in oleg's article instead of abusing generic_level?
+% and replace the option with Ubound of level | Link of typ?
 
 % alternatives: 
 % - return equations?
@@ -862,7 +866,7 @@ val implementation: string -> unit
 <<signature Compile.init_path>>=
 val init_path: unit -> unit
 @
-% ?
+% ? for load_path, use the -I ?
 
 <<signature Compile.initial_env>>=
 val initial_env: unit -> Env.t
@@ -1130,10 +1134,8 @@ rule token = parse
 %token TRY EXCEPTION
 %token TYPE OF VAL EXTERNAL MUTABLE
 %token MODULE SIG STRUCT OPEN
-%token LAZY
-%token ASSERT
-%token AND
-%token OR
+%token LAZY ASSERT
+%token AND OR
 
 %token LPAREN RPAREN
 %token LBRACE RBRACE
@@ -1712,6 +1714,7 @@ let parse_file inputfile parse_fun ast_magic =
   close_in ic;
   ast
 @
+%less: can remove this intermediate? could not do everything in wrap?
 
 <<signature Parse.implementation>>=
 val implementation : Lexing.lexbuf -> Parsetree.structure
@@ -1793,13 +1796,8 @@ structure_tail:
 ;
 @
 %$
-% remove seq_expr? need? for directives? #open stuff?
+%less: remove seq_expr? need? for directives? #open stuff?
 
-<<function Parser.mkstrexp>>=
-let mkstrexp e =
-  { pstr_desc = Pstr_eval e; pstr_loc = e.pexp_loc }
-@
-% mv that only for toplevel?
 
 <<structure rules>>=
 structure_item:
@@ -1858,6 +1856,7 @@ module_expr:
 @
 %less: legacy, could remove
 \fi
+
 
 \subsection{Signatures ([[.mli]])}
 % the .mli
@@ -2236,13 +2235,7 @@ constant:
   | STRING                                      { Const_string $1 }
   | FLOAT                                       { Const_float $1 }
 ;
-signed_constant:
-    constant                                    { $1 }
-  | SUBTRACTIVE INT                             { Const_int(- $2) }
-  | SUBTRACTIVE FLOAT                           { Const_float("-" ^ $2) }
-;
 @
-%$
 
 \subsection{Constructors}
 
@@ -2645,6 +2638,15 @@ simple_pattern:
 % another special case of lists
 
 
+<<extra rules>>=
+signed_constant:
+    constant                                    { $1 }
+  | SUBTRACTIVE INT                             { Const_int(- $2) }
+  | SUBTRACTIVE FLOAT                           { Const_float("-" ^ $2) }
+;
+@
+%$
+
 <<pattern rules>>=
 lbl_pattern_list:
     label_longident EQUAL pattern               { [($1, $3)] }
@@ -2889,6 +2891,7 @@ type t =
 %  to know some offset? for instance type in .cmi have no associated
 %  pos! it's using nopos! and you need that only for external
 %  entity, for local entity Ident.t is enough
+% vs Longident and Lident and Ldot?
 
 %ex: unit test?
 %let path_int = Pident ident_int,  not even Pervasives! higher than that
@@ -2913,6 +2916,7 @@ and signature = signature_item list
 <<type Types.signature_item>>=
 and signature_item =
     Tsig_value of Ident.t * value_description
+
   | Tsig_type of Ident.t * type_declaration
   | Tsig_exception of Ident.t * exception_declaration
   | Tsig_module of Ident.t * module_type
@@ -2930,7 +2934,7 @@ type value_description =
 @
 % diff? core_type -> type_expr! same in most of what is below.
 % also val_prim string list become more precise type
-
+% this is the main thing we want! the type of things!
 
 
 
@@ -2986,7 +2990,7 @@ type expression =
     exp_loc: Location.t;
     exp_type: type_expr; }
 @
-%diff = type_expr!
+%diff = type_expr! again this is the main thing we want!
 
 <<type Typedtree.expression_desc>>=
 and expression_desc =
@@ -3368,18 +3372,30 @@ type t
 % its full path, and it's type.
 % This env will evolve as we typecheck a program and recurse on its
 % AST.
+% but if maps ident to stuff, how get fully qualified like X.y?
+% because X itself is an ident! and it will be in module_components
+% where then you can look for info about y.
 
 <<type Env.t>>=
 type t = {
   values     : (Path.t * Types.value_description) Ident.tbl;
-  types      : (Path.t * Types.type_declaration)  Ident.tbl;
-
-  modules    : (Path.t * Types.module_type)       Ident.tbl;
-  components : (Path.t * module_components)       Ident.tbl;
-
-  constrs    : Types.constructor_description      Ident.tbl;
-  labels     : Types.label_description            Ident.tbl;
+  <<[[Env.t]] other fields>>
 }
+@
+%recall that 'type value_description =
+%  { pval_type: core_type;
+%    pval_prim: string list }
+% so this is really the typing environment! map an ident to its type.
+
+
+<<[[Env.t]] other fields>>=
+types      : (Path.t * Types.type_declaration)  Ident.tbl;
+
+modules    : (Path.t * Types.module_type)       Ident.tbl;
+components : (Path.t * module_components)       Ident.tbl;
+
+constrs    : Types.constructor_description      Ident.tbl;
+labels     : Types.label_description            Ident.tbl;
 @
 %less: no Path for constructor and record?
 % not needed?
@@ -3478,6 +3494,7 @@ let open_signature root sg env =
       | Tsig_value(id, decl) ->
           store_value (Ident.hide id) p
                       (Subst.value_description sub decl) env
+
       | Tsig_type(id, decl) ->
           store_type (Ident.hide id) p
                      (Subst.type_declaration sub decl) env
@@ -3528,7 +3545,6 @@ let rec prefix_idents root pos sub = function
       let p = Pdot(root, Ident.name id, pos) in
       let (pl, final_sub) = prefix_idents root (pos+1) sub rem in
       (p::pl, final_sub)
-
   | Tsig_module(id, mty) :: rem ->
       let p = Pdot(root, Ident.name id, pos) in
       let (pl, final_sub) =
@@ -4092,6 +4108,28 @@ and signature_item s = function
 
 \section{Reading typed [[.cmi]] interface files}
 
+% X.Y.z -> Ldot(Ldot(X, "Y", 0), "z", 42)?
+
+% Env.lookup -> <>
+<<function Env.lookup_module_descr>>=
+let rec lookup_module_descr lid env =
+  match lid with
+    Lident s ->
+      begin try
+        Ident.find_name s env.components
+      with Not_found ->
+        (Pident(Ident.create_persistent s), (find_pers_struct s).ps_comps)
+      end
+  | Ldot(l, s) ->
+      let (p, descr) = lookup_module_descr l env in
+      (match descr with
+       Structure_comps c ->
+      let (descr, pos) = Tbl.find s c.comp_components in
+          (Pdot(p, s, pos), descr)
+      )
+@
+
+
 
 % Env.find -> <>
 <<function Env.find_module_descr>>=
@@ -4116,26 +4154,7 @@ let rec find_module_descr path env =
       end
 @
 
-% X.Y.z -> Pdot(Pdot(X, "Y", 0), "z", 42)
 
-% Env.lookup -> <>
-<<function Env.lookup_module_descr>>=
-let rec lookup_module_descr lid env =
-  match lid with
-    Lident s ->
-      begin try
-        Ident.find_name s env.components
-      with Not_found ->
-        (Pident(Ident.create_persistent s), (find_pers_struct s).ps_comps)
-      end
-  | Ldot(l, s) ->
-      let (p, descr) = lookup_module_descr l env in
-      (match descr with
-       Structure_comps c ->
-      let (descr, pos) = Tbl.find s c.comp_components in
-          (Pdot(p, s, pos), descr)
-      )
-@
 
 \subsection{Persistent identifiers}
 
@@ -4871,6 +4890,14 @@ let rec filter_arrow env t =
 
 % link with next section where type types ...
 
+<<[[Typetexp.transl_simple_type()]] when not fixed and Not_found>>=
+else begin
+  let v = new_global_var() in
+  type_variables := Tbl.add name v !type_variables;
+  v
+end
+@
+
 \section{Typing [[let]]}
 
 % Def
@@ -4958,7 +4985,7 @@ List.iter2
 
 \subsection{Generalizations and type schemas}
 
-% see http://okmij.org/ftp/ML/generalization.html !
+% see http://okmij.org/ftp/ML/generalization.html ! the first part.
 
 % we want this code:
 %  let f x = x in 
@@ -5028,6 +5055,8 @@ let generic_level = (-1)
 %todo: could have instead a tvar_is_type_schema? instead
 % of abusing tval_level for everything no? a bit
 % ugly to abuse int like that
+% or use is_quantified_tvar? or like in oleg's article have
+% Tvar and QVar
 
 
 %"The current nesting level of lets" that's the comment in caml light
@@ -5147,15 +5176,18 @@ let instance_label lbl =
 % complicated,
 % again see http://okmij.org/ftp/ML/generalization.html
 
-\subsubsection{Type levels}
-
-%   fun x -> let y = x in y
-% don't want infer 'a -> 'b, because hole
+% fun x -> let y = x in y
+% don't want to generalize, don't want infer 'a -> 'b, because hole
 % in the type system! someone writes this function and
 % no guarantee! (ok Obj.magic does that but we want to avoid it actually)
 
-% see http://okmij.org/ftp/ML/generalization.html for full 
-% explanations, it's subtle.
+% so regular test is to look if type variables in x are
+% free in the environment, but takes time to do so.
+% enter type levels tricks.
+
+
+\subsubsection{Type levels}
+
 
 <<[[Ctype.generalize()]] generalization criteria>>=
 v.tvar_level > !current_level
@@ -5219,6 +5251,10 @@ then v.tvar_level <- tvar.tvar_level
 
 
 
+
+\subsubsection{[[reset_xxx()]]}
+
+% note that type_expressions is for toplevel expressions
 <<[[Typecore.type_expression()]] before begin_def, reset>>=
 reset_def();
 Typetexp.reset_type_variables();
@@ -5249,6 +5285,7 @@ val type_binding:
 let type_binding env rec_flag spat_sexp_list =
   reset_def();
   Typetexp.reset_type_variables();
+
   type_let env rec_flag spat_sexp_list
 @
 
@@ -5312,6 +5349,8 @@ val make_nongen: type_expr -> unit
 % with is_nonexpansive instead of transforming the level
 % so that the call to generalize later will fail?
 % need to change the level? so faster at the upper level?
+% todo: rewrite to be like for type_expression, and
+% see if significantly slower!
 
 <<function Ctype.make_nongen>>=
 let rec make_nongen ty =
@@ -5343,28 +5382,34 @@ val transl_value_decl:
 (* Translate a value declaration *)
 
 let transl_value_decl env valdecl =
-  Ctype.reset_def();
   let ty = Typetexp.transl_type_scheme env valdecl.pval_type in
   { val_type = ty;
     val_prim = Primitive.parse_declaration (Ctype.arity ty) valdecl.pval_prim }
 @
-
+%old: Ctype.reset_def();
 
 
 <<signature Typetexp.transl_type_scheme>>=
 val transl_type_scheme:
         Env.t -> Parsetree.core_type -> Types.type_expr
 @
+% transl_value_decl -> <>
 <<function Typetexp.transl_type_scheme>>=
 let transl_type_scheme env styp =
+  Ctype.reset_def();
   reset_type_variables();
+
   begin_def();
   let typ = transl_simple_type env false styp in
   end_def();
+
   generalize typ;
   typ
 @
-% generalize!
+% generalize! again
+%old: reset_def() was in the caller, in transl_value_decl
+% but I prefer to put it closer to reset_type_variables;
+% more symetric with the other functions.
 
 \section{Typing other elements}
 
@@ -5372,39 +5417,32 @@ let transl_type_scheme env styp =
 % this is mostly to build the environment that will then
 % be used when typing expressions!
 
-<<signature Typetexp.transl_simple_type>>=
-(* Typechecking of type expressions for the core language *)
-
-val transl_simple_type:
-        Env.t -> bool -> Parsetree.core_type -> Types.type_expr
-@
-% bool? "fixed"?
-
-
 
 <<constant Typetexp.type_variables>>=
 (* Translation of type expressions *)
 
 let type_variables = ref (Tbl.empty : (string, Types.type_expr) Tbl.t)
 @
+% type_expr should always be a Tvar
 
+<<signature Typetexp.transl_simple_type>>=
+(* Typechecking of type expressions for the core language *)
 
+val transl_simple_type:
+        Env.t -> bool -> Parsetree.core_type -> Types.type_expr
+@
 % fixed? false when called fro Pexp_constraint, true when called
 %  from type definitions
 <<function Typetexp.transl_simple_type>>=
 let rec transl_simple_type env fixed styp =
   match styp.ptyp_desc with
-    Ptyp_var name ->
+  | Ptyp_var name ->
       begin try
         Tbl.find name !type_variables
       with Not_found ->
-        if fixed then
-          raise(Error(styp.ptyp_loc, Unbound_type_variable name))
-        else begin
-          let v = new_global_var() in
-          type_variables := Tbl.add name v !type_variables;
-          v
-        end
+        if fixed 
+        then raise(Error(styp.ptyp_loc, Unbound_type_variable name))
+        <<[[Typetexp.transl_simple_type()]] when not fixed and Not_found>>
       end
   | Ptyp_constr(lid, stl) ->
       let (path, decl) =
@@ -5412,10 +5450,7 @@ let rec transl_simple_type env fixed styp =
           Env.lookup_type lid env
         with Not_found ->
           raise(Error(styp.ptyp_loc, Unbound_type_constructor lid)) in
-      if List.length stl <> decl.type_arity 
-      then
-        raise(Error(styp.ptyp_loc, Type_arity_mismatch(lid, decl.type_arity,
-                                                           List.length stl)));
+      <<[[Typetexp.transl_simple_type()]] sanity check arity stl>>
       Tconstr(path, List.map (transl_simple_type env fixed) stl)
   (* boilerplate mapper *)
   | Ptyp_arrow(st1, st2) ->
@@ -5425,34 +5460,21 @@ let rec transl_simple_type env fixed styp =
       Ttuple(List.map (transl_simple_type env fixed) stl)
 @
 
-<<signature Ctype.new_global_var>>=
-val new_global_var: unit -> type_expr
-        (* Return a fresh variable, bound at toplevel
-           (as type variables ['a] in type constraints). *)
+<<[[Typetexp.transl_simple_type()]] sanity check arity stl>>=
+if List.length stl <> decl.type_arity 
+then
+  raise(Error(styp.ptyp_loc, Type_arity_mismatch(lid, decl.type_arity,
+                                                     List.length stl)));
 @
 
-
-<<function Ctype.new_global_var>>=
-let new_global_var () =
-  Tvar { tvar_level = 1; tvar_link = None }
-@
-% newvar not enough? anyway have no begin_def when
-% processing type declarations no?
 
 \subsection{Typing type declarations}
-
 
 <<signature Typedecl.transl_type_decl>>=
 val transl_type_decl:
         Env.t -> (string * Parsetree.type_declaration) list ->
                          (Ident.t * Types.type_declaration) list * Env.t
 @
-
-
-
-
-% why reset_def?
-
 <<function Typedecl.transl_type_decl>>=
 (* Translate a set of mutually recursive type declarations *)
 
@@ -5478,43 +5500,7 @@ let transl_type_decl env name_sdecl_list =
   <<[[Typedecl.transl_type_decl()]] check recursive abbrevs>>
   (decls, newenv)
 @
-
-
-
-
-% exported because used in typedecl too
-<<signature Typetexp.reset_type_variables>>=
-val reset_type_variables: unit -> unit
-@
-<<function Typetexp.reset_type_variables>>=
-let reset_type_variables () =
-  type_variables := Tbl.empty
-@
-% a bit ugly to use those globals, could
-% be instead passed in a second environment
-
-
-
-
-
-<<exception Typetexp.Already_bound>>=
-exception Already_bound
-@
-
-<<signature Typetexp.enter_type_variable>>=
-val enter_type_variable: string -> Types.type_expr
-@
-<<function Typetexp.enter_type_variable>>=
-let enter_type_variable name =
-  try
-    Tbl.find name !type_variables; 
-    raise Already_bound
-  with Not_found ->
-    let v = new_global_var() in
-    type_variables := Tbl.add name v !type_variables;
-    v
-@
-%todo: boilerplate again? could factorize code?
+% why reset_def?
 
 
 
@@ -5566,6 +5552,57 @@ let transl_declaration env (name, sdecl) id =
   (id, decl)
 @
 
+
+% exported because used in typedecl too
+<<signature Typetexp.reset_type_variables>>=
+val reset_type_variables: unit -> unit
+@
+% ??? -> <>
+<<function Typetexp.reset_type_variables>>=
+let reset_type_variables () =
+  type_variables := Tbl.empty
+@
+% a bit ugly to use those globals, could
+% be instead passed in a second environment
+
+
+
+<<exception Typetexp.Already_bound>>=
+exception Already_bound
+@
+
+<<signature Typetexp.enter_type_variable>>=
+val enter_type_variable: string -> Types.type_expr
+@
+<<function Typetexp.enter_type_variable>>=
+let enter_type_variable name =
+  try
+    Tbl.find name !type_variables; 
+    raise Already_bound
+  with Not_found ->
+    let v = new_global_var() in
+    type_variables := Tbl.add name v !type_variables;
+    v
+@
+%todo: boilerplate again? could factorize code?
+
+
+
+<<signature Ctype.new_global_var>>=
+val new_global_var: unit -> type_expr
+        (* Return a fresh variable, bound at toplevel
+           (as type variables ['a] in type constraints). *)
+@
+<<function Ctype.new_global_var>>=
+let new_global_var () =
+  Tvar { tvar_level = 1; tvar_link = None }
+@
+% newvar not enough? anyway have no begin_def when
+% processing type declarations no?
+
+
+
+
 <<function Typedecl.enter_types>>=
 (* Enter all declared types in the environment as abstract types *)
 
@@ -5585,6 +5622,7 @@ let rec enter_types env = function
 
 % generalize???
 
+\subsubsection{Sanity checks}
 
 <<[[Typedecl.transl_declaration()]] sanity check when variant case>>=
 let all_constrs = ref StringSet.empty in
@@ -6057,7 +6095,6 @@ let rec free_type_ident env ids ty =
 <<constants Predef.ident_xxx>>=
 and ident_format = Ident.create "format"
 @
-
 <<signatures Predef.path_xxx>>=
 val path_format: Path.t
 @
@@ -8662,6 +8699,12 @@ end
 %start use_file                         /* for the #use directive */
 %type <Parsetree.toplevel_phrase list> use_file
 @
+
+<<function Parser.mkstrexp>>=
+let mkstrexp e =
+  { pstr_desc = Pstr_eval e; pstr_loc = e.pexp_loc }
+@
+% mv that only for toplevel?
 
 <<entry points rules>>=
 
