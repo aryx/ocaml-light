@@ -30,7 +30,7 @@
 int debugger_in_use = 0;
 unsigned long event_count;
 
-#if !defined(HAS_SOCKETS) || defined(_WIN32)
+#if !defined(HAS_SOCKETS)
 
 void debugger_init(void)
 {

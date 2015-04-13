@@ -20,15 +20,8 @@
 
 extern void caml_main (char **);
 
-#ifdef _WIN32
-extern void expand_command_line (int *, char ***);
-#endif
-
 int main(int argc, char **argv)
 {
-#ifdef _WIN32
-  expand_command_line(&argc, &argv);
-#endif
   caml_main(argv);
   sys_exit(Val_int(0));
   return 0; /* not reached */

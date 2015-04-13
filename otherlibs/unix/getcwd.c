@@ -17,11 +17,7 @@
 
 #ifdef HAS_GETCWD
 
-#ifndef _WIN32
 #include <sys/param.h>
-#else
-#define MAXPATHLEN 512
-#endif
 
 value unix_getcwd(value unit)     /* ML */
 {

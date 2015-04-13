@@ -23,10 +23,6 @@
 
 #include "socketaddr.h"
 
-#ifdef _WIN32
-#define EAFNOSUPPORT WSAEAFNOSUPPORT
-#endif
-
 union sock_addr_union sock_addr;
 int sock_addr_len;
 
@@ -41,7 +37,6 @@ value alloc_inet_addr(unsigned int a)
 void get_sockaddr(value a)
 {
   switch(Tag_val(a)) {
-#ifndef _WIN32
   case 0:                       /* ADDR_UNIX */
     { value path;
       mlsize_t len;
@@ -57,7 +52,6 @@ void get_sockaddr(value a)
         + len;
       break;
     }
-#endif
   case 1:                       /* ADDR_INET */
     {
       char * p;
@@ -78,7 +72,6 @@ value alloc_sockaddr(void)
 {
   value res;
   switch(sock_addr.s_gen.sa_family) {
-#ifndef _WIN32
   case AF_UNIX:
     { value n = copy_string(sock_addr.s_unix.sun_path);
       Begin_root (n);
@@ -87,7 +80,6 @@ value alloc_sockaddr(void)
       End_roots();
       break;
     }
-#endif
   case AF_INET:
     { value a = alloc_inet_addr(sock_addr.s_inet.sin_addr.s_addr);
       Begin_root (a);
