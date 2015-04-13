@@ -191,11 +191,7 @@ value log10_float(value f)              /* ML */
 
 value modf_float(value f)              /* ML */
 {
-#if macintosh
-  _float_eval frem;
-#else
   double frem;
-#endif
   value res;
   value quo = Val_unit, rem = Val_unit;
 

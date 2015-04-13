@@ -15,12 +15,8 @@
 #define _config_
 
 
-#if !macintosh
 #include "../config/m.h"
 #include "../config/s.h"
-#else
-#include "::config:sm-Mac.h"
-#endif
 
 /* Library dependencies */
 

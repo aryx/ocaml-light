@@ -18,16 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#if macintosh
-#include "::config:sm-Mac.h"
-#else
 #include "../config/s.h"
-#endif
-
-#if macintosh
-#include "::byterun:rotatecursor.h"
-extern int volatile have_to_interact;
-#endif
 
 /*  machine-dependent definitions			*/
 /*  the following definitions are for the Tahoe		*/
@@ -123,28 +114,12 @@ extern int volatile have_to_interact;
 
 /*  storage allocation macros  */
 
-#if macintosh
-
-#define INTERACT() \
-  (have_to_interact ? (have_to_interact = 0, rotatecursor_action (1)): 0)
-
-#define CALLOC(k,n)	 (INTERACT (), calloc((unsigned)(k),(unsigned)(n)))
-#define FREE(x)      (INTERACT (), free((char*)(x)))
-#define MALLOC(n)    (INTERACT (), malloc((unsigned)(n)))
-#define	NEW(t)       (INTERACT (), (t*)allocate(sizeof(t)))
-#define	NEW2(n,t)    (INTERACT (), (t*)allocate((unsigned)((n)*sizeof(t))))
-#define REALLOC(p,n) (INTERACT (), realloc((char*)(p),(unsigned)(n)))
-
-#else
-
 #define CALLOC(k,n)	(calloc((unsigned)(k),(unsigned)(n)))
 #define	FREE(x)		(free((char*)(x)))
 #define MALLOC(n)	(malloc((unsigned)(n)))
 #define	NEW(t)		((t*)allocate(sizeof(t)))
 #define	NEW2(n,t)	((t*)allocate((unsigned)((n)*sizeof(t))))
 #define REALLOC(p,n)	(realloc((char*)(p),(unsigned)(n)))
-
-#endif /* macintosh */
 
 
 /*  the structure of a symbol table entry  */
