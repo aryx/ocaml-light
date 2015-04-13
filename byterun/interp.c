@@ -30,11 +30,6 @@
 #include "stacks.h"
 #include "str.h"
 
-#if macintosh
-#include "rotatecursor.h"
-extern int volatile have_to_interact;
-#endif
-
 /* Registers for the abstract machine:
         pc         the code pointer
         sp         the stack pointer (grows downward)
@@ -754,12 +749,6 @@ value interprete(code_t prog, asize_t prog_size)
           extra_args = 0;
         }
       }
-#if macintosh
-      if (have_to_interact){
-        have_to_interact = 0;
-        rotatecursor_action (0);
-      }
-#endif
       Next;
 
 /* Calling C functions */

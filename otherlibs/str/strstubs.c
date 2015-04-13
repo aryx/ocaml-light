@@ -1,8 +1,4 @@
-#if !macintosh
 #include <sys/types.h>
-#else
-#include <SizeTDef.h>
-#endif
 #include <string.h>
 #include <regex.h>
 #include <mlvalues.h>

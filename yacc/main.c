@@ -375,15 +375,8 @@ void open_files(void)
       open_error(interface_file_name);
 }
 
-#if macintosh
-int volatile have_to_interact;
-#endif
-
 void main(int argc, char **argv)
 {
-#if macintosh
-    rotatecursor_init (&have_to_interact, NULL);
-#endif
     set_signals();
     getargs(argc, argv);
     open_files();

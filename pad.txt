@@ -91,6 +91,7 @@ Then I did many modifications, mostly removing stuff:
    newgenty, etc), from caml special light 1.16
    introduced for the need of objects
  - I moved the debugger/ and toplevel/ under tools/
+ - I removed some support for macintosh in byterun/
 
 I have also rewritten a few:
  - if then else if --> match () with when

@@ -19,10 +19,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#if !macintosh
+
 #include <sys/types.h>
 #include <sys/stat.h>
-#endif
+
 #include "config.h"
 #ifdef HAS_UNISTD
 #include <unistd.h>
@@ -104,11 +104,8 @@ static int sys_open_flags[] = {
 value sys_open(value path, value flags, value perm) /* ML */
 {
   int ret;
-  ret = open(String_val(path), convert_flag_list(flags, sys_open_flags)
-#if !macintosh
-             , Int_val(perm)
-#endif
-                                       );
+  ret = open(String_val(path), convert_flag_list(flags, sys_open_flags), 
+             Int_val(perm));
   if (ret == -1) sys_error(path);
   return Val_long(ret);
 }
@@ -121,16 +118,8 @@ value sys_close(value fd)             /* ML */
 
 value sys_file_exists(value name)     /* ML */
 {
-#if macintosh
-  int f;
-  f = open (String_val (name), O_RDONLY);
-  if (f == -1) return (Val_bool (0));
-  close (f);
-  return (Val_bool (1));
-#else
   struct stat st;
   return Val_bool(stat(String_val(name), &st) == 0);
-#endif
 }
 
 value sys_remove(value name)          /* ML */
@@ -247,15 +236,6 @@ char * searchpath(char * name)
   return fullname;
 }
 
-#elif macintosh
-
-/* We don't need searchpath on the Macintosh because there are no #! scripts */
-
-char *searchpath (char * name)
-{
-  return name;
-}
-
 #else
 
 #ifndef S_ISREG
@@ -288,7 +268,7 @@ char * searchpath(char * name)
   return fullname;
 }
 
-#endif /* _WIN32, macintosh, ... */
+#endif /* _WIN32 */
 
 #ifdef _WIN32
 
