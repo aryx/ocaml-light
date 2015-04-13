@@ -107,17 +107,20 @@
 
 \title{
 {\Huge 
-Principia Softwarica: The OCaml Light Compilers
+Principia Softwarica: The Caml Special Light Compilers
 }\\
 {version 0.1}
 }
-% compilers, with an s, ocamlc and ocamlopt
+%note: compilers, with an s, ocamlc and ocamlopt
 
 \author{
 Yoann Padioleau\\
-\texttt{yoann.padioleau@gmail.com}
+\texttt{yoann.padioleau@gmail.com}\\
+\\
+with code from\\
+Xavier Leroy and Damien Doligez
 }
-% with code from Xavier Leroy and Damien Doligez
+
 
 \maketitle 
 \onecolumn
@@ -406,6 +409,7 @@ type t =
   | Ldot of t * string
 @
 %note: like a list, but enforce have at least one element
+% Foo.Bar.x -> Ldot (Ldot (Lident "Foo", "Bar"), "x")
 
 %<<signature Longident.flatten>>=
 %val flatten: t -> string list
@@ -5127,6 +5131,7 @@ let inst_subst = ref ([] : (type_expr * type_expr) list)
 let rec copy ty =
   match repr ty with
     Tvar v as t ->
+      (* generic mark, let's create a new var then *)
       if v.tvar_level = generic_level then begin
         try
           List.assq t !inst_subst
@@ -6090,7 +6095,7 @@ let rec free_type_ident env ids ty =
 %todo: delete?
 
 
-\subsection{Printf and [[format]]}
+\subsection{[[printf()]] and [[format]]}
 
 <<constants Predef.ident_xxx>>=
 and ident_format = Ident.create "format"
@@ -6735,6 +6740,13 @@ val check_unused:
   (Typedtree.pattern * Typedtree.expression) list -> unit
 @
 
+\section{Dead code}
+
+% unused variable
+% dead function (when not exported in .cmi)
+% etc
+
+%TODO!
 
 
 
@@ -8047,6 +8059,8 @@ val ranlib: string
 
 \subsection{[[-custom]]}
 
+% it also adds the .so in it no?
+
 <<constant Clflags.custom_runtime>>=
 let custom_runtime = ref false          (* -custom *)
 @
@@ -8130,6 +8144,12 @@ let link_everything = ref false         (* -linkall *)
       " Link all modules, even unused ones";
 @
 
+% useful for modules that are plugins, like mmm/Viewers/plain.ml
+% that just add some of its functions to some globals.
+% the module appears unused from outside, but it has some
+% important side effects!
+
+%todo: put code here using link_everything
 
 \subsection{[[-output-obj]]}
 
@@ -8318,6 +8338,10 @@ let record_event ev =
   events := ev :: !events
 @
 
+\section{Backtraces}
+
+% OCAMLRUNPARAM=b
+% very useful
 
 \chapter{Profiling Support}
 
@@ -8502,7 +8526,7 @@ let rec mkrangepat c1 c2 =
 %$
 % meh
 
-\section{Assert, and [[-noassert]]}
+\section{[[assert()]], and [[-noassert]]}
 
 <<[[Lexer.keyword_table]] elements>>=
 "assert", ASSERT;
@@ -8543,7 +8567,7 @@ let noassert = ref false                (* -noassert *)
 "-noassert", Arg.Set noassert, " Don't compile assertion checks";
 @
 
-\section{Lazy}
+\section{[[lazy()]] evaluation}
 
 <<[[Lexer.keyword_table]] elements>>=
 "lazy", LAZY;
@@ -8691,7 +8715,12 @@ if is_ast_file then begin
 end 
 @
 
-\section{Toplevel}
+% useful to unit tests? to not depend on lexer/parser?
+
+\section{Toplevel interpreter}
+
+% well it looks like an interpreter, but it's really
+% an on-the-fly bytecode compiler.
 
 <<Parser entry points types>>=
 %start toplevel_phrase                  /* for interactive use */
@@ -9751,6 +9780,7 @@ let print_warning loc msg =
 
 
 \section{Fatal errors}
+% internal error in compiler, should never happen
 
 % ?? -> <>
 <<signature Misc.fatal_error>>=
@@ -9774,17 +9804,14 @@ type error =
   | Unterminated_comment
   | Unterminated_string
 @
-
 <<exception Lexer.Error>>=
 exception Error of error * int * int
 @
-
 <<signature Lexer.report_error>>=
 val report_error: error -> unit
 @
 
 % in .mll
-
 <<function Lexer.report_error>>=
 let report_error = function
     Illegal_character ->
@@ -9800,6 +9827,10 @@ let report_error = function
 %\subsection{Grammar managment}
 
 % error yacc terminal!
+% useful, but in the end not enough! it happens sometimes
+% that I got a syntax error at one place but have no idea
+% how to close it or how to fix it (usually I then use
+% emacs M-x backward-paren to find errors)
 
 <<rule module_expr error cases>>=
 | STRUCT structure error
@@ -9859,9 +9890,11 @@ type error =
   | Other of Location.t
 @
 %Other for ?
-
 <<exception Syntaxerr.Error>>=
 exception Error of error
+@
+<<signature Syntaxerr.report_error>>=
+val report_error: error -> unit
 @
 
 <<exception Syntaxerr.Escape_error>>=
@@ -9869,9 +9902,6 @@ exception Escape_error
 @
 % why not an error case? 
 
-<<signature Syntaxerr.report_error>>=
-val report_error: error -> unit
-@
 
 
 <<function Syntaxerr.report_error>>=
@@ -9914,11 +9944,9 @@ type error =
   | Corrupted_interface of string
   | Illegal_renaming of string * string
 @
-
 <<exception Env.Error>>=
 exception Error of error
 @
-
 <<signature Env.report_error>>=
 val report_error: error -> unit
 @
@@ -9961,11 +9989,9 @@ type error =
 @
 % no unify error?
 %TODO: error a la julien? far easier to understand
-
 <<exception Typetexp.Error>>=
 exception Error of Location.t * error
 @
-
 <<signature Typetexp.report_error>>=
 val report_error: error -> unit
 @
@@ -9999,11 +10025,9 @@ type error =
   | Repeated_name of string * string
   | Non_generalizable of type_expr
 @
-
 <<exception Typemod.Error>>=
 exception Error of Location.t * error
 @
-
 <<signature Typemod.report_error>>=
 val report_error: error -> unit
 @
@@ -10043,24 +10067,22 @@ let report_error = function
 @
 
 
-
-
 <<type Includemod.error>>=
 type error =
     Missing_field of Ident.t
+  (* X do not match Y *)
   | Value_descriptions of Ident.t * value_description * value_description
   | Type_declarations of Ident.t * type_declaration * type_declaration
   | Exception_declarations of
       Ident.t * exception_declaration * exception_declaration
   | Module_types of module_type * module_type
+
   | Interface_mismatch of string * string
 @
 % last one is probably the most classic?
-
 <<exception Includemod.Error>>=
 exception Error of error list
 @
-
 <<signature Includemod.report_error>>=
 val report_error: error list -> unit
 @
@@ -10134,12 +10156,9 @@ type error =
   | Recursive_abbrev of string
   | Definition_mismatch of type_expr
 @
-
-
 <<exception Typedecl.Error>>=
 exception Error of Location.t * error
 @
-
 <<signature Typedecl.report_error>>=
 val report_error: error -> unit
 @
@@ -10170,27 +10189,28 @@ let report_error = function
 
 <<type Typecore.error>>=
 type error =
-    Unbound_value of Longident.t
+    Unbound_value       of Longident.t
   | Unbound_constructor of Longident.t
-  | Unbound_label of Longident.t
+  | Unbound_label       of Longident.t
 
   | Constructor_arity_mismatch of Longident.t * int * int
   | Label_mismatch of Longident.t * type_expr * type_expr
   | Pattern_type_clash of type_expr * type_expr
+
   | Multiply_bound_variable
   | Orpat_not_closed
   | Expr_type_clash of type_expr * type_expr
   | Apply_non_function of type_expr
+
   | Label_multiply_defined of Longident.t
   | Label_missing
   | Label_not_mutable of Longident.t
+
   | Bad_format of string
 @
-
 <<exception Typecore.Error>>=
 exception Error of Location.t * error
 @
-
 <<signature Typecore.report_error>>=
 val report_error: error -> unit
 @
@@ -10265,11 +10285,9 @@ type error =
     Illegal_letrec_pat
   | Illegal_letrec_expr
 @
-
 <<exception Translcore.Error>>=
 exception Error of Location.t * error
 @
-
 <<signature Translcore.report_error>>=
 val report_error: error -> unit
 @
@@ -10295,11 +10313,9 @@ type error =
   | Custom_runtime
   | File_exists of string
 @
-
 <<exception Bytelink.Error>>=
 exception Error of error
 @
-
 <<signature Bytelink.report_error>>=
 val report_error: error -> unit
 @
@@ -10332,18 +10348,14 @@ let report_error = function
 
 
 
-
-
 <<type Bytelibrarian.error>>=
 type error =
     File_not_found of string
   | Not_an_object_file of string
 @
-
 <<exception Bytelibrarian.Error>>=
 exception Error of error
 @
-
 <<signature Bytelibrarian.report_error>>=
 val report_error: error -> unit
 @
@@ -10375,7 +10387,7 @@ val for_all2: ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
 <<signature Misc.filter>>=
 val filter: ('a -> bool) -> 'a list -> 'a list
 @
-
+%todo: vs List.filter?
 
 <<signature Misc.replicate_list>>=
 val replicate_list: 'a -> int -> 'a list
@@ -10383,7 +10395,7 @@ val replicate_list: 'a -> int -> 'a list
            all identical to [elem]. *)
 @
 
-
+% implem
 
 
 <<function Misc.map_end>>=
