@@ -102,16 +102,12 @@ value is_printable(value chr) /* ML */
   int c;
   unsigned char * printable_chars;
 
-#ifdef _WIN32
-  printable_chars = printable_chars_iso;
-#else
   static int iso_charset = -1;
   if (iso_charset == -1) {
     char * lc_ctype = (char *) getenv("LC_CTYPE");
     iso_charset = (lc_ctype != 0 && strcmp(lc_ctype, "iso_8859_1") == 0);
   }
   printable_chars = iso_charset ? printable_chars_iso : printable_chars_ascii;
-#endif
   c = Int_val(chr);
   return Val_bool(printable_chars[c >> 3] & (1 << (c & 7)));
 }

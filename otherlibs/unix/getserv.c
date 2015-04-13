@@ -21,13 +21,9 @@
 
 #include <sys/types.h>
 
-#ifndef _WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#else
-#include <winsock.h>
-#endif
 
 static value alloc_service_entry(struct servent *entry)
 {

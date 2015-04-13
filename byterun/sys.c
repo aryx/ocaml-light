@@ -177,11 +177,7 @@ void sys_init(char **argv)
 
 value sys_system_command(value command)   /* ML */
 {
-#ifndef _WIN32
   int retcode = system(String_val(command));
-#else
-  int retcode = win32_system(String_val(command));
-#endif
   if (retcode == -1) sys_error(command);
   return Val_int(retcode);
 }
@@ -202,41 +198,6 @@ value sys_get_config(value unit)  /* ML */
 
 /* Search path function */
 
-#ifdef _WIN32
-
-char * searchpath(char * name)
-{
-  char * fullname;
-  char * path;
-  char * p;
-  char * q;
-  struct stat st;
-
-  if (stat(name, &st) == 0) return name;
-  path = getenv("PATH");
-  if (path == NULL) return 0;
-  fullname = stat_alloc(strlen(name) + strlen(path) + 6);
-  strcpy(fullname, name);
-  strcat(fullname, ".exe");
-  if (stat(fullname, &st) == 0) return fullname;
-  for (p = name; *p != 0; p++) {
-    if (*p == '/' || *p == '\\' || *p == ':') return name;
-  }
-  while(1) {
-    for (p = fullname; *path != 0 && *path != ';'; p++, path++) *p = *path;
-    if (p != fullname && p[-1] != '\\') *p++ = '\\';
-    for (q = name; *q != 0; p++, q++) *p = *q;
-    *p = 0;
-    if (stat(fullname, &st) == 0) break;
-    strcpy(p, ".exe");
-    if (stat(fullname, &st) == 0) break;
-    if (*path == 0) return 0;
-    path++;
-  }
-  return fullname;
-}
-
-#else
 
 #ifndef S_ISREG
 #define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
@@ -267,47 +228,3 @@ char * searchpath(char * name)
   }
   return fullname;
 }
-
-#endif /* _WIN32 */
-
-#ifdef _WIN32
-
-#include <ctype.h>
-extern char * mktemp(char *);
-
-int win32_system(char * cmdline)
-{
-#define MAX_CMD_LENGTH 256
-  char cmd[MAX_CMD_LENGTH + 16];
-  char template[9];
-  char * tempfile;
-  int len, i, j, fd, retcode;
-
-  len = strlen(cmdline);
-  if (len < 1000) {
-    return system(cmdline);
-  } else {
-    /* Skip initial blanks, if any */
-    for (i = 0; cmdline[i] != 0 && isspace(cmdline[i]); i++) /*nothing*/;
-    /* Copy command name to buffer, stop at first blank */
-    for (j = 0; cmdline[i] != 0 && ! isspace(cmdline[i]); i++) {
-      if (j < MAX_CMD_LENGTH) cmd[j++] = cmdline[i];
-    }
-    /* Save remainder of command line to temp file */
-    strcpy(template, "cmXXXXXX");
-    tempfile = mktemp(template);
-    fd = open(tempfile, O_WRONLY | O_CREAT | O_TRUNC | O_TEXT, 0666);
-    if (fd == -1) return -1;
-    write(fd, cmdline + i, len - i);
-    close(fd);
-    /* Add " @tempfile" to the command line */
-    sprintf(cmd + j, " @%s", tempfile);
-    /* Run command */
-    retcode = system(cmd);
-    /* Remove temp file and exit */
-    unlink(tempfile);
-    return retcode;
-  }
-}
-
-#endif

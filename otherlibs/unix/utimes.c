@@ -17,11 +17,7 @@
 #ifdef HAS_UTIME
 
 #include <sys/types.h>
-#ifndef _WIN32
 #include <utime.h>
-#else
-#include <sys/utime.h>
-#endif
 
 value unix_utimes(value path, value atime, value mtime) /* ML */
 {
