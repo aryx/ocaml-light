@@ -107,25 +107,6 @@ Then I backported a few things from a more recent ocaml distribution:
  - b8238a8b61696e454e5fc391dec9d71555b909e9
    PR#5662 : typo in md5.c when clearing sensitive data in context
 
-*** TODO warnings to backports
-
-Warning 26: unused variable t.
-
-*** TODO backports
-
-c4fb76de04783aea39a97b9279ea7adf5fdacfa8
-Fix: bug dans le calcul de la longueur max d'une chaine.
-
-ce301ce8fb46ce57a19a1323c9a6e6959da4d749
-OFFSETREF met () dans l'accu.
-
-3402009ef3e42d2977bbe0be6bb11841bd3445b8
-Faute d'orthographe sur un ident dans intern_from_string.
-
-*** TODO include tests/ from csl/ and ocaml examples from caml light
-(that have been updated to ocaml 3.08 by leroy on their distrib/contrib/
-I think)
-
 
 * Compile
 
@@ -136,6 +117,12 @@ $ make
 if you change types.mli, then the signature of the .cmo will
 change in which case you need to 
 $ make bootstrap
+
+* Test?
+
+make install
+and run /usr/.../bin/ocaml ?
+but make bootstrap should already be a good test
 
 * Debugging ocamlc and ocamlrun themselves
 
