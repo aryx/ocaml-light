@@ -1,0 +1,242 @@
+-*- org -*-
+
+* Last
+
+** small but useful
+
+*** { x with ... } nice sugar to have
+annoying otherwise
+
+*** improve error messages
+
+File "asmcomp/selectgen.ml", line 297, characters 1-19293:
+Some labels are undefined
+with no explanations of the labels...
+
+File "typing/typecore.ml", line 246, characters 2-7965:
+Warning: this pattern-matching is not exhaustive
+with no explanations of the cases...
+
+error for .mly are reported for the .ml. Support #line?
+
+** Internals
+
+*** remove stuff
+
+**** EASY less: remove or, and  infix operator (use || and &&)
+
+**** EASY less: get rid of type x = y = z
+it's confusing anyway
+
+**** less: remove tbl? just use map?
+
+*** refactoring
+
+**** less: remove Ident.xxx that are really a Map?
+get rid of lots of code in Ident.ml?
+
+actually I think he did that in more recent versions of ocaml,
+even maybe in 1.07?
+
+**** EASY delete Tmty_ident?
+can remove more code?
+
+**** get rid of mtype.ml
+
+**** ???? type patterns? introduce elt in new_env!
+
+**** EASY rename Env.modules -> Env.module_type and Env.components -> Env.module no?
+
+*** checking
+
+**** still? fix the warnings reported by ocaml 4.02
+git stash apply!
+
+**** less: forward port things fixing shift/reduce conflicts?
+ocaml 4.00 has 0 conflicts
+
+*** lots of boilerplate, how can factorize? all those enter_xxx, find_xxx,
+a bit ugly no? typeclass can help? deriving?
+
+*** bench: compare my ocaml 1.07 with ocaml 4.00? 
+try on syncweb? faster?
+
+** stuff not in ocaml 
+
+*** add typeclasses!
+or go directly to implicits?
+
+http://okmij.org/ftp/Computation/typeclass.html
+
+http://www.haskellforall.com/2012/05/scrap-your-type-classes.html
+
+use implicit proposal syntax?
+https://github.com/ocamllabs/ocaml-modular-implicits/commit/65a9ac20406833ba0d420fbe382ece17edf037bc
+
+typing haskell in haskell for tutorial?
+
+=> use in fork-ocaml itself, e.g. no more
+duplicated names such as Subst.value_description and 
+Subst.type_declaration, can have just Subst.subst 
+with different instances of Subst! overload!
+all those repeated names are useless.
+
+*** add deriving! or better, template haskell?
+at least deriving!
+
+and at least my xxx_of_v (or if have overloading
+metaocaml_of !)
+
+=> use in fork-ocaml itself, remove lots of boilerplate,
+e.g. Subst.type_expr, essentially a visitor with just
+a special case for Tvar ! the rest is boilerpate
+
+*** later later
+
+**** add attributes?
+
+**** add error messages of julien
+
+**** other cool but simple and orthogonal features?
+stuff that will factorize code!
+e.g. auto generate dumpers, visitors.
+If have visitor then can rewrite some boilerplate code, e.g.
+simplif.ml.
+
+would be good to have delta programming, to express how to pass
+from parsedtree.mli to typedtree.mli, because very very similar
+(or just autogenerate via a script? :) )
+
+** later forwardport
+
+*** less: license
+commit cc0f32b05439bb7018e8ad62a54d6371b01aab9f
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Wed Nov 17 18:59:06 1999 +0000
+
+    Changement de la licence
+
+LGPL for byterun/
+
+
+*** include diffs that help the debuggability of ocaml
+
+commit a843096a997d0a2914b8cbabd952e4a230d07598
+Author: Damien Doligez <damien.doligez-inria.fr>
+Date:   Mon Apr 3 08:34:22 2000 +0000
+
+    codes pour faciliter le debug
+
+commit bad71c148081a820604b9901300a5b8e2b730a95
+Author: Damien Doligez <damien.doligez-inria.fr>
+Date:   Mon Nov 8 17:05:45 1999 +0000
+
+    ajout heap_check en mode debug
+
+commit 5674cf35c8d59cd19bb93a39542dfad1e7d9ac9e
+Author: Damien Doligez <damien.doligez-inria.fr>
+Date:   Mon Nov 8 17:02:14 1999 +0000
+
+    ajout heap_check
+
+
+*** other
+
+commit ddd99c7e5d2f0f8e7364e8521fa7e8308999344e
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Tue Aug 28 14:47:48 2001 +0000
+
+    Chargement dynamique de primitives C
+?
+
+
+commit 0f0fd99ae2eb7fdc570161725ea8a5001225d651
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Tue Feb 27 09:51:24 2001 +0000
+
+    Ajout de backtrace
+
+commit 913d33aa9ec4b999a9fad1f7792bf83d99cda37b
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Mon Feb 19 12:40:33 2001 +0000
+
+    Backtrace
+
+commit 4b84fcf843140a9a3f9ccd86036b7a314dcd216a
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Mon Feb 19 12:29:00 2001 +0000
+
+    Ajout du backtrace
+
+
+commit ddc93821b88710566a5816f6e3e712bcf8cc3c9d
+ajout assert pour eviter le bug d'alignement des racines
+also need diff that introduce compact.c?
+
+
+commit 66ae9423a784fbc4d35b794906a4dee705afccf2
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Thu Oct 15 16:10:53 1998 +0000
+
+    Portage ARM
+
+commit 0f45531954cadaa9f19a73944e8f9574f5fc08ee
+Author: Damien Doligez <damien.doligez-inria.fr>
+Date:   Sun Oct 29 17:36:44 2000 +0000
+
+    passage a ANSI C -> suppression bcopy et memmov
+
+** Still?
+
+**** less: study diff between old and new typechecker?
+
+ type type_expr =
+-    Tvar of type_variable
++  { mutable desc: type_desc; 
++    mutable level: int }
++
++and type_desc =
++    Tvar
+   | Tarrow of type_expr * type_expr
+   | Ttuple of type_expr list
+-  | Tconstr of Path.t * type_expr list
+-
+-and type_variable =
+-    { mutable tvar_level: int;
+-      mutable tvar_link: type_expr option }
++  | Tconstr of Path.t * type_expr list * (Path.t * type_expr) list ref
++  | Tnil
++  | Tlink of type_expr
+
+
++exception Cannot_expand
++exception Nonlinear_abbrev
++exception Recursive_abbrev
+
+
+**** strictopt?
+-type let_kind = Strict | Alias
++type let_kind = Strict | Alias | StrictOpt
+
+
+* Backports
+
+*** TODO warnings to backports
+
+Warning 26: unused variable t.
+
+*** TODO backports
+
+c4fb76de04783aea39a97b9279ea7adf5fdacfa8
+Fix: bug dans le calcul de la longueur max d'une chaine.
+
+ce301ce8fb46ce57a19a1323c9a6e6959da4d749
+OFFSETREF met () dans l'accu.
+
+3402009ef3e42d2977bbe0be6bb11841bd3445b8
+Faute d'orthographe sur un ident dans intern_from_string.
+
+*** TODO include tests/ from csl/ and ocaml examples from caml light
+(that have been updated to ocaml 3.08 by leroy on their distrib/contrib/
+I think)
+
