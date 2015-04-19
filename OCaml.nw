@@ -111,6 +111,7 @@ Principia Softwarica: The Caml Special Light Compilers
 }\\
 {version 0.1}
 }
+%less: OCaml light?
 %note: compilers, with an s, ocamlc and ocamlopt
 
 \author{
@@ -190,6 +191,9 @@ Here are other candidates that were considered but ultimately discarded:
 
 %https://rwmj.wordpress.com/2009/08/04/ocaml-internals/
 %https://github.com/ocamllabs/ocaml-internals/wiki
+
+%good to vary a bit, not always C code written by the same people :)
+%and also different language! help also to explore concepts for Compiler.nw
 
 \section{Getting started}
 
@@ -273,6 +277,13 @@ the main author of OCaml.
 
 \section{High-level language principles}
 
+% have seen C, improvments over assembly
+% - function, more structured and typed than CALL
+% - while/if/..., more structured than JMP
+% - struct, more structured than manual offsets
+% - expressions over 3 address code
+% - pointers? needed for complex structures (e.g. lists, hashtbl, etc)
+
 %advanced features not in C, so good increment:
 % - gc (no more malloc/free and bugs), which imply special bit
 %   for each values (and some tricks around integer operations)
@@ -282,6 +293,7 @@ the main author of OCaml.
 % - ADT and pattern matching (no more enum/switch loophole)
 % - type inference (less boilerplate, especially needed when have
 %   polymorphism and closures and quite complicated types)
+% - references: disciplined safe pointers!
 
 % missing: 
 %  - call/cc, too advanced? too complex for mere mortal?
