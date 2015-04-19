@@ -24,20 +24,23 @@ open Ctype
 
 (*s: type Typecore.error *)
 type error =
-    Unbound_value of Longident.t
+    Unbound_value       of Longident.t
   | Unbound_constructor of Longident.t
-  | Unbound_label of Longident.t
+  | Unbound_label       of Longident.t
 
   | Constructor_arity_mismatch of Longident.t * int * int
   | Label_mismatch of Longident.t * type_expr * type_expr
   | Pattern_type_clash of type_expr * type_expr
+
   | Multiply_bound_variable
   | Orpat_not_closed
   | Expr_type_clash of type_expr * type_expr
   | Apply_non_function of type_expr
+
   | Label_multiply_defined of Longident.t
   | Label_missing
   | Label_not_mutable of Longident.t
+
   | Bad_format of string
 (*e: type Typecore.error *)
 

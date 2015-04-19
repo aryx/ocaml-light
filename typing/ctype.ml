@@ -116,6 +116,7 @@ let inst_subst = ref ([] : (type_expr * type_expr) list)
 let rec copy ty =
   match repr ty with
     Tvar v as t ->
+      (* generic mark, let's create a new var then *)
       if v.tvar_level = generic_level then begin
         try
           List.assq t !inst_subst
