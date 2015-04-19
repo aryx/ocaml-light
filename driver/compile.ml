@@ -122,8 +122,10 @@ let interface sourcefile =
   let modulename = String.capitalize(Filename.basename prefixname) in
   let inputfile = preprocess sourcefile (prefixname ^ ".ppi") in
 
+  (* parsing *)
   let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
 
+  (* typing *)
   let sg = Typemod.transl_signature (initial_env()) ast in
 
   if !Clflags.print_types 
@@ -148,17 +150,21 @@ let implementation sourcefile =
   let modulename = String.capitalize(Filename.basename prefixname) in
   let inputfile = preprocess sourcefile (prefixname ^ ".ppo") in
 
+  (* parsing *)
   let ast = parse_file inputfile Parse.implementation ast_impl_magic_number in
 
   let objfile = prefixname ^ ".cmo" in
   let oc = open_out_bin objfile in
   try
+
+    (* typing *)
     let (struc, sg, finalenv) =
       Typemod.type_structure (initial_env()) ast in
 
     if !Clflags.print_types 
     then (Printtyp.signature sg; print_newline());
 
+    (* checking *)
     let (coercion, _crc) =
       if Sys.file_exists (prefixname ^ ".mli") then begin
         let intf_file =
@@ -174,6 +180,7 @@ let implementation sourcefile =
       end 
     in
 
+    (* generating *)
     Translmod.transl_implementation modulename struc coercion
     |> print_if Clflags.dump_rawlambda Printlambda.lambda
     |> Simplif.simplify_lambda

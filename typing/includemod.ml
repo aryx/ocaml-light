@@ -23,11 +23,13 @@ open Typedtree
 (*s: type Includemod.error *)
 type error =
     Missing_field of Ident.t
+  (* X do not match Y *)
   | Value_descriptions of Ident.t * value_description * value_description
   | Type_declarations of Ident.t * type_declaration * type_declaration
   | Exception_declarations of
       Ident.t * exception_declaration * exception_declaration
   | Module_types of module_type * module_type
+
   | Interface_mismatch of string * string
 (*e: type Includemod.error *)
 

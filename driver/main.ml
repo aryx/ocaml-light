@@ -56,9 +56,11 @@ let process_file name =
 (*s: function Main.print_version_number *)
 let print_version_number () =
   print_string "The Objective Caml compiler, version ";
-  print_string Config.version; print_newline();
+  print_string Config.version; 
+  print_newline();
   print_string "Standard library directory: ";
-  print_string Config.standard_library; print_newline()
+  print_string Config.standard_library; 
+  print_newline()
 (*e: function Main.print_version_number *)
 
 (*s: constant Main.usage *)
