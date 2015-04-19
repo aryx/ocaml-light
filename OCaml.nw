@@ -29,8 +29,8 @@
 % - TODO how a gc works
 % - TODO how values are represented at runtime, the Obj module
 % - TODO how compiler backends work (register, liveness, etc)
-% - SEMI how type inference works in caml itself,
-%        value restriction, type schema, generalization, instantiation
+% - how type inference works in caml itself,
+%   type schema, generalization, instantiation, value restriction (partially)
 
 %history LP-ization:
 % - skeleton, mostly copy paste of Template.nw skeleton
@@ -95,7 +95,7 @@
 % Config
 %------------------------------------------------------------------------------
 \allcodefalse
-% used for ??
+% used for extra copyright, other stuff??
 
 %\setcounter{tocdepth}{1}
 
@@ -107,11 +107,12 @@
 
 \title{
 {\Huge 
-Principia Softwarica: The Caml Special Light Compilers
+Principia Softwarica: The OCaml Light Compilers
 }\\
 {version 0.1}
 }
-%less: OCaml light?
+%less: OCaml light? Caml Special Light (after all what I have is close
+% to csl and I should have forked from there)
 %note: compilers, with an s, ocamlc and ocamlopt
 
 \author{
@@ -160,12 +161,16 @@ a compiler for a high level language (higher than C).
 Why? Because I think it makes you a better programmer if
 you fully understand how things work under the hood.
 
-% chose ocaml because good compromise! functional, and imperative.
+% I chose Ocaml because good compromise! functional, and imperative.
 % I removed parts that were more complicated:
 %  - objects
 %  - functors
 % (indeed they were not that used in the code of ocaml itself ... hmm)
 % good increments over C (see section below in first chapter).
+% And the compiler code is quite elegant.
+
+%%good to vary a bit, not always C code written by the same people :)
+%%and also different language! help also to explore concepts for Compiler.nw
 
 Here are other candidates that were considered but ultimately discarded:
 \begin{itemize}
@@ -188,12 +193,10 @@ Here are other candidates that were considered but ultimately discarded:
 
 % so many candidates to list here actually.
 
-
+%todo?
 %https://rwmj.wordpress.com/2009/08/04/ocaml-internals/
 %https://github.com/ocamllabs/ocaml-internals/wiki
 
-%good to vary a bit, not always C code written by the same people :)
-%and also different language! help also to explore concepts for Compiler.nw
 
 \section{Getting started}
 
@@ -240,8 +243,8 @@ those parts are copyright by INRIA.
 /*                                                                     */
 /***********************************************************************/
 @
-\fi
 % in parser.mly
+\fi
 
 \ifallcode
 <<copyright header0>>=
@@ -277,14 +280,14 @@ the main author of OCaml.
 
 \section{High-level language principles}
 
-% have seen C, improvments over assembly
-% - function, more structured and typed than CALL
+% have seen C in other book, which is a big improvment over assembly:
+% - functions, more structured and typed than CALL
 % - while/if/..., more structured than JMP
-% - struct, more structured than manual offsets
-% - expressions over 3 address code
+% - struct/array, more structured than manual offsets manip
+% - expressions better than limited 3 address code
 % - pointers? needed for complex structures (e.g. lists, hashtbl, etc)
 
-%advanced features not in C, so good increment:
+%ocaml has many advanced features not in C, so it is good increment too:
 % - gc (no more malloc/free and bugs), which imply special bit
 %   for each values (and some tricks around integer operations)
 % - parametric polymorphism (no more code duplication and void* loophole)
@@ -299,7 +302,8 @@ the main author of OCaml.
 %  - call/cc, too advanced? too complex for mere mortal?
 %    but could, see
 %    http://gallium.inria.fr/~xleroy/software/ocaml-callcc-1.0.tar.gz
-%    or http://okmij.org/ftp/continuations/implementations.html
+%    or 
+%    http://okmij.org/ftp/continuations/implementations.html
 %  - macros 
 %    but could at least implement deriving
 % missing on purpose: 
@@ -569,9 +573,6 @@ type rec_flag = Nonrecursive | Recursive
 @
 % actually can also have rec_flag for constants? build a cycle?
 
-<<type Asttypes.direction_flag>>=
-type direction_flag = Upto | Downto
-@
 
 %  | Pexp_construct of Longident.t * expression option
 % so if multi args? then have an intermediate Pexp_tuple!
@@ -613,6 +614,10 @@ and pattern_desc =
 | Pexp_try of expression * (pattern * expression) list
 @
 
+<<type Asttypes.direction_flag>>=
+type direction_flag = Upto | Downto
+@
+
 \subsection{Modules}
 
 \subsubsection{Signatures}
@@ -640,6 +645,7 @@ and signature_item_desc =
 % recursive module type
 % type_declaration list  for mutually recursive types
 
+%less: should not allow Psig_open, or just for implicit Pervasives open
 
 <<type Parsetree.value_description>>=
 (* Value descriptions *)
@@ -660,6 +666,7 @@ and module_type_desc =
     Pmty_ident of Longident.t
   | Pmty_signature of signature
 @
+% recursive back to signature!
 %less: remove PPmty_ident? no aliases for sig? because no module type
 
 
@@ -707,7 +714,9 @@ and module_expr_desc =
   | Pmod_structure of structure
   | Pmod_constraint of module_expr * module_type
 @
-
+% recurse back to structure
+%note: here we want to keep Tmod_ident, it allows to do module aliases
+% which is useful
 
 \section{Types and the typed tree}
 
@@ -721,7 +730,8 @@ type type_expr =
 @
 % Tconstr, type "constructor"
 % diff with core_type_desc: 
-% - no more Any, no more type aliases (but I removed them)
+% - no more Any
+% - no more type aliases (but I removed them)
 % - no manifest (type abbreviations) (but I aspectized it)
 
 <<type Types.type_variable>>=
@@ -751,6 +761,8 @@ and type_variable =
 
 
 \section{[[Lambda]] and [[Instruction]] intermediate languages}
+
+% will see later?
 
 \section{Bytecode}
 
@@ -821,11 +833,13 @@ let exec_name = ref "a.out"             (* -o *)
 <<function Main.print_version_number>>=
 let print_version_number () =
   print_string "The Objective Caml compiler, version ";
-  print_string Config.version; print_newline();
+  print_string Config.version; 
+  print_newline();
   print_string "Standard library directory: ";
-  print_string Config.standard_library; print_newline()
+  print_string Config.standard_library; 
+  print_newline()
 @
-
+%less: use printf
 
 <<signature Config.version>>=
 val version: string
@@ -896,17 +910,21 @@ let implementation sourcefile =
   let modulename = String.capitalize(Filename.basename prefixname) in
   let inputfile = preprocess sourcefile (prefixname ^ ".ppo") in
 
+  (* parsing *)
   let ast = parse_file inputfile Parse.implementation ast_impl_magic_number in
 
   let objfile = prefixname ^ ".cmo" in
   let oc = open_out_bin objfile in
   try
+
+    (* typing *)
     let (struc, sg, finalenv) =
       Typemod.type_structure (initial_env()) ast in
 
     if !Clflags.print_types 
     then (Printtyp.signature sg; print_newline());
 
+    (* checking *)
     let (coercion, _crc) =
       if Sys.file_exists (prefixname ^ ".mli") then begin
         let intf_file =
@@ -922,6 +940,7 @@ let implementation sourcefile =
       end 
     in
 
+    (* generating *)
     Translmod.transl_implementation modulename struc coercion
     |> print_if Clflags.dump_rawlambda Printlambda.lambda
     |> Simplif.simplify_lambda
@@ -983,6 +1002,7 @@ let process_implementation_file name =
 <<signature Compile.interface>>=
 val interface: string -> unit
 @
+% filename
 
 <<function Compile.interface>>=
 (* Compile a .mli file *)
@@ -993,8 +1013,10 @@ let interface sourcefile =
   let modulename = String.capitalize(Filename.basename prefixname) in
   let inputfile = preprocess sourcefile (prefixname ^ ".ppi") in
 
+  (* parsing *)
   let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
 
+  (* typing *)
   let sg = Typemod.transl_signature (initial_env()) ast in
 
   if !Clflags.print_types 
@@ -1030,7 +1052,7 @@ let process_interface_file name =
     Bytelink.link (List.rev !objfiles)
 @
 
-
+% will see Bytelink.link later
 
 
 
@@ -1108,6 +1130,7 @@ rule token = parse
 
 
 \ifallcode
+% this could be in Extra.nw
 <<Lexer helpers>>=
 (* For nested comments *)
 
@@ -1191,6 +1214,11 @@ rule token = parse
 
 @
 %less: regroup? can put multiple on one line
+%todo: can remove 'and' 'or'
+
+% the INFIXOPxxx is to have different priorities, 
+% plus-like operators, multiply-like operators, etc.
+%less: but I think 5 different operators priorities is already too much.
 
 \section{Comments}
 % space and comments?
@@ -1199,7 +1227,7 @@ rule token = parse
   [' ' '\010' '\013' '\009' '\012'] +
     { token lexbuf }
 @
-
+% 13 = return, 9 = tabs, 10 = ? 12 = ?
 
 <<[[Lexer.token()]] comment case>>=
 | "(*"
@@ -1231,6 +1259,7 @@ and comment = parse
       { comment lexbuf }
 @
 %+2??
+%less: succ -> incr, pred -> decr?
 
 
 
@@ -1254,6 +1283,7 @@ and comment = parse
 %| ['A'-'Z' '\192'-'\214' '\216'-'\222' ]
 %  (['A'-'Z' 'a'-'z' '_' '\192'-'\214' '\216'-'\246' '\248'-'\255'
 % not sure why allowed that
+%note: note the \' prime! ocaml is math friendly :)
 
 <<constant Lexer.keyword_table>>=
 let keyword_table =
@@ -1416,6 +1446,7 @@ let keyword_table =
 %  | ['*' '/' '%'] symbolchar *
 %            { INFIXOP3(Lexing.lexeme lexbuf) }
 %$
+%clearer
 
 <<[[Lexer.token()]] sharp case>>=
 | "#"  { SHARP }
