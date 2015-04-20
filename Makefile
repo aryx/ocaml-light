@@ -711,73 +711,6 @@ SRC_VIEWS= \
   ./driver/errors.mli\
   ./driver/errors.ml\
   ./driver/main.ml\
-  byterun/config.h\
-  byterun/instruct.h\
-  byterun/mlvalues.h\
-  byterun/exec.h\
-  byterun/prims.h\
-  byterun/memory.h\
-  byterun/memory.c\
-  byterun/freelist.h\
-  byterun/freelist.c\
-  byterun/alloc.h\
-  byterun/alloc.c\
-  byterun/interp.h\
-  byterun/interp.c\
-  byterun/gc.h\
-  byterun/gc_ctrl.h\
-  byterun/gc_ctrl.c\
-  byterun/roots.h\
-  byterun/roots.c\
-  byterun/major_gc.h\
-  byterun/major_gc.c\
-  byterun/minor_gc.h\
-  byterun/minor_gc.c\
-  byterun/compact.h\
-  byterun/compact.c\
-  byterun/hash.c\
-  byterun/array.c\
-  byterun/stacks.h\
-  byterun/stacks.c\
-  byterun/callback.h\
-  byterun/callback.c\
-  byterun/compare.c\
-  byterun/debugger.h\
-  byterun/debugger.c\
-  byterun/instrtrace.h\
-  byterun/instrtrace.c\
-  byterun/extern.c\
-  byterun/fail.h\
-  byterun/fail.c\
-  byterun/fix_code.h\
-  byterun/fix_code.c\
-  byterun/intext.h\
-  byterun/intern.c\
-  byterun/ints.c\
-  byterun/floats.c\
-  byterun/io.h\
-  byterun/io.c\
-  byterun/lexing.c\
-  byterun/md5.h\
-  byterun/md5.c\
-  byterun/meta.c\
-  byterun/misc.h\
-  byterun/misc.c\
-  byterun/obj.c\
-  byterun/parsing.c\
-  byterun/printexc.c\
-  byterun/reverse.h\
-  byterun/signals.h\
-  byterun/signals.c\
-  byterun/str.h\
-  byterun/str.c\
-  byterun/sys.h\
-  byterun/sys.c\
-  byterun/terminfo.c\
-  byterun/weak.h\
-  byterun/weak.c\
-  byterun/startup.c\
-  byterun/main.c\
   \
   asmcomp/arm/arch.ml\
   asmcomp/clambda.mli\
@@ -845,8 +778,87 @@ SRC_VIEWS= \
 sync::
 	$(MAKE) sync2
 
+sync_ml:
+	$(MAKE) sync
+
 sync2:
 	$(MAKE) LANG=ocamlyacc sync3
 
 sync3:
 	$(SYNCWEB) $(SRC_ORIG) parsing/parser.mly
+
+
+SRC_VIEWS_C=\
+  byterun/config.h\
+  byterun/instruct.h\
+  byterun/mlvalues.h\
+  byterun/exec.h\
+  byterun/prims.h\
+  byterun/memory.h\
+  byterun/memory.c\
+  byterun/freelist.h\
+  byterun/freelist.c\
+  byterun/alloc.h\
+  byterun/alloc.c\
+  byterun/interp.h\
+  byterun/interp.c\
+  byterun/gc.h\
+  byterun/gc_ctrl.h\
+  byterun/gc_ctrl.c\
+  byterun/roots.h\
+  byterun/roots.c\
+  byterun/major_gc.h\
+  byterun/major_gc.c\
+  byterun/minor_gc.h\
+  byterun/minor_gc.c\
+  byterun/compact.h\
+  byterun/compact.c\
+  byterun/hash.c\
+  byterun/array.c\
+  byterun/stacks.h\
+  byterun/stacks.c\
+  byterun/callback.h\
+  byterun/callback.c\
+  byterun/compare.c\
+  byterun/debugger.h\
+  byterun/debugger.c\
+  byterun/instrtrace.h\
+  byterun/instrtrace.c\
+  byterun/extern.c\
+  byterun/fail.h\
+  byterun/fail.c\
+  byterun/fix_code.h\
+  byterun/fix_code.c\
+  byterun/intext.h\
+  byterun/intern.c\
+  byterun/ints.c\
+  byterun/floats.c\
+  byterun/io.h\
+  byterun/io.c\
+  byterun/lexing.c\
+  byterun/md5.h\
+  byterun/md5.c\
+  byterun/meta.c\
+  byterun/misc.h\
+  byterun/misc.c\
+  byterun/obj.c\
+  byterun/parsing.c\
+  byterun/printexc.c\
+  byterun/reverse.h\
+  byterun/signals.h\
+  byterun/signals.c\
+  byterun/str.h\
+  byterun/str.c\
+  byterun/sys.h\
+  byterun/sys.c\
+  byterun/terminfo.c\
+  byterun/weak.h\
+  byterun/weak.c\
+  byterun/startup.c\
+  byterun/main.c\
+
+
+SYNCWEB_C=~/github/syncweb/syncweb.opt -md5sum_in_auxfile -less_marks -lang C
+sync_c:
+	for i in $(SRC_VIEWS_C); do echo $$i; $(SYNCWEB_C) $(SRC_ORIG) $$i || exit 1; done 
+
