@@ -1,3 +1,4 @@
+/*s: byterun/alloc.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -12,7 +13,9 @@
 /* $Id: alloc.h,v 1.4 1997/09/02 12:53:55 xleroy Exp $ */
 
 #ifndef _alloc_
+/*s: constant _alloc_ */
 #define _alloc_
+/*e: constant _alloc_ */
 
 
 #include "misc.h"
@@ -30,3 +33,4 @@ int convert_flag_list (value, int *);
 
 
 #endif /* _alloc_ */
+/*e: byterun/alloc.h */

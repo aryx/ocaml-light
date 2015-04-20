@@ -1,3 +1,4 @@
+/*s: byterun/fix_code.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -14,7 +15,9 @@
 /* Handling of blocks of bytecode (endianness switch, threading). */
 
 #ifndef _fix_code_
+/*s: constant _fix_code_ */
 #define _fix_code_
+/*e: constant _fix_code_ */
 
 
 #include "config.h"
@@ -37,3 +40,4 @@ void thread_code (code_t code, asize_t len);
 #endif
 
 #endif
+/*e: byterun/fix_code.h */

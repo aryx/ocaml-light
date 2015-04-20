@@ -1,3 +1,4 @@
+/*s: byterun/fix_code.c */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -26,11 +27,20 @@
 #include <unistd.h>
 #endif
 
+/*s: global start_code */
 code_t start_code;
+/*e: global start_code */
+/*s: global code_size */
 asize_t code_size;
+/*e: global code_size */
+/*s: global saved_code */
 unsigned char * saved_code;
+/*e: global saved_code */
+/*s: global code_md5 */
 unsigned char code_md5[16];
+/*e: global code_md5 */
 
+/*s: function load_code */
 /* Read the main bytecode block from a file */
 
 void load_code(int fd, asize_t len)
@@ -60,11 +70,13 @@ void load_code(int fd, asize_t len)
   thread_code(start_code, code_size);
 #endif
 }
+/*e: function load_code */
 
 /* This code is needed only if the processor is big endian */
 
 #ifdef ARCH_BIG_ENDIAN
 
+/*s: function fixup_endianness */
 void fixup_endianness(code_t code, asize_t len)
 {
   code_t p;
@@ -73,6 +85,7 @@ void fixup_endianness(code_t code, asize_t len)
     Reverse_int32(p);
   }
 }
+/*e: function fixup_endianness */
 
 #endif
 
@@ -80,9 +93,14 @@ void fixup_endianness(code_t code, asize_t len)
 
 #ifdef THREADED_CODE
 
+/*s: global instr_table */
 char ** instr_table;
+/*e: global instr_table */
+/*s: global instr_base */
 char * instr_base;
+/*e: global instr_base */
 
+/*s: function thread_code */
 void thread_code (code_t code, asize_t len)
 {
   code_t p;
@@ -126,9 +144,11 @@ void thread_code (code_t code, asize_t len)
   }
   Assert(p == code + len);
 }
+/*e: function thread_code */
 
 #endif /* THREADED_CODE */
 
+/*s: function set_instruction */
 void set_instruction(code_t pos, opcode_t instr)
 {
 #ifdef THREADED_CODE
@@ -137,4 +157,6 @@ void set_instruction(code_t pos, opcode_t instr)
   *pos = instr;
 #endif
 }
+/*e: function set_instruction */
 
+/*e: byterun/fix_code.c */

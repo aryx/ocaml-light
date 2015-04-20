@@ -1,3 +1,4 @@
+/*s: byterun/instruct.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -11,6 +12,7 @@
 
 /* $Id: instruct.h,v 1.10 1997/05/13 14:05:43 xleroy Exp $ */
 
+/*s: enum instructions */
 /* The instruction set. */
 
 enum instructions {
@@ -45,3 +47,5 @@ enum instructions {
   GETMETHOD,
   STOP, EVENT, BREAK
 };
+/*e: enum instructions */
+/*e: byterun/instruct.h */

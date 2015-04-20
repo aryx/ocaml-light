@@ -1,3 +1,4 @@
+/*s: byterun/freelist.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -14,7 +15,9 @@
 /* Free lists of heap blocks. */
 
 #ifndef _freelist_
+/*s: constant _freelist_ */
 #define _freelist_
+/*e: constant _freelist_ */
 
 
 #include "misc.h"
@@ -30,3 +33,4 @@ void fl_add_block (char *);
 
 
 #endif /* _freelist_ */
+/*e: byterun/freelist.h */

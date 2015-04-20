@@ -18889,11 +18889,11 @@ bits  63    10 9     8 7   0
 #define Double_wosize ((sizeof(double) / sizeof(value)))
 @
 
-<<function Double_val>>=
+<<macro Double_val>>=
 #define Double_val(v) (* (double *)(v))
 @
 
-<<function Store_double_val>>=
+<<macro Store_double_val>>=
 #define Store_double_val(v,d) (* (double *)(v) = (d))
 @
 
@@ -19134,8 +19134,8 @@ typedef opcode_t * code_t;
 <<constant Double_tag>>
 <<constant Double_wosize>>
 #ifndef ARCH_ALIGN_DOUBLE
-<<function Double_val>>
-<<function Store_double_val>>
+<<macro Double_val>>
+<<macro Store_double_val>>
 #else
 double Double_val (value);
 void Store_double_val (value,double);
@@ -19916,14 +19916,17 @@ static char *fl_prev = Fl_head;  /* Current allocation pointer. */
 
 <<global fl_last>>=
 static char *fl_last = NULL;     /* Last block in the list.  Only valid
+                                    just after fl_allocate returned NULL. */
 @
 
 <<global fl_merge>>=
 char *fl_merge = Fl_head;        /* Current insertion pointer.  Managed
+                                    jointly with [sweep_slice]. */
 @
 
 <<global fl_cur_size>>=
 asize_t fl_cur_size = 0;         /* How many free words were added since
+                                    the latest fl_init_merge. */
 @
 
 <<function Next>>=
@@ -20207,11 +20210,8 @@ typedef struct {
 <<constant Fl_head>>
 <<global fl_prev>>
 <<global fl_last>>
-                                    just after fl_allocate returned NULL. */
 <<global fl_merge>>
-                                    jointly with [sweep_slice]. */
 <<global fl_cur_size>>
-                                    the latest fl_init_merge. */
 
 <<function Next>>
 
@@ -22383,6 +22383,7 @@ static asize_t gray_vals_size;
 
 <<global heap_is_pure>>=
 static int heap_is_pure;   /* The heap is pure if the only gray objects
+                              below [markhp] are also in [gray_vals]. */
 @
 
 <<global allocated_words>>=
@@ -22788,7 +22789,6 @@ char *heap_start, *heap_end;
 value *gray_vals_cur, *gray_vals_end;
 <<global gray_vals_size>>
 <<global heap_is_pure>>
-                              below [markhp] are also in [gray_vals]. */
 <<global allocated_words>>
 <<global extra_heap_memory>>
 extern char *fl_merge;  /* Defined in freelist.c. */
@@ -28690,7 +28690,7 @@ value md5_chan(value vchan, value len)       /* ML */
 }
 @
 
-<<function byteReverse>>=
+<<macro byteReverse>>=
 #define byteReverse(buf, len)   /* Nothing */
 @
 
@@ -28981,7 +28981,7 @@ void MD5Transform(uint32 *buf, uint32 *in)
  */
 
 #ifndef ARCH_BIG_ENDIAN
-<<function byteReverse>>
+<<macro byteReverse>>
 #else
 <<function byteReverse>>
 #endif

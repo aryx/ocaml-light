@@ -1,3 +1,4 @@
+/*s: byterun/instrtrace.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -14,7 +15,9 @@
 /* Trace the instructions executed */
 
 #ifndef _instrtrace_
+/*s: constant _instrtrace_ */
 #define _instrtrace_
+/*e: constant _instrtrace_ */
 
 
 #include "mlvalues.h"
@@ -27,3 +30,4 @@ void disasm_instr (code_t pc);
 
 
 #endif
+/*e: byterun/instrtrace.h */

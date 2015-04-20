@@ -1,3 +1,4 @@
+/*s: byterun/md5.c */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -19,6 +20,7 @@
 #include "io.h"
 #include "reverse.h"
 
+/*s: function md5_string */
 /* MD5 message digest */
 
 value md5_string(value str, value ofs, value len) /* ML */
@@ -31,7 +33,9 @@ value md5_string(value str, value ofs, value len) /* ML */
   MD5Final(&Byte_u(res, 0), &ctx);
   return res;
 }
+/*e: function md5_string */
 
+/*s: function md5_chan */
 value md5_chan(value vchan, value len)       /* ML */
 {
   struct channel * chan = Channel(vchan);
@@ -55,6 +59,7 @@ value md5_chan(value vchan, value len)       /* ML */
   Unlock(chan);
   return res;
 }
+/*e: function md5_chan */
 
 /*
  * This code implements the MD5 message-digest algorithm.
@@ -74,8 +79,11 @@ value md5_chan(value vchan, value len)       /* ML */
  */
 
 #ifndef ARCH_BIG_ENDIAN
+/*s: macro byteReverse */
 #define byteReverse(buf, len)   /* Nothing */
+/*e: macro byteReverse */
 #else
+/*s: function byteReverse */
 static void byteReverse(unsigned char * buf, unsigned longs)
 {
     uint32 t;
@@ -86,8 +94,10 @@ static void byteReverse(unsigned char * buf, unsigned longs)
         buf += 4;
     } while (--longs);
 }
+/*e: function byteReverse */
 #endif
 
+/*s: function MD5Init */
 /*
  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
@@ -102,7 +112,9 @@ void MD5Init(struct MD5Context *ctx)
     ctx->bits[0] = 0;
     ctx->bits[1] = 0;
 }
+/*e: function MD5Init */
 
+/*s: function MD5Update */
 /*
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
@@ -150,7 +162,9 @@ void MD5Update(struct MD5Context *ctx, unsigned char *buf, unsigned int len)
 
     memcpy(ctx->in, buf, len);
 }
+/*e: function MD5Update */
 
+/*s: function MD5Final */
 /*
  * Final wrapup - pad to 64-byte boundary with the bit pattern 
  * 1 0* (64-bit count of bits processed, MSB-first)
@@ -195,19 +209,31 @@ void MD5Final(unsigned char *digest, struct MD5Context *ctx)
     memcpy(digest, ctx->buf, 16);
     memset(ctx, 0, sizeof(*ctx));        /* In case it's sensitive */
 }
+/*e: function MD5Final */
 
 /* The four core functions - F1 is optimized somewhat */
 
+/*s: function F1 */
 /* #define F1(x, y, z) (x & y | ~x & z) */
 #define F1(x, y, z) (z ^ (x & (y ^ z)))
+/*e: function F1 */
+/*s: function F2 */
 #define F2(x, y, z) F1(z, x, y)
+/*e: function F2 */
+/*s: function F3 */
 #define F3(x, y, z) (x ^ y ^ z)
+/*e: function F3 */
+/*s: function F4 */
 #define F4(x, y, z) (y ^ (x | ~z))
+/*e: function F4 */
 
+/*s: function MD5STEP */
 /* This is the central step in the MD5 algorithm. */
 #define MD5STEP(f, w, x, y, z, data, s) \
         ( w += f(x, y, z) + data,  w = w<<s | w>>(32-s),  w += x )
+/*e: function MD5STEP */
 
+/*s: function MD5Transform */
 /*
  * The core of the MD5 algorithm, this alters an existing MD5 hash to
  * reflect the addition of 16 longwords of new data.  MD5Update blocks
@@ -295,4 +321,6 @@ void MD5Transform(uint32 *buf, uint32 *in)
     buf[2] += c;
     buf[3] += d;
 }
+/*e: function MD5Transform */
 
+/*e: byterun/md5.c */

@@ -1,3 +1,4 @@
+/*s: byterun/interp.c */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -43,12 +44,20 @@ sp is a local copy of the global variable extern_sp. */
 /* Instruction decoding */
 
 #ifdef THREADED_CODE
+/*s: function Instruct */
 #  define Instruct(name) lbl_##name
+/*e: function Instruct */
 #  if defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
+/*s: constant Jumptbl_base */
 #    define Jumptbl_base ((char *) &&lbl_ACC0)
+/*e: constant Jumptbl_base */
 #  else
+/*s: constant Jumptbl_base (byterun/interp.c) */
 #    define Jumptbl_base ((char *) 0)
+/*e: constant Jumptbl_base (byterun/interp.c) */
+/*s: constant jumptbl_base */
 #    define jumptbl_base ((char *) 0)
+/*e: constant jumptbl_base */
 #  endif
 #  ifdef DEBUG
 #    define Next goto next_instr
@@ -60,13 +69,22 @@ sp is a local copy of the global variable extern_sp. */
 #  define Next break
 #endif
 
+/*s: constant Setup_for_gc (byterun/interp.c) */
 /* GC interface */
 
 #define Setup_for_gc { sp -= 2; sp[0] = accu; sp[1] = env; extern_sp = sp; }
+/*e: constant Setup_for_gc (byterun/interp.c) */
+/*s: constant Restore_after_gc (byterun/interp.c) */
 #define Restore_after_gc { accu = sp[0]; env = sp[1]; sp += 2; }
+/*e: constant Restore_after_gc (byterun/interp.c) */
+/*s: constant Setup_for_c_call */
 #define Setup_for_c_call { *--sp = env; extern_sp = sp; }
+/*e: constant Setup_for_c_call */
+/*s: constant Restore_after_c_call */
 #define Restore_after_c_call { sp = extern_sp; env = *sp++; }
+/*e: constant Restore_after_c_call */
 
+/*s: constant Setup_for_debugger */
 /* Debugger interface */
 
 #define Setup_for_debugger \
@@ -74,7 +92,10 @@ sp is a local copy of the global variable extern_sp. */
      sp[0] = accu; sp[1] = (value)(pc - 1); \
      sp[2] = env; sp[3] = Val_long(extra_args); \
      extern_sp = sp; }
+/*e: constant Setup_for_debugger */
+/*s: constant Restore_after_debugger */
 #define Restore_after_debugger { sp += 4; }
+/*e: constant Restore_after_debugger */
 
 #ifdef THREADED_CODE
 #define Restart_curr_instr \
@@ -923,3 +944,4 @@ value interprete(code_t prog, asize_t prog_size)
   }
 #endif
 }
+/*e: byterun/interp.c */

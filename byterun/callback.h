@@ -1,3 +1,4 @@
+/*s: byterun/callback.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -14,7 +15,9 @@
 /* Callbacks from C to Caml */
 
 #ifndef _callback_
+/*s: constant _callback_ */
 #define _callback_
+/*e: constant _callback_ */
 
 #include "mlvalues.h"
 
@@ -29,3 +32,4 @@ void caml_main (char ** argv);
 void caml_startup (char ** argv);
 
 #endif
+/*e: byterun/callback.h */

@@ -1,3 +1,4 @@
+/*s: byterun/startup.c */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -39,15 +40,22 @@
 #include "sys.h"
 
 #ifndef O_BINARY
+/*s: constant O_BINARY (byterun/startup.c) */
 #define O_BINARY 0
+/*e: constant O_BINARY (byterun/startup.c) */
 #endif
 
 #ifndef SEEK_END
+/*s: constant SEEK_END (byterun/startup.c) */
 #define SEEK_END 2
+/*e: constant SEEK_END (byterun/startup.c) */
 #endif
 
+/*s: global atom_table */
 header_t atom_table[256];
+/*e: global atom_table */
 
+/*s: function init_atoms */
 /* Initialize the atom table */
 
 static void init_atoms(void)
@@ -55,7 +63,9 @@ static void init_atoms(void)
   int i;
   for(i = 0; i < 256; i++) atom_table[i] = Make_header(0, i, White);
 }
+/*e: function init_atoms */
 
+/*s: function read_size */
 /* Read the trailer of a bytecode file */
 
 static unsigned long read_size(char * ptr)
@@ -64,11 +74,19 @@ static unsigned long read_size(char * ptr)
   return ((unsigned long) p[0] << 24) + ((unsigned long) p[1] << 16) +
          ((unsigned long) p[2] << 8) + p[3];
 }
+/*e: function read_size */
 
+/*s: constant FILE_NOT_FOUND */
 #define FILE_NOT_FOUND (-1)
+/*e: constant FILE_NOT_FOUND */
+/*s: constant TRUNCATED_FILE */
 #define TRUNCATED_FILE (-2)
+/*e: constant TRUNCATED_FILE */
+/*s: constant BAD_MAGIC_NUM */
 #define BAD_MAGIC_NUM (-3)
+/*e: constant BAD_MAGIC_NUM */
 
+/*s: function read_trailer */
 static int read_trailer(int fd, struct exec_trailer *trail)
 {
   char buffer[TRAILER_SIZE];
@@ -85,7 +103,9 @@ static int read_trailer(int fd, struct exec_trailer *trail)
   else
     return BAD_MAGIC_NUM;
 }
+/*e: function read_trailer */
 
+/*s: function attempt_open */
 static int attempt_open(char **name, struct exec_trailer *trail, int do_open_script)
 {
   char * truename;
@@ -106,7 +126,9 @@ static int attempt_open(char **name, struct exec_trailer *trail, int do_open_scr
   if (err != 0) { close(fd); return err; }
   return fd;
 }
+/*e: function attempt_open */
 
+/*s: function check_primitives */
 /* Check the primitives used by the bytecode file against the table of
    primitives linked in this interpreter */
 
@@ -128,6 +150,7 @@ static void check_primitives(int fd, int prim_size)
   }
   stat_free(prims);
 }
+/*e: function check_primitives */
 
 /* Invocation of camlrun: 4 cases.
 
@@ -154,17 +177,32 @@ Algorithm:
 
 */
 
+/*s: global verbose_init */
 /* Configuration parameters and flags */
 
 static unsigned long verbose_init = 0;
+/*e: global verbose_init */
+/*s: global percent_free_init */
 static unsigned long percent_free_init = Percent_free_def;
+/*e: global percent_free_init */
+/*s: global max_percent_free_init */
 static unsigned long max_percent_free_init = Max_percent_free_def;
+/*e: global max_percent_free_init */
+/*s: global minor_heap_init */
 static unsigned long minor_heap_init = Minor_heap_def;
+/*e: global minor_heap_init */
+/*s: global heap_chunk_init */
 static unsigned long heap_chunk_init = Heap_chunk_def;
+/*e: global heap_chunk_init */
+/*s: global heap_size_init */
 static unsigned long heap_size_init = Init_heap_def;
+/*e: global heap_size_init */
+/*s: global max_stack_init */
 static unsigned long max_stack_init = Max_stack_def;
+/*e: global max_stack_init */
 extern int trace_flag;
 
+/*s: function parse_command_line */
 /* Parse options on the command line */
 
 static int parse_command_line(char **argv)
@@ -187,8 +225,10 @@ static int parse_command_line(char **argv)
   }
   return i;
 }
+/*e: function parse_command_line */
 
 /* Parse the CAMLRUNPARAM variable */
+/*s: function scanmult */
 /* The option letter for each runtime option is the first letter of the
    last word of the ML name of the option (see [stdlib/gc.mli]).
    Except for l (maximum stack size) and h (initial heap size).
@@ -202,7 +242,9 @@ static void scanmult (char *opt, long unsigned int *var)
   if (mult == 'M') *var = *var * (1024 * 1024);
   if (mult == 'G') *var = *var * (1024 * 1024 * 1024);
 }
+/*e: function scanmult */
 
+/*s: function parse_camlrunparam */
 static void parse_camlrunparam(void)
 {
   char *opt = getenv ("CAMLRUNPARAM");
@@ -220,9 +262,11 @@ static void parse_camlrunparam(void)
     }
   }
 }
+/*e: function parse_camlrunparam */
 
 extern void init_ieee_floats (void);
 
+/*s: function caml_main */
 /* Main entry point when loading code from a file */
 
 void caml_main(char **argv)
@@ -296,7 +340,9 @@ void caml_main(char **argv)
     fatal_uncaught_exception(exn_bucket);
   }
 }
+/*e: function caml_main */
 
+/*s: function caml_startup_code */
 /* Main entry point when code is linked in as initialized data */
 
 void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
@@ -334,4 +380,6 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
     fatal_uncaught_exception(exn_bucket);
   }
 }
+/*e: function caml_startup_code */
   
+/*e: byterun/startup.c */

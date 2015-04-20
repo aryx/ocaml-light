@@ -1,3 +1,4 @@
+/*s: byterun/misc.c */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -20,25 +21,34 @@
 
 #ifdef DEBUG
 
+/*s: function failed_assert */
 void failed_assert (char * expr, char * file, int line)
 {
   fprintf (stderr, "Assertion failed: %s; file %s; line %d\n",
            expr, file, line);
   exit (100);
 }
+/*e: function failed_assert */
 
+/*s: global seed */
 static unsigned long seed = 0x12345;
+/*e: global seed */
 
+/*s: function not_random */
 unsigned long not_random (void)
 {
   seed = seed * 65537 + 12345;
   return seed;
 }
+/*e: function not_random */
 
 #endif
 
+/*s: global verb_gc */
 int verb_gc;
+/*e: global verb_gc */
 
+/*s: function gc_message */
 void gc_message (char *msg, long unsigned int arg)
 {
   if (verb_gc){
@@ -50,7 +60,9 @@ void gc_message (char *msg, long unsigned int arg)
 #endif
   }
 }
+/*e: function gc_message */
 
+/*s: function fatal_error */
 void fatal_error (char *msg)
 {
 #ifdef HAS_UI
@@ -61,7 +73,9 @@ void fatal_error (char *msg)
   exit(2);
 #endif
 }
+/*e: function fatal_error */
 
+/*s: function fatal_error_arg */
 void fatal_error_arg (char *fmt, char *arg)
 {
 #ifdef HAS_UI
@@ -72,9 +86,11 @@ void fatal_error_arg (char *fmt, char *arg)
   exit(2);
 #endif
 }
+/*e: function fatal_error_arg */
 
 #ifdef USING_MEMMOV
 
+/*s: function memmov */
 /* This should work on 64-bit machines as well as 32-bit machines.
    It assumes a long is the natural size for memory reads and writes.
 */
@@ -147,9 +163,11 @@ void memmov (char * dst, char * src, unsigned long length)
     }
   }
 }
+/*e: function memmov */
 
 #endif /* USING_MEMMOV */
 
+/*s: function aligned_malloc */
 char *aligned_malloc (asize_t size, int modulo, void **block)
                   
                 
@@ -165,3 +183,5 @@ char *aligned_malloc (asize_t size, int modulo, void **block)
   aligned_mem = (((unsigned long) raw_mem / Page_size + 1) * Page_size);
   return (char *) (aligned_mem - modulo);
 }
+/*e: function aligned_malloc */
+/*e: byterun/misc.c */

@@ -1,3 +1,4 @@
+/*s: byterun/array.c */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -19,13 +20,16 @@
 #include "misc.h"
 #include "mlvalues.h"
 
+/*s: function array_get */
 value array_get(value array, value index)   /* ML */
 {
   long idx = Long_val(index);
   if (idx < 0 || idx >= Wosize_val(array)) invalid_argument("Array.get");
   return Field(array, idx);
 }
+/*e: function array_get */
 
+/*s: function array_set */
 value array_set(value array, value index, value newval)   /* ML */
 {
   long idx = Long_val(index);
@@ -33,7 +37,9 @@ value array_set(value array, value index, value newval)   /* ML */
   Modify(&Field(array, idx), newval);
   return Val_unit;
 }
+/*e: function array_set */
 
+/*s: function make_vect */
 value make_vect(value len, value init)      /* ML */
 {
   value res;
@@ -64,3 +70,5 @@ value make_vect(value len, value init)      /* ML */
   End_roots();
   return res;
 }
+/*e: function make_vect */
+/*e: byterun/array.c */

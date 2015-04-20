@@ -1,3 +1,4 @@
+/*s: byterun/memory.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -14,7 +15,9 @@
 /* Allocation macros and functions */
 
 #ifndef _memory_
+/*s: constant _memory_ */
 #define _memory_
+/*e: constant _memory_ */
 
 
 #include "config.h"
@@ -36,11 +39,16 @@ void * stat_resize (void *, asize_t);     /* Size in bytes. */
 /* void shrink_heap (char *);        Only used in compact.c */
 
 #ifdef NATIVE_CODE
+/*s: constant Garbage_collection_function */
 #define Garbage_collection_function garbage_collection
+/*e: constant Garbage_collection_function */
 #else
+/*s: constant Garbage_collection_function (byterun/memory.h) */
 #define Garbage_collection_function minor_collection
+/*e: constant Garbage_collection_function (byterun/memory.h) */
 #endif
 
+/*s: function Alloc_small */
 #define Alloc_small(result, wosize, tag) {            Assert (wosize >= 1); \
   young_ptr -= Bhsize_wosize (wosize);                                      \
   if (young_ptr < young_limit){                                             \
@@ -52,10 +60,12 @@ void * stat_resize (void *, asize_t);     /* Size in bytes. */
   Hd_hp (young_ptr) = Make_header ((wosize), (tag), Black);                 \
   (result) = Val_hp (young_ptr);                                            \
 }
+/*e: function Alloc_small */
 
 /* You must use [Modify] to change a field of an existing shared block,
    unless you are sure the value being overwritten is not a shared block and
    the value being written is not a young block. */
+/*s: function Modify */
 /* [Modify] never calls the GC. */
 
 #define Modify(fp, val) {                                                   \
@@ -73,7 +83,9 @@ void * stat_resize (void *, asize_t);     /* Size in bytes. */
     }                                                                       \
   }                                                                         \
 }                                                                           \
+/*e: function Modify */
 
+/*s: struct caml__roots_block */
 /*
    [Begin_roots] and [End_roots] are used for C variables that are GC roots.
    It must contain all values in C local variables and function parameters
@@ -98,10 +110,13 @@ struct caml__roots_block {
   long nitems;
   value *tables [5];
 };
+/*e: struct caml__roots_block */
 
 extern struct caml__roots_block *local_roots;  /* defined in roots.h */
 
+/*s: constant Begin_root */
 #define Begin_root Begin_roots1
+/*e: constant Begin_root */
 
 #define Begin_roots1(r0) { \
   struct caml__roots_block caml__roots_block; \
@@ -191,7 +206,9 @@ extern struct caml__roots_block *local_roots;  /* defined in roots.h */
   caml__roots_block.ntables = 1; \
   caml__roots_block.tables[0] = name;
   
+/*s: function Pop_roots */
 #define Pop_roots() local_roots = caml__roots_block.next;
+/*e: function Pop_roots */
 
 /* [register_global_root] registers a global C variable as a memory root
    for the duration of the program, or until [remove_global_root] is
@@ -207,3 +224,4 @@ void remove_global_root (value *);
 
 #endif /* _memory_ */
 
+/*e: byterun/memory.h */

@@ -1,3 +1,4 @@
+/*s: byterun/io.c */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -36,22 +37,39 @@
 #endif
 
 #ifndef INT_MAX
+/*s: constant INT_MAX */
 #define INT_MAX 0x7FFFFFFF
+/*e: constant INT_MAX */
 #endif
 
 #ifndef SEEK_SET
+/*s: constant SEEK_SET */
 #define SEEK_SET 0
+/*e: constant SEEK_SET */
+/*s: constant SEEK_CUR */
 #define SEEK_CUR 1
+/*e: constant SEEK_CUR */
+/*s: constant SEEK_END */
 #define SEEK_END 2
+/*e: constant SEEK_END */
 #endif
 
+/*s: global channel_mutex_free */
 /* Hooks for locking channels */
 
 void (*channel_mutex_free) (struct channel *) = NULL;
+/*e: global channel_mutex_free */
+/*s: global channel_mutex_lock */
 void (*channel_mutex_lock) (struct channel *) = NULL;
+/*e: global channel_mutex_lock */
+/*s: global channel_mutex_unlock */
 void (*channel_mutex_unlock) (struct channel *) = NULL;
+/*e: global channel_mutex_unlock */
+/*s: global channel_mutex_unlock_exn */
 void (*channel_mutex_unlock_exn) (void) = NULL;
+/*e: global channel_mutex_unlock_exn */
 
+/*s: function open_descriptor */
 /* Basic functions over type struct channel *.
    These functions can be called directly from C.
    No locking is performed. */
@@ -68,14 +86,18 @@ struct channel * open_descriptor(int fd)
   channel->mutex = NULL;
   return channel;
 }
+/*e: function open_descriptor */
 
+/*s: function close_channel */
 void close_channel(struct channel *channel)
 {
   close(channel->fd);
   if (channel_mutex_free != NULL) (*channel_mutex_free)(channel);
   stat_free(channel);
 }  
+/*e: function close_channel */
 
+/*s: function channel_size */
 long channel_size(struct channel *channel)
 {
   long end;
@@ -87,19 +109,27 @@ long channel_size(struct channel *channel)
   }
   return end;
 }
+/*e: function channel_size */
 
 /* Output */
 
 #ifndef EINTR
+/*s: constant EINTR */
 #define EINTR (-1)
+/*e: constant EINTR */
 #endif
 #ifndef EAGAIN
+/*s: constant EAGAIN */
 #define EAGAIN (-1)
+/*e: constant EAGAIN */
 #endif
 #ifndef EWOULDBLOCK
+/*s: constant EWOULDBLOCK */
 #define EWOULDBLOCK (-1)
+/*e: constant EWOULDBLOCK */
 #endif
 
+/*s: function do_write */
 static int do_write(int fd, char *p, int n)
 {
   int retcode;
@@ -128,7 +158,9 @@ again:
   if (retcode == -1) sys_error(NO_ARG);
   return retcode;
 }
+/*e: function do_write */
 
+/*s: function flush_partial */
 /* Attempt to flush the buffer. This will make room in the buffer for
    at least one character. Returns true if the buffer is empty at the
    end of the flush, or false if some data remains in the buffer. */
@@ -149,14 +181,18 @@ int flush_partial(struct channel *channel)
   Unlock(channel);
   return (channel->curr == channel->buff);
 }
+/*e: function flush_partial */
 
+/*s: function flush */
 /* Flush completely the buffer. */
 
 void flush(struct channel *channel)
 {
   while (! flush_partial(channel)) /*nothing*/;
 }
+/*e: function flush */
 
+/*s: function putword */
 /* Output data */
 
 void putword(struct channel *channel, uint32 w)
@@ -166,7 +202,9 @@ void putword(struct channel *channel, uint32 w)
   putch(channel, w >> 8);
   putch(channel, w);
 }
+/*e: function putword */
 
+/*s: function putblock */
 int putblock(struct channel *channel, char *p, long int len)
 {
   int n, free, towrite, written;
@@ -192,7 +230,9 @@ int putblock(struct channel *channel, char *p, long int len)
     return free;
   }
 }
+/*e: function putblock */
 
+/*s: function really_putblock */
 void really_putblock(struct channel *channel, char *p, long int len)
 {
   int written;
@@ -202,19 +242,25 @@ void really_putblock(struct channel *channel, char *p, long int len)
     len -= written;
   }
 }
+/*e: function really_putblock */
 
+/*s: function seek_out */
 void seek_out(struct channel *channel, long int dest)
 {
   flush(channel);
   if (lseek(channel->fd, dest, 0) != dest) sys_error(NO_ARG);
   channel->offset = dest;
 }
+/*e: function seek_out */
 
+/*s: function pos_out */
 long pos_out(struct channel *channel)
 {
   return channel->offset + channel->curr - channel->buff;
 }
+/*e: function pos_out */
 
+/*s: function do_read */
 /* Input */
 
 static int do_read(int fd, char *p, unsigned int n)
@@ -236,7 +282,9 @@ static int do_read(int fd, char *p, unsigned int n)
   if (retcode == -1) sys_error(NO_ARG);
   return retcode;
 }
+/*e: function do_read */
 
+/*s: function refill */
 unsigned char refill(struct channel *channel)
 {
   int n;
@@ -248,7 +296,9 @@ unsigned char refill(struct channel *channel)
   channel->curr = channel->buff + 1;
   return (unsigned char)(channel->buff[0]);
 }
+/*e: function refill */
 
+/*s: function getword */
 uint32 getword(struct channel *channel)
 {
   int i;
@@ -260,7 +310,9 @@ uint32 getword(struct channel *channel)
   }
   return res;
 }
+/*e: function getword */
 
+/*s: function getblock */
 int getblock(struct channel *channel, char *p, long int len)
 {
   int n, avail, nread;
@@ -289,7 +341,9 @@ int getblock(struct channel *channel, char *p, long int len)
     return nread;
   }
 }
+/*e: function getblock */
 
+/*s: function really_getblock */
 int really_getblock(struct channel *chan, char *p, long int n)
 {
   int r;
@@ -301,7 +355,9 @@ int really_getblock(struct channel *chan, char *p, long int n)
   }
   return (n == 0);
 }
+/*e: function really_getblock */
 
+/*s: function seek_in */
 void seek_in(struct channel *channel, long int dest)
 {
   if (dest >= channel->offset - (channel->max - channel->buff) &&
@@ -313,12 +369,16 @@ void seek_in(struct channel *channel, long int dest)
     channel->curr = channel->max = channel->buff;
   }
 }
+/*e: function seek_in */
 
+/*s: function pos_in */
 long pos_in(struct channel *channel)
 {
   return channel->offset - (channel->max - channel->curr);
 }
+/*e: function pos_in */
 
+/*s: function input_scan_line */
 long input_scan_line(struct channel *channel)
 {
   char * p;
@@ -358,7 +418,9 @@ long input_scan_line(struct channel *channel)
   /* Found a newline. Return the length of the line, newline included. */
   return (p - channel->curr);
 }
+/*e: function input_scan_line */
 
+/*s: function finalize_channel */
 /* Caml entry points for the I/O functions.  Wrap struct channel *
    objects into a heap-allocated, finalized object.  Perform locking
    and unlocking around the I/O operations. */
@@ -369,24 +431,32 @@ static void finalize_channel(value vchan)
   if (channel_mutex_free != NULL) (*channel_mutex_free)(chan);
   stat_free(chan);
 }
+/*e: function finalize_channel */
 
+/*s: function alloc_channel */
 static value alloc_channel(struct channel *chan)
 {
   value res = alloc_final(2, finalize_channel, 1, 32);
   Field(res, 1) = (value) chan;
   return res;
 }
+/*e: function alloc_channel */
 
+/*s: function caml_open_descriptor */
 value caml_open_descriptor(value fd)       /* ML */
 {
   return alloc_channel(open_descriptor(Int_val(fd)));
 }
+/*e: function caml_open_descriptor */
 
+/*s: function channel_descriptor */
 value channel_descriptor(value vchannel)   /* ML */
 {
   return Val_long(Channel(vchannel)->fd);
 }
+/*e: function channel_descriptor */
 
+/*s: function caml_close_channel */
 value caml_close_channel(value vchannel)      /* ML */
 {
   /* For output channels, must have flushed before */
@@ -395,23 +465,31 @@ value caml_close_channel(value vchannel)      /* ML */
   channel->fd = -1;
   return Val_unit;
 }
+/*e: function caml_close_channel */
 
+/*s: function caml_channel_size */
 value caml_channel_size(value vchannel)      /* ML */
 {
   return Val_long(channel_size(Channel(vchannel)));
 }
+/*e: function caml_channel_size */
 
+/*s: function caml_flush_partial */
 value caml_flush_partial(value vchannel)            /* ML */
 {
   return Val_bool(flush_partial(Channel(vchannel)));
 }
+/*e: function caml_flush_partial */
 
+/*s: function caml_flush */
 value caml_flush(value vchannel)            /* ML */
 {
   flush(Channel(vchannel));
   return Val_unit;
 }
+/*e: function caml_flush */
 
+/*s: function caml_output_char */
 value caml_output_char(value vchannel, value ch)  /* ML */
 {
   struct channel * channel = Channel(vchannel);
@@ -420,7 +498,9 @@ value caml_output_char(value vchannel, value ch)  /* ML */
   Unlock(channel);
   return Val_unit;
 }
+/*e: function caml_output_char */
 
+/*s: function caml_output_int */
 value caml_output_int(value vchannel, value w)    /* ML */
 {
   struct channel * channel = Channel(vchannel);
@@ -429,6 +509,7 @@ value caml_output_int(value vchannel, value w)    /* ML */
   Unlock(channel);
   return Val_unit;
 }
+/*e: function caml_output_int */
 
 value caml_output_partial(value vchannel, value buff, value start, value length) /* ML */
 {
@@ -460,6 +541,7 @@ value caml_output(value vchannel, value buff, value start, value length) /* ML *
   return Val_unit;
 }
 
+/*s: function caml_seek_out */
 value caml_seek_out(value vchannel, value pos)    /* ML */
 {
   struct channel * channel = Channel(vchannel);
@@ -468,12 +550,16 @@ value caml_seek_out(value vchannel, value pos)    /* ML */
   Unlock(channel);
   return Val_unit;
 }
+/*e: function caml_seek_out */
 
+/*s: function caml_pos_out */
 value caml_pos_out(value vchannel)          /* ML */
 {
   return Val_long(pos_out(Channel(vchannel)));
 }
+/*e: function caml_pos_out */
 
+/*s: function caml_input_char */
 value caml_input_char(value vchannel)       /* ML */
 {
   struct channel * channel = Channel(vchannel);
@@ -484,7 +570,9 @@ value caml_input_char(value vchannel)       /* ML */
   Unlock(channel);
   return Val_long(c);
 }
+/*e: function caml_input_char */
 
+/*s: function caml_input_int */
 value caml_input_int(value vchannel)        /* ML */
 {
   struct channel * channel = Channel(vchannel);
@@ -498,6 +586,7 @@ value caml_input_int(value vchannel)        /* ML */
 #endif
   return Val_long(i);
 }
+/*e: function caml_input_int */
 
 value caml_input(value vchannel, value buff, value start, value length) /* ML */
 {
@@ -512,6 +601,7 @@ value caml_input(value vchannel, value buff, value start, value length) /* ML */
   return Val_long(res);
 }
 
+/*s: function caml_seek_in */
 value caml_seek_in(value vchannel, value pos)     /* ML */
 {
   struct channel * channel = Channel(vchannel);
@@ -520,12 +610,16 @@ value caml_seek_in(value vchannel, value pos)     /* ML */
   Unlock(channel);
   return Val_unit;
 }
+/*e: function caml_seek_in */
 
+/*s: function caml_pos_in */
 value caml_pos_in(value vchannel)           /* ML */
 {
   return Val_long(pos_in(Channel(vchannel)));
 }
+/*e: function caml_pos_in */
 
+/*s: function caml_input_scan_line */
 value caml_input_scan_line(value vchannel)       /* ML */
 {
   struct channel * channel = Channel(vchannel);
@@ -536,4 +630,6 @@ value caml_input_scan_line(value vchannel)       /* ML */
   Unlock(channel);
   return Val_long(res);
 }
+/*e: function caml_input_scan_line */
 
+/*e: byterun/io.c */

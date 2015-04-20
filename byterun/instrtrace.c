@@ -1,3 +1,4 @@
+/*s: byterun/instrtrace.c */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -24,11 +25,17 @@
 extern code_t start_code;
 extern char * names_of_cprim[];
 
+/*s: global icount */
 long icount = 0;
+/*e: global icount */
 
+/*s: function stop_here */
 void stop_here () {}
+/*e: function stop_here */
 
+/*s: global trace_flag */
 int trace_flag = 0;
+/*e: global trace_flag */
 
 void disasm_instr(pc)
      code_t pc;
@@ -63,3 +70,4 @@ void disasm_instr(pc)
 }
 
 #endif
+/*e: byterun/instrtrace.c */
