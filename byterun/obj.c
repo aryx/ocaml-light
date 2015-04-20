@@ -1,4 +1,5 @@
 /*s: byterun/obj.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: obj.c,v 1.5 1997/11/20 15:30:42 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Operations on objects */
 

@@ -1,4 +1,5 @@
 /*s: byterun/terminfo.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,8 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
+/*e: copyright header C xavier */
 
-/* $Id: terminfo.c,v 1.12 1997/10/24 15:52:05 xleroy Exp $ */
 
 /* Read and output terminal commands */
 

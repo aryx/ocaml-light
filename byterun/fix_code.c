@@ -1,4 +1,5 @@
 /*s: byterun/fix_code.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: fix_code.c,v 1.17 1997/09/02 12:53:58 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Handling of blocks of bytecode (endianness switch, threading). */
 

@@ -1,4 +1,5 @@
 /*s: byterun/compact.h */
+/*s: copyright header C damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: compact.h,v 1.2 1997/09/02 12:53:56 xleroy Exp $ */
+/*e: copyright header C damien */
 
 #ifndef _compact_
 /*s: constant _compact_ */

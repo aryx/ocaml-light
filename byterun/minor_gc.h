@@ -1,4 +1,5 @@
 /*s: byterun/minor_gc.h */
+/*s: copyright header C damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: minor_gc.h,v 1.9 1997/09/02 12:54:05 xleroy Exp $ */
+/*e: copyright header C damien */
 
 #ifndef _minor_gc_
 /*s: constant _minor_gc_ */

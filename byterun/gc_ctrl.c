@@ -1,4 +1,5 @@
 /*s: byterun/gc_ctrl.c */
+/*s: copyright header C damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: gc_ctrl.c,v 1.14 1997/10/14 15:48:44 doligez Exp $ */
+/*e: copyright header C damien */
 
 #include "alloc.h"
 #include "compact.h"

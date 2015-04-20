@@ -1,4 +1,5 @@
 /*s: byterun/startup.c */
+/*s: copyright header C xavier and damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: startup.c,v 1.23 1997/12/09 13:53:13 vouillon Exp $ */
+/*e: copyright header C xavier and damien */
 
 /* Start-up code */
 

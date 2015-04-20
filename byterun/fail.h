@@ -1,4 +1,5 @@
 /*s: byterun/fail.h */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: fail.h,v 1.8 1997/09/02 12:53:58 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 #ifndef _fail_
 /*s: constant _fail_ */

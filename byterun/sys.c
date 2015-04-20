@@ -1,4 +1,5 @@
 /*s: byterun/sys.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: sys.c,v 1.30 1997/12/10 14:56:28 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Basic system calls */
 

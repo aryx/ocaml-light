@@ -1,4 +1,5 @@
 /*s: byterun/signals.h */
+/*s: copyright header C xavier and damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: signals.h,v 1.9 1997/09/02 12:54:08 xleroy Exp $ */
+/*e: copyright header C xavier and damien */
 
 #ifndef _signals_
 /*s: constant _signals_ */

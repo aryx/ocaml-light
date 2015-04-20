@@ -1,4 +1,5 @@
 /*s: byterun/printexc.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: printexc.c,v 1.3 1997/09/02 12:54:07 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Print an uncaught exception and abort */
 

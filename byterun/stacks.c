@@ -1,4 +1,5 @@
 /*s: byterun/stacks.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: stacks.c,v 1.11 1997/11/20 15:30:43 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* To initialize and resize the stacks */
 

@@ -1,4 +1,5 @@
 /*s: byterun/memory.c */
+/*s: copyright header C damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: memory.c,v 1.12 1997/12/10 13:27:29 xleroy Exp $ */
+/*e: copyright header C damien */
 
 #include <stdlib.h>
 #include <string.h>

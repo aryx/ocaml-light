@@ -1,4 +1,5 @@
 /*s: byterun/extern.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: extern.c,v 1.21 1997/12/11 20:53:06 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Structured output */
 

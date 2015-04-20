@@ -1,4 +1,5 @@
 /*s: byterun/gc.h */
+/*s: copyright header C damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: gc.h,v 1.5 1997/05/19 15:41:40 doligez Exp $ */
+/*e: copyright header C damien */
 
 #ifndef _gc_
 /*s: constant _gc_ */

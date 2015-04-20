@@ -1,4 +1,5 @@
 /*s: byterun/prims.h */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: prims.h,v 1.3 1996/04/30 14:45:15 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Interface with C primitives. */
 

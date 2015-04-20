@@ -1,4 +1,5 @@
 /*s: byterun/md5.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: md5.c,v 1.9 1997/09/02 12:54:04 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 #include <string.h>
 #include "alloc.h"

@@ -1,4 +1,5 @@
 /*s: byterun/floats.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: floats.c,v 1.20 1997/11/27 16:30:58 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 #include <math.h>
 #include <stdio.h>

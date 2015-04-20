@@ -1,4 +1,5 @@
 /*s: byterun/reverse.h */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: reverse.h,v 1.5 1997/07/02 18:15:55 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Swap byte-order in 32-bit integers and in words */
 

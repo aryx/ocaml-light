@@ -231,7 +231,34 @@ those parts are copyright by INRIA.
 @
 
 \ifallcode
-<<copyright header C>>=
+<<copyright header 1997>>=
+(***********************************************************************)
+(*                                                                     *)
+(*                           Objective Caml                            *)
+(*                                                                     *)
+(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
+(*                                                                     *)
+(*  Copyright 1997 Institut National de Recherche en Informatique et   *)
+(*  Automatique.  Distributed only by permission.                      *)
+(*                                                                     *)
+(***********************************************************************)
+@
+
+<<copyright header 1998>>=
+(***********************************************************************)
+(*                                                                     *)
+(*                           Objective Caml                            *)
+(*                                                                     *)
+(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
+(*                                                                     *)
+(*  Copyright 1998 Institut National de Recherche en Informatique et   *)
+(*  Automatique.  Distributed only by permission.                      *)
+(*                                                                     *)
+(***********************************************************************)
+@
+
+
+<<copyright header C xavier>>=
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -243,10 +270,48 @@ those parts are copyright by INRIA.
 /*                                                                     */
 /***********************************************************************/
 @
-% in parser.mly
-\fi
+% in parser.mly and many stdlib support C code in byterun
 
-\ifallcode
+<<copyright header C xavier and damien>>=
+/***********************************************************************/
+/*                                                                     */
+/*                           Objective Caml                            */
+/*                                                                     */
+/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
+/*                                                                     */
+/*  Copyright 1996 Institut National de Recherche en Informatique et   */
+/*  Automatique.  Distributed only by permission.                      */
+/*                                                                     */
+/***********************************************************************/
+@
+
+<<copyright header C damien>>=
+/***********************************************************************/
+/*                                                                     */
+/*                           Objective Caml                            */
+/*                                                                     */
+/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
+/*                                                                     */
+/*  Copyright 1996 Institut National de Recherche en Informatique et   */
+/*  Automatique.  Distributed only by permission.                      */
+/*                                                                     */
+/***********************************************************************/
+@
+
+<<copyright header C damien 1997>>=
+/***********************************************************************/
+/*                                                                     */
+/*                           Objective Caml                            */
+/*                                                                     */
+/*            Damien Doligez, projet Para, INRIA Rocquencourt          */
+/*                                                                     */
+/*  Copyright 1997 Institut National de Recherche en Informatique et   */
+/*  Automatique.  Distributed only by permission.                      */
+/*                                                                     */
+/***********************************************************************/
+@
+
+
 <<copyright header0>>=
 (***********************************************************************)
 (*                                                                     *)
@@ -1616,7 +1681,7 @@ let get_stored_string () =
 % bootstrapping issue? no for ocamlyacc as it's written in C.
 
 <<./parsing/parser.mly>>=
-<<copyright header C>>
+<<copyright header C xavier>>
 
 /* The parser definition */
 

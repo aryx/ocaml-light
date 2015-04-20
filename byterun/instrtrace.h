@@ -1,4 +1,5 @@
 /*s: byterun/instrtrace.h */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: instrtrace.h,v 1.4 1997/09/02 12:54:00 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Trace the instructions executed */
 

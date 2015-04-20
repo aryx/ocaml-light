@@ -1,4 +1,5 @@
 /*s: byterun/callback.h */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: callback.h,v 1.2 1997/09/02 12:53:56 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Callbacks from C to Caml */
 

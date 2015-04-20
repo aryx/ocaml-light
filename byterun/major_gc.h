@@ -1,4 +1,5 @@
 /*s: byterun/major_gc.h */
+/*s: copyright header C damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: major_gc.h,v 1.6 1997/09/02 12:54:04 xleroy Exp $ */
+/*e: copyright header C damien */
 
 #ifndef _major_gc_
 /*s: constant _major_gc_ */

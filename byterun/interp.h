@@ -1,4 +1,5 @@
 /*s: byterun/interp.h */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: interp.h,v 1.6 1997/09/02 12:54:01 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* The bytecode interpreter */
 
