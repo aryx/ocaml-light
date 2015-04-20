@@ -1,16 +1,17 @@
 /*s: byterun/weak.c */
+/*s: copyright header C damien 1997 */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
 /*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
+/*            Damien Doligez, projet Para, INRIA Rocquencourt          */
 /*                                                                     */
 /*  Copyright 1997 Institut National de Recherche en Informatique et   */
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
+/*e: copyright header C damien 1997 */
 
-/* $Id: weak.c,v 1.7 1997/09/02 12:54:11 xleroy Exp $ */
 
 /* Operations on weak arrays */
 

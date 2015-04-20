@@ -1,4 +1,5 @@
 /*s: byterun/array.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: array.c,v 1.8 1997/09/11 15:09:43 doligez Exp $ */
+/*e: copyright header C xavier */
 
 /* Operations on arrays */
 

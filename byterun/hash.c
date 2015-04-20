@@ -1,4 +1,5 @@
 /*s: byterun/hash.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: hash.c,v 1.10 1997/09/02 12:54:00 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* The generic hashing primitive */
 

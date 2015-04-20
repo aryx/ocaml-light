@@ -1,4 +1,5 @@
 /*s: byterun/weak.h */
+/*s: copyright header C damien 1997 */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,8 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
+/*e: copyright header C damien 1997 */
 
-/* $Id: weak.h,v 1.2 1997/02/25 14:39:01 xleroy Exp $ */
 
 /* Operations on weak arrays */
 

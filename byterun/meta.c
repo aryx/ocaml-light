@@ -1,4 +1,5 @@
 /*s: byterun/meta.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: meta.c,v 1.13 1997/11/17 10:38:58 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Primitives for the toplevel */
 

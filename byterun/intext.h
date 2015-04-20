@@ -1,4 +1,5 @@
 /*s: byterun/intext.h */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: intext.h,v 1.15 1997/11/17 13:52:29 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Structured input/output */
 

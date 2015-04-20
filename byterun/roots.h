@@ -1,4 +1,5 @@
 /*s: byterun/roots.h */
+/*s: copyright header C xavier and damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: roots.h,v 1.11 1997/11/27 16:30:58 xleroy Exp $ */
+/*e: copyright header C xavier and damien */
 
 #ifndef _roots_
 /*s: constant _roots_ */

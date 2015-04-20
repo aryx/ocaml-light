@@ -1,4 +1,5 @@
 /*s: byterun/intern.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: intern.c,v 1.22 1997/12/11 20:53:07 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Structured input, compact format */
 

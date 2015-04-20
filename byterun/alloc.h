@@ -1,4 +1,5 @@
 /*s: byterun/alloc.h */
+/*s: copyright header C xavier and damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: alloc.h,v 1.4 1997/09/02 12:53:55 xleroy Exp $ */
+/*e: copyright header C xavier and damien */
 
 #ifndef _alloc_
 /*s: constant _alloc_ */

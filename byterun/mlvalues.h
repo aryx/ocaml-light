@@ -1,4 +1,5 @@
 /*s: byterun/mlvalues.h */
+/*s: copyright header C xavier and damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: mlvalues.h,v 1.19 1997/09/02 12:54:06 xleroy Exp $ */
+/*e: copyright header C xavier and damien */
 
 #ifndef _mlvalues_
 /*s: constant _mlvalues_ */

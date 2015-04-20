@@ -1,4 +1,5 @@
 /*s: byterun/memory.h */
+/*s: copyright header C damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: memory.h,v 1.15 1997/11/20 15:30:41 xleroy Exp $ */
+/*e: copyright header C damien */
 
 /* Allocation macros and functions */
 

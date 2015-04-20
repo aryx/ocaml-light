@@ -528,21 +528,10 @@ external puts: out_channel -> string -> int -> unit = "terminfo_puts"
 %-------------------------------------------------------------
 
 <<./parsing/linenum.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1997 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header 1997>>
 
 <<signature Linenum.for_position>>
 @
-
 
 \subsection*{[[./parsing/longident.mli]]}
 
@@ -771,17 +760,7 @@ open Format
 %-------------------------------------------------------------
 
 <<./parsing/syntaxerr.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1997 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header 1997>>
 
 <<type Syntaxerr.error>>
 
@@ -791,7 +770,6 @@ open Format
 <<signature Syntaxerr.report_error>>
 @
 
-
 \subsection*{[[./parsing/syntaxerr.ml]]}
 
 
@@ -799,17 +777,7 @@ open Format
 %-------------------------------------------------------------
 
 <<./parsing/syntaxerr.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1997 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header 1997>>
 
 (* Auxiliary type for reporting syntax errors *)
 
@@ -821,7 +789,6 @@ open Format
 <<exception Syntaxerr.Escape_error>>
 
 <<function Syntaxerr.report_error>>
-
 
 @
 
@@ -8286,17 +8253,7 @@ let print_specific_operation printreg op arg =
 %-------------------------------------------------------------
 
 <<asmcomp/arm/arch.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1998 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header 1998>>
 
 (* Specific operations for the ARM processor *)
 
@@ -11890,17 +11847,7 @@ let assemble_file infile outfile =
 %-------------------------------------------------------------
 
 <<asmcomp/arm/proc.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1998 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header 1998>>
 
 (* Description of the ARM processor *)
 
@@ -12019,16 +11966,7 @@ val reload_generic: unit -> reloader
 %-------------------------------------------------------------
 
 <<asmcomp/reloadgen.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1997 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
+<<copyright header 1997>>
 
 <<type Reloadgen.reloader>>
 
@@ -12277,18 +12215,9 @@ let fundecl f =
 %-------------------------------------------------------------
 
 <<asmcomp/arm/reload.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1998 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-open Reloadgen
+<<copyright header 1998>>
 
+open Reloadgen
 
 <<function Reload.fundecl>>
 @
@@ -16598,17 +16527,7 @@ val scheduler_generic: unit -> scheduler
 %-------------------------------------------------------------
 
 <<asmcomp/schedgen.mli>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1997 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header 1997>>
 
 <<type Schedgen.code_dag_node>>
 
@@ -16817,17 +16736,7 @@ let fundecl f =
 %-------------------------------------------------------------
 
 <<asmcomp/arm/selection.ml>>=
-(***********************************************************************)
-(*                                                                     *)
-(*                           Objective Caml                            *)
-(*                                                                     *)
-(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
-(*                                                                     *)
-(*  Copyright 1998 Institut National de Recherche en Informatique et   *)
-(*  Automatique.  Distributed only by permission.                      *)
-(*                                                                     *)
-(***********************************************************************)
-
+<<copyright header 1998>>
 
 (* Instruction selection for the ARM processor *)
 
@@ -18417,18 +18326,7 @@ open Clflags
 %-------------------------------------------------------------
 
 <<byterun/config.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: config.h,v 1.14 1997/05/26 17:15:19 doligez Exp $ */
+<<copyright header C xavier and damien>>
 
 #ifndef _config_
 <<constant _config_>>
@@ -18555,18 +18453,7 @@ enum instructions {
 %-------------------------------------------------------------
 
 <<byterun/instruct.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: instruct.h,v 1.10 1997/05/13 14:05:43 xleroy Exp $ */
+<<copyright header C xavier>>
 
 <<enum instructions>>
 @
@@ -18968,18 +18855,7 @@ bits  63    10 9     8 7   0
 %-------------------------------------------------------------
 
 <<byterun/mlvalues.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: mlvalues.h,v 1.19 1997/09/02 12:54:06 xleroy Exp $ */
+<<copyright header C xavier and damien>>
 
 #ifndef _mlvalues_
 <<constant _mlvalues_>>
@@ -19215,18 +19091,7 @@ struct exec_trailer {
 %-------------------------------------------------------------
 
 <<byterun/exec.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: exec.h,v 1.4 1997/06/13 15:49:32 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* exec.h : format of executable bytecode files */
 
@@ -19259,18 +19124,7 @@ struct exec_trailer {
 %-------------------------------------------------------------
 
 <<byterun/prims.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: prims.h,v 1.3 1996/04/30 14:45:15 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Interface with C primitives. */
 
@@ -19373,18 +19227,7 @@ struct caml__roots_block {
 %-------------------------------------------------------------
 
 <<byterun/memory.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: memory.h,v 1.15 1997/11/20 15:30:41 xleroy Exp $ */
+<<copyright header C damien>>
 
 /* Allocation macros and functions */
 
@@ -19793,18 +19636,7 @@ void * stat_resize (void * blk, asize_t sz)
 %-------------------------------------------------------------
 
 <<byterun/memory.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: memory.c,v 1.12 1997/12/10 13:27:29 xleroy Exp $ */
+<<copyright header C damien>>
 
 #include <stdlib.h>
 #include <string.h>
@@ -19858,18 +19690,7 @@ void * stat_resize (void * blk, asize_t sz)
 %-------------------------------------------------------------
 
 <<byterun/freelist.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: freelist.h,v 1.6 1997/09/02 12:53:59 xleroy Exp $ */
+<<copyright header C damien>>
 
 /* Free lists of heap blocks. */
 
@@ -20175,18 +19996,7 @@ void fl_add_block (char *bp)
 %-------------------------------------------------------------
 
 <<byterun/freelist.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: freelist.c,v 1.8 1997/09/02 12:53:59 xleroy Exp $ */
+<<copyright header C damien>>
 
 #include "config.h"
 #include "freelist.h"
@@ -20245,18 +20055,7 @@ typedef struct {
 %-------------------------------------------------------------
 
 <<byterun/alloc.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: alloc.h,v 1.4 1997/09/02 12:53:55 xleroy Exp $ */
+<<copyright header C xavier and damien>>
 
 #ifndef _alloc_
 <<constant _alloc_>>
@@ -20403,18 +20202,7 @@ int convert_flag_list(value list, int *flags)
 %-------------------------------------------------------------
 
 <<byterun/alloc.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: alloc.c,v 1.9 1997/09/02 12:53:55 xleroy Exp $ */
+<<copyright header C xavier and damien>>
 
 /* 1. Allocation functions doing the same work as the macros in the
       case where [Setup_for_gc] and [Restore_after_gc] are no-ops.
@@ -20459,18 +20247,7 @@ int convert_flag_list(value list, int *flags)
 %-------------------------------------------------------------
 
 <<byterun/interp.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: interp.h,v 1.6 1997/09/02 12:54:01 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* The bytecode interpreter */
 
@@ -20542,18 +20319,7 @@ value interprete (code_t prog, asize_t prog_size);
 %-------------------------------------------------------------
 
 <<byterun/interp.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: interp.c,v 1.42 1997/09/02 12:54:01 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* The bytecode interpreter */
 
@@ -21556,18 +21322,7 @@ value interprete(code_t prog, asize_t prog_size)
 %-------------------------------------------------------------
 
 <<byterun/gc.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: gc.h,v 1.5 1997/05/19 15:41:40 doligez Exp $ */
+<<copyright header C damien>>
 
 #ifndef _gc_
 <<constant _gc_>>
@@ -21617,18 +21372,7 @@ value interprete(code_t prog, asize_t prog_size)
 %-------------------------------------------------------------
 
 <<byterun/gc_ctrl.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: gc_ctrl.h,v 1.6 1997/09/02 12:53:59 xleroy Exp $ */
+<<copyright header C damien>>
 
 #ifndef _gc_ctrl_
 <<constant _gc_ctrl_>>
@@ -21912,18 +21656,7 @@ void init_gc (long unsigned int minor_size, long unsigned int major_size, long u
 %-------------------------------------------------------------
 
 <<byterun/gc_ctrl.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: gc_ctrl.c,v 1.14 1997/10/14 15:48:44 doligez Exp $ */
+<<copyright header C damien>>
 
 #include "alloc.h"
 #include "compact.h"
@@ -21991,18 +21724,7 @@ extern unsigned long percent_max;     /*        cf. compact.c */
 %-------------------------------------------------------------
 
 <<byterun/roots.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: roots.h,v 1.11 1997/11/27 16:30:58 xleroy Exp $ */
+<<copyright header C xavier and damien>>
 
 #ifndef _roots_
 <<constant _roots_>>
@@ -22167,18 +21889,7 @@ void do_local_roots (scanning_action f, value *stack_low, value *stack_high, str
 %-------------------------------------------------------------
 
 <<byterun/roots.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: roots.c,v 1.15 1997/11/20 15:30:42 xleroy Exp $ */
+<<copyright header C xavier and damien>>
 
 /* To walk the memory roots for garbage collection */
 
@@ -22269,18 +21980,7 @@ void do_local_roots (scanning_action f, value *stack_low, value *stack_high, str
 %-------------------------------------------------------------
 
 <<byterun/major_gc.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: major_gc.h,v 1.6 1997/09/02 12:54:04 xleroy Exp $ */
+<<copyright header C damien>>
 
 #ifndef _major_gc_
 <<constant _major_gc_>>
@@ -22743,18 +22443,7 @@ void init_major_heap (asize_t heap_size)
 %-------------------------------------------------------------
 
 <<byterun/major_gc.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: major_gc.c,v 1.16 1997/09/02 12:54:03 xleroy Exp $ */
+<<copyright header C damien>>
 
 #include "compact.h"
 #include "config.h"
@@ -22835,18 +22524,7 @@ static void update_weak_pointers (void);
 %-------------------------------------------------------------
 
 <<byterun/minor_gc.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: minor_gc.h,v 1.9 1997/09/02 12:54:05 xleroy Exp $ */
+<<copyright header C damien>>
 
 #ifndef _minor_gc_
 <<constant _minor_gc_>>
@@ -23038,18 +22716,7 @@ void realloc_ref_table (void)
 %-------------------------------------------------------------
 
 <<byterun/minor_gc.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: minor_gc.c,v 1.17 1997/11/20 15:30:42 xleroy Exp $ */
+<<copyright header C damien>>
 
 #include <string.h>
 #include "config.h"
@@ -23094,18 +22761,7 @@ static asize_t ref_table_size, ref_table_reserve;
 %-------------------------------------------------------------
 
 <<byterun/compact.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: compact.h,v 1.2 1997/09/02 12:53:56 xleroy Exp $ */
+<<copyright header C damien>>
 
 #ifndef _compact_
 <<constant _compact_>>
@@ -23476,18 +23132,7 @@ void compact_heap_maybe (void)
 %-------------------------------------------------------------
 
 <<byterun/compact.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: compact.c,v 1.6 1997/09/02 13:13:33 xleroy Exp $ */
+<<copyright header C damien>>
 
 #include <string.h>
 
@@ -23619,18 +23264,7 @@ value hash_univ_param(value count, value limit, value obj) /* ML */
 %-------------------------------------------------------------
 
 <<byterun/hash.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: hash.c,v 1.10 1997/09/02 12:54:00 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* The generic hashing primitive */
 
@@ -23797,18 +23431,7 @@ value make_vect(value len, value init)      /* ML */
 %-------------------------------------------------------------
 
 <<byterun/array.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: array.c,v 1.8 1997/09/11 15:09:43 doligez Exp $ */
+<<copyright header C xavier>>
 
 /* Operations on arrays */
 
@@ -23844,18 +23467,7 @@ value make_vect(value len, value init)      /* ML */
 %-------------------------------------------------------------
 
 <<byterun/stacks.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: stacks.h,v 1.6 1997/09/02 12:54:09 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* structure of the stacks */
 
@@ -23992,18 +23604,7 @@ void change_max_stack_size (long unsigned int new_max_size)
 %-------------------------------------------------------------
 
 <<byterun/stacks.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: stacks.c,v 1.11 1997/11/20 15:30:43 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* To initialize and resize the stacks */
 
@@ -24042,18 +23643,7 @@ void change_max_stack_size (long unsigned int new_max_size)
 %-------------------------------------------------------------
 
 <<byterun/callback.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: callback.h,v 1.2 1997/09/02 12:53:56 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Callbacks from C to Caml */
 
@@ -24222,18 +23812,7 @@ value * caml_named_value(char *name)
 %-------------------------------------------------------------
 
 <<byterun/callback.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: callback.c,v 1.3 1997/09/02 12:53:56 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Callbacks from C to Caml */
 
@@ -24440,18 +24019,7 @@ value greaterequal(value v1, value v2)       /* ML */
 %-------------------------------------------------------------
 
 <<byterun/compare.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: compare.c,v 1.13 1997/09/02 12:53:56 xleroy Exp $ */
+<<copyright header C xavier>>
 
 #include "fail.h"
 #include "memory.h"
@@ -24569,18 +24137,7 @@ enum debugger_reply {
 %-------------------------------------------------------------
 
 <<byterun/debugger.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: debugger.h,v 1.3 1997/09/02 12:53:57 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Interface with the debugger */
 
@@ -24943,18 +24500,7 @@ void debugger(enum event_kind event)
 %-------------------------------------------------------------
 
 <<byterun/debugger.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: debugger.c,v 1.14 1997/09/02 12:53:57 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Interface with the debugger */
 
@@ -25035,18 +24581,7 @@ void debugger(enum event_kind event)
 %-------------------------------------------------------------
 
 <<byterun/instrtrace.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: instrtrace.h,v 1.4 1997/09/02 12:54:00 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Trace the instructions executed */
 
@@ -25085,18 +24620,7 @@ int trace_flag = 0;
 %-------------------------------------------------------------
 
 <<byterun/instrtrace.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: instrtrace.c,v 1.5 1997/05/20 09:20:15 doligez Exp $ */
+<<copyright header C xavier>>
 
 /* Trace the instructions executed */
 
@@ -25605,18 +25129,7 @@ value output_value_to_buffer(value buf, value ofs, value len, value v, value fla
 %-------------------------------------------------------------
 
 <<byterun/extern.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: extern.c,v 1.21 1997/12/11 20:53:06 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Structured output */
 
@@ -25772,18 +25285,7 @@ struct longjmp_buffer {
 %-------------------------------------------------------------
 
 <<byterun/fail.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: fail.h,v 1.8 1997/09/02 12:53:58 xleroy Exp $ */
+<<copyright header C xavier>>
 
 #ifndef _fail_
 <<constant _fail_>>
@@ -25964,18 +25466,7 @@ void raise_not_found(void)
 %-------------------------------------------------------------
 
 <<byterun/fail.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: fail.c,v 1.10 1997/09/02 12:53:57 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Raising exceptions from C. */
 
@@ -26030,18 +25521,7 @@ void raise_not_found(void)
 %-------------------------------------------------------------
 
 <<byterun/fix_code.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: fix_code.h,v 1.12 1997/09/02 12:53:58 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Handling of blocks of bytecode (endianness switch, threading). */
 
@@ -26202,18 +25682,7 @@ void set_instruction(code_t pos, opcode_t instr)
 %-------------------------------------------------------------
 
 <<byterun/fix_code.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: fix_code.c,v 1.17 1997/09/02 12:53:58 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Handling of blocks of bytecode (endianness switch, threading). */
 
@@ -26414,18 +25883,7 @@ void set_instruction(code_t pos, opcode_t instr)
 %-------------------------------------------------------------
 
 <<byterun/intext.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: intext.h,v 1.15 1997/11/17 13:52:29 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Structured input/output */
 
@@ -26749,18 +26207,7 @@ unsigned char * code_checksum(void)
 %-------------------------------------------------------------
 
 <<byterun/intern.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: intern.c,v 1.22 1997/12/11 20:53:07 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Structured input, compact format */
 
@@ -27092,18 +26539,7 @@ value format_int(value fmt, value arg)      /* ML */
 %-------------------------------------------------------------
 
 <<byterun/ints.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: ints.c,v 1.6 1997/09/02 12:54:02 xleroy Exp $ */
+<<copyright header C xavier>>
 
 #include <stdio.h>
 #include <string.h>
@@ -27492,18 +26928,7 @@ void init_ieee_floats(void)
 %-------------------------------------------------------------
 
 <<byterun/floats.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: floats.c,v 1.20 1997/11/27 16:30:58 xleroy Exp $ */
+<<copyright header C xavier>>
 
 #include <math.h>
 #include <stdio.h>
@@ -27663,18 +27088,7 @@ struct channel {
 %-------------------------------------------------------------
 
 <<byterun/io.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: io.h,v 1.10 1997/09/02 12:54:03 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Buffered input/output */
 
@@ -28289,18 +27703,7 @@ value caml_input_scan_line(value vchannel)       /* ML */
 %-------------------------------------------------------------
 
 <<byterun/io.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: io.c,v 1.25 1997/12/11 20:48:46 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Buffered input/output. */
 
@@ -28570,18 +27973,7 @@ value lex_engine(struct lexing_table *tbl, value start_state, struct lexer_buffe
 %-------------------------------------------------------------
 
 <<byterun/lexing.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: lexing.c,v 1.10 1997/09/02 12:54:03 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* The table-driven automaton for lexers generated by camllex. */
 
@@ -28938,18 +28330,7 @@ void MD5Transform(uint32 *buf, uint32 *in)
 %-------------------------------------------------------------
 
 <<byterun/md5.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: md5.c,v 1.9 1997/09/02 12:54:04 xleroy Exp $ */
+<<copyright header C xavier>>
 
 #include <string.h>
 #include "alloc.h"
@@ -29095,18 +28476,7 @@ value available_primitives(value unit)
 %-------------------------------------------------------------
 
 <<byterun/meta.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: meta.c,v 1.13 1997/11/17 10:38:58 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Primitives for the toplevel */
 
@@ -29182,18 +28552,7 @@ value available_primitives(value unit)
 %-------------------------------------------------------------
 
 <<byterun/misc.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: misc.h,v 1.7 1997/09/02 12:54:06 xleroy Exp $ */
+<<copyright header C xavier and damien>>
 
 /* Miscellaneous macros and variables. */
 
@@ -29435,18 +28794,7 @@ char *aligned_malloc (asize_t size, int modulo, void **block)
 %-------------------------------------------------------------
 
 <<byterun/misc.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: misc.c,v 1.10 1997/09/02 12:54:06 xleroy Exp $ */
+<<copyright header C xavier and damien>>
 
 #include <stdio.h>
 #include "config.h"
@@ -29543,18 +28891,7 @@ value obj_block(value tag, value size) /* ML */
 %-------------------------------------------------------------
 
 <<byterun/obj.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: obj.c,v 1.5 1997/11/20 15:30:42 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Operations on objects */
 
@@ -29870,18 +29207,7 @@ value parse_engine(struct parser_tables *tables, struct parser_env *env, value c
 %-------------------------------------------------------------
 
 <<byterun/parsing.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: parsing.c,v 1.9 1997/09/02 12:54:07 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* The PDA automaton for parsers generated by camlyacc */
 
@@ -30022,18 +29348,7 @@ void fatal_uncaught_exception(value exn)
 %-------------------------------------------------------------
 
 <<byterun/printexc.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: printexc.c,v 1.3 1997/09/02 12:54:07 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Print an uncaught exception and abort */
 
@@ -30111,18 +29426,7 @@ void fatal_uncaught_exception(value exn)
 %-------------------------------------------------------------
 
 <<byterun/reverse.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: reverse.h,v 1.5 1997/07/02 18:15:55 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Swap byte-order in 32-bit integers and in words */
 
@@ -30150,18 +29454,7 @@ void fatal_uncaught_exception(value exn)
 %-------------------------------------------------------------
 
 <<byterun/signals.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: signals.h,v 1.9 1997/09/02 12:54:08 xleroy Exp $ */
+<<copyright header C xavier and damien>>
 
 #ifndef _signals_
 <<constant _signals_>>
@@ -30425,18 +29718,7 @@ value install_signal_handler(value signal_number, value action) /* ML */
 %-------------------------------------------------------------
 
 <<byterun/signals.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: signals.c,v 1.17 1997/10/16 16:11:17 xleroy Exp $ */
+<<copyright header C xavier and damien>>
 
 #include <signal.h>
 #include "alloc.h"
@@ -30551,18 +29833,7 @@ value install_signal_handler(value signal_number, value action) /* ML */
 %-------------------------------------------------------------
 
 <<byterun/str.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: str.h,v 1.4 1997/09/02 12:54:09 xleroy Exp $ */
+<<copyright header C xavier>>
 
 #ifndef _str_
 <<constant _str_>>
@@ -30710,18 +29981,7 @@ value bitvect_test(value bv, value n)       /* ML */
 %-------------------------------------------------------------
 
 <<byterun/str.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: str.c,v 1.11 1997/09/02 12:54:09 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Operations on strings */
 
@@ -30773,18 +30033,7 @@ value bitvect_test(value bv, value n)       /* ML */
 %-------------------------------------------------------------
 
 <<byterun/sys.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: sys.h,v 1.6 1997/09/02 12:54:10 xleroy Exp $ */
+<<copyright header C xavier>>
 
 #ifndef _sys_
 <<constant _sys_>>
@@ -31027,18 +30276,7 @@ char * searchpath(char * name)
 %-------------------------------------------------------------
 
 <<byterun/sys.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: sys.c,v 1.30 1997/12/10 14:56:28 xleroy Exp $ */
+<<copyright header C xavier>>
 
 /* Basic system calls */
 
@@ -31220,18 +30458,8 @@ value terminfo_puts(value vchan, value str, value count)
 %-------------------------------------------------------------
 
 <<byterun/terminfo.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
+<<copyright header C xavier>>
 
-/* $Id: terminfo.c,v 1.12 1997/10/24 15:52:05 xleroy Exp $ */
 
 /* Read and output terminal commands */
 
@@ -31280,18 +30508,8 @@ extern int tputs (char * str, int count, int (*outchar)(int c));
 %-------------------------------------------------------------
 
 <<byterun/weak.h>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*            Damien Doligez, projet Para, INRIA Rocquencourt          */
-/*                                                                     */
-/*  Copyright 1997 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
+<<copyright header C damien 1997>>
 
-/* $Id: weak.h,v 1.2 1997/02/25 14:39:01 xleroy Exp $ */
 
 /* Operations on weak arrays */
 
@@ -31379,18 +30597,8 @@ value weak_get (value ar, value n)        /* ML */
 %-------------------------------------------------------------
 
 <<byterun/weak.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*             Damien Doligez, projet Para, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1997 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
+<<copyright header C damien 1997>>
 
-/* $Id: weak.c,v 1.7 1997/09/02 12:54:11 xleroy Exp $ */
 
 /* Operations on weak arrays */
 
@@ -31742,18 +30950,7 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
 %-------------------------------------------------------------
 
 <<byterun/startup.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: startup.c,v 1.23 1997/12/09 13:53:13 vouillon Exp $ */
+<<copyright header C xavier and damien>>
 
 /* Start-up code */
 
@@ -31871,18 +31068,7 @@ int main(int argc, char **argv)
 %-------------------------------------------------------------
 
 <<byterun/main.c>>=
-/***********************************************************************/
-/*                                                                     */
-/*                           Objective Caml                            */
-/*                                                                     */
-/*         Xavier Leroy and Damien Doligez, INRIA Rocquencourt         */
-/*                                                                     */
-/*  Copyright 1996 Institut National de Recherche en Informatique et   */
-/*  Automatique.  Distributed only by permission.                      */
-/*                                                                     */
-/***********************************************************************/
-
-/* $Id: main.c,v 1.23 1997/11/17 15:11:56 doligez Exp $ */
+<<copyright header C xavier and damien>>
 
 /* Main entry point (can be overriden by a user-provided main()
    function that calls caml_main() later. */

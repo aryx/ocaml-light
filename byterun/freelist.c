@@ -1,4 +1,5 @@
 /*s: byterun/freelist.c */
+/*s: copyright header C damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: freelist.c,v 1.8 1997/09/02 12:53:59 xleroy Exp $ */
+/*e: copyright header C damien */
 
 #include "config.h"
 #include "freelist.h"

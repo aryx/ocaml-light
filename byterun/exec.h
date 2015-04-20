@@ -1,4 +1,5 @@
 /*s: byterun/exec.h */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: exec.h,v 1.4 1997/06/13 15:49:32 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* exec.h : format of executable bytecode files */
 

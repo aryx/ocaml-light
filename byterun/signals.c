@@ -1,4 +1,5 @@
 /*s: byterun/signals.c */
+/*s: copyright header C xavier and damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: signals.c,v 1.17 1997/10/16 16:11:17 xleroy Exp $ */
+/*e: copyright header C xavier and damien */
 
 #include <signal.h>
 #include "alloc.h"

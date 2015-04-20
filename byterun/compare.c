@@ -1,4 +1,5 @@
 /*s: byterun/compare.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: compare.c,v 1.13 1997/09/02 12:53:56 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 #include "fail.h"
 #include "memory.h"

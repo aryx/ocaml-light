@@ -1,4 +1,5 @@
 /*s: byterun/io.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: io.c,v 1.25 1997/12/11 20:48:46 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /* Buffered input/output. */
 

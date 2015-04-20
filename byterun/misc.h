@@ -1,4 +1,5 @@
 /*s: byterun/misc.h */
+/*s: copyright header C xavier and damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: misc.h,v 1.7 1997/09/02 12:54:06 xleroy Exp $ */
+/*e: copyright header C xavier and damien */
 
 /* Miscellaneous macros and variables. */
 

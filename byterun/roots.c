@@ -1,4 +1,5 @@
 /*s: byterun/roots.c */
+/*s: copyright header C xavier and damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: roots.c,v 1.15 1997/11/20 15:30:42 xleroy Exp $ */
+/*e: copyright header C xavier and damien */
 
 /* To walk the memory roots for garbage collection */
 

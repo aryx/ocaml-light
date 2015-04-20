@@ -1,4 +1,5 @@
 /*s: byterun/str.h */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: str.h,v 1.4 1997/09/02 12:54:09 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 #ifndef _str_
 /*s: constant _str_ */

@@ -1,4 +1,5 @@
 /*s: byterun/instruct.h */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: instruct.h,v 1.10 1997/05/13 14:05:43 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 /*s: enum instructions */
 /* The instruction set. */

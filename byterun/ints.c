@@ -1,4 +1,5 @@
 /*s: byterun/ints.c */
+/*s: copyright header C xavier */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: ints.c,v 1.6 1997/09/02 12:54:02 xleroy Exp $ */
+/*e: copyright header C xavier */
 
 #include <stdio.h>
 #include <string.h>

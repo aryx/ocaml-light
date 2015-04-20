@@ -1,4 +1,5 @@
 /*s: byterun/config.h */
+/*s: copyright header C xavier and damien */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -9,8 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: config.h,v 1.14 1997/05/26 17:15:19 doligez Exp $ */
+/*e: copyright header C xavier and damien */
 
 #ifndef _config_
 /*s: constant _config_ */
