@@ -1,3 +1,4 @@
+/*s: byterun/minor_gc.c */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -24,14 +25,19 @@
 #include "roots.h"
 #include "signals.h"
 
+/*s: global minor_heap_size */
 asize_t minor_heap_size;
+/*e: global minor_heap_size */
 char *young_start = NULL, *young_end = NULL;
 char *young_ptr = NULL, *young_limit = NULL;
 static value **ref_table = NULL, **ref_table_end, **ref_table_threshold;
 value **ref_table_ptr = NULL, **ref_table_limit;
 static asize_t ref_table_size, ref_table_reserve;
+/*s: global in_minor_collection */
 int in_minor_collection = 0;
+/*e: global in_minor_collection */
 
+/*s: function set_minor_heap_size */
 void set_minor_heap_size (asize_t size)
 {
   char *new_heap;
@@ -63,7 +69,9 @@ void set_minor_heap_size (asize_t size)
   ref_table_limit = ref_table_threshold;
   ref_table_end = ref_table + ref_table_size + ref_table_reserve;
 }
+/*e: function set_minor_heap_size */
 
+/*s: function oldify */
 void oldify (value v, value *p)
 {
   value result, field0;
@@ -116,7 +124,9 @@ void oldify (value v, value *p)
     *p = v;
   }
 }
+/*e: function oldify */
 
+/*s: function minor_collection */
 void minor_collection (void)
 {
   value **r;
@@ -138,7 +148,9 @@ void minor_collection (void)
   major_collection_slice ();
   force_major_slice = 0;
 }
+/*e: function minor_collection */
 
+/*s: function check_urgent_gc */
 value check_urgent_gc (value extra_root)
 {
   if (force_major_slice) {
@@ -148,7 +160,9 @@ value check_urgent_gc (value extra_root)
   }
   return extra_root;
 }
+/*e: function check_urgent_gc */
 
+/*s: function realloc_ref_table */
 void realloc_ref_table (void)
 {                                 Assert (ref_table_ptr == ref_table_limit);
                                   Assert (ref_table_limit <= ref_table_end);
@@ -174,3 +188,5 @@ void realloc_ref_table (void)
     ref_table_limit = ref_table_end;
   }
 }
+/*e: function realloc_ref_table */
+/*e: byterun/minor_gc.c */

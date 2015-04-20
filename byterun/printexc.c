@@ -1,3 +1,4 @@
+/*s: byterun/printexc.c */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -23,17 +24,22 @@
 #include "ui.h"
 #endif
 
+/*s: struct stringbuf */
 struct stringbuf {
   char * ptr;
   char * end;
   char data[256];
 };
+/*e: struct stringbuf */
 
+/*s: function add_char */
 static void add_char(struct stringbuf *buf, char c)
 {
   if (buf->ptr < buf->end) *(buf->ptr++) = c;
 }
+/*e: function add_char */
 
+/*s: function add_string */
 static void add_string(struct stringbuf *buf, char *s)
 {
   int len = strlen(s);
@@ -41,13 +47,19 @@ static void add_string(struct stringbuf *buf, char *s)
   if (len > 0) bcopy(s, buf->ptr, len);
   buf->ptr += len;
 }
+/*e: function add_string */
   
 #ifdef HAS_UI
+/*s: function errprintf */
 #define errprintf(fmt,arg) ui_print_stderr(fmt, arg)
+/*e: function errprintf */
 #else
+/*s: function errprintf (byterun/printexc.c) */
 #define errprintf(fmt,arg) fprintf(stderr, fmt, arg)
+/*e: function errprintf (byterun/printexc.c) */
 #endif
 
+/*s: function fatal_uncaught_exception */
 void fatal_uncaught_exception(value exn)
 {
   mlsize_t start, i;
@@ -94,3 +106,5 @@ void fatal_uncaught_exception(value exn)
   exit(2);
 #endif
 }
+/*e: function fatal_uncaught_exception */
+/*e: byterun/printexc.c */

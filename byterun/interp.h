@@ -1,3 +1,4 @@
+/*s: byterun/interp.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -14,7 +15,9 @@
 /* The bytecode interpreter */
 
 #ifndef _interp_
+/*s: constant _interp_ */
 #define _interp_
+/*e: constant _interp_ */
 
 
 #include "misc.h"
@@ -24,3 +27,4 @@ value interprete (code_t prog, asize_t prog_size);
 
 
 #endif
+/*e: byterun/interp.h */

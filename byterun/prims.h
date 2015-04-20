@@ -1,3 +1,4 @@
+/*s: byterun/prims.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -14,7 +15,9 @@
 /* Interface with C primitives. */
 
 #ifndef _prims_
+/*s: constant _prims_ */
 #define _prims_
+/*e: constant _prims_ */
 
 typedef value (*c_primitive)();
 
@@ -22,3 +25,4 @@ extern c_primitive cprim[];
 extern char * names_of_cprim[];
 
 #endif /* _prims_ */
+/*e: byterun/prims.h */

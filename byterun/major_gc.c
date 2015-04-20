@@ -1,3 +1,4 @@
+/*s: byterun/major_gc.c */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -27,32 +28,59 @@
 #include <limits.h>
 #else
 #ifdef ARCH_SIXTYFOUR
+/*s: constant LONG_MAX */
 #define LONG_MAX 0x7FFFFFFFFFFFFFFF
+/*e: constant LONG_MAX */
 #else
+/*s: constant LONG_MAX (byterun/major_gc.c) */
 #define LONG_MAX 0x7FFFFFFF
+/*e: constant LONG_MAX (byterun/major_gc.c) */
 #endif
 #endif
 
+/*s: global percent_free */
 unsigned long percent_free;
+/*e: global percent_free */
+/*s: global major_heap_increment */
 long major_heap_increment;
+/*e: global major_heap_increment */
 char *heap_start, *heap_end;
+/*s: global page_table */
 page_table_entry *page_table;
+/*e: global page_table */
+/*s: global page_table_size */
 asize_t page_table_size;
+/*e: global page_table_size */
+/*s: global gc_sweep_hp */
 char *gc_sweep_hp;
+/*e: global gc_sweep_hp */
+/*s: global gc_phase */
 int gc_phase;
+/*e: global gc_phase */
+/*s: global gray_vals */
 static value *gray_vals;
+/*e: global gray_vals */
 value *gray_vals_cur, *gray_vals_end;
+/*s: global gray_vals_size */
 static asize_t gray_vals_size;
+/*e: global gray_vals_size */
+/*s: global heap_is_pure */
 static int heap_is_pure;   /* The heap is pure if the only gray objects
                               below [markhp] are also in [gray_vals]. */
+/*e: global heap_is_pure */
+/*s: global allocated_words */
 unsigned long allocated_words;
+/*e: global allocated_words */
+/*s: global extra_heap_memory */
 unsigned long extra_heap_memory;
+/*e: global extra_heap_memory */
 extern char *fl_merge;  /* Defined in freelist.c. */
 
 static char *markhp, *chunk, *limit;
 
 static void update_weak_pointers (void);
 
+/*s: function realloc_gray_vals */
 static void realloc_gray_vals (void)
 {
   value *new;
@@ -78,7 +106,9 @@ static void realloc_gray_vals (void)
     heap_is_pure = 0;
   }
 }
+/*e: function realloc_gray_vals */
 
+/*s: function darken */
 void darken (value v, value *p)
              
                 /* not used */
@@ -92,7 +122,9 @@ void darken (value v, value *p)
     }
   }
 }
+/*e: function darken */
 
+/*s: function start_cycle */
 static void start_cycle (void)
 {
   Assert (gc_phase == Phase_idle);
@@ -101,7 +133,9 @@ static void start_cycle (void)
   gc_phase = Phase_mark;
   markhp = NULL;
 }
+/*e: function start_cycle */
 
+/*s: function mark_slice */
 static void mark_slice (long int work)
 {
   value *gray_vals_ptr;  /* Local copy of gray_vals_cur */
@@ -178,7 +212,9 @@ static void mark_slice (long int work)
   }
   gray_vals_cur = gray_vals_ptr;
 }
+/*e: function mark_slice */
 
+/*s: function update_weak_pointers */
 /* Walk through the linked list of weak arrays.
    Arrays that are white are removed from this list.
    For the other arrays, pointers to white objects are erased.
@@ -208,7 +244,9 @@ static void update_weak_pointers (void)
     }
   }
 }
+/*e: function update_weak_pointers */
 
+/*s: function sweep_slice */
 static void sweep_slice (long int work)
 {
   char *hp;
@@ -251,7 +289,9 @@ static void sweep_slice (long int work)
     }
   }
 }
+/*e: function sweep_slice */
 
+/*s: function major_collection_slice */
 /* The main entry point for the GC.  Called at each minor GC. */
 void major_collection_slice (void)
 {
@@ -288,7 +328,7 @@ void major_collection_slice (void)
   if (gc_phase == Phase_mark){
     mark_slice (300 * (allocated_words / percent_free + 1)
                 + 200 * (extra_heap_memory / (100 + percent_free) + 1)
-		+ Margin);
+        + Margin);
     gc_message ("!", 0);
   }else{
     Assert (gc_phase == Phase_sweep);
@@ -304,8 +344,10 @@ void major_collection_slice (void)
   allocated_words = 0;
   extra_heap_memory = 0;
 }
+/*e: function major_collection_slice */
 
 /* The minor heap must be empty when this function is called. */
+/*s: function finish_major_cycle */
 /* This does not call compact_heap_maybe because the estimations of
    free and live memory are only valid for a cycle done incrementally.
    Besides, this function is called by compact_heap_maybe.
@@ -320,7 +362,9 @@ void finish_major_cycle (void)
   stat_major_words += allocated_words;
   allocated_words = 0;
 }
+/*e: function finish_major_cycle */
 
+/*s: function round_heap_chunk_size */
 asize_t round_heap_chunk_size (asize_t request)
 {                            Assert (major_heap_increment >= Heap_chunk_min);
   if (request < major_heap_increment){
@@ -333,7 +377,9 @@ asize_t round_heap_chunk_size (asize_t request)
     /* not reached */ return 0;
   }
 }
+/*e: function round_heap_chunk_size */
 
+/*s: function init_major_heap */
 void init_major_heap (asize_t heap_size)
 {
   asize_t i;
@@ -377,3 +423,5 @@ void init_major_heap (asize_t heap_size)
   allocated_words = 0;
   extra_heap_memory = 0;
 }
+/*e: function init_major_heap */
+/*e: byterun/major_gc.c */

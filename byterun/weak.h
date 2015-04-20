@@ -1,3 +1,4 @@
+/*s: byterun/weak.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -16,3 +17,4 @@
 #include "mlvalues.h"
 
 extern value weak_list_head;
+/*e: byterun/weak.h */

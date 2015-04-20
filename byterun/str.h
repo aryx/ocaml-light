@@ -1,3 +1,4 @@
+/*s: byterun/str.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -12,7 +13,9 @@
 /* $Id: str.h,v 1.4 1997/09/02 12:54:09 xleroy Exp $ */
 
 #ifndef _str_
+/*s: constant _str_ */
 #define _str_
+/*e: constant _str_ */
 
 
 #include "misc.h"
@@ -22,3 +25,4 @@ mlsize_t string_length (value);
 
 
 #endif /* _str_ */
+/*e: byterun/str.h */

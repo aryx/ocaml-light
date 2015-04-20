@@ -1,3 +1,4 @@
+/*s: byterun/debugger.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -14,7 +15,9 @@
 /* Interface with the debugger */
 
 #ifndef _debugger_
+/*s: constant _debugger_ */
 #define _debugger_
+/*e: constant _debugger_ */
 
 #include "misc.h"
 #include "mlvalues.h"
@@ -22,16 +25,19 @@
 extern int debugger_in_use;
 extern unsigned long event_count;
 
+/*s: enum event_kind */
 enum event_kind {
   EVENT_COUNT, BREAKPOINT, PROGRAM_START, PROGRAM_EXIT,
   TRAP_BARRIER, UNCAUGHT_EXC
 };
+/*e: enum event_kind */
 
 void debugger_init (void);
 void debugger (enum event_kind event);
 
 /* Communication protocol */
 
+/*s: enum debugger_request */
 /* Requests from the debugger to the runtime system */
 
 enum debugger_request {
@@ -84,7 +90,9 @@ enum debugger_request {
   /* Send the code address of the given closure.
      Reply is one uint32. */
 };
+/*e: enum debugger_request */
 
+/*s: enum debugger_reply */
 /* Replies to a REQ_GO request. All replies are followed by three uint32:
    - the value of the event counter
    - the position of the stack
@@ -102,7 +110,9 @@ enum debugger_reply {
   REP_UNCAUGHT_EXC = 'u'
   /* Program exited due to a stray exception. */
 };
+/*e: enum debugger_reply */
 
 #endif
 
 
+/*e: byterun/debugger.h */

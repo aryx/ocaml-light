@@ -1,3 +1,4 @@
+/*s: byterun/signals.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -12,7 +13,9 @@
 /* $Id: signals.h,v 1.9 1997/09/02 12:54:08 xleroy Exp $ */
 
 #ifndef _signals_
+/*s: constant _signals_ */
 #define _signals_
+/*e: constant _signals_ */
 
 #include "misc.h"
 #include "mlvalues.h"
@@ -32,3 +35,4 @@ extern void (*leave_blocking_section_hook)();
 
 #endif /* _signals_ */
 
+/*e: byterun/signals.h */

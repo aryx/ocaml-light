@@ -1,3 +1,4 @@
+/*s: byterun/misc.h */
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -14,7 +15,9 @@
 /* Miscellaneous macros and variables. */
 
 #ifndef _misc_
+/*s: constant _misc_ */
 #define _misc_
+/*e: constant _misc_ */
 
 
 #include "config.h"
@@ -35,16 +38,22 @@ typedef int asize_t;
 #endif
 
 #ifndef NULL
+/*s: constant NULL */
 #define NULL 0
+/*e: constant NULL */
 #endif
 
 typedef char * addr;
 
 #ifdef __GNUC__
+/*s: constant Noreturn */
 /* Works only in GCC 2.5 and later */
 #define Noreturn __attribute ((noreturn))
+/*e: constant Noreturn */
 #else
+/*s: constant Noreturn (byterun/misc.h) */
 #define Noreturn
+/*e: constant Noreturn (byterun/misc.h) */
 #endif
 
 /* Assertions */
@@ -54,15 +63,21 @@ typedef char * addr;
 #define Assert(x) if (!(x)) failed_assert ( #x , __FILE__, __LINE__)
 #else
 #ifndef __LINE__
+/*s: constant __LINE__ */
 #define __LINE__ 0
+/*e: constant __LINE__ */
 #endif
 #ifndef __FILE__
+/*s: constant __FILE__ */
 #define __FILE__ "(?)"
+/*e: constant __FILE__ */
 #endif
 #define Assert(x) if (!(x)) failed_assert ("(?)" , __FILE__, __LINE__)
 #endif
 #else
+/*s: function Assert */
 #define Assert(x)
+/*e: function Assert */
 #endif
 
 void failed_assert (char *, char *, int) Noreturn;
@@ -85,3 +100,4 @@ unsigned long not_random (void);
 
 
 #endif /* _misc_ */
+/*e: byterun/misc.h */
