@@ -15,10 +15,7 @@
 /* Free lists of heap blocks. */
 
 #ifndef _freelist_
-/*s: constant _freelist_ */
 #define _freelist_
-/*e: constant _freelist_ */
-
 
 #include "misc.h"
 #include "mlvalues.h"

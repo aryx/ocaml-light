@@ -14,6 +14,7 @@
 
 /* exec.h : format of executable bytecode files */
 
+/*s: exec.h toplevel comment */
 /*  offset 0 --->  initial junk
                    code block
                    names of primitives
@@ -23,6 +24,7 @@
                    trailer
  end of file --->
 */
+/*e: exec.h toplevel comment */
 
 /*s: constant TRAILER_SIZE */
 /* Structure of the trailer.

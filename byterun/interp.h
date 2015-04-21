@@ -15,16 +15,14 @@
 /* The bytecode interpreter */
 
 #ifndef _interp_
-/*s: constant _interp_ */
 #define _interp_
-/*e: constant _interp_ */
-
 
 #include "misc.h"
 #include "mlvalues.h"
 
+/*s: signature function interprete */
 value interprete (code_t prog, asize_t prog_size);
-
+/*e: signature function interprete */
 
 #endif
 /*e: byterun/interp.h */

@@ -13,14 +13,12 @@
 /*e: copyright header C xavier and damien */
 
 #ifndef _mlvalues_
-/*s: constant _mlvalues_ */
 #define _mlvalues_
-/*e: constant _mlvalues_ */
-
 
 #include "config.h"
 #include "misc.h"
 
+/*s: mlvalues.h top comment */
 /* Definitions
 
   word: Four bytes on 32 and 16 bit architectures,
@@ -50,8 +48,11 @@
   color: The value of the color field of the header.
          This is for use only by the GC.
 */
+/*e: mlvalues.h top comment */
 
+/*s: typedef value */
 typedef long value;
+/*e: typedef value */
 typedef unsigned long header_t;
 typedef unsigned long mlsize_t;
 typedef unsigned int tag_t;             /* Actually, an unsigned char */
@@ -262,8 +263,12 @@ bits  63    10 9     8 7   0
 #define Field(x, i) (((value *)(x)) [i])           /* Also an l-value. */
 /*e: function Field */
 
+/*s: typedef opcode_t */
 typedef int32 opcode_t;
+/*e: typedef opcode_t */
+/*s: typedef code_t */
 typedef opcode_t * code_t;
+/*e: typedef code_t */
 
 /*s: constant Closure_tag */
 /* Special case of tuples of fields: closures */
@@ -339,6 +344,7 @@ typedef opcode_t * code_t;
 /*s: constant Double_wosize */
 #define Double_wosize ((sizeof(double) / sizeof(value)))
 /*e: constant Double_wosize */
+
 #ifndef ARCH_ALIGN_DOUBLE
 /*s: macro Double_val */
 #define Double_val(v) (* (double *)(v))
@@ -394,11 +400,11 @@ extern header_t atom_table[];
 /*e: function Is_atom */
 #else
 extern char * static_data_start, * static_data_end;
-/*s: function Is_atom (byterun/mlvalues.h) */
+/*s: function Is_atom ifdef NATIVE_CODE */
 #define Is_atom(v) \
   ((((char *)(v) >= static_data_start && (char *)(v) < static_data_end) || \
    ((v) >= Atom(0) && (v) <= Atom(255))))
-/*e: function Is_atom (byterun/mlvalues.h) */
+/*e: function Is_atom ifdef NATIVE_CODE */
 #endif
 
 /*s: function Val_bool */

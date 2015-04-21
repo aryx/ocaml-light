@@ -15,9 +15,7 @@
 /* Miscellaneous macros and variables. */
 
 #ifndef _misc_
-/*s: constant _misc_ */
 #define _misc_
-/*e: constant _misc_ */
 
 
 #include "config.h"
