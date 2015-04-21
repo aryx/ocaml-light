@@ -874,15 +874,20 @@ enum instructions {
   <<signal opcodes>>
   <<foreign C calls opcodes>>
   <<arithmetics opcodes>>
-  <<oo opcodes>>
   <<debugger opcodes>>
 };
 @
 %THE ORDER IS IMPORTANT!! if you change it then you will not be able
 % to run boot/ocamlc! because it will use a different order
 % for the opcodes.
-% But remember that there is boot/ocamlrun too! so can change
-% things if do make bootstrap.
+% But remember that there is boot/ocamlrun too! so you can change
+% things if you do make bootstrap.
+%
+% What happens is that if you modify instruct.h, then by running
+% make this will update opcodes.ml which will force all the ML
+% code that is generating code to be recompiled and a new ocamlc
+% will be produced (but one that runs on boot/ocamlrun but not
+% byterun/ocamlrun though)
 
 % A lot more cases compared to Machine.nw or Assembler.nw opcodes.
 % similar: 
@@ -8797,7 +8802,6 @@ value interprete(code_t prog, asize_t prog_size)
     <<[[interpreter()]] arithmetics cases>>
     <<[[interpreter()]] array cases>>
     <<[[interpreter()]] string cases>>
-    <<[[interpreter()]] oo cases>>
     <<[[interpreter()]] debugger cases>>
 
     #ifndef THREADED_CODE
@@ -9744,23 +9748,23 @@ value * modify_dest, modify_newval;
 
 \subsection{Other operations}
 
-%todo: delete? but then compatibility pb?
+% deleted. But then compatibility pb? no, just use make boostrap.
 
-<<oo opcodes>>=
-  GETMETHOD,
-@
-
-<<[[interpreter()]] oo cases>>=
-/* Object-oriented operations */
-
-#define Lookup(obj, lab) \
-  Field (Field (Field (obj, 0), ((lab) >> 16) / sizeof (value)), \
-         ((lab) / sizeof (value)) & 0xFF)
-
-    Instruct(GETMETHOD):
-      accu = Lookup(sp[0], accu);
-      Next;
-@
+%<<oo opcodes>>=
+%  GETMETHOD,
+%@
+%
+%<<[[interpreter()]] oo cases>>=
+%/* Object-oriented operations */
+%
+%#define Lookup(obj, lab) \
+%  Field (Field (Field (obj, 0), ((lab) >> 16) / sizeof (value)), \
+%         ((lab) / sizeof (value)) & 0xFF)
+%
+%    Instruct(GETMETHOD):
+%      accu = Lookup(sp[0], accu);
+%      Next;
+%@
 
 
 

@@ -77,9 +77,6 @@ enum instructions {
     EQ, NEQ, LTINT, LEINT, GTINT, GEINT,
     OFFSETINT, OFFSETREF,
   /*e: arithmetics opcodes */
-  /*s: oo opcodes */
-    GETMETHOD,
-  /*e: oo opcodes */
   /*s: debugger opcodes */
     STOP, EVENT, BREAK
   /*e: debugger opcodes */
