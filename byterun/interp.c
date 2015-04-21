@@ -254,11 +254,11 @@ value interprete(code_t prog, asize_t prog_size)
     /*s: [[interpreter()]] basic stack operations cases */
     /* Basic stack operations */
 
-        /*s: [[interpreter()]] basic stack operations before ACC case */
+        /*s: [[interpreter()]] basic stack operation before ACC case */
             Instruct(PUSHACC):
               *--sp = accu;
               /* Fallthrough */
-        /*e: [[interpreter()]] basic stack operations before ACC case */
+        /*e: [[interpreter()]] basic stack operation before ACC case */
         Instruct(ACC):
           accu = sp[*pc++];
           Next;
@@ -352,6 +352,36 @@ value interprete(code_t prog, asize_t prog_size)
           env = accu;
           goto check_stacks;
         }
+        Instruct(APPTERM): {
+          int nargs = *pc++;
+          int slotsize = *pc;
+          value * newsp;
+          int i;
+          /* Slide the nargs bottom words of the current frame to the top
+             of the frame, and discard the remainder of the frame */
+          newsp = sp + slotsize - nargs;
+          for (i = nargs - 1; i >= 0; i--) newsp[i] = sp[i];
+          sp = newsp;
+          pc = Code_val(accu);
+          env = accu;
+          extra_args += nargs - 1;
+          goto check_stacks;
+        }
+        Instruct(RETURN): {
+          sp += *pc++;
+          if (extra_args > 0) {
+            extra_args--;
+            pc = Code_val(accu);
+            env = accu;
+          } else {
+            pc = (code_t)(sp[0]);
+            env = sp[1];
+            extra_args = Long_val(sp[2]);
+            sp += 3;
+          }
+          Next;
+        }
+    /*x: [[interpreter()]] function application cases */
         Instruct(APPLY1): {
           value arg1 = sp[0];
           sp -= 3;
@@ -364,7 +394,6 @@ value interprete(code_t prog, asize_t prog_size)
           extra_args = 0;
           goto check_stacks;
         }
-    /*x: [[interpreter()]] function application cases */
         Instruct(APPLY2): {
           value arg1 = sp[0];
           value arg2 = sp[1];
@@ -395,23 +424,7 @@ value interprete(code_t prog, asize_t prog_size)
           extra_args = 2;
           goto check_stacks;
         }
-    /*x: [[interpreter()]] function application cases */
-        Instruct(APPTERM): {
-          int nargs = *pc++;
-          int slotsize = *pc;
-          value * newsp;
-          int i;
-          /* Slide the nargs bottom words of the current frame to the top
-             of the frame, and discard the remainder of the frame */
-          newsp = sp + slotsize - nargs;
-          for (i = nargs - 1; i >= 0; i--) newsp[i] = sp[i];
-          sp = newsp;
-          pc = Code_val(accu);
-          env = accu;
-          extra_args += nargs - 1;
-          goto check_stacks;
-        }
-    /*x: [[interpreter()]] function application cases */
+
         Instruct(APPTERM1): {
           value arg1 = sp[0];
           sp = sp + *pc - 1;
@@ -443,21 +456,6 @@ value interprete(code_t prog, asize_t prog_size)
           env = accu;
           extra_args += 2;
           goto check_stacks;
-        }
-    /*x: [[interpreter()]] function application cases */
-        Instruct(RETURN): {
-          sp += *pc++;
-          if (extra_args > 0) {
-            extra_args--;
-            pc = Code_val(accu);
-            env = accu;
-          } else {
-            pc = (code_t)(sp[0]);
-            env = sp[1];
-            extra_args = Long_val(sp[2]);
-            sp += 3;
-          }
-          Next;
         }
     /*e: [[interpreter()]] function application cases */
     /*s: [[interpreter()]] misc cases */
@@ -518,17 +516,21 @@ value interprete(code_t prog, asize_t prog_size)
         }
     /*e: [[interpreter()]] misc cases */
     /*s: [[interpreter()]] global data access cases */
+        /*s: [[interpreter()]] before GETGLOBAL case */
         Instruct(PUSHGETGLOBAL):
           *--sp = accu;
           /* Fallthrough */
+        /*e: [[interpreter()]] before GETGLOBAL case */
         Instruct(GETGLOBAL):
           accu = Field(global_data, *pc);
           pc++;
           Next;
 
+        /*s: [[interpreter()]] before GETGLOBALFIELD case */
         Instruct(PUSHGETGLOBALFIELD):
           *--sp = accu;
           /* Fallthrough */
+        /*e: [[interpreter()]] before GETGLOBALFIELD case */
         Instruct(GETGLOBALFIELD): {
           accu = Field(global_data, *pc);
           pc++;
@@ -545,16 +547,11 @@ value interprete(code_t prog, asize_t prog_size)
     /*e: [[interpreter()]] global data access cases */
     /*s: [[interpreter()]] blocks allocation cases */
     /* Allocation of blocks */
-
-        Instruct(PUSHATOM0):
-          *--sp = accu;
-          /* Fallthrough */
-        Instruct(ATOM0):
-          accu = Atom(0); Next;
-
+        /*s: [[interpreter()]] before ATOM case */
         Instruct(PUSHATOM):
           *--sp = accu;
           /* Fallthrough */
+        /*e: [[interpreter()]] before ATOM case */
         Instruct(ATOM):
           accu = Atom(*pc++); Next;
 
@@ -569,6 +566,13 @@ value interprete(code_t prog, asize_t prog_size)
           accu = block;
           Next;
         }
+    /*x: [[interpreter()]] blocks allocation cases */
+        Instruct(PUSHATOM0):
+          *--sp = accu;
+          /* Fallthrough */
+        Instruct(ATOM0):
+          accu = Atom(0); Next;
+
         Instruct(MAKEBLOCK1): {
           tag_t tag = *pc++;
           value block;
@@ -601,6 +605,15 @@ value interprete(code_t prog, asize_t prog_size)
     /*e: [[interpreter()]] blocks allocation cases */
     /*s: [[interpreter()]] blocks access cases */
     /* Access to components of blocks */
+        Instruct(GETFIELD):
+          accu = Field(accu, *pc); pc++; Next;
+
+        Instruct(SETFIELD):
+          modify_dest = &Field(accu, *pc);
+          pc++;
+          modify_newval = *sp++;
+          goto modify;
+    /*x: [[interpreter()]] blocks access cases */
 
         Instruct(GETFIELD0):
           accu = Field(accu, 0); Next;
@@ -610,8 +623,6 @@ value interprete(code_t prog, asize_t prog_size)
           accu = Field(accu, 2); Next;
         Instruct(GETFIELD3):
           accu = Field(accu, 3); Next;
-        Instruct(GETFIELD):
-          accu = Field(accu, *pc); pc++; Next;
 
         Instruct(SETFIELD0):
           modify_dest = &Field(accu, 0);
@@ -630,11 +641,6 @@ value interprete(code_t prog, asize_t prog_size)
           goto modify;
         Instruct(SETFIELD3):
           modify_dest = &Field(accu, 3);
-          modify_newval = *sp++;
-          goto modify;
-        Instruct(SETFIELD):
-          modify_dest = &Field(accu, *pc);
-          pc++;
           modify_newval = *sp++;
           goto modify;
     /*e: [[interpreter()]] blocks access cases */
@@ -777,6 +783,18 @@ value interprete(code_t prog, asize_t prog_size)
     /*s: [[interpreter()]] foreign c calls cases */
     /* Calling C functions */
 
+        Instruct(C_CALLN): {
+          int nargs = *pc++;
+          *--sp = accu;
+          Setup_for_c_call;
+          accu = cprim[*pc](sp + 1, nargs);
+          Restore_after_c_call;
+          sp += nargs;
+          pc++;
+          Next;
+        }
+    /*x: [[interpreter()]] foreign c calls cases */
+
         Instruct(C_CALL1):
           Setup_for_c_call;
           accu = cprim[*pc](accu);
@@ -811,20 +829,20 @@ value interprete(code_t prog, asize_t prog_size)
           sp += 4;
           pc++;
           Next;
-        Instruct(C_CALLN): {
-          int nargs = *pc++;
-          *--sp = accu;
-          Setup_for_c_call;
-          accu = cprim[*pc](sp + 1, nargs);
-          Restore_after_c_call;
-          sp += nargs;
-          pc++;
-          Next;
-        }
     /*e: [[interpreter()]] foreign c calls cases */
     /*s: [[interpreter()]] arithmetics cases */
     /* Integer constants */
 
+        /*s: [[interpreter()]] before CONSTINT case */
+            Instruct(PUSHCONSTINT):
+              *--sp = accu;
+              /* Fallthrough */
+        /*e: [[interpreter()]] before CONSTINT case */
+        Instruct(CONSTINT):
+          accu = Val_int(*pc);
+          pc++;
+          Next;
+    /*x: [[interpreter()]] arithmetics cases */
         Instruct(CONST0):
           accu = Val_int(0); Next;
         Instruct(CONST1):
@@ -842,14 +860,6 @@ value interprete(code_t prog, asize_t prog_size)
           *--sp = accu; accu = Val_int(2); Next;
         Instruct(PUSHCONST3):
           *--sp = accu; accu = Val_int(3); Next;
-
-        Instruct(PUSHCONSTINT):
-          *--sp = accu;
-          /* Fallthrough */
-        Instruct(CONSTINT):
-          accu = Val_int(*pc);
-          pc++;
-          Next;
     /*x: [[interpreter()]] arithmetics cases */
     /* Integer arithmetic */
 

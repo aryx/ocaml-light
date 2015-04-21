@@ -27,7 +27,7 @@
 
 %thx to this manual, better understand OCaml?:
 % - TODO how a gc works
-% - TODO how values are represented at runtime, the Obj module
+% - SEMI how values are represented at runtime, the Obj module
 % - TODO how compiler backends work (register, liveness, etc)
 % - how type inference works in caml itself,
 %   type schema, generalization, instantiation, value restriction (partially)
@@ -41,9 +41,9 @@
 %    * TODO [[xxx]] other fields, [[xxx]] extra fields
 % - read Extra section, identify concepts, first TOC
 % - SEMI distribute parts of the Extra section in the main file
-% - TODO understand main(), LP split main, improve TOC
-% - TODO understand main functions, LP split, cluster, improve TOC
-% - TODO LP split the structures, use datalog for flow to field info
+% - SEMI understand main(), LP split main, improve TOC
+% - SEMI understand main functions, LP split, cluster, improve TOC
+% - SEMI LP split the structures, use datalog for flow to field info
 % - SEMI scheckify, plan9ify
 % - SEMI aspecify advanced features! remove useless features, error, debug, 
 %        secu
@@ -878,16 +878,18 @@ enum instructions {
 };
 @
 %THE ORDER IS IMPORTANT!! if you change it then you will not be able
-% to run boot/ocamlc! because it will use a different order
-% for the opcodes.
-% But remember that there is boot/ocamlrun too! so you can change
-% things if you do make bootstrap.
+% to run boot/ocamlc because it will use a different order
+% for the opcodes. But remember that there is boot/ocamlrun too! 
+% so you can change things if you do make bootstrap.
 %
-% What happens is that if you modify instruct.h, then by running
+% What happens when you modify instruct.h? Then by running
 % make this will update opcodes.ml which will force all the ML
 % code that is generating code to be recompiled and a new ocamlc
 % will be produced (but one that runs on boot/ocamlrun but not
-% byterun/ocamlrun though)
+% byterun/ocamlrun though). With boot/ocamlrun ./ocamlc you
+% can recompile everything including a new ocamlc that this time
+% will run on the new byterun/ocamlrun. Now you can promote
+% byterun/ocamlrun to boot/ocamlrun and ./ocamlc as boot/ocamlc.
 
 % A lot more cases compared to Machine.nw or Assembler.nw opcodes.
 % similar: 
@@ -8846,6 +8848,8 @@ value interprete(code_t prog, asize_t prog_size)
 
 sp is a local copy of the global variable extern_sp. */
 @
+% so it's a one register stack machine :) a mix of stack and register
+% machine (ok maybe 2 with the env)
 
 <<[[interprete()]] local variables>>=
 <<[[interpreter()]] ifdef PC_REG>>
@@ -8901,19 +8905,17 @@ value * extern_sp;
 \subsection{Basic stack operations}
 
 <<basic stack operations opcodes>>=
-  ACC0, ACC1, ACC2, ACC3, ACC4, ACC5, ACC6, ACC7,
-  ACC, PUSH,
-  PUSHACC0, PUSHACC1, PUSHACC2, PUSHACC3,
-  PUSHACC4, PUSHACC5, PUSHACC6, PUSHACC7,
-  PUSHACC, 
-  POP, ASSIGN,
+ACC, 
+PUSH,
+POP, 
+ASSIGN,
 @
-%main one: ACC, PUSH, POP, ASSIGN
+%main one
 
 <<[[interpreter()]] basic stack operations cases>>=
 /* Basic stack operations */
 
-    <<[[interpreter()]] basic stack operations before ACC case>>
+    <<[[interpreter()]] basic stack operation before ACC case>>
     Instruct(ACC):
       accu = sp[*pc++];
       Next;
@@ -8927,6 +8929,13 @@ value * extern_sp;
       sp[*pc++] = accu;
       accu = Val_unit;
       Next;
+@
+% need PUSHACC0?
+
+
+
+<<basic stack operations opcodes>>=
+  ACC0, ACC1, ACC2, ACC3, ACC4, ACC5, ACC6, ACC7,
 @
 
 <<[[interpreter()]] basic stack operations cases>>=
@@ -8950,6 +8959,14 @@ value * extern_sp;
 %opti: start to see specialized operations, e.g. ACC1 is really
 % an ACC and a CONST0 before, but here compressed in one single opcode.
 
+% there will be many XXX[0-9] later
+
+
+<<basic stack operations opcodes>>=
+  PUSHACC0, PUSHACC1, PUSHACC2, PUSHACC3,
+  PUSHACC4, PUSHACC5, PUSHACC6, PUSHACC7,
+@
+
 <<[[interpreter()]] basic stack operations cases>>=
     Instruct(PUSHACC1):
       *--sp = accu; accu = sp[1]; Next;
@@ -8970,21 +8987,23 @@ value * extern_sp;
 % PUSHACC1 is really a PUSH and an ACC1.
 % so faster interpreter. See zinc manual.
 
-<<[[interpreter()]] basic stack operations before ACC case>>=
+<<basic stack operations opcodes>>=
+  PUSHACC, 
+@
+
+<<[[interpreter()]] basic stack operation before ACC case>>=
     Instruct(PUSHACC):
       *--sp = accu;
       /* Fallthrough */
 @
-
+% there will be many PUSHXXX later
 
 
 \subsection{Env access}
 
 <<env access opcodes>>=
-  ENVACC1, ENVACC2, ENVACC3, ENVACC4, ENVACC,
-  PUSHENVACC1, PUSHENVACC2, PUSHENVACC3, PUSHENVACC4, PUSHENVACC,
+ENVACC,
 @
-
 
 <<[[interpreter()]] env access cases>>=
 /* Access in heap-allocated environment */
@@ -8995,7 +9014,14 @@ value * extern_sp;
       Next;
 @
 
+
+<<env access opcodes>>=
+  ENVACC1, ENVACC2, ENVACC3, ENVACC4, 
+  PUSHENVACC1, PUSHENVACC2, PUSHENVACC3, PUSHENVACC4, PUSHENVACC,
+@
+
 \ifallcode
+
 <<[[interpreter()]] env access cases>>=
     Instruct(ENVACC1):
       accu = Field(env, 1); Next;
@@ -9026,10 +9052,12 @@ Instruct(PUSHENVACC):
 \subsection{Function application}
 
 <<function application opcodes>>=
-  PUSH_RETADDR, APPLY, APPLY1, APPLY2, APPLY3,
-  APPTERM, APPTERM1, APPTERM2, APPTERM3, 
-  RETURN, 
+PUSH_RETADDR, 
+APPLY, 
+APPTERM, 
+RETURN, 
 @
+
 
 <<function Code_val>>=
 #define Code_val(val) (((code_t *) (val)) [0])     /* Also an l-value. */
@@ -9053,6 +9081,58 @@ Instruct(PUSHENVACC):
       env = accu;
       goto check_stacks;
     }
+    Instruct(APPTERM): {
+      int nargs = *pc++;
+      int slotsize = *pc;
+      value * newsp;
+      int i;
+      /* Slide the nargs bottom words of the current frame to the top
+         of the frame, and discard the remainder of the frame */
+      newsp = sp + slotsize - nargs;
+      for (i = nargs - 1; i >= 0; i--) newsp[i] = sp[i];
+      sp = newsp;
+      pc = Code_val(accu);
+      env = accu;
+      extra_args += nargs - 1;
+      goto check_stacks;
+    }
+    Instruct(RETURN): {
+      sp += *pc++;
+      if (extra_args > 0) {
+        extra_args--;
+        pc = Code_val(accu);
+        env = accu;
+      } else {
+        pc = (code_t)(sp[0]);
+        env = sp[1];
+        extra_args = Long_val(sp[2]);
+        sp += 3;
+      }
+      Next;
+    }
+@
+
+
+<<[[interpreter()]] before CHECK_SIGNALS case>>=
+/* Stack checks */
+
+    check_stacks:
+      if (sp < stack_threshold) {
+        extern_sp = sp;
+        realloc_stack();
+        sp = extern_sp;
+      }
+      /* Fall through CHECK_SIGNALS */
+@
+
+
+<<function application opcodes>>=
+  APPLY1, APPLY2, APPLY3,
+  APPTERM1, APPTERM2, APPTERM3, 
+@
+
+% no allcode here, it's an important difference
+<<[[interpreter()]] function application cases>>=
     Instruct(APPLY1): {
       value arg1 = sp[0];
       sp -= 3;
@@ -9065,10 +9145,6 @@ Instruct(PUSHENVACC):
       extra_args = 0;
       goto check_stacks;
     }
-@
-
-% no allcode here, it's an important difference
-<<[[interpreter()]] function application cases>>=
     Instruct(APPLY2): {
       value arg1 = sp[0];
       value arg2 = sp[1];
@@ -9099,29 +9175,7 @@ Instruct(PUSHENVACC):
       extra_args = 2;
       goto check_stacks;
     }
-@
 
-
-<<[[interpreter()]] function application cases>>=
-    Instruct(APPTERM): {
-      int nargs = *pc++;
-      int slotsize = *pc;
-      value * newsp;
-      int i;
-      /* Slide the nargs bottom words of the current frame to the top
-         of the frame, and discard the remainder of the frame */
-      newsp = sp + slotsize - nargs;
-      for (i = nargs - 1; i >= 0; i--) newsp[i] = sp[i];
-      sp = newsp;
-      pc = Code_val(accu);
-      env = accu;
-      extra_args += nargs - 1;
-      goto check_stacks;
-    }
-@
-
-
-<<[[interpreter()]] function application cases>>=
     Instruct(APPTERM1): {
       value arg1 = sp[0];
       sp = sp + *pc - 1;
@@ -9157,42 +9211,14 @@ Instruct(PUSHENVACC):
 @
 
 
-<<[[interpreter()]] function application cases>>=
-    Instruct(RETURN): {
-      sp += *pc++;
-      if (extra_args > 0) {
-        extra_args--;
-        pc = Code_val(accu);
-        env = accu;
-      } else {
-        pc = (code_t)(sp[0]);
-        env = sp[1];
-        extra_args = Long_val(sp[2]);
-        sp += 3;
-      }
-      Next;
-    }
-@
-
-
-<<[[interpreter()]] before CHECK_SIGNALS case>>=
-/* Stack checks */
-
-    check_stacks:
-      if (sp < stack_threshold) {
-        extern_sp = sp;
-        realloc_stack();
-        sp = extern_sp;
-      }
-      /* Fall through CHECK_SIGNALS */
-@
-
 
 \subsection{Misc}
 
 <<misc opcodes>>=
-  RESTART, GRAB,
-  CLOSURE, CLOSUREREC,
+RESTART, 
+GRAB,
+CLOSURE, 
+CLOSUREREC,
 @
 
 <<[[interpreter()]] misc cases>>=
@@ -9256,8 +9282,11 @@ Instruct(PUSHENVACC):
 \subsection{Global data access}
 
 <<global data access opcodes>>=
-  GETGLOBAL, PUSHGETGLOBAL, GETGLOBALFIELD, PUSHGETGLOBALFIELD, SETGLOBAL,
+GETGLOBAL, 
+SETGLOBAL, 
+GETGLOBALFIELD,
 @
+
 
 <<global global_data>>=
 value global_data;
@@ -9266,17 +9295,13 @@ value global_data;
 % see also meta.mli?
 
 <<[[interpreter()]] global data access cases>>=
-    Instruct(PUSHGETGLOBAL):
-      *--sp = accu;
-      /* Fallthrough */
+    <<[[interpreter()]] before GETGLOBAL case>>
     Instruct(GETGLOBAL):
       accu = Field(global_data, *pc);
       pc++;
       Next;
 
-    Instruct(PUSHGETGLOBALFIELD):
-      *--sp = accu;
-      /* Fallthrough */
+    <<[[interpreter()]] before GETGLOBALFIELD case>>
     Instruct(GETGLOBALFIELD): {
       accu = Field(global_data, *pc);
       pc++;
@@ -9292,27 +9317,39 @@ value global_data;
       Next;
 @
 
+<<global data access opcodes>>=
+  PUSHGETGLOBAL, PUSHGETGLOBALFIELD, 
+@
+
+\ifallcode
+
+<<[[interpreter()]] before GETGLOBAL case>>=
+Instruct(PUSHGETGLOBAL):
+  *--sp = accu;
+  /* Fallthrough */
+@
+
+<<[[interpreter()]] before GETGLOBALFIELD case>>=
+Instruct(PUSHGETGLOBALFIELD):
+  *--sp = accu;
+  /* Fallthrough */
+@
+
+\fi
+
 \subsection{Blocks}
 
 \subsubsection{Blocks allocation}
 
 <<blocks allocation opcodes>>=
-  ATOM0, ATOM, PUSHATOM0, PUSHATOM,
-  MAKEBLOCK, MAKEBLOCK1, MAKEBLOCK2, MAKEBLOCK3,
+ATOM,
+MAKEBLOCK,
 @
+
 
 <<[[interpreter()]] blocks allocation cases>>=
 /* Allocation of blocks */
-
-    Instruct(PUSHATOM0):
-      *--sp = accu;
-      /* Fallthrough */
-    Instruct(ATOM0):
-      accu = Atom(0); Next;
-
-    Instruct(PUSHATOM):
-      *--sp = accu;
-      /* Fallthrough */
+    <<[[interpreter()]] before ATOM case>>
     Instruct(ATOM):
       accu = Atom(*pc++); Next;
 
@@ -9327,6 +9364,30 @@ value global_data;
       accu = block;
       Next;
     }
+@
+
+
+<<blocks allocation opcodes>>=
+  PUSHATOM,
+  ATOM0, PUSHATOM0, 
+  MAKEBLOCK1, MAKEBLOCK2, MAKEBLOCK3,
+@
+
+
+\ifallcode
+<<[[interpreter()]] before ATOM case>>=
+Instruct(PUSHATOM):
+  *--sp = accu;
+  /* Fallthrough */
+@
+
+<<[[interpreter()]] blocks allocation cases>>=
+    Instruct(PUSHATOM0):
+      *--sp = accu;
+      /* Fallthrough */
+    Instruct(ATOM0):
+      accu = Atom(0); Next;
+
     Instruct(MAKEBLOCK1): {
       tag_t tag = *pc++;
       value block;
@@ -9357,15 +9418,16 @@ value global_data;
       Next;
     }
 @
+\fi
 
 
 \subsubsection{Blocks access}
 
-
 <<blocks access opcodes>>=
-  GETFIELD0, GETFIELD1, GETFIELD2, GETFIELD3, GETFIELD,
-  SETFIELD0, SETFIELD1, SETFIELD2, SETFIELD3, SETFIELD,
+GETFIELD,
+SETFIELD,
 @
+
 
 <<[[interprete()]] other local variables>>=
 value * modify_dest, modify_newval;
@@ -9374,6 +9436,23 @@ value * modify_dest, modify_newval;
 
 <<[[interpreter()]] blocks access cases>>=
 /* Access to components of blocks */
+    Instruct(GETFIELD):
+      accu = Field(accu, *pc); pc++; Next;
+
+    Instruct(SETFIELD):
+      modify_dest = &Field(accu, *pc);
+      pc++;
+      modify_newval = *sp++;
+      goto modify;
+@
+
+<<blocks access opcodes>>=
+  GETFIELD0, GETFIELD1, GETFIELD2, GETFIELD3,
+  SETFIELD0, SETFIELD1, SETFIELD2, SETFIELD3,
+@
+
+\ifallcode
+<<[[interpreter()]] blocks access cases>>=
 
     Instruct(GETFIELD0):
       accu = Field(accu, 0); Next;
@@ -9383,8 +9462,6 @@ value * modify_dest, modify_newval;
       accu = Field(accu, 2); Next;
     Instruct(GETFIELD3):
       accu = Field(accu, 3); Next;
-    Instruct(GETFIELD):
-      accu = Field(accu, *pc); pc++; Next;
 
     Instruct(SETFIELD0):
       modify_dest = &Field(accu, 0);
@@ -9405,17 +9482,14 @@ value * modify_dest, modify_newval;
       modify_dest = &Field(accu, 3);
       modify_newval = *sp++;
       goto modify;
-    Instruct(SETFIELD):
-      modify_dest = &Field(accu, *pc);
-      pc++;
-      modify_newval = *sp++;
-      goto modify;
 @
+\fi
 
 \subsection{Recursive definitions}
 
 <<recursive definition opcodes>>=
-  DUMMY, UPDATE,
+DUMMY, 
+UPDATE,
 @
 
 <<[[interpreter()]] recursive definition cases>>=
@@ -9445,9 +9519,14 @@ value * modify_dest, modify_newval;
 \subsection{Branching operations}
 
 <<branching opcodes>>=
-  BRANCH, BRANCHIF, BRANCHIFNOT, SWITCH, BOOLNOT,
+BRANCH, 
+BRANCHIF, 
+BRANCHIFNOT, 
+SWITCH, 
+BOOLNOT,
 @
 
+% note the += here, so jumps are relative!
 <<[[interpreter()]] branching cases>>=
 /* Branches and conditional branches */
 
@@ -9483,7 +9562,9 @@ value * modify_dest, modify_newval;
 \subsection{Exceptions}
 
 <<exception opcodes>>=
-  PUSHTRAP, POPTRAP, RAISE,
+PUSHTRAP, 
+POPTRAP, 
+RAISE,
 @
 
 <<[[interpreter()]] exception cases>>=
@@ -9524,11 +9605,16 @@ value * modify_dest, modify_newval;
       sp += 4;
       Next;
 @
+%TODO: poptrap is better in more recent version of ocaml,
+% there is a comment that seems to indicate it better handles
+% signals
 
 \subsection{Signals}
 
+%less: this is subtle, maybe put in advanced topics?
+
 <<signal opcodes>>=
-  CHECK_SIGNALS,
+CHECK_SIGNALS,
 @
 
 <<[[interpreter()]] signal cases>>=
@@ -9569,12 +9655,41 @@ value * modify_dest, modify_newval;
 
 \subsection{Foreign C calls}
 
+
 <<foreign C calls opcodes>>=
-  C_CALL1, C_CALL2, C_CALL3, C_CALL4, C_CALL5, C_CALLN,
+C_CALLN,
 @
+
 
 <<[[interpreter()]] foreign c calls cases>>=
 /* Calling C functions */
+
+    Instruct(C_CALLN): {
+      int nargs = *pc++;
+      *--sp = accu;
+      Setup_for_c_call;
+      accu = cprim[*pc](sp + 1, nargs);
+      Restore_after_c_call;
+      sp += nargs;
+      pc++;
+      Next;
+    }
+@
+
+<<constant Setup_for_c_call>>=
+#define Setup_for_c_call { *--sp = env; extern_sp = sp; }
+@
+
+<<constant Restore_after_c_call>>=
+#define Restore_after_c_call { sp = extern_sp; env = *sp++; }
+@
+
+<<foreign C calls opcodes>>=
+  C_CALL1, C_CALL2, C_CALL3, C_CALL4, C_CALL5,
+@
+
+\ifallcode
+<<[[interpreter()]] foreign c calls cases>>=
 
     Instruct(C_CALL1):
       Setup_for_c_call;
@@ -9610,40 +9725,41 @@ value * modify_dest, modify_newval;
       sp += 4;
       pc++;
       Next;
-    Instruct(C_CALLN): {
-      int nargs = *pc++;
-      *--sp = accu;
-      Setup_for_c_call;
-      accu = cprim[*pc](sp + 1, nargs);
-      Restore_after_c_call;
-      sp += nargs;
-      pc++;
-      Next;
-    }
 @
+\fi
 
-<<constant Setup_for_c_call>>=
-#define Setup_for_c_call { *--sp = env; extern_sp = sp; }
-@
-
-<<constant Restore_after_c_call>>=
-#define Restore_after_c_call { sp = extern_sp; env = *sp++; }
-@
 
 \subsection{Arithmetics}
 
 <<arithmetics opcodes>>=
-  CONST0, CONST1, CONST2, CONST3, CONSTINT,
-  PUSHCONST0, PUSHCONST1, PUSHCONST2, PUSHCONST3, PUSHCONSTINT,
-  NEGINT, ADDINT, SUBINT, MULINT, DIVINT, MODINT,
-  ANDINT, ORINT, XORINT, LSLINT, LSRINT, ASRINT,
-  EQ, NEQ, LTINT, LEINT, GTINT, GEINT,
-  OFFSETINT, OFFSETREF,
+CONSTINT,
+NEGINT, ADDINT, SUBINT, MULINT, DIVINT, MODINT,
+ANDINT, ORINT, XORINT, 
+LSLINT, LSRINT, ASRINT,
+EQ, NEQ, 
+LTINT, LEINT, GTINT, GEINT,
+OFFSETINT, OFFSETREF,
 @
+
 
 <<[[interpreter()]] arithmetics cases>>=
 /* Integer constants */
 
+    <<[[interpreter()]] before CONSTINT case>>
+    Instruct(CONSTINT):
+      accu = Val_int(*pc);
+      pc++;
+      Next;
+@
+
+<<arithmetics opcodes>>=
+  CONST0, CONST1, CONST2, CONST3, 
+  PUSHCONSTINT,
+  PUSHCONST0, PUSHCONST1, PUSHCONST2, PUSHCONST3, 
+@
+
+\ifallcode
+<<[[interpreter()]] arithmetics cases>>=
     Instruct(CONST0):
       accu = Val_int(0); Next;
     Instruct(CONST1):
@@ -9661,15 +9777,16 @@ value * modify_dest, modify_newval;
       *--sp = accu; accu = Val_int(2); Next;
     Instruct(PUSHCONST3):
       *--sp = accu; accu = Val_int(3); Next;
+@
 
+<<[[interpreter()]] before CONSTINT case>>=
     Instruct(PUSHCONSTINT):
       *--sp = accu;
       /* Fallthrough */
-    Instruct(CONSTINT):
-      accu = Val_int(*pc);
-      pc++;
-      Next;
 @
+\fi
+
+
 
 % builtins! finally, but handling the special int encoding used
 <<[[interpreter()]] arithmetics cases>>=
@@ -9731,6 +9848,8 @@ value * modify_dest, modify_newval;
     Integer_comparison(GTINT, >)
     Integer_comparison(GEINT, >=)
 @
+% note that this is used only for the compare_int! it's not
+% the same as the generic compare that is generic
 
 <<[[interpreter()]] arithmetics cases>>=
     Instruct(OFFSETINT):
@@ -9746,7 +9865,7 @@ value * modify_dest, modify_newval;
 % >> >>
 
 
-\subsection{Other operations}
+%\subsection{Other operations}
 
 % deleted. But then compatibility pb? no, just use make boostrap.
 
@@ -10205,7 +10324,7 @@ let record_event ev =
 \subsection{Interpreter control}
 
 <<debugger opcodes>>=
-  STOP, EVENT, BREAK
+STOP, EVENT, BREAK
 @
 
 <<[[interpreter()]] debugger cases>>=
@@ -10373,7 +10492,7 @@ and array_kind =
 
 %instruct
 <<array opcodes>>=
-  VECTLENGTH, GETVECTITEM, SETVECTITEM,
+VECTLENGTH, GETVECTITEM, SETVECTITEM,
 @
 
 %interpreter
@@ -10477,7 +10596,7 @@ let rec mkrangepat c1 c2 =
 @
 
 <<string opcodes>>=
-  GETSTRINGCHAR, SETSTRINGCHAR, 
+GETSTRINGCHAR, SETSTRINGCHAR, 
 @
 
 % interpreter
