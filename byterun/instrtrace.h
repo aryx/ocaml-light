@@ -15,10 +15,7 @@
 /* Trace the instructions executed */
 
 #ifndef _instrtrace_
-/*s: constant _instrtrace_ */
 #define _instrtrace_
-/*e: constant _instrtrace_ */
-
 
 #include "mlvalues.h"
 #include "misc.h"
@@ -26,8 +23,8 @@
 extern int trace_flag;
 extern long icount;
 void stop_here (void);
-void disasm_instr (code_t pc);
 
+void disasm_instr (code_t pc);
 
 #endif
 /*e: byterun/instrtrace.h */

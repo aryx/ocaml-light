@@ -33,27 +33,56 @@ enum instructions {
     APPTERM, APPTERM1, APPTERM2, APPTERM3, 
     RETURN, 
   /*e: function application opcodes */
-  RESTART, GRAB,
-  CLOSURE, CLOSUREREC,
-  GETGLOBAL, PUSHGETGLOBAL, GETGLOBALFIELD, PUSHGETGLOBALFIELD, SETGLOBAL,
-  ATOM0, ATOM, PUSHATOM0, PUSHATOM,
-  MAKEBLOCK, MAKEBLOCK1, MAKEBLOCK2, MAKEBLOCK3,
-  GETFIELD0, GETFIELD1, GETFIELD2, GETFIELD3, GETFIELD,
-  SETFIELD0, SETFIELD1, SETFIELD2, SETFIELD3, SETFIELD,
-  DUMMY, UPDATE,
-  VECTLENGTH, GETVECTITEM, SETVECTITEM,
-  GETSTRINGCHAR, SETSTRINGCHAR, 
-  BRANCH, BRANCHIF, BRANCHIFNOT, SWITCH, BOOLNOT,
-  PUSHTRAP, POPTRAP, RAISE, CHECK_SIGNALS,
-  C_CALL1, C_CALL2, C_CALL3, C_CALL4, C_CALL5, C_CALLN,
-  CONST0, CONST1, CONST2, CONST3, CONSTINT,
-  PUSHCONST0, PUSHCONST1, PUSHCONST2, PUSHCONST3, PUSHCONSTINT,
-  NEGINT, ADDINT, SUBINT, MULINT, DIVINT, MODINT,
-  ANDINT, ORINT, XORINT, LSLINT, LSRINT, ASRINT,
-  EQ, NEQ, LTINT, LEINT, GTINT, GEINT,
-  OFFSETINT, OFFSETREF,
-  GETMETHOD,
-  STOP, EVENT, BREAK
+  /*s: misc opcodes */
+    RESTART, GRAB,
+    CLOSURE, CLOSUREREC,
+  /*e: misc opcodes */
+  /*s: global data access opcodes */
+    GETGLOBAL, PUSHGETGLOBAL, GETGLOBALFIELD, PUSHGETGLOBALFIELD, SETGLOBAL,
+  /*e: global data access opcodes */
+  /*s: blocks allocation opcodes */
+    ATOM0, ATOM, PUSHATOM0, PUSHATOM,
+    MAKEBLOCK, MAKEBLOCK1, MAKEBLOCK2, MAKEBLOCK3,
+  /*e: blocks allocation opcodes */
+  /*s: blocks access opcodes */
+    GETFIELD0, GETFIELD1, GETFIELD2, GETFIELD3, GETFIELD,
+    SETFIELD0, SETFIELD1, SETFIELD2, SETFIELD3, SETFIELD,
+  /*e: blocks access opcodes */
+  /*s: recursive definition opcodes */
+    DUMMY, UPDATE,
+  /*e: recursive definition opcodes */
+  /*s: array opcodes */
+    VECTLENGTH, GETVECTITEM, SETVECTITEM,
+  /*e: array opcodes */
+  /*s: string opcodes */
+    GETSTRINGCHAR, SETSTRINGCHAR, 
+  /*e: string opcodes */
+  /*s: branching opcodes */
+    BRANCH, BRANCHIF, BRANCHIFNOT, SWITCH, BOOLNOT,
+  /*e: branching opcodes */
+  /*s: exception opcodes */
+    PUSHTRAP, POPTRAP, RAISE,
+  /*e: exception opcodes */
+  /*s: signal opcodes */
+    CHECK_SIGNALS,
+  /*e: signal opcodes */
+  /*s: foreign C calls opcodes */
+    C_CALL1, C_CALL2, C_CALL3, C_CALL4, C_CALL5, C_CALLN,
+  /*e: foreign C calls opcodes */
+  /*s: arithmetics opcodes */
+    CONST0, CONST1, CONST2, CONST3, CONSTINT,
+    PUSHCONST0, PUSHCONST1, PUSHCONST2, PUSHCONST3, PUSHCONSTINT,
+    NEGINT, ADDINT, SUBINT, MULINT, DIVINT, MODINT,
+    ANDINT, ORINT, XORINT, LSLINT, LSRINT, ASRINT,
+    EQ, NEQ, LTINT, LEINT, GTINT, GEINT,
+    OFFSETINT, OFFSETREF,
+  /*e: arithmetics opcodes */
+  /*s: oo opcodes */
+    GETMETHOD,
+  /*e: oo opcodes */
+  /*s: debugger opcodes */
+    STOP, EVENT, BREAK
+  /*e: debugger opcodes */
 };
 /*e: enum instructions */
 /*e: byterun/instruct.h */

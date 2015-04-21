@@ -95,7 +95,10 @@
 % Config
 %------------------------------------------------------------------------------
 \allcodefalse
-% used for extra copyright, other stuff??
+% used for 
+% - extra copyright, 
+% - composite operations opti in interprete()
+% - other stuff??
 
 %\setcounter{tocdepth}{1}
 
@@ -415,7 +418,6 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 
 \section{Bootstrapping}
 
-
 <<constant Clflags.nopervasives>>=
 let nopervasives = ref false            (* -nopervasives *)
 @
@@ -423,19 +425,33 @@ let nopervasives = ref false            (* -nopervasives *)
 "-nopervasives", Arg.Set nopervasives, " (undocumented)";
 @
 
-% make bootstrap
+% 'make coldstart' is nice. See the basic stuff needed.
+
+% 'make bootstrap' has beautiful comments!
+% (but can't use syncweb with Makefiles, but maybe can with mk!!)
+
+
+% can you change instruct.h? if do so then can't run anymore
+% boot/ocamlc. But there is also boot/ocamlrun, so it should
+% work!
 
 %###############################################################################
 
 \chapter{Core Data Structures}
 
+% core DS for ocamlc
 %parsing/parsetree.mli and asttypes.mli
 %typing/types.mli
 %typing/typedtree.mli (and asttypes.mli)
 %bytecomp/lambda.mli
 %bytecomp/instruct.mli
+
+% core DS for ocamlrun
 %byterun/instruct.h
 %byterun/mlvalues.h
+
+% opcode.ml? is the link!
+
 
 \section{Abstract syntax tree}
 
@@ -834,6 +850,8 @@ and type_variable =
 % will see later?
 
 \section{Bytecode}
+% core DS for ocamlrun now!
+% Bytecode opcodes?
 
 % https://github.com/ocamllabs/ocaml-internals/wiki/Bytecode-compiler-pipeline
 
@@ -844,29 +862,35 @@ enum instructions {
   <<basic stack operations opcodes>>
   <<env access opcodes>>
   <<function application opcodes>>
-  RESTART, GRAB,
-  CLOSURE, CLOSUREREC,
-  GETGLOBAL, PUSHGETGLOBAL, GETGLOBALFIELD, PUSHGETGLOBALFIELD, SETGLOBAL,
-  ATOM0, ATOM, PUSHATOM0, PUSHATOM,
-  MAKEBLOCK, MAKEBLOCK1, MAKEBLOCK2, MAKEBLOCK3,
-  GETFIELD0, GETFIELD1, GETFIELD2, GETFIELD3, GETFIELD,
-  SETFIELD0, SETFIELD1, SETFIELD2, SETFIELD3, SETFIELD,
-  DUMMY, UPDATE,
-  VECTLENGTH, GETVECTITEM, SETVECTITEM,
-  GETSTRINGCHAR, SETSTRINGCHAR, 
-  BRANCH, BRANCHIF, BRANCHIFNOT, SWITCH, BOOLNOT,
-  PUSHTRAP, POPTRAP, RAISE, CHECK_SIGNALS,
-  C_CALL1, C_CALL2, C_CALL3, C_CALL4, C_CALL5, C_CALLN,
-  CONST0, CONST1, CONST2, CONST3, CONSTINT,
-  PUSHCONST0, PUSHCONST1, PUSHCONST2, PUSHCONST3, PUSHCONSTINT,
-  NEGINT, ADDINT, SUBINT, MULINT, DIVINT, MODINT,
-  ANDINT, ORINT, XORINT, LSLINT, LSRINT, ASRINT,
-  EQ, NEQ, LTINT, LEINT, GTINT, GEINT,
-  OFFSETINT, OFFSETREF,
-  GETMETHOD,
-  STOP, EVENT, BREAK
+  <<misc opcodes>>
+  <<global data access opcodes>>
+  <<blocks allocation opcodes>>
+  <<blocks access opcodes>>
+  <<recursive definition opcodes>>
+  <<array opcodes>>
+  <<string opcodes>>
+  <<branching opcodes>>
+  <<exception opcodes>>
+  <<signal opcodes>>
+  <<foreign C calls opcodes>>
+  <<arithmetics opcodes>>
+  <<oo opcodes>>
+  <<debugger opcodes>>
 };
 @
+%THE ORDER IS IMPORTANT!! if you change it then you will not be able
+% to run boot/ocamlc! because it will use a different order
+% for the opcodes.
+% But remember that there is boot/ocamlrun too! so can change
+% things if do make bootstrap.
+
+% A lot more cases compared to Machine.nw or Assembler.nw opcodes.
+% similar: 
+%  - branching
+%  - arithmetics
+%  - foreign c calls =~ syscalls/interrupts opcodes
+%  - basic stack =~ memory opcodes
+% different: all the rest ... exn, env, function call, debugger, etc.
 
 \section{Runtime values}
 
@@ -1096,6 +1120,7 @@ bits  63    10 9     8 7   0
 
 
 \chapter{[[main()]]}
+% of ocamlc, there is also the main of ocamlrun!
 
 <<toplevel Main._1>>=
 let _ = 
@@ -8570,7 +8595,174 @@ typedef opcode_t * code_t;
 
 % asize_t is in misc.h = int
 
+\section{[[main()]] (of [[ocamlrun]])}
 
+%/* Main entry point (can be overriden by a user-provided main()
+%   function that calls caml_main() later. */
+
+<<function main>>=
+int main(int argc, char **argv)
+{
+  caml_main(argv);
+  sys_exit(Val_int(0));
+  return 0; /* not reached */
+}
+@
+
+\subsection{[[caml_main()]]}
+
+<<function caml_main>>=
+/* Main entry point when loading code from a file */
+
+void caml_main(char **argv)
+{
+  int fd;
+  struct exec_trailer trail;
+  int pos;
+  struct longjmp_buffer raise_buf;
+  struct channel * chan;
+
+  /* Machine-dependent initialization of the floating-point hardware
+     so that it behaves as much as possible as specified in IEEE */
+  init_ieee_floats();
+
+  /* Set up a catch-all exception handler */
+  if (sigsetjmp(raise_buf.buf, 1) == 0) {
+    external_raise = &raise_buf;
+    /* Determine options and position of bytecode file */
+#ifdef DEBUG
+    verbose_init = 1;
+#endif
+    parse_camlrunparam();
+    pos = 0;
+    fd = attempt_open(&argv[0], &trail, 0);
+    if (fd < 0) {
+
+      pos = parse_command_line(argv);
+      if (argv[pos] == 0)
+        fatal_error("No bytecode file specified.\n");
+
+      fd = attempt_open(&argv[pos], &trail, 1);
+      switch(fd) {
+      case FILE_NOT_FOUND:
+        fatal_error_arg("Fatal error: cannot find file %s\n", argv[pos]);
+        break;
+      case TRUNCATED_FILE:
+      case BAD_MAGIC_NUM:
+        fatal_error_arg(
+          "Fatal error: the file %s is not a bytecode executable file\n",
+          argv[pos]);
+        break;
+      }
+    }
+    /* Initialize the abstract machine */
+    init_gc (minor_heap_init, heap_size_init, heap_chunk_init,
+             percent_free_init, max_percent_free_init, verbose_init);
+    init_stack (max_stack_init);
+    init_atoms();
+
+    /* Initialize the interpreter */
+    interprete(NULL, 0);
+
+    /* Initialize the debugger, if needed */
+    debugger_init();
+
+    /* Load the code */
+    lseek(fd, - (long) (TRAILER_SIZE + trail.code_size + trail.prim_size
+                        + trail.data_size + trail.symbol_size
+                        + trail.debug_size), SEEK_END);
+    load_code(fd, trail.code_size);
+
+    /* Check the primitives */
+    check_primitives(fd, trail.prim_size);
+
+    /* Load the globals */
+    chan = open_descriptor(fd);
+    global_data = input_val(chan);
+    close_channel(chan);
+    /* Ensure that the globals are in the major heap. */
+    oldify(global_data, &global_data);
+
+    /* Record the command-line arguments */
+    sys_init(argv + pos);
+
+    /* Execute the program */
+    debugger(PROGRAM_START);
+
+    interprete(start_code, trail.code_size);
+
+  } else {
+    extern_sp = &exn_bucket; /* The debugger needs the exception value. */
+    debugger(UNCAUGHT_EXC);
+    fatal_uncaught_exception(exn_bucket);
+  }
+}
+@
+
+%\subsection{Command line processing}
+
+<<function parse_command_line>>=
+/* Parse options on the command line */
+
+static int parse_command_line(char **argv)
+{
+  int i;
+
+  for(i = 1; argv[i] != NULL && argv[i][0] == '-'; i++) {
+    switch(argv[i][1]) {
+    <<[[parse_command_line()]] cases>>
+    default:
+      fatal_error_arg("Unknown option %s.\n", argv[i]);
+    }
+  }
+  return i;
+}
+@
+
+\subsection{Bytecode executable format}
+% again, but this time in C for ocamlrun to read
+
+<<exec.h toplevel comment>>=
+/*  offset 0 --->  initial junk
+                   code block
+                   names of primitives
+                   data block
+                   symbol table
+                   debug infos
+                   trailer
+ end of file --->
+*/
+@
+
+<<constant TRAILER_SIZE>>=
+/* Structure of the trailer.
+   Sizes are 32-bit unsigned integers, big endian */
+
+#define TRAILER_SIZE (5*4+12)
+@
+
+<<struct exec_trailer>>=
+struct exec_trailer {
+  unsigned int code_size;      /* Size of the code block (in bytes) */
+  unsigned int prim_size;      /* Size of the primitive table (in bytes) */
+  unsigned int data_size;      /* Size of the global data table (bytes) */
+  unsigned int symbol_size;    /* Size of the symbol table (bytes) */
+  unsigned int debug_size;     /* Size of the debug infos (bytes) */
+  char magic[12];              /* A magic string */
+};
+@
+
+<<constant EXEC_MAGIC>>=
+/* Magic number for this release */
+
+#define EXEC_MAGIC "Caml1999X002"
+@
+
+
+
+\subsection{Loading the executable}
+
+\subsection{Initializing}
 
 \section{[[interprete()]]}
 
@@ -8593,7 +8785,6 @@ value interprete(code_t prog, asize_t prog_size)
     <<[[interpreter()]] basic stack operations cases>>
     <<[[interpreter()]] env access cases>>
     <<[[interpreter()]] function application cases>>
-    <<[[interpreter()]] check cases>>
     <<[[interpreter()]] misc cases>>
     <<[[interpreter()]] global data access cases>>
     <<[[interpreter()]] blocks allocation cases>>
@@ -8601,6 +8792,7 @@ value interprete(code_t prog, asize_t prog_size)
     <<[[interpreter()]] recursive definition cases>>
     <<[[interpreter()]] branching cases>>
     <<[[interpreter()]] exception cases>>
+    <<[[interpreter()]] signal cases>>
     <<[[interpreter()]] foreign c calls cases>>
     <<[[interpreter()]] arithmetics cases>>
     <<[[interpreter()]] array cases>>
@@ -8626,13 +8818,6 @@ value interprete(code_t prog, asize_t prog_size)
 % of instruct.h? is it an assumption for jumptbl.h to work?
 % I don't think so.
 
-% A lot more cases compared to Machine.nw or Assembler.nw opcodes.
-% similar: 
-%  - branching
-%  - arithmetics
-%  - foreign c calls =~ syscalls/interrupts opcodes
-%  - basic stack =~ memory opcodes
-% different: all the rest ... exn, env, function, debugger, etc.
 
 % there is threaded code and simpler code, with different
 % ifdefs, but for explanation purpose we focus on the simpler
@@ -8693,6 +8878,8 @@ extra_args = 0;
 env = Atom(0);
 accu = Val_int(0);
 @
+% extern_sp in the sense that it's a global defined elsewhere
+% but we have a local copy here.
 
 <<global extern_sp>>=
 value * extern_sp;
@@ -8717,10 +8904,28 @@ value * extern_sp;
   PUSHACC, 
   POP, ASSIGN,
 @
+%main one: ACC, PUSH, POP, ASSIGN
 
 <<[[interpreter()]] basic stack operations cases>>=
 /* Basic stack operations */
 
+    <<[[interpreter()]] basic stack operations before ACC case>>
+    Instruct(ACC):
+      accu = sp[*pc++];
+      Next;
+    Instruct(PUSH): Instruct(PUSHACC0):
+      *--sp = accu; 
+      Next;
+    Instruct(POP):
+      sp += *pc++;
+      Next;
+    Instruct(ASSIGN):
+      sp[*pc++] = accu;
+      accu = Val_unit;
+      Next;
+@
+
+<<[[interpreter()]] basic stack operations cases>>=
     Instruct(ACC0):
       accu = sp[0]; Next;
     Instruct(ACC1):
@@ -8737,9 +8942,11 @@ value * extern_sp;
       accu = sp[6]; Next;
     Instruct(ACC7):
       accu = sp[7]; Next;
+@
+%opti: start to see specialized operations, e.g. ACC1 is really
+% an ACC and a CONST0 before, but here compressed in one single opcode.
 
-    Instruct(PUSH): Instruct(PUSHACC0):
-      *--sp = accu; Next;
+<<[[interpreter()]] basic stack operations cases>>=
     Instruct(PUSHACC1):
       *--sp = accu; accu = sp[1]; Next;
     Instruct(PUSHACC2):
@@ -8754,27 +8961,18 @@ value * extern_sp;
       *--sp = accu; accu = sp[6]; Next;
     Instruct(PUSHACC7):
       *--sp = accu; accu = sp[7]; Next;
-
-    Instruct(PUSHACC):
-      *--sp = accu;
-      /* Fallthrough */
-    Instruct(ACC):
-      accu = sp[*pc++];
-      Next;
-
-    Instruct(POP):
-      sp += *pc++;
-      Next;
-    Instruct(ASSIGN):
-      sp[*pc++] = accu;
-      accu = Val_unit;
-      Next;
 @
 % start to see composite operations in one opcode, e.g. 
 % PUSHACC1 is really a PUSH and an ACC1.
 % so faster interpreter. See zinc manual.
-% start to see also specialized operations, e.g. ACC1 is really
-% an ACC and a CONST0 before, but here compressed in one single opcode.
+
+<<[[interpreter()]] basic stack operations before ACC case>>=
+    Instruct(PUSHACC):
+      *--sp = accu;
+      /* Fallthrough */
+@
+
+
 
 \subsection{Env access}
 
@@ -8783,9 +8981,18 @@ value * extern_sp;
   PUSHENVACC1, PUSHENVACC2, PUSHENVACC3, PUSHENVACC4, PUSHENVACC,
 @
 
+
 <<[[interpreter()]] env access cases>>=
 /* Access in heap-allocated environment */
 
+    <<[[interpreter()]] env access before ENVACC case>>
+    Instruct(ENVACC):
+      accu = Field(env, *pc++);
+      Next;
+@
+
+\ifallcode
+<<[[interpreter()]] env access cases>>=
     Instruct(ENVACC1):
       accu = Field(env, 1); Next;
     Instruct(ENVACC2):
@@ -8803,14 +9010,14 @@ value * extern_sp;
       *--sp = accu; accu = Field(env, 3); Next;
     Instruct(PUSHENVACC4):
       *--sp = accu; accu = Field(env, 4); Next;
-
-    Instruct(PUSHENVACC):
-      *--sp = accu;
-      /* Fallthrough */
-    Instruct(ENVACC):
-      accu = Field(env, *pc++);
-      Next;
 @
+
+<<[[interpreter()]] env access before ENVACC case>>=
+Instruct(PUSHENVACC):
+  *--sp = accu;
+  /* Fallthrough */
+@
+\fi
 
 \subsection{Function application}
 
@@ -8854,6 +9061,10 @@ value * extern_sp;
       extra_args = 0;
       goto check_stacks;
     }
+@
+
+% no allcode here, it's an important difference
+<<[[interpreter()]] function application cases>>=
     Instruct(APPLY2): {
       value arg1 = sp[0];
       value arg2 = sp[1];
@@ -8884,7 +9095,10 @@ value * extern_sp;
       extra_args = 2;
       goto check_stacks;
     }
+@
 
+
+<<[[interpreter()]] function application cases>>=
     Instruct(APPTERM): {
       int nargs = *pc++;
       int slotsize = *pc;
@@ -8900,6 +9114,10 @@ value * extern_sp;
       extra_args += nargs - 1;
       goto check_stacks;
     }
+@
+
+
+<<[[interpreter()]] function application cases>>=
     Instruct(APPTERM1): {
       value arg1 = sp[0];
       sp = sp + *pc - 1;
@@ -8932,7 +9150,10 @@ value * extern_sp;
       extra_args += 2;
       goto check_stacks;
     }
+@
 
+
+<<[[interpreter()]] function application cases>>=
     Instruct(RETURN): {
       sp += *pc++;
       if (extra_args > 0) {
@@ -8950,8 +9171,7 @@ value * extern_sp;
 @
 
 
-
-<<[[interpreter()]] check cases>>=
+<<[[interpreter()]] before CHECK_SIGNALS case>>=
 /* Stack checks */
 
     check_stacks:
@@ -8961,41 +9181,15 @@ value * extern_sp;
         sp = extern_sp;
       }
       /* Fall through CHECK_SIGNALS */
-
-/* Signal handling */
-
-    Instruct(CHECK_SIGNALS):    /* accu not preserved */
-      if (something_to_do) goto process_signal;
-      Next;
-
-    process_signal:
-      something_to_do = 0;
-      if (force_major_slice){
-        Setup_for_gc;
-        minor_collection ();
-        Restore_after_gc;
-      }
-      /* If a signal arrives between the following two instructions,
-         it will be lost. */
-      { int signal_number = pending_signal;
-        pending_signal = 0;
-        if (signal_number) {
-          /* Push a return frame to the current code location */
-          sp -= 4;
-          sp[0] = Val_int(signal_number);
-          sp[1] = (value) pc;
-          sp[2] = env;
-          sp[3] = Val_long(extra_args);
-          /* Branch to the signal handler */
-          env = Field(signal_handlers, signal_number);
-          pc = Code_val(env);
-          extra_args = 0;
-        }
-      }
-      Next;
 @
 
+
 \subsection{Misc}
+
+<<misc opcodes>>=
+  RESTART, GRAB,
+  CLOSURE, CLOSUREREC,
+@
 
 <<[[interpreter()]] misc cases>>=
     Instruct(RESTART): {
@@ -9057,6 +9251,10 @@ value * extern_sp;
 
 \subsection{Global data access}
 
+<<global data access opcodes>>=
+  GETGLOBAL, PUSHGETGLOBAL, GETGLOBALFIELD, PUSHGETGLOBALFIELD, SETGLOBAL,
+@
+
 <<global global_data>>=
 value global_data;
 @
@@ -9093,6 +9291,11 @@ value global_data;
 \subsection{Blocks}
 
 \subsubsection{Blocks allocation}
+
+<<blocks allocation opcodes>>=
+  ATOM0, ATOM, PUSHATOM0, PUSHATOM,
+  MAKEBLOCK, MAKEBLOCK1, MAKEBLOCK2, MAKEBLOCK3,
+@
 
 <<[[interpreter()]] blocks allocation cases>>=
 /* Allocation of blocks */
@@ -9154,6 +9357,12 @@ value global_data;
 
 \subsubsection{Blocks access}
 
+
+<<blocks access opcodes>>=
+  GETFIELD0, GETFIELD1, GETFIELD2, GETFIELD3, GETFIELD,
+  SETFIELD0, SETFIELD1, SETFIELD2, SETFIELD3, SETFIELD,
+@
+
 <<[[interprete()]] other local variables>>=
 value * modify_dest, modify_newval;
 @
@@ -9201,6 +9410,10 @@ value * modify_dest, modify_newval;
 
 \subsection{Recursive definitions}
 
+<<recursive definition opcodes>>=
+  DUMMY, UPDATE,
+@
+
 <<[[interpreter()]] recursive definition cases>>=
 /* For recursive definitions */
 
@@ -9226,6 +9439,10 @@ value * modify_dest, modify_newval;
 
 
 \subsection{Branching operations}
+
+<<branching opcodes>>=
+  BRANCH, BRANCHIF, BRANCHIFNOT, SWITCH, BOOLNOT,
+@
 
 <<[[interpreter()]] branching cases>>=
 /* Branches and conditional branches */
@@ -9260,6 +9477,10 @@ value * modify_dest, modify_newval;
 @
 
 \subsection{Exceptions}
+
+<<exception opcodes>>=
+  PUSHTRAP, POPTRAP, RAISE,
+@
 
 <<[[interpreter()]] exception cases>>=
 /* Exceptions */
@@ -9300,7 +9521,53 @@ value * modify_dest, modify_newval;
       Next;
 @
 
+\subsection{Signals}
+
+<<signal opcodes>>=
+  CHECK_SIGNALS,
+@
+
+<<[[interpreter()]] signal cases>>=
+<<[[interpreter()]] before CHECK_SIGNALS case>>
+
+/* Signal handling */
+
+    Instruct(CHECK_SIGNALS):    /* accu not preserved */
+      if (something_to_do) goto process_signal;
+      Next;
+
+    process_signal:
+      something_to_do = 0;
+      if (force_major_slice){
+        Setup_for_gc;
+        minor_collection ();
+        Restore_after_gc;
+      }
+      /* If a signal arrives between the following two instructions,
+         it will be lost. */
+      { int signal_number = pending_signal;
+        pending_signal = 0;
+        if (signal_number) {
+          /* Push a return frame to the current code location */
+          sp -= 4;
+          sp[0] = Val_int(signal_number);
+          sp[1] = (value) pc;
+          sp[2] = env;
+          sp[3] = Val_long(extra_args);
+          /* Branch to the signal handler */
+          env = Field(signal_handlers, signal_number);
+          pc = Code_val(env);
+          extra_args = 0;
+        }
+      }
+      Next;
+@
+
 \subsection{Foreign C calls}
+
+<<foreign C calls opcodes>>=
+  C_CALL1, C_CALL2, C_CALL3, C_CALL4, C_CALL5, C_CALLN,
+@
 
 <<[[interpreter()]] foreign c calls cases>>=
 /* Calling C functions */
@@ -9361,6 +9628,15 @@ value * modify_dest, modify_newval;
 
 \subsection{Arithmetics}
 
+<<arithmetics opcodes>>=
+  CONST0, CONST1, CONST2, CONST3, CONSTINT,
+  PUSHCONST0, PUSHCONST1, PUSHCONST2, PUSHCONST3, PUSHCONSTINT,
+  NEGINT, ADDINT, SUBINT, MULINT, DIVINT, MODINT,
+  ANDINT, ORINT, XORINT, LSLINT, LSRINT, ASRINT,
+  EQ, NEQ, LTINT, LEINT, GTINT, GEINT,
+  OFFSETINT, OFFSETREF,
+@
+
 <<[[interpreter()]] arithmetics cases>>=
 /* Integer constants */
 
@@ -9391,6 +9667,7 @@ value * modify_dest, modify_newval;
       Next;
 @
 
+% builtins! finally, but handling the special int encoding used
 <<[[interpreter()]] arithmetics cases>>=
 /* Integer arithmetic */
 
@@ -9415,12 +9692,19 @@ value * modify_dest, modify_newval;
       accu = Val_long(Long_val(accu) % divisor);
       Next;
     }
+@
+
+<<[[interpreter()]] arithmetics cases>>=
     Instruct(ANDINT):
       accu = (value)((long) accu & (long) *sp++); Next;
     Instruct(ORINT):
       accu = (value)((long) accu | (long) *sp++); Next;
     Instruct(XORINT):
       accu = (value)(((long) accu ^ (long) *sp++) | 1); Next;
+@
+
+
+<<[[interpreter()]] arithmetics cases>>=
     Instruct(LSLINT):
       accu = (value)((((long) accu - 1) << Long_val(*sp++)) + 1); Next;
     Instruct(LSRINT):
@@ -9428,7 +9712,10 @@ value * modify_dest, modify_newval;
       Next;
     Instruct(ASRINT):
       accu = (value)((((long) accu - 1) >> Long_val(*sp++)) | 1); Next;
+@
 
+
+<<[[interpreter()]] arithmetics cases>>=
 #define Integer_comparison(opname,tst) \
     Instruct(opname): \
       accu = Val_int((long) accu tst (long) *sp++); Next;
@@ -9439,7 +9726,9 @@ value * modify_dest, modify_newval;
     Integer_comparison(LEINT, <=)
     Integer_comparison(GTINT, >)
     Integer_comparison(GEINT, >=)
+@
 
+<<[[interpreter()]] arithmetics cases>>=
     Instruct(OFFSETINT):
       accu += *pc << 1;
       pc++;
@@ -9456,6 +9745,10 @@ value * modify_dest, modify_newval;
 \subsection{Other operations}
 
 %todo: delete? but then compatibility pb?
+
+<<oo opcodes>>=
+  GETMETHOD,
+@
 
 <<[[interpreter()]] oo cases>>=
 /* Object-oriented operations */
@@ -9505,52 +9798,6 @@ if (sigsetjmp(raise_buf.buf, 1)) {
 external_raise = &raise_buf;
 @
 
-
-\section{Bytecode executable format}
-% again, but this time in C for ocamlrun to read
-
-<<exec.h toplevel comment>>=
-/*  offset 0 --->  initial junk
-                   code block
-                   names of primitives
-                   data block
-                   symbol table
-                   debug infos
-                   trailer
- end of file --->
-*/
-@
-
-<<constant TRAILER_SIZE>>=
-/* Structure of the trailer.
-   Sizes are 32-bit unsigned integers, big endian */
-
-#define TRAILER_SIZE (5*4+12)
-@
-
-<<struct exec_trailer>>=
-struct exec_trailer {
-  unsigned int code_size;      /* Size of the code block (in bytes) */
-  unsigned int prim_size;      /* Size of the primitive table (in bytes) */
-  unsigned int data_size;      /* Size of the global data table (bytes) */
-  unsigned int symbol_size;    /* Size of the symbol table (bytes) */
-  unsigned int debug_size;     /* Size of the debug infos (bytes) */
-  char magic[12];              /* A magic string */
-};
-@
-
-<<constant EXEC_MAGIC>>=
-/* Magic number for this release */
-
-#define EXEC_MAGIC "Caml1999X002"
-@
-
-
-\section{Startup}
-
-<<constant Clflags.keep_startup_file>>=
-let keep_startup_file = ref false       (* -dstartup *)
-@
 
 \section{Memory allocation}
 % could be in gc section, but it's a bit different
@@ -9953,7 +10200,9 @@ let record_event ev =
 
 \subsection{Interpreter control}
 
-
+<<debugger opcodes>>=
+  STOP, EVENT, BREAK
+@
 
 <<[[interpreter()]] debugger cases>>=
 /* Debugging and machine control */
@@ -10119,6 +10368,9 @@ and array_kind =
 
 
 %instruct
+<<array opcodes>>=
+  VECTLENGTH, GETVECTITEM, SETVECTITEM,
+@
 
 %interpreter
 <<[[interpreter()]] array cases>>=
@@ -10218,6 +10470,10 @@ let rec mkrangepat c1 c2 =
 %codegen
 <<[[Lambda.primitive]] string operations cases>>=
 | Pstringlength | Pstringrefu | Pstringsetu | Pstringrefs | Pstringsets
+@
+
+<<string opcodes>>=
+  GETSTRINGCHAR, SETSTRINGCHAR, 
 @
 
 % interpreter
@@ -11456,8 +11712,47 @@ let dump_linear = ref false             (* -dlinear *)
 
 \subsubsection{[[-dcmm]]}
 
+\section{Verbose interpreter, [[ocamlrun -v]]}
 
-\section{Verbose interpreter}
+<<[[parse_command_line()]] cases>>=
+case 'v':
+  verbose_init = 1;
+  break;
+@
+
+<<global verbose_init>>=
+/* Configuration parameters and flags */
+
+static unsigned long verbose_init = 0;
+@
+
+<<[[caml_startup_code()]] ifdef DEBUG, set verbose_init>>=
+#ifdef DEBUG
+  verbose_init = 1;
+#endif
+@
+
+\section{Tracing interpreter, [[ocamlrun -t]]}
+
+<<[[parse_command_line()]] cases>>=
+#ifdef DEBUG
+    case 't':
+      trace_flag = 1;
+      break;
+#endif
+@
+
+<<global trace_flag>>=
+int trace_flag = 0;
+@
+
+<<global icount>>=
+long icount = 0;
+@
+
+<<function stop_here>>=
+void stop_here () {}
+@
 
 
 <<[[interpreter()]] ifdef DEBUG, loop start>>=
@@ -11471,6 +11766,41 @@ let dump_linear = ref false             (* -dlinear *)
 
 <<macro Next for THREADED_CODE ifdef DEBUG>>=
 #    define Next goto next_instr
+@
+
+
+<<function disasm_instr>>=
+void disasm_instr(pc)
+     code_t pc;
+{
+  int instr = *pc;
+  printf("%6ld  %s", (long) (pc - start_code),
+         instr < 0 || instr > STOP ? "???" : names_of_instructions[instr]);
+  pc++;
+  switch(instr) {
+      /* Instructions with one integer operand */
+    case PUSHACC: case ACC: case POP: case ASSIGN:
+    case PUSHENVACC: case ENVACC: case PUSH_RETADDR: case APPLY:
+    case APPTERM1: case APPTERM2: case APPTERM3: case RETURN:
+    case GRAB: case PUSHGETGLOBAL: case GETGLOBAL: case SETGLOBAL:
+    case PUSHATOM: case ATOM: case MAKEBLOCK1: case MAKEBLOCK2:
+    case MAKEBLOCK3: case GETFIELD: case SETFIELD: case DUMMY:
+    case BRANCH: case BRANCHIF: case BRANCHIFNOT: case PUSHTRAP:
+    case CONSTINT: case PUSHCONSTINT: case OFFSETINT: case OFFSETREF:
+      printf(" %d\n", pc[0]); break;
+      /* Instructions with two operands */
+    case APPTERM: case CLOSURE: case CLOSUREREC: case PUSHGETGLOBALFIELD:
+    case GETGLOBALFIELD: case MAKEBLOCK:
+      printf(" %d, %d\n", pc[0], pc[1]); break;
+      /* Instructions with a C primitive as operand */
+    case C_CALL1: case C_CALL2: case C_CALL3: case C_CALL4: case C_CALL5:
+      printf(" %s\n", names_of_cprim[pc[0]]); break;
+    case C_CALLN:
+      printf(" %d, %s\n", pc[0], names_of_cprim[pc[1]]); break;
+    default:
+      printf("\n");
+    }
+}
 @
 
 \chapter{Profiling}

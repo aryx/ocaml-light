@@ -211,14 +211,17 @@ static int parse_command_line(char **argv)
 
   for(i = 1; argv[i] != NULL && argv[i][0] == '-'; i++) {
     switch(argv[i][1]) {
-#ifdef DEBUG
-    case 't':
-      trace_flag = 1;
-      break;
-#endif
+    /*s: [[parse_command_line()]] cases */
     case 'v':
       verbose_init = 1;
       break;
+    /*x: [[parse_command_line()]] cases */
+    #ifdef DEBUG
+        case 't':
+          trace_flag = 1;
+          break;
+    #endif
+    /*e: [[parse_command_line()]] cases */
     default:
       fatal_error_arg("Unknown option %s.\n", argv[i]);
     }
@@ -280,6 +283,7 @@ void caml_main(char **argv)
   /* Machine-dependent initialization of the floating-point hardware
      so that it behaves as much as possible as specified in IEEE */
   init_ieee_floats();
+
   /* Set up a catch-all exception handler */
   if (sigsetjmp(raise_buf.buf, 1) == 0) {
     external_raise = &raise_buf;
@@ -291,9 +295,11 @@ void caml_main(char **argv)
     pos = 0;
     fd = attempt_open(&argv[0], &trail, 0);
     if (fd < 0) {
+
       pos = parse_command_line(argv);
       if (argv[pos] == 0)
         fatal_error("No bytecode file specified.\n");
+
       fd = attempt_open(&argv[pos], &trail, 1);
       switch(fd) {
       case FILE_NOT_FOUND:
@@ -312,28 +318,37 @@ void caml_main(char **argv)
              percent_free_init, max_percent_free_init, verbose_init);
     init_stack (max_stack_init);
     init_atoms();
+
     /* Initialize the interpreter */
     interprete(NULL, 0);
+
     /* Initialize the debugger, if needed */
     debugger_init();
+
     /* Load the code */
     lseek(fd, - (long) (TRAILER_SIZE + trail.code_size + trail.prim_size
                         + trail.data_size + trail.symbol_size
                         + trail.debug_size), SEEK_END);
     load_code(fd, trail.code_size);
+
     /* Check the primitives */
     check_primitives(fd, trail.prim_size);
+
     /* Load the globals */
     chan = open_descriptor(fd);
     global_data = input_val(chan);
     close_channel(chan);
     /* Ensure that the globals are in the major heap. */
     oldify(global_data, &global_data);
+
     /* Record the command-line arguments */
     sys_init(argv + pos);
+
     /* Execute the program */
     debugger(PROGRAM_START);
+
     interprete(start_code, trail.code_size);
+
   } else {
     extern_sp = &exn_bucket; /* The debugger needs the exception value. */
     debugger(UNCAUGHT_EXC);
@@ -350,32 +365,42 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
   struct longjmp_buffer raise_buf;
 
   init_ieee_floats();
-#ifdef DEBUG
-  verbose_init = 1;
-#endif
+  /*s: [[caml_startup_code()]] ifdef DEBUG, set verbose_init */
+  #ifdef DEBUG
+    verbose_init = 1;
+  #endif
+  /*e: [[caml_startup_code()]] ifdef DEBUG, set verbose_init */
+
   parse_camlrunparam();
+
   /* Set up a catch-all exception handler */
   if (sigsetjmp(raise_buf.buf, 1) == 0) {
     external_raise = &raise_buf;
+
     /* Initialize the abstract machine */
     init_gc (minor_heap_init, heap_size_init, heap_chunk_init,
              percent_free_init, max_percent_free_init, verbose_init);
     init_stack (max_stack_init);
     init_atoms();
+
     /* Initialize the interpreter */
     interprete(NULL, 0);
+
     /* Load the code */
     start_code = code;
 #ifdef THREADED_CODE
     thread_code(start_code, code_size);
 #endif
+
     /* Load the globals */
     global_data = input_val_from_string((value)data, 0);
     /* Ensure that the globals are in the major heap. */
     oldify(global_data, &global_data);
+
     /* Run the code */
     sys_init(argv);
     interprete(start_code, code_size);
+
   } else {
     fatal_uncaught_exception(exn_bucket);
   }
