@@ -17625,6 +17625,10 @@ let object_file_name name =
     fatal_error "Asmlink.object_file_name: bad ext"
 @
 
+<<constant Clflags.keep_startup_file>>=
+let keep_startup_file = ref false       (* -dstartup *)
+@
+
 <<function Asmlink.link>>=
 (* Main entry point *)
 
@@ -23231,11 +23235,6 @@ void debugger(enum event_kind event)
 
 \subsection*{[[byterun/instrtrace.h]]}
 
-<<constant _instrtrace_>>=
-#define _instrtrace_
-@
-
-
 %-------------------------------------------------------------
 
 <<byterun/instrtrace.h>>=
@@ -23244,8 +23243,7 @@ void debugger(enum event_kind event)
 /* Trace the instructions executed */
 
 #ifndef _instrtrace_
-<<constant _instrtrace_>>
-
+#define _instrtrace_
 
 #include "mlvalues.h"
 #include "misc.h"
@@ -23253,8 +23251,8 @@ void debugger(enum event_kind event)
 extern int trace_flag;
 extern long icount;
 void stop_here (void);
-void disasm_instr (code_t pc);
 
+void disasm_instr (code_t pc);
 
 #endif
 @
@@ -23262,17 +23260,6 @@ void disasm_instr (code_t pc);
 
 \subsection*{[[byterun/instrtrace.c]]}
 
-<<global icount>>=
-long icount = 0;
-@
-
-<<function stop_here>>=
-void stop_here () {}
-@
-
-<<global trace_flag>>=
-int trace_flag = 0;
-@
 
 
 %-------------------------------------------------------------
@@ -23285,6 +23272,7 @@ int trace_flag = 0;
 #ifdef DEBUG
 
 #include <stdio.h>
+
 #include "instruct.h"
 #include "misc.h"
 #include "mlvalues.h"
@@ -23299,37 +23287,7 @@ extern char * names_of_cprim[];
 
 <<global trace_flag>>
 
-void disasm_instr(pc)
-     code_t pc;
-{
-  int instr = *pc;
-  printf("%6ld  %s", (long) (pc - start_code),
-         instr < 0 || instr > STOP ? "???" : names_of_instructions[instr]);
-  pc++;
-  switch(instr) {
-      /* Instructions with one integer operand */
-    case PUSHACC: case ACC: case POP: case ASSIGN:
-    case PUSHENVACC: case ENVACC: case PUSH_RETADDR: case APPLY:
-    case APPTERM1: case APPTERM2: case APPTERM3: case RETURN:
-    case GRAB: case PUSHGETGLOBAL: case GETGLOBAL: case SETGLOBAL:
-    case PUSHATOM: case ATOM: case MAKEBLOCK1: case MAKEBLOCK2:
-    case MAKEBLOCK3: case GETFIELD: case SETFIELD: case DUMMY:
-    case BRANCH: case BRANCHIF: case BRANCHIFNOT: case PUSHTRAP:
-    case CONSTINT: case PUSHCONSTINT: case OFFSETINT: case OFFSETREF:
-      printf(" %d\n", pc[0]); break;
-      /* Instructions with two operands */
-    case APPTERM: case CLOSURE: case CLOSUREREC: case PUSHGETGLOBALFIELD:
-    case GETGLOBALFIELD: case MAKEBLOCK:
-      printf(" %d, %d\n", pc[0], pc[1]); break;
-      /* Instructions with a C primitive as operand */
-    case C_CALL1: case C_CALL2: case C_CALL3: case C_CALL4: case C_CALL5:
-      printf(" %s\n", names_of_cprim[pc[0]]); break;
-    case C_CALLN:
-      printf(" %d, %s\n", pc[0], names_of_cprim[pc[1]]); break;
-    default:
-      printf("\n");
-    }
-}
+<<function disasm_instr>>
 
 #endif
 @
@@ -29394,11 +29352,6 @@ static void check_primitives(int fd, int prim_size)
 }
 @
 
-<<global verbose_init>>=
-/* Configuration parameters and flags */
-
-static unsigned long verbose_init = 0;
-@
 
 <<global percent_free_init>>=
 static unsigned long percent_free_init = Percent_free_def;
@@ -29424,30 +29377,6 @@ static unsigned long heap_size_init = Init_heap_def;
 static unsigned long max_stack_init = Max_stack_def;
 @
 
-<<function parse_command_line>>=
-/* Parse options on the command line */
-
-static int parse_command_line(char **argv)
-{
-  int i;
-
-  for(i = 1; argv[i] != NULL && argv[i][0] == '-'; i++) {
-    switch(argv[i][1]) {
-#ifdef DEBUG
-    case 't':
-      trace_flag = 1;
-      break;
-#endif
-    case 'v':
-      verbose_init = 1;
-      break;
-    default:
-      fatal_error_arg("Unknown option %s.\n", argv[i]);
-    }
-  }
-  return i;
-}
-@
 
 <<function scanmult>>=
 /* The option letter for each runtime option is the first letter of the
@@ -29485,81 +29414,6 @@ static void parse_camlrunparam(void)
 }
 @
 
-<<function caml_main>>=
-/* Main entry point when loading code from a file */
-
-void caml_main(char **argv)
-{
-  int fd;
-  struct exec_trailer trail;
-  int pos;
-  struct longjmp_buffer raise_buf;
-  struct channel * chan;
-
-  /* Machine-dependent initialization of the floating-point hardware
-     so that it behaves as much as possible as specified in IEEE */
-  init_ieee_floats();
-  /* Set up a catch-all exception handler */
-  if (sigsetjmp(raise_buf.buf, 1) == 0) {
-    external_raise = &raise_buf;
-    /* Determine options and position of bytecode file */
-#ifdef DEBUG
-    verbose_init = 1;
-#endif
-    parse_camlrunparam();
-    pos = 0;
-    fd = attempt_open(&argv[0], &trail, 0);
-    if (fd < 0) {
-      pos = parse_command_line(argv);
-      if (argv[pos] == 0)
-        fatal_error("No bytecode file specified.\n");
-      fd = attempt_open(&argv[pos], &trail, 1);
-      switch(fd) {
-      case FILE_NOT_FOUND:
-        fatal_error_arg("Fatal error: cannot find file %s\n", argv[pos]);
-        break;
-      case TRUNCATED_FILE:
-      case BAD_MAGIC_NUM:
-        fatal_error_arg(
-          "Fatal error: the file %s is not a bytecode executable file\n",
-          argv[pos]);
-        break;
-      }
-    }
-    /* Initialize the abstract machine */
-    init_gc (minor_heap_init, heap_size_init, heap_chunk_init,
-             percent_free_init, max_percent_free_init, verbose_init);
-    init_stack (max_stack_init);
-    init_atoms();
-    /* Initialize the interpreter */
-    interprete(NULL, 0);
-    /* Initialize the debugger, if needed */
-    debugger_init();
-    /* Load the code */
-    lseek(fd, - (long) (TRAILER_SIZE + trail.code_size + trail.prim_size
-                        + trail.data_size + trail.symbol_size
-                        + trail.debug_size), SEEK_END);
-    load_code(fd, trail.code_size);
-    /* Check the primitives */
-    check_primitives(fd, trail.prim_size);
-    /* Load the globals */
-    chan = open_descriptor(fd);
-    global_data = input_val(chan);
-    close_channel(chan);
-    /* Ensure that the globals are in the major heap. */
-    oldify(global_data, &global_data);
-    /* Record the command-line arguments */
-    sys_init(argv + pos);
-    /* Execute the program */
-    debugger(PROGRAM_START);
-    interprete(start_code, trail.code_size);
-  } else {
-    extern_sp = &exn_bucket; /* The debugger needs the exception value. */
-    debugger(UNCAUGHT_EXC);
-    fatal_uncaught_exception(exn_bucket);
-  }
-}
-@
 
 <<function caml_startup_code>>=
 /* Main entry point when code is linked in as initialized data */
@@ -29569,32 +29423,38 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
   struct longjmp_buffer raise_buf;
 
   init_ieee_floats();
-#ifdef DEBUG
-  verbose_init = 1;
-#endif
+  <<[[caml_startup_code()]] ifdef DEBUG, set verbose_init>>
+
   parse_camlrunparam();
+
   /* Set up a catch-all exception handler */
   if (sigsetjmp(raise_buf.buf, 1) == 0) {
     external_raise = &raise_buf;
+
     /* Initialize the abstract machine */
     init_gc (minor_heap_init, heap_size_init, heap_chunk_init,
              percent_free_init, max_percent_free_init, verbose_init);
     init_stack (max_stack_init);
     init_atoms();
+
     /* Initialize the interpreter */
     interprete(NULL, 0);
+
     /* Load the code */
     start_code = code;
 #ifdef THREADED_CODE
     thread_code(start_code, code_size);
 #endif
+
     /* Load the globals */
     global_data = input_val_from_string((value)data, 0);
     /* Ensure that the globals are in the major heap. */
     oldify(global_data, &global_data);
+
     /* Run the code */
     sys_init(argv);
     interprete(start_code, code_size);
+
   } else {
     fatal_uncaught_exception(exn_bucket);
   }
@@ -29709,15 +29569,6 @@ extern void init_ieee_floats (void);
 
 
 \subsection*{[[byterun/main.c]]}
-
-<<function main>>=
-int main(int argc, char **argv)
-{
-  caml_main(argv);
-  sys_exit(Val_int(0));
-  return 0; /* not reached */
-}
-@
 
 
 %-------------------------------------------------------------

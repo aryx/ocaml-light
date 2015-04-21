@@ -357,7 +357,8 @@ beforedepend:: parsing/linenum.ml
 # The numeric opcodes
 
 bytecomp/opcodes.ml: byterun/instruct.h
-	sed -n -e '/^enum/p' -e 's/,//g' -e '/^  /p' byterun/instruct.h | \
+	cat byterun/instruct.h | grep -v '*[sex]:*' | \
+	sed -n -e '/^enum/p' -e 's/,//g' -e '/^  /p' | \
         awk -f tools/misc/make-opcodes > bytecomp/opcodes.ml
 
 partialclean::

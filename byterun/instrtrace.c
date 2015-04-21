@@ -17,6 +17,7 @@
 #ifdef DEBUG
 
 #include <stdio.h>
+
 #include "instruct.h"
 #include "misc.h"
 #include "mlvalues.h"
@@ -37,6 +38,7 @@ void stop_here () {}
 int trace_flag = 0;
 /*e: global trace_flag */
 
+/*s: function disasm_instr */
 void disasm_instr(pc)
      code_t pc;
 {
@@ -68,6 +70,7 @@ void disasm_instr(pc)
       printf("\n");
     }
 }
+/*e: function disasm_instr */
 
 #endif
 /*e: byterun/instrtrace.c */

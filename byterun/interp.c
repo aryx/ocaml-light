@@ -254,6 +254,25 @@ value interprete(code_t prog, asize_t prog_size)
     /*s: [[interpreter()]] basic stack operations cases */
     /* Basic stack operations */
 
+        /*s: [[interpreter()]] basic stack operations before ACC case */
+            Instruct(PUSHACC):
+              *--sp = accu;
+              /* Fallthrough */
+        /*e: [[interpreter()]] basic stack operations before ACC case */
+        Instruct(ACC):
+          accu = sp[*pc++];
+          Next;
+        Instruct(PUSH): Instruct(PUSHACC0):
+          *--sp = accu; 
+          Next;
+        Instruct(POP):
+          sp += *pc++;
+          Next;
+        Instruct(ASSIGN):
+          sp[*pc++] = accu;
+          accu = Val_unit;
+          Next;
+    /*x: [[interpreter()]] basic stack operations cases */
         Instruct(ACC0):
           accu = sp[0]; Next;
         Instruct(ACC1):
@@ -270,9 +289,7 @@ value interprete(code_t prog, asize_t prog_size)
           accu = sp[6]; Next;
         Instruct(ACC7):
           accu = sp[7]; Next;
-
-        Instruct(PUSH): Instruct(PUSHACC0):
-          *--sp = accu; Next;
+    /*x: [[interpreter()]] basic stack operations cases */
         Instruct(PUSHACC1):
           *--sp = accu; accu = sp[1]; Next;
         Instruct(PUSHACC2):
@@ -287,25 +304,19 @@ value interprete(code_t prog, asize_t prog_size)
           *--sp = accu; accu = sp[6]; Next;
         Instruct(PUSHACC7):
           *--sp = accu; accu = sp[7]; Next;
-
-        Instruct(PUSHACC):
-          *--sp = accu;
-          /* Fallthrough */
-        Instruct(ACC):
-          accu = sp[*pc++];
-          Next;
-
-        Instruct(POP):
-          sp += *pc++;
-          Next;
-        Instruct(ASSIGN):
-          sp[*pc++] = accu;
-          accu = Val_unit;
-          Next;
     /*e: [[interpreter()]] basic stack operations cases */
     /*s: [[interpreter()]] env access cases */
     /* Access in heap-allocated environment */
 
+        /*s: [[interpreter()]] env access before ENVACC case */
+        Instruct(PUSHENVACC):
+          *--sp = accu;
+          /* Fallthrough */
+        /*e: [[interpreter()]] env access before ENVACC case */
+        Instruct(ENVACC):
+          accu = Field(env, *pc++);
+          Next;
+    /*x: [[interpreter()]] env access cases */
         Instruct(ENVACC1):
           accu = Field(env, 1); Next;
         Instruct(ENVACC2):
@@ -323,13 +334,6 @@ value interprete(code_t prog, asize_t prog_size)
           *--sp = accu; accu = Field(env, 3); Next;
         Instruct(PUSHENVACC4):
           *--sp = accu; accu = Field(env, 4); Next;
-
-        Instruct(PUSHENVACC):
-          *--sp = accu;
-          /* Fallthrough */
-        Instruct(ENVACC):
-          accu = Field(env, *pc++);
-          Next;
     /*e: [[interpreter()]] env access cases */
     /*s: [[interpreter()]] function application cases */
     /* Function application */
@@ -360,6 +364,7 @@ value interprete(code_t prog, asize_t prog_size)
           extra_args = 0;
           goto check_stacks;
         }
+    /*x: [[interpreter()]] function application cases */
         Instruct(APPLY2): {
           value arg1 = sp[0];
           value arg2 = sp[1];
@@ -390,7 +395,7 @@ value interprete(code_t prog, asize_t prog_size)
           extra_args = 2;
           goto check_stacks;
         }
-
+    /*x: [[interpreter()]] function application cases */
         Instruct(APPTERM): {
           int nargs = *pc++;
           int slotsize = *pc;
@@ -406,6 +411,7 @@ value interprete(code_t prog, asize_t prog_size)
           extra_args += nargs - 1;
           goto check_stacks;
         }
+    /*x: [[interpreter()]] function application cases */
         Instruct(APPTERM1): {
           value arg1 = sp[0];
           sp = sp + *pc - 1;
@@ -438,7 +444,7 @@ value interprete(code_t prog, asize_t prog_size)
           extra_args += 2;
           goto check_stacks;
         }
-
+    /*x: [[interpreter()]] function application cases */
         Instruct(RETURN): {
           sp += *pc++;
           if (extra_args > 0) {
@@ -454,49 +460,6 @@ value interprete(code_t prog, asize_t prog_size)
           Next;
         }
     /*e: [[interpreter()]] function application cases */
-    /*s: [[interpreter()]] check cases */
-    /* Stack checks */
-
-        check_stacks:
-          if (sp < stack_threshold) {
-            extern_sp = sp;
-            realloc_stack();
-            sp = extern_sp;
-          }
-          /* Fall through CHECK_SIGNALS */
-
-    /* Signal handling */
-
-        Instruct(CHECK_SIGNALS):    /* accu not preserved */
-          if (something_to_do) goto process_signal;
-          Next;
-
-        process_signal:
-          something_to_do = 0;
-          if (force_major_slice){
-            Setup_for_gc;
-            minor_collection ();
-            Restore_after_gc;
-          }
-          /* If a signal arrives between the following two instructions,
-             it will be lost. */
-          { int signal_number = pending_signal;
-            pending_signal = 0;
-            if (signal_number) {
-              /* Push a return frame to the current code location */
-              sp -= 4;
-              sp[0] = Val_int(signal_number);
-              sp[1] = (value) pc;
-              sp[2] = env;
-              sp[3] = Val_long(extra_args);
-              /* Branch to the signal handler */
-              env = Field(signal_handlers, signal_number);
-              pc = Code_val(env);
-              extra_args = 0;
-            }
-          }
-          Next;
-    /*e: [[interpreter()]] check cases */
     /*s: [[interpreter()]] misc cases */
         Instruct(RESTART): {
           int num_args = Wosize_val(env) - 2;
@@ -766,6 +729,51 @@ value interprete(code_t prog, asize_t prog_size)
           sp += 4;
           Next;
     /*e: [[interpreter()]] exception cases */
+    /*s: [[interpreter()]] signal cases */
+    /*s: [[interpreter()]] before CHECK_SIGNALS case */
+    /* Stack checks */
+
+        check_stacks:
+          if (sp < stack_threshold) {
+            extern_sp = sp;
+            realloc_stack();
+            sp = extern_sp;
+          }
+          /* Fall through CHECK_SIGNALS */
+    /*e: [[interpreter()]] before CHECK_SIGNALS case */
+
+    /* Signal handling */
+
+        Instruct(CHECK_SIGNALS):    /* accu not preserved */
+          if (something_to_do) goto process_signal;
+          Next;
+
+        process_signal:
+          something_to_do = 0;
+          if (force_major_slice){
+            Setup_for_gc;
+            minor_collection ();
+            Restore_after_gc;
+          }
+          /* If a signal arrives between the following two instructions,
+             it will be lost. */
+          { int signal_number = pending_signal;
+            pending_signal = 0;
+            if (signal_number) {
+              /* Push a return frame to the current code location */
+              sp -= 4;
+              sp[0] = Val_int(signal_number);
+              sp[1] = (value) pc;
+              sp[2] = env;
+              sp[3] = Val_long(extra_args);
+              /* Branch to the signal handler */
+              env = Field(signal_handlers, signal_number);
+              pc = Code_val(env);
+              extra_args = 0;
+            }
+          }
+          Next;
+    /*e: [[interpreter()]] signal cases */
     /*s: [[interpreter()]] foreign c calls cases */
     /* Calling C functions */
 
@@ -866,12 +874,14 @@ value interprete(code_t prog, asize_t prog_size)
           accu = Val_long(Long_val(accu) % divisor);
           Next;
         }
+    /*x: [[interpreter()]] arithmetics cases */
         Instruct(ANDINT):
           accu = (value)((long) accu & (long) *sp++); Next;
         Instruct(ORINT):
           accu = (value)((long) accu | (long) *sp++); Next;
         Instruct(XORINT):
           accu = (value)(((long) accu ^ (long) *sp++) | 1); Next;
+    /*x: [[interpreter()]] arithmetics cases */
         Instruct(LSLINT):
           accu = (value)((((long) accu - 1) << Long_val(*sp++)) + 1); Next;
         Instruct(LSRINT):
@@ -879,7 +889,7 @@ value interprete(code_t prog, asize_t prog_size)
           Next;
         Instruct(ASRINT):
           accu = (value)((((long) accu - 1) >> Long_val(*sp++)) | 1); Next;
-
+    /*x: [[interpreter()]] arithmetics cases */
     #define Integer_comparison(opname,tst) \
         Instruct(opname): \
           accu = Val_int((long) accu tst (long) *sp++); Next;
@@ -890,7 +900,7 @@ value interprete(code_t prog, asize_t prog_size)
         Integer_comparison(LEINT, <=)
         Integer_comparison(GTINT, >)
         Integer_comparison(GEINT, >=)
-
+    /*x: [[interpreter()]] arithmetics cases */
         Instruct(OFFSETINT):
           accu += *pc << 1;
           pc++;
