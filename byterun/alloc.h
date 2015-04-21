@@ -13,9 +13,7 @@
 /*e: copyright header C xavier and damien */
 
 #ifndef _alloc_
-/*s: constant _alloc_ */
 #define _alloc_
-/*e: constant _alloc_ */
 
 
 #include "misc.h"

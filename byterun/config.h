@@ -13,9 +13,7 @@
 /*e: copyright header C xavier and damien */
 
 #ifndef _config_
-/*s: constant _config_ */
 #define _config_
-/*e: constant _config_ */
 
 
 #include "../config/m.h"
@@ -91,8 +89,8 @@ typedef char schar;
 /*e: constant Max_stack_def */
 
 
-/* Maximum size of a block allocated in the young generation (words). */
 /*s: constant Max_young_wosize */
+/* Maximum size of a block allocated in the young generation (words). */
 /* Must be > 4 */
 #define Max_young_wosize 256
 /*e: constant Max_young_wosize */

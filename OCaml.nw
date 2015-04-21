@@ -435,6 +435,7 @@ let nopervasives = ref false            (* -nopervasives *)
 %bytecomp/lambda.mli
 %bytecomp/instruct.mli
 %byterun/instruct.h
+%byterun/mlvalues.h
 
 \section{Abstract syntax tree}
 
@@ -798,6 +799,9 @@ type type_expr =
 % - no more Any
 % - no more type aliases (but I removed them)
 % - no manifest (type abbreviations) (but I aspectized it)
+% diff with thih
+% - arrow is seens as a form of type constructor but with a higher kind
+%   not sure it simplifies things
 
 <<type Types.type_variable>>=
 and type_variable = 
@@ -833,13 +837,259 @@ and type_variable =
 
 % https://github.com/ocamllabs/ocaml-internals/wiki/Bytecode-compiler-pipeline
 
+<<enum instructions>>=
+/* The instruction set. */
+
+enum instructions {
+  <<basic stack operations opcodes>>
+  <<env access opcodes>>
+  <<function application opcodes>>
+  RESTART, GRAB,
+  CLOSURE, CLOSUREREC,
+  GETGLOBAL, PUSHGETGLOBAL, GETGLOBALFIELD, PUSHGETGLOBALFIELD, SETGLOBAL,
+  ATOM0, ATOM, PUSHATOM0, PUSHATOM,
+  MAKEBLOCK, MAKEBLOCK1, MAKEBLOCK2, MAKEBLOCK3,
+  GETFIELD0, GETFIELD1, GETFIELD2, GETFIELD3, GETFIELD,
+  SETFIELD0, SETFIELD1, SETFIELD2, SETFIELD3, SETFIELD,
+  DUMMY, UPDATE,
+  VECTLENGTH, GETVECTITEM, SETVECTITEM,
+  GETSTRINGCHAR, SETSTRINGCHAR, 
+  BRANCH, BRANCHIF, BRANCHIFNOT, SWITCH, BOOLNOT,
+  PUSHTRAP, POPTRAP, RAISE, CHECK_SIGNALS,
+  C_CALL1, C_CALL2, C_CALL3, C_CALL4, C_CALL5, C_CALLN,
+  CONST0, CONST1, CONST2, CONST3, CONSTINT,
+  PUSHCONST0, PUSHCONST1, PUSHCONST2, PUSHCONST3, PUSHCONSTINT,
+  NEGINT, ADDINT, SUBINT, MULINT, DIVINT, MODINT,
+  ANDINT, ORINT, XORINT, LSLINT, LSRINT, ASRINT,
+  EQ, NEQ, LTINT, LEINT, GTINT, GEINT,
+  OFFSETINT, OFFSETREF,
+  GETMETHOD,
+  STOP, EVENT, BREAK
+};
+@
+
 \section{Runtime values}
 
 %https://rwmj.wordpress.com/2009/08/04/ocaml-internals/
+%see also oreilly book, very good chapter on values
 
-% see also oreilly book, very good chapter on values
+%blocks, will help understand elts from Lambda and Instruct
 
-% blocks, will help understand elts from Lambda and Instruct
+% big abuse of int ... variant via special tag bit
+% but really should be Long of int | Block of ...?
+% todo: look at zamcov?
+
+<<mlvalues.h top comment>>=
+/* Definitions
+
+  word: Four bytes on 32 and 16 bit architectures,
+        eight bytes on 64 bit architectures.
+  long: A C long integer.
+  val: The ML representation of something.  A long or a block or a pointer
+       outside the heap.  If it is a block, it is the (encoded) address
+       of an object.  If it is a long, it is encoded as well.
+  object: Something allocated.  It always has a header and some
+          fields or some number of bytes (a multiple of the word size).
+  field: A word-sized val which is part of an object.
+  bp: Pointer to the first byte of an object.  (a char *)
+  op: Pointer to the first field of an object.  (a value *)
+  hp: Pointer to the header of an object.  (a char *)
+  int32: Four bytes on all architectures.
+
+  Remark: An object size is always a multiple of the word size, and at least
+          one word plus the header.
+
+  bosize: Size (in bytes) of the "bytes" part.
+  wosize: Size (in words) of the "fields" part.
+  bhsize: Size (in bytes) of the object with its header.
+  whsize: Size (in words) of the object with its header.
+
+  hd: A header.
+  tag: The value of the tag field of the header.
+  color: The value of the color field of the header.
+         This is for use only by the GC.
+*/
+@
+
+<<typedef value>>=
+typedef long value;
+@
+
+
+<<function Is_long>>=
+/* Longs vs blocks. */
+#define Is_long(x)   (((x) & 1) != 0)
+@
+
+<<function Is_block>>=
+#define Is_block(x)  (((x) & 1) == 0)
+@
+
+% so first bit set for ints, so to get value you need to shift,
+% to add you need to do stuff, etc. It complicates things.
+% Why not opposite? why not use bit 31 as the marker instead of bit0?
+% look at zinc report?
+
+% what about is_pointer_outside_heap?
+
+\subsection{Long}
+
+%/* Conversion macro names are always of the form  "to_from". */
+<<function Val_long>>=
+/* Example: Val_long as in "Val from long" or "Val of long". */
+#define Val_long(x)     (((long)(x) << 1) + 1)
+@
+
+<<function Long_val>>=
+#define Long_val(x)     ((x) >> 1)
+@
+% Long of val
+
+<<constant Val_int>>=
+#define Val_int Val_long
+@
+<<function Int_val>>=
+#define Int_val(x) ((int) Long_val(x))
+@
+
+
+
+<<constant Max_long>>=
+#define Max_long ((1L << (8 * sizeof(value) - 2)) - 1)
+@
+
+<<constant Min_long>>=
+#define Min_long (-(1L << (8 * sizeof(value) - 2)))
+@
+
+\subsection{Blocks}
+
+<<function Tag_hd>>=
+/* Structure of the header:
+
+For 16-bit and 32-bit architectures:
+     +--------+-------+-----+
+     | wosize | color | tag |
+     +--------+-------+-----+
+bits  31    10 9     8 7   0
+
+For 64-bit architectures:
+
+     +--------+-------+-----+
+     | wosize | color | tag |
+     +--------+-------+-----+
+bits  63    10 9     8 7   0
+
+*/
+
+#define Tag_hd(hd) ((tag_t) ((hd) & 0xFF))
+@
+
+
+\subsection{Tags}
+
+%todo: use enum?
+
+% tagspace: 0 -> 251 -> 255.
+%/* 1- If tag < No_scan_tag : a tuple of fields.  */
+% and so the Field macri will be used
+%/* 2- If tag > No_scan_tag : a sequence of bytes. */
+% and so the Bp_val macro will be used. No scan because
+% the gc should not traverse this data
+
+<<constant Object_tag>>=
+/* Another special case: objects */
+#define Object_tag 248
+@
+
+<<constant Infix_tag>>=
+/* Infix_tag must be 1 modulo 4 and infix headers can only occur in objects
+   with tag Closure_tag (see compact.c). */
+
+#define Infix_tag 249
+@
+<<constant Closure_tag>>=
+/* Special case of tuples of fields: closures */
+
+#define Closure_tag 250
+@
+
+
+
+<<constant No_scan_tag>>=
+/* The lowest tag for blocks containing no value. */
+#define No_scan_tag 251
+@
+<<constant Abstract_tag>>=
+/* Abstract things.  Their contents is not traced by the GC; therefore they
+   must not contain any [value].
+*/
+#define Abstract_tag 251
+@
+
+<<constant String_tag>>=
+/* Strings. */
+#define String_tag 252
+@
+<<constant Double_tag>>=
+/* Floating-point numbers. */
+#define Double_tag 253
+@
+<<constant Double_array_tag>>=
+/* Arrays of floating-point numbers. */
+#define Double_array_tag 254
+@
+
+<<constant Final_tag>>=
+/* Finalized things.  Just like abstract things, but the GC will call the
+   [Final_fun] before deallocation.
+*/
+#define Final_tag 255
+@
+
+\subsection{Atoms}
+
+<<function Atom>>=
+#define Atom(tag) (Val_hp (&(atom_table [tag])))
+@
+
+<<function Is_atom>>=
+#define Is_atom(v) ((v) >= Atom(0) && (v) <= Atom(255))
+@
+
+
+
+
+\subsection{More values}
+
+\subsubsection{Booleans}
+
+<<function Val_bool>>=
+/* Booleans are integers 0 or 1 */
+
+#define Val_bool(x) Val_int((x) != 0)
+@
+
+<<function Bool_val>>=
+#define Bool_val(x) Int_val(x)
+@
+
+<<constant Val_false>>=
+#define Val_false Val_int(0)
+@
+
+<<constant Val_true>>=
+#define Val_true Val_int(1)
+@
+
+\subsubsection{Unit}
+
+<<constant Val_unit>>=
+/* The unit value is 0 */
+
+#define Val_unit Val_int(0)
+@
+
 
 
 %\section{Native CMM, lambda, etc?}
@@ -6850,14 +7100,18 @@ val check_unused:
 
 \section{Dead code}
 
-% unused variable
-% dead function (when not exported in .cmi)
-% etc
+% surprisingly effective at finding bugs! if it's dead, it's
+% probably not what you meant!
 
-%TODO!
+\subsection{Dead variables}
 
+\subsection{Dead functions}
 
+% (easier to detect when not exported in .cmi)
 
+\subsection{Dead statements}
+
+% other? dead???
 
 \chapter{Compiling}
 % Generating
@@ -7119,16 +7373,15 @@ type primitive =
 
   (* Float operations *)
   <<[[Lambda.primitive]] float operations cases>>
-
   (* String operations *)
-  | Pstringlength | Pstringrefu | Pstringsetu | Pstringrefs | Pstringsets
-
+  <<[[Lambda.primitive]] string operations cases>>
   (* Array operations *)
   <<[[Lambda.primitive]] array operations cases>>
 
   (* Bitvect operations *)
   | Pbittest
 @
+
 
 <<type Lambda.comparison>>=
 and comparison =
@@ -7647,11 +7900,13 @@ type label = int                        (* Symbolic code labels *)
 <<type Instruct.instruction>>=
 type instruction =
     Klabel of label
+
   | Kacc of int
   | Kenvacc of int
   | Kpush
   | Kpop of int
   | Kassign of int
+
   | Kpush_retaddr of label
   | Kapply of int                       (* number of arguments *)
   | Kappterm of int * int               (* number of arguments, slot size *)
@@ -7660,19 +7915,25 @@ type instruction =
   | Kgrab of int                        (* number of arguments *)
   | Kclosure of label * int
   | Kclosurerec of label * int
+
   | Kgetglobal of Ident.t
   | Ksetglobal of Ident.t
+
   | Kconst of structured_constant
   | Kmakeblock of int * int             (* size, tag *)
   | Kgetfield of int
   | Ksetfield of int
+
   | Kdummy of int                       (* block size *)
   | Kupdate of int                      (* block size *)
+
   | Kvectlength
   | Kgetvectitem
   | Ksetvectitem
+
   | Kgetstringchar
   | Ksetstringchar
+
   | Kbranch of label
   | Kbranchif of label
   | Kbranchifnot of label
@@ -7680,16 +7941,21 @@ type instruction =
   | Kstrictbranchifnot of label
   | Kswitch of label array * label array
   | Kboolnot
+
   | Kpushtrap of label
   | Kpoptrap
   | Kraise
   | Kcheck_signals
+
   | Kccall of string * int
+
   | Knegint | Kaddint | Ksubint | Kmulint | Kdivint | Kmodint
   | Kandint | Korint | Kxorint | Klslint | Klsrint | Kasrint
   | Kintcomp of comparison
+
   | Koffsetint of int
   | Koffsetref of int
+
   | Kevent of debug_event
   | Kstop
 @
@@ -7709,7 +7975,8 @@ val immed_max: int
 val compile_implementation: string -> lambda -> instruction list
 @
 
-\subsection{Binary bytecode format, [[.cmo]]}
+\subsection{Bytecode object format, [[.cmo]]}
+% there is also Bytecode binary format which is very different
 
 %(* Format of a .cmo file:
 %     magic number (Config.cmo_magic_number)
@@ -7873,6 +8140,12 @@ let include_dirs = ref ([] : string list)(* -I *)
 
 % reput section on linking in the main() chapter
 % and the call to bytelink.link()
+
+\section{Bytecode executable format [[.byte]]}
+% the trailer, see below
+
+
+% opcode.opXxx generated automatically from instruct.h?
 
 \section{Basic linking}
 
@@ -8277,8 +8550,1001 @@ let output_c_object = ref false         (* -output-obj *)
       "Output a C object file instead of an executable";
 @
 
+
+
 \chapter{Interpreting}
 % Running
+
+<<signature function interprete>>=
+value interprete (code_t prog, asize_t prog_size);
+@
+% have seen value in core DS, typedef long value;
+
+<<typedef opcode_t>>=
+typedef int32 opcode_t;
+@
+<<typedef code_t>>=
+typedef opcode_t * code_t;
+@
+% for start of array, or for idx in array
+
+% asize_t is in misc.h = int
+
+
+
+\section{[[interprete()]]}
+
+% // array<opcode>
+<<function interpreter>>=
+value interprete(code_t prog, asize_t prog_size)
+{
+  <<[[interprete()]] local variables>>
+  <<[[interprete()]] initialisations>>
+
+  <<[[interpreter()]] ifdef THREADED_CODE, loop start>>
+  #else
+  while(1) {
+    <<[[interpreter()]] ifdef DEBUG, loop start>>
+    curr_instr = *pc++;
+    dispatch_instr:
+    switch(curr_instr) {
+      #endif /* #else THREADED_CODE */
+  
+    <<[[interpreter()]] basic stack operations cases>>
+    <<[[interpreter()]] env access cases>>
+    <<[[interpreter()]] function application cases>>
+    <<[[interpreter()]] check cases>>
+    <<[[interpreter()]] misc cases>>
+    <<[[interpreter()]] global data access cases>>
+    <<[[interpreter()]] blocks allocation cases>>
+    <<[[interpreter()]] blocks access cases>>
+    <<[[interpreter()]] recursive definition cases>>
+    <<[[interpreter()]] branching cases>>
+    <<[[interpreter()]] exception cases>>
+    <<[[interpreter()]] foreign c calls cases>>
+    <<[[interpreter()]] arithmetics cases>>
+    <<[[interpreter()]] array cases>>
+    <<[[interpreter()]] string cases>>
+    <<[[interpreter()]] oo cases>>
+    <<[[interpreter()]] debugger cases>>
+
+    #ifndef THREADED_CODE
+    default:
+      fatal_error_arg("Fatal error: bad opcode (%lx)\n",
+                      (char *)(long)(*(pc-1)));
+    }
+  }
+  #endif /* ifndef THREADED_CODE */
+}
+@
+%note: maybe better to be more explicit in order of switch cases,
+% and anyway some cases are really long and you want to subsplit
+% them, so easier to name the intermediate chunks.
+%note: dispatch_instr seems used only for debugger
+
+%coupling? order of labels here must correspond to order
+% of instruct.h? is it an assumption for jumptbl.h to work?
+% I don't think so.
+
+% A lot more cases compared to Machine.nw or Assembler.nw opcodes.
+% similar: 
+%  - branching
+%  - arithmetics
+%  - foreign c calls =~ syscalls/interrupts opcodes
+%  - basic stack =~ memory opcodes
+% different: all the rest ... exn, env, function, debugger, etc.
+
+% there is threaded code and simpler code, with different
+% ifdefs, but for explanation purpose we focus on the simpler
+% non threaded code
+<<constant THREADED_CODE>>=
+#define THREADED_CODE
+@
+% if does not have gcc first-class labels, can't have THREADED_CODE
+% see advanced topics chapter
+
+
+
+<<interp.c toplevel comment>>=
+/* Registers for the abstract machine:
+        pc         the code pointer
+        sp         the stack pointer (grows downward)
+        accu       the accumulator
+        env        heap-allocated environment
+
+        trapsp     pointer to the current trap frame
+        extra_args number of extra arguments provided by the caller
+
+sp is a local copy of the global variable extern_sp. */
+@
+
+<<[[interprete()]] local variables>>=
+<<[[interpreter()]] ifdef PC_REG>>
+#else
+register code_t pc;
+register value * sp;
+register value accu;
+#endif
+<<[[interpreter()]] ifdef THREADED_CODE, jumptbl_base register declaration>>
+value env;
+long extra_args;
+
+#ifndef THREADED_CODE
+opcode_t curr_instr;
+#endif
+<<[[interprete()]] other local variables>>
+@
+% the main one!
+
+<<global trapsp>>=
+value * trapsp;
+@
+% why not a local like for the other?
+
+
+<<[[interprete()]] initialisations>>=
+<<[[interprete()]] ifdef THREADED_CODE initialisations>>
+<<[[interprete()]] initial_xxx initialisations>>
+<<[[interprete()]] exception initialisations>>
+
+sp = extern_sp;
+pc = prog;
+extra_args = 0;
+env = Atom(0);
+accu = Val_int(0);
+@
+
+<<global extern_sp>>=
+value * extern_sp;
+@
+
+
+% when no threaded code
+<<macro Instruct>>=
+#  define Instruct(name) case name
+@
+<<macro Next>>=
+#  define Next break
+@
+
+\subsection{Basic stack operations}
+
+<<basic stack operations opcodes>>=
+  ACC0, ACC1, ACC2, ACC3, ACC4, ACC5, ACC6, ACC7,
+  ACC, PUSH,
+  PUSHACC0, PUSHACC1, PUSHACC2, PUSHACC3,
+  PUSHACC4, PUSHACC5, PUSHACC6, PUSHACC7,
+  PUSHACC, 
+  POP, ASSIGN,
+@
+
+<<[[interpreter()]] basic stack operations cases>>=
+/* Basic stack operations */
+
+    Instruct(ACC0):
+      accu = sp[0]; Next;
+    Instruct(ACC1):
+      accu = sp[1]; Next;
+    Instruct(ACC2):
+      accu = sp[2]; Next;
+    Instruct(ACC3):
+      accu = sp[3]; Next;
+    Instruct(ACC4):
+      accu = sp[4]; Next;
+    Instruct(ACC5):
+      accu = sp[5]; Next;
+    Instruct(ACC6):
+      accu = sp[6]; Next;
+    Instruct(ACC7):
+      accu = sp[7]; Next;
+
+    Instruct(PUSH): Instruct(PUSHACC0):
+      *--sp = accu; Next;
+    Instruct(PUSHACC1):
+      *--sp = accu; accu = sp[1]; Next;
+    Instruct(PUSHACC2):
+      *--sp = accu; accu = sp[2]; Next;
+    Instruct(PUSHACC3):
+      *--sp = accu; accu = sp[3]; Next;
+    Instruct(PUSHACC4):
+      *--sp = accu; accu = sp[4]; Next;
+    Instruct(PUSHACC5):
+      *--sp = accu; accu = sp[5]; Next;
+    Instruct(PUSHACC6):
+      *--sp = accu; accu = sp[6]; Next;
+    Instruct(PUSHACC7):
+      *--sp = accu; accu = sp[7]; Next;
+
+    Instruct(PUSHACC):
+      *--sp = accu;
+      /* Fallthrough */
+    Instruct(ACC):
+      accu = sp[*pc++];
+      Next;
+
+    Instruct(POP):
+      sp += *pc++;
+      Next;
+    Instruct(ASSIGN):
+      sp[*pc++] = accu;
+      accu = Val_unit;
+      Next;
+@
+% start to see composite operations in one opcode, e.g. 
+% PUSHACC1 is really a PUSH and an ACC1.
+% so faster interpreter. See zinc manual.
+% start to see also specialized operations, e.g. ACC1 is really
+% an ACC and a CONST0 before, but here compressed in one single opcode.
+
+\subsection{Env access}
+
+<<env access opcodes>>=
+  ENVACC1, ENVACC2, ENVACC3, ENVACC4, ENVACC,
+  PUSHENVACC1, PUSHENVACC2, PUSHENVACC3, PUSHENVACC4, PUSHENVACC,
+@
+
+<<[[interpreter()]] env access cases>>=
+/* Access in heap-allocated environment */
+
+    Instruct(ENVACC1):
+      accu = Field(env, 1); Next;
+    Instruct(ENVACC2):
+      accu = Field(env, 2); Next;
+    Instruct(ENVACC3):
+      accu = Field(env, 3); Next;
+    Instruct(ENVACC4):
+      accu = Field(env, 4); Next;
+
+    Instruct(PUSHENVACC1):
+      *--sp = accu; accu = Field(env, 1); Next;
+    Instruct(PUSHENVACC2):
+      *--sp = accu; accu = Field(env, 2); Next;
+    Instruct(PUSHENVACC3):
+      *--sp = accu; accu = Field(env, 3); Next;
+    Instruct(PUSHENVACC4):
+      *--sp = accu; accu = Field(env, 4); Next;
+
+    Instruct(PUSHENVACC):
+      *--sp = accu;
+      /* Fallthrough */
+    Instruct(ENVACC):
+      accu = Field(env, *pc++);
+      Next;
+@
+
+\subsection{Function application}
+
+<<function application opcodes>>=
+  PUSH_RETADDR, APPLY, APPLY1, APPLY2, APPLY3,
+  APPTERM, APPTERM1, APPTERM2, APPTERM3, 
+  RETURN, 
+@
+
+<<function Code_val>>=
+#define Code_val(val) (((code_t *) (val)) [0])     /* Also an l-value. */
+@
+
+% pc + *pc! so jumps are relative.
+<<[[interpreter()]] function application cases>>=
+/* Function application */
+
+    Instruct(PUSH_RETADDR): {
+      sp -= 3;
+      sp[0] = (value) (pc + *pc);
+      sp[1] = env;
+      sp[2] = Val_long(extra_args);
+      pc++;
+      Next;
+    }
+    Instruct(APPLY): {
+      extra_args = *pc - 1;
+      pc = Code_val(accu);
+      env = accu;
+      goto check_stacks;
+    }
+    Instruct(APPLY1): {
+      value arg1 = sp[0];
+      sp -= 3;
+      sp[0] = arg1;
+      sp[1] = (value)pc;
+      sp[2] = env;
+      sp[3] = Val_long(extra_args);
+      pc = Code_val(accu);
+      env = accu;
+      extra_args = 0;
+      goto check_stacks;
+    }
+    Instruct(APPLY2): {
+      value arg1 = sp[0];
+      value arg2 = sp[1];
+      sp -= 3;
+      sp[0] = arg1;
+      sp[1] = arg2;
+      sp[2] = (value)pc;
+      sp[3] = env;
+      sp[4] = Val_long(extra_args);
+      pc = Code_val(accu);
+      env = accu;
+      extra_args = 1;
+      goto check_stacks;
+    }
+    Instruct(APPLY3): {
+      value arg1 = sp[0];
+      value arg2 = sp[1];
+      value arg3 = sp[2];
+      sp -= 3;
+      sp[0] = arg1;
+      sp[1] = arg2;
+      sp[2] = arg3;
+      sp[3] = (value)pc;
+      sp[4] = env;
+      sp[5] = Val_long(extra_args);
+      pc = Code_val(accu);
+      env = accu;
+      extra_args = 2;
+      goto check_stacks;
+    }
+
+    Instruct(APPTERM): {
+      int nargs = *pc++;
+      int slotsize = *pc;
+      value * newsp;
+      int i;
+      /* Slide the nargs bottom words of the current frame to the top
+         of the frame, and discard the remainder of the frame */
+      newsp = sp + slotsize - nargs;
+      for (i = nargs - 1; i >= 0; i--) newsp[i] = sp[i];
+      sp = newsp;
+      pc = Code_val(accu);
+      env = accu;
+      extra_args += nargs - 1;
+      goto check_stacks;
+    }
+    Instruct(APPTERM1): {
+      value arg1 = sp[0];
+      sp = sp + *pc - 1;
+      sp[0] = arg1;
+      pc = Code_val(accu);
+      env = accu;
+      goto check_stacks;
+    }
+    Instruct(APPTERM2): {
+      value arg1 = sp[0];
+      value arg2 = sp[1];
+      sp = sp + *pc - 2;
+      sp[0] = arg1;
+      sp[1] = arg2;
+      pc = Code_val(accu);
+      env = accu;
+      extra_args += 1;
+      goto check_stacks;
+    }
+    Instruct(APPTERM3): {
+      value arg1 = sp[0];
+      value arg2 = sp[1];
+      value arg3 = sp[2];
+      sp = sp + *pc - 3;
+      sp[0] = arg1;
+      sp[1] = arg2;
+      sp[2] = arg3;
+      pc = Code_val(accu);
+      env = accu;
+      extra_args += 2;
+      goto check_stacks;
+    }
+
+    Instruct(RETURN): {
+      sp += *pc++;
+      if (extra_args > 0) {
+        extra_args--;
+        pc = Code_val(accu);
+        env = accu;
+      } else {
+        pc = (code_t)(sp[0]);
+        env = sp[1];
+        extra_args = Long_val(sp[2]);
+        sp += 3;
+      }
+      Next;
+    }
+@
+
+
+
+<<[[interpreter()]] check cases>>=
+/* Stack checks */
+
+    check_stacks:
+      if (sp < stack_threshold) {
+        extern_sp = sp;
+        realloc_stack();
+        sp = extern_sp;
+      }
+      /* Fall through CHECK_SIGNALS */
+
+/* Signal handling */
+
+    Instruct(CHECK_SIGNALS):    /* accu not preserved */
+      if (something_to_do) goto process_signal;
+      Next;
+
+    process_signal:
+      something_to_do = 0;
+      if (force_major_slice){
+        Setup_for_gc;
+        minor_collection ();
+        Restore_after_gc;
+      }
+      /* If a signal arrives between the following two instructions,
+         it will be lost. */
+      { int signal_number = pending_signal;
+        pending_signal = 0;
+        if (signal_number) {
+          /* Push a return frame to the current code location */
+          sp -= 4;
+          sp[0] = Val_int(signal_number);
+          sp[1] = (value) pc;
+          sp[2] = env;
+          sp[3] = Val_long(extra_args);
+          /* Branch to the signal handler */
+          env = Field(signal_handlers, signal_number);
+          pc = Code_val(env);
+          extra_args = 0;
+        }
+      }
+      Next;
+@
+
+\subsection{Misc}
+
+<<[[interpreter()]] misc cases>>=
+    Instruct(RESTART): {
+      int num_args = Wosize_val(env) - 2;
+      int i;
+      sp -= num_args;
+      for (i = 0; i < num_args; i++) sp[i] = Field(env, i + 2);
+      env = Field(env, 1);
+      extra_args += num_args;
+      Next;
+    }
+
+    Instruct(GRAB): {
+      int required = *pc++;
+      if (extra_args >= required) {
+        extra_args -= required;
+      } else {
+        mlsize_t num_args, i;
+        num_args = 1 + extra_args; /* arg1 + extra args */
+        Alloc_small(accu, num_args + 2, Closure_tag);
+        Field(accu, 1) = env;
+        for (i = 0; i < num_args; i++) Field(accu, i + 2) = sp[i];
+        Code_val(accu) = pc - 3; /* Point to the preceding RESTART instr. */
+        sp += num_args;
+        pc = (code_t)(sp[0]);
+        env = sp[1];
+        extra_args = Long_val(sp[2]);
+        sp += 3;
+      }
+      Next;
+    }
+
+    Instruct(CLOSURE): {
+      int nvars = *pc++;
+      int i;
+      if (nvars > 0) *--sp = accu;
+      Alloc_small(accu, 1 + nvars, Closure_tag);
+      Code_val(accu) = pc + *pc;
+      for (i = 0; i < nvars; i++) Field(accu, i + 1) = sp[i];
+      sp += nvars;
+      pc++;
+      Next;
+    }
+
+    Instruct(CLOSUREREC): {
+      int nvars = *pc++;
+      int i;
+      if (nvars > 0) *--sp = accu;
+      Alloc_small(accu, 2 + nvars, Closure_tag);
+      Code_val(accu) = pc + *pc;
+      Field(accu, 1) = Val_int(0);
+      for (i = 0; i < nvars; i++) Field(accu, i + 2) = sp[i];
+      sp += nvars;
+      modify(&Field(accu, 1), accu);
+      pc++;
+      Next;
+    }
+@
+
+\subsection{Global data access}
+
+<<global global_data>>=
+value global_data;
+@
+
+% see also meta.mli?
+
+<<[[interpreter()]] global data access cases>>=
+    Instruct(PUSHGETGLOBAL):
+      *--sp = accu;
+      /* Fallthrough */
+    Instruct(GETGLOBAL):
+      accu = Field(global_data, *pc);
+      pc++;
+      Next;
+
+    Instruct(PUSHGETGLOBALFIELD):
+      *--sp = accu;
+      /* Fallthrough */
+    Instruct(GETGLOBALFIELD): {
+      accu = Field(global_data, *pc);
+      pc++;
+      accu = Field(accu, *pc);
+      pc++;
+      Next;
+    }
+
+    Instruct(SETGLOBAL):
+      modify(&Field(global_data, *pc), accu);
+      accu = Val_unit;
+      pc++;
+      Next;
+@
+
+\subsection{Blocks}
+
+\subsubsection{Blocks allocation}
+
+<<[[interpreter()]] blocks allocation cases>>=
+/* Allocation of blocks */
+
+    Instruct(PUSHATOM0):
+      *--sp = accu;
+      /* Fallthrough */
+    Instruct(ATOM0):
+      accu = Atom(0); Next;
+
+    Instruct(PUSHATOM):
+      *--sp = accu;
+      /* Fallthrough */
+    Instruct(ATOM):
+      accu = Atom(*pc++); Next;
+
+    Instruct(MAKEBLOCK): {
+      mlsize_t wosize = *pc++;
+      tag_t tag = *pc++;
+      mlsize_t i;
+      value block;
+      Alloc_small(block, wosize, tag);
+      Field(block, 0) = accu;
+      for (i = 1; i < wosize; i++) Field(block, i) = *sp++;
+      accu = block;
+      Next;
+    }
+    Instruct(MAKEBLOCK1): {
+      tag_t tag = *pc++;
+      value block;
+      Alloc_small(block, 1, tag);
+      Field(block, 0) = accu;
+      accu = block;
+      Next;
+    }
+    Instruct(MAKEBLOCK2): {
+      tag_t tag = *pc++;
+      value block;
+      Alloc_small(block, 2, tag);
+      Field(block, 0) = accu;
+      Field(block, 1) = sp[0];
+      sp += 1;
+      accu = block;
+      Next;
+    }
+    Instruct(MAKEBLOCK3): {
+      tag_t tag = *pc++;
+      value block;
+      Alloc_small(block, 3, tag);
+      Field(block, 0) = accu;
+      Field(block, 1) = sp[0];
+      Field(block, 2) = sp[1];
+      sp += 2;
+      accu = block;
+      Next;
+    }
+@
+
+
+\subsubsection{Blocks access}
+
+<<[[interprete()]] other local variables>>=
+value * modify_dest, modify_newval;
+@
+
+
+<<[[interpreter()]] blocks access cases>>=
+/* Access to components of blocks */
+
+    Instruct(GETFIELD0):
+      accu = Field(accu, 0); Next;
+    Instruct(GETFIELD1):
+      accu = Field(accu, 1); Next;
+    Instruct(GETFIELD2):
+      accu = Field(accu, 2); Next;
+    Instruct(GETFIELD3):
+      accu = Field(accu, 3); Next;
+    Instruct(GETFIELD):
+      accu = Field(accu, *pc); pc++; Next;
+
+    Instruct(SETFIELD0):
+      modify_dest = &Field(accu, 0);
+      modify_newval = *sp++;
+    modify:
+      Modify(modify_dest, modify_newval);
+      accu = Val_unit;
+      Next;
+    Instruct(SETFIELD1):
+      modify_dest = &Field(accu, 1);
+      modify_newval = *sp++;
+      goto modify;
+    Instruct(SETFIELD2):
+      modify_dest = &Field(accu, 2);
+      modify_newval = *sp++;
+      goto modify;
+    Instruct(SETFIELD3):
+      modify_dest = &Field(accu, 3);
+      modify_newval = *sp++;
+      goto modify;
+    Instruct(SETFIELD):
+      modify_dest = &Field(accu, *pc);
+      pc++;
+      modify_newval = *sp++;
+      goto modify;
+@
+
+\subsection{Recursive definitions}
+
+<<[[interpreter()]] recursive definition cases>>=
+/* For recursive definitions */
+
+    Instruct(DUMMY): {
+      int size = *pc++;
+      Alloc_small(accu, size, 0);
+      while (size--) Field(accu, size) = Val_long(0);
+      Next;
+    }
+    Instruct(UPDATE): {
+      value newval = *sp++;
+      mlsize_t size, n;
+      size = Wosize_val(newval);
+      Assert(size == Wosize_val(accu));
+      Tag_val(accu) = Tag_val(newval);
+      for (n = 0; n < size; n++) {
+        modify(&Field(accu, n), Field(newval, n));
+      }
+      accu = Val_unit;
+      Next;
+    }
+@
+
+
+\subsection{Branching operations}
+
+<<[[interpreter()]] branching cases>>=
+/* Branches and conditional branches */
+
+    Instruct(BRANCH):
+      pc += *pc;
+      Next;
+    Instruct(BRANCHIF):
+      if (accu != Val_false) pc += *pc; else pc++;
+      Next;
+    Instruct(BRANCHIFNOT):
+      if (accu == Val_false) pc += *pc; else pc++;
+      Next;
+    Instruct(SWITCH): {
+      uint32 sizes = *pc++;
+      if (Is_block(accu)) {
+        long index = Tag_val(accu);
+        Assert(index >= 0 && index < (sizes >> 16));
+        pc += pc[(sizes & 0xFFFF) + index];
+      } else {
+        long index = Long_val(accu);
+        if ((unsigned long) index < (sizes & 0xFFFF))
+          pc += pc[index];
+        else
+          pc += (sizes & 0xFFFF) + (sizes >> 16);
+      }
+      Next;
+    }
+    Instruct(BOOLNOT):
+      accu = Val_not(accu);
+      Next;
+@
+
+\subsection{Exceptions}
+
+<<[[interpreter()]] exception cases>>=
+/* Exceptions */
+
+    Instruct(PUSHTRAP):
+      sp -= 4;
+      Trap_pc(sp) = pc + *pc;
+      Trap_link(sp) = trapsp;
+      sp[2] = env;
+      sp[3] = Val_long(extra_args);
+      trapsp = sp;
+      pc++;
+      Next;
+
+    Instruct(POPTRAP):
+      /* We should check here if a signal is pending, to preserve the
+         semantics of the program w.r.t. exceptions. Unfortunately,
+         process_signal destroys the accumulator, and there is no
+         convenient way to preserve it... */
+      trapsp = Trap_link(sp);
+      sp += 4;
+      Next;
+
+    Instruct(RAISE):
+    raise_exception:
+      if (trapsp >= trap_barrier) debugger(TRAP_BARRIER);
+      sp = trapsp;
+      if ((char *) sp >= (char *) stack_high - initial_sp_offset) {
+        exn_bucket = accu;
+        external_raise = initial_external_raise;
+        siglongjmp(external_raise->buf, 1);
+      }
+      pc = Trap_pc(sp);
+      trapsp = Trap_link(sp);
+      env = sp[2];
+      extra_args = Long_val(sp[3]);
+      sp += 4;
+      Next;
+@
+
+\subsection{Foreign C calls}
+
+<<[[interpreter()]] foreign c calls cases>>=
+/* Calling C functions */
+
+    Instruct(C_CALL1):
+      Setup_for_c_call;
+      accu = cprim[*pc](accu);
+      Restore_after_c_call;
+      pc++;
+      Next;
+    Instruct(C_CALL2):
+      Setup_for_c_call;
+      accu = cprim[*pc](accu, sp[1]);
+      Restore_after_c_call;
+      sp += 1;
+      pc++;
+      Next;
+    Instruct(C_CALL3):
+      Setup_for_c_call;
+      accu = cprim[*pc](accu, sp[1], sp[2]);
+      Restore_after_c_call;
+      sp += 2;
+      pc++;
+      Next;
+    Instruct(C_CALL4):
+      Setup_for_c_call;
+      accu = cprim[*pc](accu, sp[1], sp[2], sp[3]);
+      Restore_after_c_call;
+      sp += 3;
+      pc++;
+      Next;
+    Instruct(C_CALL5):
+      Setup_for_c_call;
+      accu = cprim[*pc](accu, sp[1], sp[2], sp[3], sp[4]);
+      Restore_after_c_call;
+      sp += 4;
+      pc++;
+      Next;
+    Instruct(C_CALLN): {
+      int nargs = *pc++;
+      *--sp = accu;
+      Setup_for_c_call;
+      accu = cprim[*pc](sp + 1, nargs);
+      Restore_after_c_call;
+      sp += nargs;
+      pc++;
+      Next;
+    }
+@
+
+<<constant Setup_for_c_call>>=
+#define Setup_for_c_call { *--sp = env; extern_sp = sp; }
+@
+
+<<constant Restore_after_c_call>>=
+#define Restore_after_c_call { sp = extern_sp; env = *sp++; }
+@
+
+\subsection{Arithmetics}
+
+<<[[interpreter()]] arithmetics cases>>=
+/* Integer constants */
+
+    Instruct(CONST0):
+      accu = Val_int(0); Next;
+    Instruct(CONST1):
+      accu = Val_int(1); Next;
+    Instruct(CONST2):
+      accu = Val_int(2); Next;
+    Instruct(CONST3):
+      accu = Val_int(3); Next;
+
+    Instruct(PUSHCONST0):
+      *--sp = accu; accu = Val_int(0); Next;
+    Instruct(PUSHCONST1):
+      *--sp = accu; accu = Val_int(1); Next;
+    Instruct(PUSHCONST2):
+      *--sp = accu; accu = Val_int(2); Next;
+    Instruct(PUSHCONST3):
+      *--sp = accu; accu = Val_int(3); Next;
+
+    Instruct(PUSHCONSTINT):
+      *--sp = accu;
+      /* Fallthrough */
+    Instruct(CONSTINT):
+      accu = Val_int(*pc);
+      pc++;
+      Next;
+@
+
+<<[[interpreter()]] arithmetics cases>>=
+/* Integer arithmetic */
+
+    Instruct(NEGINT):
+      accu = (value)(2 - (long)accu); Next;
+    Instruct(ADDINT):
+      accu = (value)((long) accu + (long) *sp++ - 1); Next;
+    Instruct(SUBINT):
+      accu = (value)((long) accu - (long) *sp++ + 1); Next;
+    Instruct(MULINT):
+      accu = Val_long(Long_val(accu) * Long_val(*sp++)); Next;
+
+    Instruct(DIVINT): {
+      long divisor = Long_val(*sp++);
+      if (divisor == 0) { Setup_for_c_call; raise_zero_divide(); }
+      accu = Val_long(Long_val(accu) / divisor);
+      Next;
+    }
+    Instruct(MODINT): {
+      long divisor = Long_val(*sp++);
+      if (divisor == 0) { Setup_for_c_call; raise_zero_divide(); }
+      accu = Val_long(Long_val(accu) % divisor);
+      Next;
+    }
+    Instruct(ANDINT):
+      accu = (value)((long) accu & (long) *sp++); Next;
+    Instruct(ORINT):
+      accu = (value)((long) accu | (long) *sp++); Next;
+    Instruct(XORINT):
+      accu = (value)(((long) accu ^ (long) *sp++) | 1); Next;
+    Instruct(LSLINT):
+      accu = (value)((((long) accu - 1) << Long_val(*sp++)) + 1); Next;
+    Instruct(LSRINT):
+      accu = (value)((((unsigned long) accu - 1) >> Long_val(*sp++)) | 1);
+      Next;
+    Instruct(ASRINT):
+      accu = (value)((((long) accu - 1) >> Long_val(*sp++)) | 1); Next;
+
+#define Integer_comparison(opname,tst) \
+    Instruct(opname): \
+      accu = Val_int((long) accu tst (long) *sp++); Next;
+
+    Integer_comparison(EQ, ==)
+    Integer_comparison(NEQ, !=)
+    Integer_comparison(LTINT, <)
+    Integer_comparison(LEINT, <=)
+    Integer_comparison(GTINT, >)
+    Integer_comparison(GEINT, >=)
+
+    Instruct(OFFSETINT):
+      accu += *pc << 1;
+      pc++;
+      Next;
+    Instruct(OFFSETREF):
+      Field(accu, 0) += *pc << 1;
+      accu = Val_unit;
+      pc++;
+      Next;
+@
+% >> >>
+
+
+\subsection{Other operations}
+
+%todo: delete? but then compatibility pb?
+
+<<[[interpreter()]] oo cases>>=
+/* Object-oriented operations */
+
+#define Lookup(obj, lab) \
+  Field (Field (Field (obj, 0), ((lab) >> 16) / sizeof (value)), \
+         ((lab) / sizeof (value)) & 0xFF)
+
+    Instruct(GETMETHOD):
+      accu = Lookup(sp[0], accu);
+      Next;
+@
+
+
+
+\subsection{XXX}
+
+
+%XXX
+<<[[interprete()]] other local variables>>=
+struct longjmp_buffer *    initial_external_raise;
+int                        initial_sp_offset;
+struct caml__roots_block * initial_local_roots;
+int                        initial_callback_depth;
+@
+
+%XXX
+<<[[interprete()]] initial_xxx initialisations>>=
+initial_local_roots = local_roots;
+initial_sp_offset = (char *) stack_high - (char *) extern_sp;
+initial_external_raise = external_raise;
+initial_callback_depth = callback_depth;
+@
+
+
+<<[[interprete()]] other local variables>>=
+struct longjmp_buffer raise_buf;
+@
+% for exn
+<<[[interprete()]] exception initialisations>>=
+if (sigsetjmp(raise_buf.buf, 1)) {
+  local_roots = initial_local_roots;
+  callback_depth = initial_callback_depth;
+  accu = exn_bucket;
+  goto raise_exception;
+}
+external_raise = &raise_buf;
+@
+
+
+\section{Bytecode executable format}
+% again, but this time in C for ocamlrun to read
+
+<<exec.h toplevel comment>>=
+/*  offset 0 --->  initial junk
+                   code block
+                   names of primitives
+                   data block
+                   symbol table
+                   debug infos
+                   trailer
+ end of file --->
+*/
+@
+
+<<constant TRAILER_SIZE>>=
+/* Structure of the trailer.
+   Sizes are 32-bit unsigned integers, big endian */
+
+#define TRAILER_SIZE (5*4+12)
+@
+
+<<struct exec_trailer>>=
+struct exec_trailer {
+  unsigned int code_size;      /* Size of the code block (in bytes) */
+  unsigned int prim_size;      /* Size of the primitive table (in bytes) */
+  unsigned int data_size;      /* Size of the global data table (bytes) */
+  unsigned int symbol_size;    /* Size of the symbol table (bytes) */
+  unsigned int debug_size;     /* Size of the debug infos (bytes) */
+  char magic[12];              /* A magic string */
+};
+@
+
+<<constant EXEC_MAGIC>>=
+/* Magic number for this release */
+
+#define EXEC_MAGIC "Caml1999X002"
+@
+
 
 \section{Startup}
 
@@ -8286,12 +9552,240 @@ let output_c_object = ref false         (* -output-obj *)
 let keep_startup_file = ref false       (* -dstartup *)
 @
 
-\section{Primitives}
+\section{Memory allocation}
+% could be in gc section, but it's a bit different
 
+<<constant Page_log>>=
+/* The size of a page for memory management (in bytes) is [1 << Page_log].
+   It must be a multiple of [sizeof (long)]. */
+#define Page_log 12             /* A page is 4 kilobytes. */
+@
+
+<<constant Page_size>>=
+/* Do not change this definition. */
+#define Page_size (1 << Page_log)
+@
+
+
+
+
+<<function alloc>>=
+value alloc (mlsize_t wosize, tag_t tag)
+{
+  value result;
+  
+  Assert (wosize > 0 && wosize <= Max_young_wosize);
+  Alloc_small (result, wosize, tag);
+  return result;
+}
+@
+
+
+
+<<function expand_heap>>=
+/* Allocate more memory from malloc for the heap.
+   Return a block of at least the requested size (in words).
+   Return NULL when out of memory.
+
+   Faudrait nettoyer tout ca pour decoupler heap_start de heap_base
+   et pour simplifier l'agrandissement de page_table.
+*/
+static char *expand_heap (mlsize_t request)
+{
+  char *mem;
+  page_table_entry *new_page_table;
+  asize_t new_page_table_size;
+  asize_t malloc_request;
+  asize_t i, more_pages;
+  void *block;
+
+  malloc_request = round_heap_chunk_size (Bhsize_wosize (request));
+  gc_message ("Growing heap to %luk bytes\n",
+              (stat_heap_size + malloc_request) / 1024);
+  mem = aligned_malloc (malloc_request + sizeof (heap_chunk_head),
+                        sizeof (heap_chunk_head), &block);
+  if (mem == NULL){
+    gc_message ("No room for growing heap\n", 0);
+    return NULL;
+  }
+  mem += sizeof (heap_chunk_head);
+  Chunk_size (mem) = malloc_request;
+  Chunk_block (mem) = block;
+  Assert (Wosize_bhsize (malloc_request) >= request);
+  Hd_hp (mem) = Make_header (Wosize_bhsize (malloc_request), 0, Blue);
+
+  if (mem < heap_start){
+    more_pages = -Page (mem);
+  }else if (Page (mem + malloc_request) > page_table_size){
+    more_pages = Page (mem + malloc_request) - page_table_size;
+  }else{
+    more_pages = 0;
+  }
+
+  if (more_pages != 0){
+    new_page_table_size = page_table_size + more_pages;
+    new_page_table =
+      (page_table_entry *) 
+        malloc(new_page_table_size * sizeof(page_table_entry));
+    if (new_page_table == NULL){
+      gc_message ("No room for growing page table\n", 0);
+      free (mem);
+      return NULL;
+    }
+  } else {
+    new_page_table = NULL;
+    new_page_table_size = 0;
+  }
+
+  if (mem < heap_start){
+    Assert (more_pages != 0);
+    for (i = 0; i < more_pages; i++){
+      new_page_table [i] = Not_in_heap;
+    }
+    bcopy (page_table, new_page_table + more_pages,
+           page_table_size * sizeof(page_table_entry));
+    Chunk_next (mem) = heap_start;
+    heap_start = mem;
+  }else{
+    char **last;
+    char *cur;
+
+    if (mem + malloc_request > heap_end) heap_end = mem + malloc_request;
+    if (more_pages != 0){
+      for (i = page_table_size; i < new_page_table_size; i++){
+        new_page_table [i] = Not_in_heap;
+      }
+      bcopy (page_table, new_page_table, 
+             page_table_size * sizeof(page_table_entry));
+    }
+    last = &heap_start;
+    cur = *last;
+    while (cur != NULL && cur < mem){
+      last = &(Chunk_next (cur));
+      cur = *last;
+    }
+    Chunk_next (mem) = cur;
+    *last = mem;
+  }
+
+  if (more_pages != 0){
+    free ((char *) page_table);
+    page_table = new_page_table;
+    page_table_size = new_page_table_size;
+  }
+
+  for (i = Page (mem); i < Page (mem + malloc_request); i++){
+    page_table [i] = In_heap;
+  }
+  stat_heap_size += malloc_request;
+  return Bp_hp (mem);
+}
+@
+
+\section{Stack}
+
+<<constant Stack_size>>=
+/* Initial size of stack (bytes). */
+#define Stack_size (4096 * sizeof(value))
+@
+
+<<constant Stack_threshold>>=
+/* Minimum free size of stack (bytes); below that, it is reallocated. */
+#define Stack_threshold (256 * sizeof(value))
+@
+
+<<constant Max_stack_def>>=
+/* Default maximum size of the stack (words). */
+#define Max_stack_def (256 * 1024)
+@
+
+
+\section{Primitives}
 
 \chapter{Garbage Collection}
 
+\section{Roots}
 
+<<struct caml__roots_block>>=
+/*
+   [Begin_roots] and [End_roots] are used for C variables that are GC roots.
+   It must contain all values in C local variables and function parameters
+   at the time the minor GC is called.
+   Usage:
+   After initialising your local variables to legal Caml values, but before
+   calling allocation functions, insert [Begin_roots_n(v1, ... vn)], where
+   v1 ... vn are your variables of type [value] that you want to be updated
+   across allocations.
+   At the end, insert [End_roots()].
+
+   Note that [Begin_roots] opens a new block, and [End_roots] closes it.
+   Thus they must occur in matching pairs at the same brace nesting level.
+
+   You can use [Val_unit] as a dummy initial value for your variables.
+*/
+
+
+struct caml__roots_block {
+  struct caml__roots_block *next;
+  long ntables;
+  long nitems;
+  value *tables [5];
+};
+@
+
+
+<<constant Begin_root>>=
+#define Begin_root Begin_roots1
+@
+
+<<macro Begin_roots1>>=
+#define Begin_roots1(r0) { \
+  struct caml__roots_block caml__roots_block; \
+  caml__roots_block.next = local_roots; \
+  local_roots = &caml__roots_block; \
+  caml__roots_block.nitems = 1; \
+  caml__roots_block.ntables = 1; \
+  caml__roots_block.tables[0] = &(r0);
+@
+
+<<macro End_roots>>=
+#define End_roots() local_roots = caml__roots_block.next; }
+@
+
+
+
+\section{Mark}
+
+\section{Sweep}
+
+\section{Major collection}
+
+\section{Minor collection}
+
+
+<<constant Max_young_wosize>>=
+/* Maximum size of a block allocated in the young generation (words). */
+/* Must be > 4 */
+#define Max_young_wosize 256
+@
+
+<<constant Minor_heap_min>>=
+/* Minimum size of the minor zone (words).
+   This must be at least [Max_young_wosize + 1]. */
+#define Minor_heap_min 4096
+@
+
+<<constant Minor_heap_max>>=
+/* Maximum size of the minor zone (words).
+   Must be greater than or equal to [Minor_heap_min].
+*/
+#define Minor_heap_max (1 << 28)
+@
+
+<<constant Minor_heap_def>>=
+/* Default size of the minor zone. (words)  */
+#define Minor_heap_def 32768
+@
 
 
 \chapter{Native Code Generation}
@@ -8320,6 +9814,17 @@ val cmx_magic_number: string
 val cmxa_magic_number: string
         (* Magic number for libraries of compilation unit descriptions *)
 @
+
+
+\section{Runtime tweaks}
+
+<<function Is_atom ifdef NATIVE_CODE>>=
+#define Is_atom(v) \
+  ((((char *)(v) >= static_data_start && (char *)(v) < static_data_end) || \
+   ((v) >= Atom(0) && (v) <= Atom(255))))
+@
+
+
 
 \chapter{Debugging Support}
 
@@ -8446,6 +9951,59 @@ let record_event ev =
   events := ev :: !events
 @
 
+\subsection{Interpreter control}
+
+
+
+<<[[interpreter()]] debugger cases>>=
+/* Debugging and machine control */
+
+    Instruct(STOP):
+      external_raise = initial_external_raise;
+      extern_sp = sp;
+      return accu;
+
+    Instruct(EVENT):
+      if (--event_count == 0) {
+        Setup_for_debugger;
+        debugger(EVENT_COUNT);
+        Restore_after_debugger;
+      }
+      Restart_curr_instr;
+
+    Instruct(BREAK):
+      Setup_for_debugger;
+      debugger(BREAKPOINT);
+      Restore_after_debugger;
+      Restart_curr_instr;
+@
+
+<<constant Setup_for_debugger>>=
+/* Debugger interface */
+
+#define Setup_for_debugger \
+   { sp -= 4; \
+     sp[0] = accu; sp[1] = (value)(pc - 1); \
+     sp[2] = env; sp[3] = Val_long(extra_args); \
+     extern_sp = sp; }
+@
+
+<<constant Restore_after_debugger>>=
+#define Restore_after_debugger { sp += 4; }
+@
+
+
+<<macro Restart_curr_instr>>=
+#define Restart_curr_instr \
+  curr_instr = saved_code[pc - 1 - start_code]; \
+  goto dispatch_instr
+@
+
+<<macro Restart_curr_instr if THREADED_CODE>>=
+#define Restart_curr_instr \
+  goto *(jumptable[saved_code[pc - 1 - start_code]])
+@
+
 \section{Backtraces}
 
 % OCAMLRUNPARAM=b
@@ -8464,7 +10022,7 @@ let record_event ev =
 %  gen chapter :)
 % functors? can be interesting to understand how it's compiled
 
-% could put when here
+%less: could put 'when' here too
 
 \section{Arrays}
 
@@ -8559,6 +10117,28 @@ and array_kind =
   | Pfloatarray
 @
 
+
+%instruct
+
+%interpreter
+<<[[interpreter()]] array cases>>=
+/* Array operations */
+
+    Instruct(VECTLENGTH):
+      accu = Val_long(Wosize_val(accu));
+      Next;
+    Instruct(GETVECTITEM):
+      accu = Field(accu, Long_val(sp[0]));
+      sp += 1;
+      Next;
+    Instruct(SETVECTITEM):
+      modify_dest = &Field(accu, Long_val(sp[0]));
+      modify_newval = sp[1];
+      sp += 2;
+      goto modify;
+@
+
+
 \subsection{[[-unsafe]]}
 
 <<constant Clflags.fast>>=
@@ -8617,7 +10197,7 @@ let rec mkrangepat c1 c2 =
                        mkrangepat (Char.chr(Char.code c1 + 1)) c2))
 @
 
-\section{String indexing}
+\section{Strings}
 
 % sugar, .[], .[] <-
 <<rule simple_expr cases>>=
@@ -8633,6 +10213,27 @@ let rec mkrangepat c1 c2 =
 @
 %$
 % meh
+
+
+%codegen
+<<[[Lambda.primitive]] string operations cases>>=
+| Pstringlength | Pstringrefu | Pstringsetu | Pstringrefs | Pstringsets
+@
+
+% interpreter
+<<[[interpreter()]] string cases>>=
+/* String operations */
+
+    Instruct(GETSTRINGCHAR):
+      accu = Val_int(Byte_u(accu, Long_val(sp[0])));
+      sp += 1;
+      Next;
+    Instruct(SETSTRINGCHAR):
+      Byte_u(accu, Long_val(sp[0])) = Int_val(sp[1]);
+      sp += 2;
+      accu = Val_unit;
+      Next;
+@
 
 \section{[[assert()]], and [[-noassert]]}
 
@@ -8942,6 +10543,90 @@ and directive_argument =
   | Pdir_int of int
   | Pdir_ident of Longident.t
 @
+
+\section{Interpreter optimisation}
+% Threaded interpreter? but can be confusing
+% thread in this context means something else
+
+%less: have another special chapter on optimisations?
+
+\subsection{Registers}
+
+<<[[interpreter()]] ifdef PC_REG>>=
+#ifdef PC_REG
+  register code_t pc PC_REG;
+  register value * sp SP_REG;
+  register value accu ACCU_REG;
+@
+
+\subsection{Threaded code}
+
+<<macro Instruct for THREADED_CODE>>=
+#  define Instruct(name) lbl_##name
+@
+
+<<macro Next for THREADED_CODE>>=
+#    define Next goto *(void *)(jumptbl_base + *pc++)
+@
+
+<<[[interpreter()]] ifdef THREADED_CODE, jumptbl_base register declaration>>=
+#if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
+#ifdef JUMPTBL_BASE_REG
+  register char * jumptbl_base JUMPTBL_BASE_REG;
+#else
+  register char * jumptbl_base;
+#endif
+#endif
+@
+% register too!
+
+
+<<[[interprete()]] ifdef THREADED_CODE initialisations>>=
+<<[[interpreter()]] ifdef THREADED_CODE, jumptable declaration>>
+if (prog == NULL) {           /* Interpreter is initializing */
+  <<[[interpreter()]] ifdef THREADED_CODE, initializing>>
+  return Val_unit;
+}
+<<[[interpreter()]] ifdef THREADED_CODE, jumptbl_base setting>>
+@
+
+
+<<[[interpreter()]] ifdef THREADED_CODE, jumptable declaration>>=
+#ifdef THREADED_CODE
+  static void * jumptable[] = {
+#    include "jumptbl.h"
+  };
+#endif
+@
+
+
+
+
+<<[[interpreter()]] ifdef THREADED_CODE, initializing>>=
+#ifdef THREADED_CODE
+    instr_table = (char **) jumptable; 
+    instr_base = Jumptbl_base;
+#endif
+@
+
+<<[[interpreter()]] ifdef THREADED_CODE, jumptbl_base setting>>=
+#if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
+  jumptbl_base = Jumptbl_base;
+#endif
+@
+
+<<[[interpreter()]] ifdef THREADED_CODE, loop start>>=
+#ifdef THREADED_CODE
+#ifdef DEBUG
+ next_instr:
+  if (icount-- == 0) stop_here ();
+  Assert(sp >= stack_low);
+  Assert(sp <= stack_high);
+#endif
+  goto *(void *)(jumptbl_base + *pc++); /* Jump to the first instruction */
+@
+
+
 
 \chapter{Conclusion}
 
@@ -9772,6 +11457,21 @@ let dump_linear = ref false             (* -dlinear *)
 \subsubsection{[[-dcmm]]}
 
 
+\section{Verbose interpreter}
+
+
+<<[[interpreter()]] ifdef DEBUG, loop start>>=
+#ifdef DEBUG
+    if (icount-- == 0) stop_here ();
+    if (trace_flag) disasm_instr(pc);
+    Assert(sp >= stack_low);
+    Assert(sp <= stack_high);
+#endif
+@
+
+<<macro Next for THREADED_CODE ifdef DEBUG>>=
+#    define Next goto next_instr
+@
 
 \chapter{Profiling}
 

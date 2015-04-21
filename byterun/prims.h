@@ -15,9 +15,7 @@
 /* Interface with C primitives. */
 
 #ifndef _prims_
-/*s: constant _prims_ */
 #define _prims_
-/*e: constant _prims_ */
 
 typedef value (*c_primitive)();
 
