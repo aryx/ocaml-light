@@ -940,17 +940,6 @@ value interprete(code_t prog, asize_t prog_size)
           accu = Val_unit;
           Next;
     /*e: [[interpreter()]] string cases */
-    /*s: [[interpreter()]] oo cases */
-    /* Object-oriented operations */
-
-    #define Lookup(obj, lab) \
-      Field (Field (Field (obj, 0), ((lab) >> 16) / sizeof (value)), \
-             ((lab) / sizeof (value)) & 0xFF)
-
-        Instruct(GETMETHOD):
-          accu = Lookup(sp[0], accu);
-          Next;
-    /*e: [[interpreter()]] oo cases */
     /*s: [[interpreter()]] debugger cases */
     /* Debugging and machine control */
 
