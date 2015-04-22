@@ -362,6 +362,7 @@ the main author of OCaml.
 %   which imply boxing values for certain implementation strategy
 % - closures (can factorize more code, no more loop for everything)
 % - ADT and pattern matching (no more enum/switch loophole)
+%   had type "and", now have type "or"!
 % - type inference (less boilerplate, especially needed when have
 %   polymorphism and closures and quite complicated types)
 % - references: disciplined safe pointers!
@@ -859,24 +860,35 @@ and type_variable =
 /* The instruction set. */
 
 enum instructions {
+  /* integers */
+  <<integer arithmetics opcodes>>
+
+  /* stack, env, heap, data */
   <<basic stack operations opcodes>>
   <<env access opcodes>>
-  <<function application opcodes>>
-  <<misc opcodes>>
-  <<global data access opcodes>>
   <<blocks allocation opcodes>>
   <<blocks access opcodes>>
-  <<recursive definition opcodes>>
-  <<array opcodes>>
-  <<string opcodes>>
+  <<global data access opcodes>>
+
+  /* control */
   <<branching opcodes>>
+  <<function application opcodes>>
+  <<recursive definition opcodes>>
   <<exception opcodes>>
   <<signal opcodes>>
   <<foreign C calls opcodes>>
-  <<arithmetics opcodes>>
+
+  /* aggregate data */
+  <<string opcodes>>
+  <<array opcodes>>
+
+  /* misc */
+  <<misc opcodes>>
   <<debugger opcodes>>
 };
 @
+%note: I changed the order with what was originally there, I think it's
+% more logical that way, better grouping. I added the comments.
 %THE ORDER IS IMPORTANT!! if you change it then you will not be able
 % to run boot/ocamlc because it will use a different order
 % for the opcodes. But remember that there is boot/ocamlrun too! 
@@ -898,6 +910,8 @@ enum instructions {
 %  - foreign c calls =~ syscalls/interrupts opcodes
 %  - basic stack =~ memory opcodes
 % different: all the rest ... exn, env, function call, debugger, etc.
+% note that there is no label here because the bytecode is really
+% closer to Machine.nw than Assembler.nw. Instruction has labels though.
 
 \section{Runtime values}
 
@@ -925,6 +939,7 @@ enum instructions {
   bp: Pointer to the first byte of an object.  (a char *)
   op: Pointer to the first field of an object.  (a value *)
   hp: Pointer to the header of an object.  (a char *)
+
   int32: Four bytes on all architectures.
 
   Remark: An object size is always a multiple of the word size, and at least
@@ -994,6 +1009,10 @@ typedef long value;
 @
 
 \subsection{Blocks}
+% =~ pointer, when not an int then the long is interpreted
+% as a pointer to an area with a header and possibly more stuff.
+
+\subsubsection{Header}
 
 <<function Tag_hd>>=
 /* Structure of the header:
@@ -1015,9 +1034,24 @@ bits  63    10 9     8 7   0
 
 #define Tag_hd(hd) ((tag_t) ((hd) & 0xFF))
 @
+% Tag of hd
 
+% 10-31 -> max size of string is?
 
-\subsection{Tags}
+<<typedef header_t>>=
+typedef unsigned long header_t;
+@
+% the whole thing
+
+<<typedef tag_t>>=
+typedef unsigned int tag_t;             /* Actually, an unsigned char */
+@
+
+<<typedef color_t>>=
+typedef unsigned long color_t;
+@
+
+\subsubsection{Tags}
 
 %todo: use enum?
 
@@ -1078,20 +1112,17 @@ bits  63    10 9     8 7   0
 #define Final_tag 255
 @
 
-\subsection{Atoms}
 
-<<function Atom>>=
-#define Atom(tag) (Val_hp (&(atom_table [tag])))
-@
+\subsection{Values}
 
-<<function Is_atom>>=
-#define Is_atom(v) ((v) >= Atom(0) && (v) <= Atom(255))
-@
-
-
-
-
-\subsection{More values}
+% How is represented:
+% - true?
+% - 1? 
+% - Foo? 
+% - (Foo (1,2)) ? 
+% - (1,2)?
+% - [1;2] ?
+% - ...
 
 \subsubsection{Booleans}
 
@@ -1121,13 +1152,27 @@ bits  63    10 9     8 7   0
 #define Val_unit Val_int(0)
 @
 
+\subsubsection{Atoms}
+% ???
+
+<<function Atom>>=
+#define Atom(tag) (Val_hp (&(atom_table [tag])))
+@
+
+<<function Is_atom>>=
+#define Is_atom(v) ((v) >= Atom(0) && (v) <= Atom(255))
+@
+
+
+
+
 
 
 %\section{Native CMM, lambda, etc?}
 
 
-\chapter{[[main()]]}
-% of ocamlc, there is also the main of ocamlrun!
+\chapter{[[Main.main()]]}
+% main of ocamlc, there is also the main of ocamlrun!
 
 <<toplevel Main._1>>=
 let _ = 
@@ -6092,6 +6137,11 @@ val type_structure:
 % whole file it will get more instantiated!
 % it will not be copy!
 
+
+%todo: then there is a check_nongen somewhere?
+% to make sure the _a does not escape the module?
+% anyway it does not have a syntax?
+
 \subsection{Exceptions, [[exn]]}
 
 % exn are really like an open variant, a variant that
@@ -6353,7 +6403,7 @@ exception Cannot_expand
 %      information is indeed lost, but it probably does not worth it.
 
 
-% p1 or p2 are possible paths to abbriviation types
+% p1 or p2 are possible paths to abbreviation types
 <<[[Ctype.unify()]] match t1 t2 other cases>>=
 | (Tconstr(p1, tl1), _) ->
     begin try
@@ -6579,8 +6629,6 @@ let type_format loc fmt =
 \subsection{Module types and functors}
 
 % things got more complicated also with functors ...
-
-
 
 \subsection{Objects}
 
@@ -7123,13 +7171,6 @@ val check_partial:
   Location.t -> (Typedtree.pattern * Typedtree.expression) list -> unit
 @
 
-\section{Unused pattern matches (dead code)}
-
-<<signature Parmatch.check_unused>>=
-val check_unused: 
-  (Typedtree.pattern * Typedtree.expression) list -> unit
-@
-
 \section{Dead code}
 
 % surprisingly effective at finding bugs! if it's dead, it's
@@ -7142,6 +7183,16 @@ val check_unused:
 % (easier to detect when not exported in .cmi)
 
 \subsection{Dead statements}
+
+\subsection{Dead patterns}
+%was \section{Unused pattern matches (dead code)}
+
+<<signature Parmatch.check_unused>>=
+val check_unused: 
+  (Typedtree.pattern * Typedtree.expression) list -> unit
+@
+
+
 
 % other? dead???
 
@@ -7329,6 +7380,9 @@ type lambda =
   <<[[Lambda.lambda]] other cases>>
 @
 
+% what is missing except the types? Did some simplifications?
+% pattern matching is simpler?
+
 <<type Lambda.lambda_switch>>=
 and lambda_switch =
   { sw_numconsts: int;                  (* Number of integer cases *)
@@ -7413,7 +7467,7 @@ type primitive =
   (* Bitvect operations *)
   | Pbittest
 @
-
+% very close to bytecode instruction set
 
 <<type Lambda.comparison>>=
 and comparison =
@@ -7519,7 +7573,14 @@ val primitive_declarations: string list ref
 let primitive_declarations = ref ([] : string list)
 @
 
-\subsection{Overloaded comparisons}
+\subsection{Generic comparisons}
+% was "overloaded" but it's the wrong term. As opposed to haskell
+% ocaml comparisons are not overloaded unfortunately.
+
+% - general, 
+% - int, 
+% - float, 
+% - string
 
 <<constant Translcore.comparisons_table>>=
 (* Translation of primitives *)
@@ -7839,6 +7900,7 @@ and close_switch fenv cenv num_keys cases =
     cases;
   (index, Array.of_list(List.rev !ucases))
 @
+% lots of boilerplate? deriving would help? factorize code?
 
 <<signature Ident.unique_name>>=
 val unique_name: t -> string
@@ -7917,18 +7979,20 @@ val for_tupled_function:
 
 
 
-\section{[[Lambda]] calcul to bytecode}
-
+\section{[[Lambda]] calcul to bytecode [[Instruction]] assembly}
 
 \subsection{[[Instruction]]}
+% bytecode assembly?
 
 <<type Instruct.label>>=
 (* Abstract machine instructions *)
 
 type label = int                        (* Symbolic code labels *)
 @
-% = label like in asm?
+% = label like in asm. So now we are closer to Assembler.nw
+% than Machine.nw
 
+% =~ Assembly of instruction set in instruct.h
 <<type Instruct.instruction>>=
 type instruction =
     Klabel of label
@@ -8006,6 +8070,8 @@ val immed_max: int
 <<signature Bytegen.compile_implementation>>=
 val compile_implementation: string -> lambda -> instruction list
 @
+
+\section{Bytecode assembly to bytecode object}
 
 \subsection{Bytecode object format, [[.cmo]]}
 % there is also Bytecode binary format which is very different
@@ -8815,6 +8881,7 @@ value interprete(code_t prog, asize_t prog_size)
   #endif /* ifndef THREADED_CODE */
 }
 @
+% classic interpreter loop
 %note: maybe better to be more explicit in order of switch cases,
 % and anyway some cases are really long and you want to subsplit
 % them, so easier to name the intermediate chunks.
@@ -8835,6 +8902,18 @@ value interprete(code_t prog, asize_t prog_size)
 % see advanced topics chapter
 
 
+
+% when no threaded code
+<<macro Instruct>>=
+#  define Instruct(name) case name
+@
+<<macro Next>>=
+#  define Next break
+@
+
+
+
+\subsection{Abstract machine registers}
 
 <<interp.c toplevel comment>>=
 /* Registers for the abstract machine:
@@ -8894,15 +8973,168 @@ value * extern_sp;
 @
 
 
-% when no threaded code
-<<macro Instruct>>=
-#  define Instruct(name) case name
-@
-<<macro Next>>=
-#  define Next break
+
+\subsection{Integer arithmetics}
+% it's about the Is_long()
+% it's about mainly accu
+
+
+<<integer arithmetics opcodes>>=
+CONSTINT,
 @
 
-\subsection{Basic stack operations}
+<<[[interpreter()]] arithmetics cases>>=
+/* Integer constants */
+
+    <<[[interpreter()]] before CONSTINT case>>
+    Instruct(CONSTINT):
+      accu = Val_int(*pc);
+      pc++;
+      Next;
+@
+
+<<integer arithmetics opcodes>>=
+  CONST0, CONST1, CONST2, CONST3, 
+  PUSHCONSTINT,
+  PUSHCONST0, PUSHCONST1, PUSHCONST2, PUSHCONST3, 
+@
+
+\ifallcode
+<<[[interpreter()]] arithmetics cases>>=
+    Instruct(CONST0):
+      accu = Val_int(0); Next;
+    Instruct(CONST1):
+      accu = Val_int(1); Next;
+    Instruct(CONST2):
+      accu = Val_int(2); Next;
+    Instruct(CONST3):
+      accu = Val_int(3); Next;
+
+    Instruct(PUSHCONST0):
+      *--sp = accu; accu = Val_int(0); Next;
+    Instruct(PUSHCONST1):
+      *--sp = accu; accu = Val_int(1); Next;
+    Instruct(PUSHCONST2):
+      *--sp = accu; accu = Val_int(2); Next;
+    Instruct(PUSHCONST3):
+      *--sp = accu; accu = Val_int(3); Next;
+@
+
+<<[[interpreter()]] before CONSTINT case>>=
+    Instruct(PUSHCONSTINT):
+      *--sp = accu;
+      /* Fallthrough */
+@
+\fi
+
+
+
+<<integer arithmetics opcodes>>=
+NEGINT, ADDINT, SUBINT, MULINT, DIVINT, MODINT,
+@
+
+% builtins! finally, but handling the special int encoding used
+<<[[interpreter()]] arithmetics cases>>=
+/* Integer arithmetic */
+
+    Instruct(NEGINT):
+      accu = (value)(2 - (long)accu); Next;
+    Instruct(ADDINT):
+      accu = (value)((long) accu + (long) *sp++ - 1); Next;
+    Instruct(SUBINT):
+      accu = (value)((long) accu - (long) *sp++ + 1); Next;
+    Instruct(MULINT):
+      accu = Val_long(Long_val(accu) * Long_val(*sp++)); Next;
+
+    Instruct(DIVINT): {
+      long divisor = Long_val(*sp++);
+      if (divisor == 0) { Setup_for_c_call; raise_zero_divide(); }
+      accu = Val_long(Long_val(accu) / divisor);
+      Next;
+    }
+    Instruct(MODINT): {
+      long divisor = Long_val(*sp++);
+      if (divisor == 0) { Setup_for_c_call; raise_zero_divide(); }
+      accu = Val_long(Long_val(accu) % divisor);
+      Next;
+    }
+@
+
+
+<<integer arithmetics opcodes>>=
+ANDINT, ORINT, XORINT, 
+@
+
+<<[[interpreter()]] arithmetics cases>>=
+    Instruct(ANDINT):
+      accu = (value)((long) accu & (long) *sp++); Next;
+    Instruct(ORINT):
+      accu = (value)((long) accu | (long) *sp++); Next;
+    Instruct(XORINT):
+      accu = (value)(((long) accu ^ (long) *sp++) | 1); Next;
+@
+
+
+<<integer arithmetics opcodes>>=
+LSLINT, LSRINT, ASRINT,
+@
+
+<<[[interpreter()]] arithmetics cases>>=
+    Instruct(LSLINT):
+      accu = (value)((((long) accu - 1) << Long_val(*sp++)) + 1); Next;
+    Instruct(LSRINT):
+      accu = (value)((((unsigned long) accu - 1) >> Long_val(*sp++)) | 1);
+      Next;
+    Instruct(ASRINT):
+      accu = (value)((((long) accu - 1) >> Long_val(*sp++)) | 1); Next;
+@
+
+<<integer arithmetics opcodes>>=
+EQ, NEQ, 
+@
+
+<<integer arithmetics opcodes>>=
+LTINT, LEINT, GTINT, GEINT,
+@
+
+
+<<[[interpreter()]] arithmetics cases>>=
+#define Integer_comparison(opname,tst) \
+    Instruct(opname): \
+      accu = Val_int((long) accu tst (long) *sp++); Next;
+
+    Integer_comparison(EQ, ==)
+    Integer_comparison(NEQ, !=)
+    Integer_comparison(LTINT, <)
+    Integer_comparison(LEINT, <=)
+    Integer_comparison(GTINT, >)
+    Integer_comparison(GEINT, >=)
+@
+% note that this is used only for the compare_int! it's not
+% the same as the generic compare that is generic
+
+<<integer arithmetics opcodes>>=
+OFFSETINT, OFFSETREF,
+@
+
+
+<<[[interpreter()]] arithmetics cases>>=
+    Instruct(OFFSETINT):
+      accu += *pc << 1;
+      pc++;
+      Next;
+    Instruct(OFFSETREF):
+      Field(accu, 0) += *pc << 1;
+      accu = Val_unit;
+      pc++;
+      Next;
+@
+% >> >>
+
+
+\subsection{Stack operations}
+
+% it's about sp mainly (and accu)
 
 <<basic stack operations opcodes>>=
 ACC, 
@@ -8999,7 +9231,9 @@ ASSIGN,
 % there will be many PUSHXXX later
 
 
-\subsection{Env access}
+\subsection{Environment access}
+% environment operations
+% Heap operations?
 
 <<env access opcodes>>=
 ENVACC,
@@ -9048,6 +9282,269 @@ Instruct(PUSHENVACC):
   /* Fallthrough */
 @
 \fi
+
+\subsection{Blocks}
+% Heap operations?
+% have seen stack, env, ints, now it's about heap?
+
+% it's about the Is_block()
+
+\subsubsection{Blocks allocation}
+
+<<blocks allocation opcodes>>=
+ATOM,
+MAKEBLOCK,
+@
+
+
+<<[[interpreter()]] blocks allocation cases>>=
+/* Allocation of blocks */
+    <<[[interpreter()]] before ATOM case>>
+    Instruct(ATOM):
+      accu = Atom(*pc++); Next;
+
+    Instruct(MAKEBLOCK): {
+      mlsize_t wosize = *pc++;
+      tag_t tag = *pc++;
+      mlsize_t i;
+      value block;
+      Alloc_small(block, wosize, tag);
+      Field(block, 0) = accu;
+      for (i = 1; i < wosize; i++) Field(block, i) = *sp++;
+      accu = block;
+      Next;
+    }
+@
+
+
+<<blocks allocation opcodes>>=
+  PUSHATOM,
+  ATOM0, PUSHATOM0, 
+  MAKEBLOCK1, MAKEBLOCK2, MAKEBLOCK3,
+@
+
+
+\ifallcode
+<<[[interpreter()]] before ATOM case>>=
+Instruct(PUSHATOM):
+  *--sp = accu;
+  /* Fallthrough */
+@
+
+<<[[interpreter()]] blocks allocation cases>>=
+    Instruct(PUSHATOM0):
+      *--sp = accu;
+      /* Fallthrough */
+    Instruct(ATOM0):
+      accu = Atom(0); Next;
+
+    Instruct(MAKEBLOCK1): {
+      tag_t tag = *pc++;
+      value block;
+      Alloc_small(block, 1, tag);
+      Field(block, 0) = accu;
+      accu = block;
+      Next;
+    }
+    Instruct(MAKEBLOCK2): {
+      tag_t tag = *pc++;
+      value block;
+      Alloc_small(block, 2, tag);
+      Field(block, 0) = accu;
+      Field(block, 1) = sp[0];
+      sp += 1;
+      accu = block;
+      Next;
+    }
+    Instruct(MAKEBLOCK3): {
+      tag_t tag = *pc++;
+      value block;
+      Alloc_small(block, 3, tag);
+      Field(block, 0) = accu;
+      Field(block, 1) = sp[0];
+      Field(block, 2) = sp[1];
+      sp += 2;
+      accu = block;
+      Next;
+    }
+@
+\fi
+
+
+\subsubsection{Blocks access}
+
+<<blocks access opcodes>>=
+GETFIELD,
+SETFIELD,
+@
+
+
+<<[[interprete()]] other local variables>>=
+value * modify_dest, modify_newval;
+@
+
+
+<<[[interpreter()]] blocks access cases>>=
+/* Access to components of blocks */
+    Instruct(GETFIELD):
+      accu = Field(accu, *pc); pc++; Next;
+
+    Instruct(SETFIELD):
+      modify_dest = &Field(accu, *pc);
+      pc++;
+      modify_newval = *sp++;
+      goto modify;
+@
+
+<<blocks access opcodes>>=
+  GETFIELD0, GETFIELD1, GETFIELD2, GETFIELD3,
+  SETFIELD0, SETFIELD1, SETFIELD2, SETFIELD3,
+@
+
+\ifallcode
+<<[[interpreter()]] blocks access cases>>=
+
+    Instruct(GETFIELD0):
+      accu = Field(accu, 0); Next;
+    Instruct(GETFIELD1):
+      accu = Field(accu, 1); Next;
+    Instruct(GETFIELD2):
+      accu = Field(accu, 2); Next;
+    Instruct(GETFIELD3):
+      accu = Field(accu, 3); Next;
+
+    Instruct(SETFIELD0):
+      modify_dest = &Field(accu, 0);
+      modify_newval = *sp++;
+    modify:
+      Modify(modify_dest, modify_newval);
+      accu = Val_unit;
+      Next;
+    Instruct(SETFIELD1):
+      modify_dest = &Field(accu, 1);
+      modify_newval = *sp++;
+      goto modify;
+    Instruct(SETFIELD2):
+      modify_dest = &Field(accu, 2);
+      modify_newval = *sp++;
+      goto modify;
+    Instruct(SETFIELD3):
+      modify_dest = &Field(accu, 3);
+      modify_newval = *sp++;
+      goto modify;
+@
+\fi
+
+\subsection{Global data access}
+% so have seen stack, heap, now it's about data section?
+
+%todo: what are those globals?
+
+<<global data access opcodes>>=
+GETGLOBAL, 
+SETGLOBAL, 
+@
+
+
+<<global global_data>>=
+value global_data;
+@
+
+% see also meta.mli?
+
+<<[[interpreter()]] global data access cases>>=
+    <<[[interpreter()]] before GETGLOBAL case>>
+    Instruct(GETGLOBAL):
+      accu = Field(global_data, *pc);
+      pc++;
+      Next;
+
+    Instruct(SETGLOBAL):
+      modify(&Field(global_data, *pc), accu);
+      accu = Val_unit;
+      pc++;
+      Next;
+@
+
+<<global data access opcodes>>=
+GETGLOBALFIELD,
+@
+% GETGLOBALFIELD is kind of a composite no?
+
+<<[[interpreter()]] global data access cases>>=
+    <<[[interpreter()]] before GETGLOBALFIELD case>>
+    Instruct(GETGLOBALFIELD): {
+      accu = Field(global_data, *pc);
+      pc++;
+      accu = Field(accu, *pc);
+      pc++;
+      Next;
+    }
+@
+
+
+<<global data access opcodes>>=
+  PUSHGETGLOBAL, PUSHGETGLOBALFIELD, 
+@
+
+\ifallcode
+
+<<[[interpreter()]] before GETGLOBAL case>>=
+Instruct(PUSHGETGLOBAL):
+  *--sp = accu;
+  /* Fallthrough */
+@
+
+<<[[interpreter()]] before GETGLOBALFIELD case>>=
+Instruct(PUSHGETGLOBALFIELD):
+  *--sp = accu;
+  /* Fallthrough */
+@
+
+\fi
+
+\subsection{Branching operations}
+
+<<branching opcodes>>=
+BRANCH, 
+BRANCHIF, 
+BRANCHIFNOT, 
+SWITCH, 
+BOOLNOT,
+@
+
+% note the += here, so jumps are relative!
+<<[[interpreter()]] branching cases>>=
+/* Branches and conditional branches */
+
+    Instruct(BRANCH):
+      pc += *pc;
+      Next;
+    Instruct(BRANCHIF):
+      if (accu != Val_false) pc += *pc; else pc++;
+      Next;
+    Instruct(BRANCHIFNOT):
+      if (accu == Val_false) pc += *pc; else pc++;
+      Next;
+    Instruct(SWITCH): {
+      uint32 sizes = *pc++;
+      if (Is_block(accu)) {
+        long index = Tag_val(accu);
+        Assert(index >= 0 && index < (sizes >> 16));
+        pc += pc[(sizes & 0xFFFF) + index];
+      } else {
+        long index = Long_val(accu);
+        if ((unsigned long) index < (sizes & 0xFFFF))
+          pc += pc[index];
+        else
+          pc += (sizes & 0xFFFF) + (sizes >> 16);
+      }
+      Next;
+    }
+    Instruct(BOOLNOT):
+      accu = Val_not(accu);
+      Next;
+@
 
 \subsection{Function application}
 
@@ -9212,279 +9709,6 @@ RETURN,
 
 
 
-\subsection{Misc}
-
-<<misc opcodes>>=
-RESTART, 
-GRAB,
-CLOSURE, 
-CLOSUREREC,
-@
-
-<<[[interpreter()]] misc cases>>=
-    Instruct(RESTART): {
-      int num_args = Wosize_val(env) - 2;
-      int i;
-      sp -= num_args;
-      for (i = 0; i < num_args; i++) sp[i] = Field(env, i + 2);
-      env = Field(env, 1);
-      extra_args += num_args;
-      Next;
-    }
-
-    Instruct(GRAB): {
-      int required = *pc++;
-      if (extra_args >= required) {
-        extra_args -= required;
-      } else {
-        mlsize_t num_args, i;
-        num_args = 1 + extra_args; /* arg1 + extra args */
-        Alloc_small(accu, num_args + 2, Closure_tag);
-        Field(accu, 1) = env;
-        for (i = 0; i < num_args; i++) Field(accu, i + 2) = sp[i];
-        Code_val(accu) = pc - 3; /* Point to the preceding RESTART instr. */
-        sp += num_args;
-        pc = (code_t)(sp[0]);
-        env = sp[1];
-        extra_args = Long_val(sp[2]);
-        sp += 3;
-      }
-      Next;
-    }
-
-    Instruct(CLOSURE): {
-      int nvars = *pc++;
-      int i;
-      if (nvars > 0) *--sp = accu;
-      Alloc_small(accu, 1 + nvars, Closure_tag);
-      Code_val(accu) = pc + *pc;
-      for (i = 0; i < nvars; i++) Field(accu, i + 1) = sp[i];
-      sp += nvars;
-      pc++;
-      Next;
-    }
-
-    Instruct(CLOSUREREC): {
-      int nvars = *pc++;
-      int i;
-      if (nvars > 0) *--sp = accu;
-      Alloc_small(accu, 2 + nvars, Closure_tag);
-      Code_val(accu) = pc + *pc;
-      Field(accu, 1) = Val_int(0);
-      for (i = 0; i < nvars; i++) Field(accu, i + 2) = sp[i];
-      sp += nvars;
-      modify(&Field(accu, 1), accu);
-      pc++;
-      Next;
-    }
-@
-
-\subsection{Global data access}
-
-<<global data access opcodes>>=
-GETGLOBAL, 
-SETGLOBAL, 
-GETGLOBALFIELD,
-@
-
-
-<<global global_data>>=
-value global_data;
-@
-
-% see also meta.mli?
-
-<<[[interpreter()]] global data access cases>>=
-    <<[[interpreter()]] before GETGLOBAL case>>
-    Instruct(GETGLOBAL):
-      accu = Field(global_data, *pc);
-      pc++;
-      Next;
-
-    <<[[interpreter()]] before GETGLOBALFIELD case>>
-    Instruct(GETGLOBALFIELD): {
-      accu = Field(global_data, *pc);
-      pc++;
-      accu = Field(accu, *pc);
-      pc++;
-      Next;
-    }
-
-    Instruct(SETGLOBAL):
-      modify(&Field(global_data, *pc), accu);
-      accu = Val_unit;
-      pc++;
-      Next;
-@
-
-<<global data access opcodes>>=
-  PUSHGETGLOBAL, PUSHGETGLOBALFIELD, 
-@
-
-\ifallcode
-
-<<[[interpreter()]] before GETGLOBAL case>>=
-Instruct(PUSHGETGLOBAL):
-  *--sp = accu;
-  /* Fallthrough */
-@
-
-<<[[interpreter()]] before GETGLOBALFIELD case>>=
-Instruct(PUSHGETGLOBALFIELD):
-  *--sp = accu;
-  /* Fallthrough */
-@
-
-\fi
-
-\subsection{Blocks}
-
-\subsubsection{Blocks allocation}
-
-<<blocks allocation opcodes>>=
-ATOM,
-MAKEBLOCK,
-@
-
-
-<<[[interpreter()]] blocks allocation cases>>=
-/* Allocation of blocks */
-    <<[[interpreter()]] before ATOM case>>
-    Instruct(ATOM):
-      accu = Atom(*pc++); Next;
-
-    Instruct(MAKEBLOCK): {
-      mlsize_t wosize = *pc++;
-      tag_t tag = *pc++;
-      mlsize_t i;
-      value block;
-      Alloc_small(block, wosize, tag);
-      Field(block, 0) = accu;
-      for (i = 1; i < wosize; i++) Field(block, i) = *sp++;
-      accu = block;
-      Next;
-    }
-@
-
-
-<<blocks allocation opcodes>>=
-  PUSHATOM,
-  ATOM0, PUSHATOM0, 
-  MAKEBLOCK1, MAKEBLOCK2, MAKEBLOCK3,
-@
-
-
-\ifallcode
-<<[[interpreter()]] before ATOM case>>=
-Instruct(PUSHATOM):
-  *--sp = accu;
-  /* Fallthrough */
-@
-
-<<[[interpreter()]] blocks allocation cases>>=
-    Instruct(PUSHATOM0):
-      *--sp = accu;
-      /* Fallthrough */
-    Instruct(ATOM0):
-      accu = Atom(0); Next;
-
-    Instruct(MAKEBLOCK1): {
-      tag_t tag = *pc++;
-      value block;
-      Alloc_small(block, 1, tag);
-      Field(block, 0) = accu;
-      accu = block;
-      Next;
-    }
-    Instruct(MAKEBLOCK2): {
-      tag_t tag = *pc++;
-      value block;
-      Alloc_small(block, 2, tag);
-      Field(block, 0) = accu;
-      Field(block, 1) = sp[0];
-      sp += 1;
-      accu = block;
-      Next;
-    }
-    Instruct(MAKEBLOCK3): {
-      tag_t tag = *pc++;
-      value block;
-      Alloc_small(block, 3, tag);
-      Field(block, 0) = accu;
-      Field(block, 1) = sp[0];
-      Field(block, 2) = sp[1];
-      sp += 2;
-      accu = block;
-      Next;
-    }
-@
-\fi
-
-
-\subsubsection{Blocks access}
-
-<<blocks access opcodes>>=
-GETFIELD,
-SETFIELD,
-@
-
-
-<<[[interprete()]] other local variables>>=
-value * modify_dest, modify_newval;
-@
-
-
-<<[[interpreter()]] blocks access cases>>=
-/* Access to components of blocks */
-    Instruct(GETFIELD):
-      accu = Field(accu, *pc); pc++; Next;
-
-    Instruct(SETFIELD):
-      modify_dest = &Field(accu, *pc);
-      pc++;
-      modify_newval = *sp++;
-      goto modify;
-@
-
-<<blocks access opcodes>>=
-  GETFIELD0, GETFIELD1, GETFIELD2, GETFIELD3,
-  SETFIELD0, SETFIELD1, SETFIELD2, SETFIELD3,
-@
-
-\ifallcode
-<<[[interpreter()]] blocks access cases>>=
-
-    Instruct(GETFIELD0):
-      accu = Field(accu, 0); Next;
-    Instruct(GETFIELD1):
-      accu = Field(accu, 1); Next;
-    Instruct(GETFIELD2):
-      accu = Field(accu, 2); Next;
-    Instruct(GETFIELD3):
-      accu = Field(accu, 3); Next;
-
-    Instruct(SETFIELD0):
-      modify_dest = &Field(accu, 0);
-      modify_newval = *sp++;
-    modify:
-      Modify(modify_dest, modify_newval);
-      accu = Val_unit;
-      Next;
-    Instruct(SETFIELD1):
-      modify_dest = &Field(accu, 1);
-      modify_newval = *sp++;
-      goto modify;
-    Instruct(SETFIELD2):
-      modify_dest = &Field(accu, 2);
-      modify_newval = *sp++;
-      goto modify;
-    Instruct(SETFIELD3):
-      modify_dest = &Field(accu, 3);
-      modify_newval = *sp++;
-      goto modify;
-@
-\fi
-
 \subsection{Recursive definitions}
 
 <<recursive definition opcodes>>=
@@ -9515,49 +9739,6 @@ UPDATE,
     }
 @
 
-
-\subsection{Branching operations}
-
-<<branching opcodes>>=
-BRANCH, 
-BRANCHIF, 
-BRANCHIFNOT, 
-SWITCH, 
-BOOLNOT,
-@
-
-% note the += here, so jumps are relative!
-<<[[interpreter()]] branching cases>>=
-/* Branches and conditional branches */
-
-    Instruct(BRANCH):
-      pc += *pc;
-      Next;
-    Instruct(BRANCHIF):
-      if (accu != Val_false) pc += *pc; else pc++;
-      Next;
-    Instruct(BRANCHIFNOT):
-      if (accu == Val_false) pc += *pc; else pc++;
-      Next;
-    Instruct(SWITCH): {
-      uint32 sizes = *pc++;
-      if (Is_block(accu)) {
-        long index = Tag_val(accu);
-        Assert(index >= 0 && index < (sizes >> 16));
-        pc += pc[(sizes & 0xFFFF) + index];
-      } else {
-        long index = Long_val(accu);
-        if ((unsigned long) index < (sizes & 0xFFFF))
-          pc += pc[index];
-        else
-          pc += (sizes & 0xFFFF) + (sizes >> 16);
-      }
-      Next;
-    }
-    Instruct(BOOLNOT):
-      accu = Val_not(accu);
-      Next;
-@
 
 \subsection{Exceptions}
 
@@ -9608,50 +9789,6 @@ RAISE,
 %TODO: poptrap is better in more recent version of ocaml,
 % there is a comment that seems to indicate it better handles
 % signals
-
-\subsection{Signals}
-
-%less: this is subtle, maybe put in advanced topics?
-
-<<signal opcodes>>=
-CHECK_SIGNALS,
-@
-
-<<[[interpreter()]] signal cases>>=
-<<[[interpreter()]] before CHECK_SIGNALS case>>
-
-/* Signal handling */
-
-    Instruct(CHECK_SIGNALS):    /* accu not preserved */
-      if (something_to_do) goto process_signal;
-      Next;
-
-    process_signal:
-      something_to_do = 0;
-      if (force_major_slice){
-        Setup_for_gc;
-        minor_collection ();
-        Restore_after_gc;
-      }
-      /* If a signal arrives between the following two instructions,
-         it will be lost. */
-      { int signal_number = pending_signal;
-        pending_signal = 0;
-        if (signal_number) {
-          /* Push a return frame to the current code location */
-          sp -= 4;
-          sp[0] = Val_int(signal_number);
-          sp[1] = (value) pc;
-          sp[2] = env;
-          sp[3] = Val_long(extra_args);
-          /* Branch to the signal handler */
-          env = Field(signal_handlers, signal_number);
-          pc = Code_val(env);
-          extra_args = 0;
-        }
-      }
-      Next;
-@
 
 \subsection{Foreign C calls}
 
@@ -9729,143 +9866,118 @@ C_CALLN,
 \fi
 
 
-\subsection{Arithmetics}
+\subsection{Signals}
 
-<<arithmetics opcodes>>=
-CONSTINT,
-NEGINT, ADDINT, SUBINT, MULINT, DIVINT, MODINT,
-ANDINT, ORINT, XORINT, 
-LSLINT, LSRINT, ASRINT,
-EQ, NEQ, 
-LTINT, LEINT, GTINT, GEINT,
-OFFSETINT, OFFSETREF,
+%less: this is subtle, maybe put in advanced topics?
+
+<<signal opcodes>>=
+CHECK_SIGNALS,
 @
 
+<<[[interpreter()]] signal cases>>=
+<<[[interpreter()]] before CHECK_SIGNALS case>>
 
-<<[[interpreter()]] arithmetics cases>>=
-/* Integer constants */
+/* Signal handling */
 
-    <<[[interpreter()]] before CONSTINT case>>
-    Instruct(CONSTINT):
-      accu = Val_int(*pc);
-      pc++;
+    Instruct(CHECK_SIGNALS):    /* accu not preserved */
+      if (something_to_do) goto process_signal;
+      Next;
+
+    process_signal:
+      something_to_do = 0;
+      if (force_major_slice){
+        Setup_for_gc;
+        minor_collection ();
+        Restore_after_gc;
+      }
+      /* If a signal arrives between the following two instructions,
+         it will be lost. */
+      { int signal_number = pending_signal;
+        pending_signal = 0;
+        if (signal_number) {
+          /* Push a return frame to the current code location */
+          sp -= 4;
+          sp[0] = Val_int(signal_number);
+          sp[1] = (value) pc;
+          sp[2] = env;
+          sp[3] = Val_long(extra_args);
+          /* Branch to the signal handler */
+          env = Field(signal_handlers, signal_number);
+          pc = Code_val(env);
+          extra_args = 0;
+        }
+      }
       Next;
 @
 
-<<arithmetics opcodes>>=
-  CONST0, CONST1, CONST2, CONST3, 
-  PUSHCONSTINT,
-  PUSHCONST0, PUSHCONST1, PUSHCONST2, PUSHCONST3, 
+\subsection{Misc}
+
+<<misc opcodes>>=
+RESTART, 
+GRAB,
+CLOSURE, 
+CLOSUREREC,
 @
 
-\ifallcode
-<<[[interpreter()]] arithmetics cases>>=
-    Instruct(CONST0):
-      accu = Val_int(0); Next;
-    Instruct(CONST1):
-      accu = Val_int(1); Next;
-    Instruct(CONST2):
-      accu = Val_int(2); Next;
-    Instruct(CONST3):
-      accu = Val_int(3); Next;
-
-    Instruct(PUSHCONST0):
-      *--sp = accu; accu = Val_int(0); Next;
-    Instruct(PUSHCONST1):
-      *--sp = accu; accu = Val_int(1); Next;
-    Instruct(PUSHCONST2):
-      *--sp = accu; accu = Val_int(2); Next;
-    Instruct(PUSHCONST3):
-      *--sp = accu; accu = Val_int(3); Next;
-@
-
-<<[[interpreter()]] before CONSTINT case>>=
-    Instruct(PUSHCONSTINT):
-      *--sp = accu;
-      /* Fallthrough */
-@
-\fi
-
-
-
-% builtins! finally, but handling the special int encoding used
-<<[[interpreter()]] arithmetics cases>>=
-/* Integer arithmetic */
-
-    Instruct(NEGINT):
-      accu = (value)(2 - (long)accu); Next;
-    Instruct(ADDINT):
-      accu = (value)((long) accu + (long) *sp++ - 1); Next;
-    Instruct(SUBINT):
-      accu = (value)((long) accu - (long) *sp++ + 1); Next;
-    Instruct(MULINT):
-      accu = Val_long(Long_val(accu) * Long_val(*sp++)); Next;
-
-    Instruct(DIVINT): {
-      long divisor = Long_val(*sp++);
-      if (divisor == 0) { Setup_for_c_call; raise_zero_divide(); }
-      accu = Val_long(Long_val(accu) / divisor);
+<<[[interpreter()]] misc cases>>=
+    Instruct(RESTART): {
+      int num_args = Wosize_val(env) - 2;
+      int i;
+      sp -= num_args;
+      for (i = 0; i < num_args; i++) sp[i] = Field(env, i + 2);
+      env = Field(env, 1);
+      extra_args += num_args;
       Next;
     }
-    Instruct(MODINT): {
-      long divisor = Long_val(*sp++);
-      if (divisor == 0) { Setup_for_c_call; raise_zero_divide(); }
-      accu = Val_long(Long_val(accu) % divisor);
+
+    Instruct(GRAB): {
+      int required = *pc++;
+      if (extra_args >= required) {
+        extra_args -= required;
+      } else {
+        mlsize_t num_args, i;
+        num_args = 1 + extra_args; /* arg1 + extra args */
+        Alloc_small(accu, num_args + 2, Closure_tag);
+        Field(accu, 1) = env;
+        for (i = 0; i < num_args; i++) Field(accu, i + 2) = sp[i];
+        Code_val(accu) = pc - 3; /* Point to the preceding RESTART instr. */
+        sp += num_args;
+        pc = (code_t)(sp[0]);
+        env = sp[1];
+        extra_args = Long_val(sp[2]);
+        sp += 3;
+      }
+      Next;
+    }
+
+    Instruct(CLOSURE): {
+      int nvars = *pc++;
+      int i;
+      if (nvars > 0) *--sp = accu;
+      Alloc_small(accu, 1 + nvars, Closure_tag);
+      Code_val(accu) = pc + *pc;
+      for (i = 0; i < nvars; i++) Field(accu, i + 1) = sp[i];
+      sp += nvars;
+      pc++;
+      Next;
+    }
+
+    Instruct(CLOSUREREC): {
+      int nvars = *pc++;
+      int i;
+      if (nvars > 0) *--sp = accu;
+      Alloc_small(accu, 2 + nvars, Closure_tag);
+      Code_val(accu) = pc + *pc;
+      Field(accu, 1) = Val_int(0);
+      for (i = 0; i < nvars; i++) Field(accu, i + 2) = sp[i];
+      sp += nvars;
+      modify(&Field(accu, 1), accu);
+      pc++;
       Next;
     }
 @
 
-<<[[interpreter()]] arithmetics cases>>=
-    Instruct(ANDINT):
-      accu = (value)((long) accu & (long) *sp++); Next;
-    Instruct(ORINT):
-      accu = (value)((long) accu | (long) *sp++); Next;
-    Instruct(XORINT):
-      accu = (value)(((long) accu ^ (long) *sp++) | 1); Next;
-@
-
-
-<<[[interpreter()]] arithmetics cases>>=
-    Instruct(LSLINT):
-      accu = (value)((((long) accu - 1) << Long_val(*sp++)) + 1); Next;
-    Instruct(LSRINT):
-      accu = (value)((((unsigned long) accu - 1) >> Long_val(*sp++)) | 1);
-      Next;
-    Instruct(ASRINT):
-      accu = (value)((((long) accu - 1) >> Long_val(*sp++)) | 1); Next;
-@
-
-
-<<[[interpreter()]] arithmetics cases>>=
-#define Integer_comparison(opname,tst) \
-    Instruct(opname): \
-      accu = Val_int((long) accu tst (long) *sp++); Next;
-
-    Integer_comparison(EQ, ==)
-    Integer_comparison(NEQ, !=)
-    Integer_comparison(LTINT, <)
-    Integer_comparison(LEINT, <=)
-    Integer_comparison(GTINT, >)
-    Integer_comparison(GEINT, >=)
-@
-% note that this is used only for the compare_int! it's not
-% the same as the generic compare that is generic
-
-<<[[interpreter()]] arithmetics cases>>=
-    Instruct(OFFSETINT):
-      accu += *pc << 1;
-      pc++;
-      Next;
-    Instruct(OFFSETREF):
-      Field(accu, 0) += *pc << 1;
-      accu = Val_unit;
-      pc++;
-      Next;
-@
-% >> >>
-
-
-%\subsection{Other operations}
+\subsection{Other operations}
 
 % deleted. But then compatibility pb? no, just use make boostrap.
 

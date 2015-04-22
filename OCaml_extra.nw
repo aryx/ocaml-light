@@ -18645,10 +18645,11 @@ typedef char schar;
 <<mlvalues.h top comment>>
 
 <<typedef value>>
-typedef unsigned long header_t;
+<<typedef header_t>>
 typedef unsigned long mlsize_t;
-typedef unsigned int tag_t;             /* Actually, an unsigned char */
-typedef unsigned long color_t;
+<<typedef tag_t>>
+<<typedef color_t>>
+
 typedef unsigned long mark_t;
 
 typedef int int32;            /* Not portable, but checked by autoconf. */
