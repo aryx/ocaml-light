@@ -33,6 +33,7 @@
   bp: Pointer to the first byte of an object.  (a char *)
   op: Pointer to the first field of an object.  (a value *)
   hp: Pointer to the header of an object.  (a char *)
+
   int32: Four bytes on all architectures.
 
   Remark: An object size is always a multiple of the word size, and at least
@@ -53,10 +54,17 @@
 /*s: typedef value */
 typedef long value;
 /*e: typedef value */
+/*s: typedef header_t */
 typedef unsigned long header_t;
+/*e: typedef header_t */
 typedef unsigned long mlsize_t;
+/*s: typedef tag_t */
 typedef unsigned int tag_t;             /* Actually, an unsigned char */
+/*e: typedef tag_t */
+/*s: typedef color_t */
 typedef unsigned long color_t;
+/*e: typedef color_t */
+
 typedef unsigned long mark_t;
 
 typedef int int32;            /* Not portable, but checked by autoconf. */

@@ -526,6 +526,12 @@ value interprete(code_t prog, asize_t prog_size)
           pc++;
           Next;
 
+        Instruct(SETGLOBAL):
+          modify(&Field(global_data, *pc), accu);
+          accu = Val_unit;
+          pc++;
+          Next;
+    /*x: [[interpreter()]] global data access cases */
         /*s: [[interpreter()]] before GETGLOBALFIELD case */
         Instruct(PUSHGETGLOBALFIELD):
           *--sp = accu;
@@ -538,12 +544,6 @@ value interprete(code_t prog, asize_t prog_size)
           pc++;
           Next;
         }
-
-        Instruct(SETGLOBAL):
-          modify(&Field(global_data, *pc), accu);
-          accu = Val_unit;
-          pc++;
-          Next;
     /*e: [[interpreter()]] global data access cases */
     /*s: [[interpreter()]] blocks allocation cases */
     /* Allocation of blocks */

@@ -16,6 +16,28 @@
 /* The instruction set. */
 
 enum instructions {
+  /* integers */
+  /*s: integer arithmetics opcodes */
+  CONSTINT,
+  /*x: integer arithmetics opcodes */
+    CONST0, CONST1, CONST2, CONST3, 
+    PUSHCONSTINT,
+    PUSHCONST0, PUSHCONST1, PUSHCONST2, PUSHCONST3, 
+  /*x: integer arithmetics opcodes */
+  NEGINT, ADDINT, SUBINT, MULINT, DIVINT, MODINT,
+  /*x: integer arithmetics opcodes */
+  ANDINT, ORINT, XORINT, 
+  /*x: integer arithmetics opcodes */
+  LSLINT, LSRINT, ASRINT,
+  /*x: integer arithmetics opcodes */
+  EQ, NEQ, 
+  /*x: integer arithmetics opcodes */
+  LTINT, LEINT, GTINT, GEINT,
+  /*x: integer arithmetics opcodes */
+  OFFSETINT, OFFSETREF,
+  /*e: integer arithmetics opcodes */
+
+  /* stack, env, heap, data */
   /*s: basic stack operations opcodes */
   ACC, 
   PUSH,
@@ -35,28 +57,6 @@ enum instructions {
     ENVACC1, ENVACC2, ENVACC3, ENVACC4, 
     PUSHENVACC1, PUSHENVACC2, PUSHENVACC3, PUSHENVACC4, PUSHENVACC,
   /*e: env access opcodes */
-  /*s: function application opcodes */
-  PUSH_RETADDR, 
-  APPLY, 
-  APPTERM, 
-  RETURN, 
-  /*x: function application opcodes */
-    APPLY1, APPLY2, APPLY3,
-    APPTERM1, APPTERM2, APPTERM3, 
-  /*e: function application opcodes */
-  /*s: misc opcodes */
-  RESTART, 
-  GRAB,
-  CLOSURE, 
-  CLOSUREREC,
-  /*e: misc opcodes */
-  /*s: global data access opcodes */
-  GETGLOBAL, 
-  SETGLOBAL, 
-  GETGLOBALFIELD,
-  /*x: global data access opcodes */
-    PUSHGETGLOBAL, PUSHGETGLOBALFIELD, 
-  /*e: global data access opcodes */
   /*s: blocks allocation opcodes */
   ATOM,
   MAKEBLOCK,
@@ -72,16 +72,16 @@ enum instructions {
     GETFIELD0, GETFIELD1, GETFIELD2, GETFIELD3,
     SETFIELD0, SETFIELD1, SETFIELD2, SETFIELD3,
   /*e: blocks access opcodes */
-  /*s: recursive definition opcodes */
-  DUMMY, 
-  UPDATE,
-  /*e: recursive definition opcodes */
-  /*s: array opcodes */
-  VECTLENGTH, GETVECTITEM, SETVECTITEM,
-  /*e: array opcodes */
-  /*s: string opcodes */
-  GETSTRINGCHAR, SETSTRINGCHAR, 
-  /*e: string opcodes */
+  /*s: global data access opcodes */
+  GETGLOBAL, 
+  SETGLOBAL, 
+  /*x: global data access opcodes */
+  GETGLOBALFIELD,
+  /*x: global data access opcodes */
+    PUSHGETGLOBAL, PUSHGETGLOBALFIELD, 
+  /*e: global data access opcodes */
+
+  /* control */
   /*s: branching opcodes */
   BRANCH, 
   BRANCHIF, 
@@ -89,6 +89,19 @@ enum instructions {
   SWITCH, 
   BOOLNOT,
   /*e: branching opcodes */
+  /*s: function application opcodes */
+  PUSH_RETADDR, 
+  APPLY, 
+  APPTERM, 
+  RETURN, 
+  /*x: function application opcodes */
+    APPLY1, APPLY2, APPLY3,
+    APPTERM1, APPTERM2, APPTERM3, 
+  /*e: function application opcodes */
+  /*s: recursive definition opcodes */
+  DUMMY, 
+  UPDATE,
+  /*e: recursive definition opcodes */
   /*s: exception opcodes */
   PUSHTRAP, 
   POPTRAP, 
@@ -102,19 +115,22 @@ enum instructions {
   /*x: foreign C calls opcodes */
     C_CALL1, C_CALL2, C_CALL3, C_CALL4, C_CALL5,
   /*e: foreign C calls opcodes */
-  /*s: arithmetics opcodes */
-  CONSTINT,
-  NEGINT, ADDINT, SUBINT, MULINT, DIVINT, MODINT,
-  ANDINT, ORINT, XORINT, 
-  LSLINT, LSRINT, ASRINT,
-  EQ, NEQ, 
-  LTINT, LEINT, GTINT, GEINT,
-  OFFSETINT, OFFSETREF,
-  /*x: arithmetics opcodes */
-    CONST0, CONST1, CONST2, CONST3, 
-    PUSHCONSTINT,
-    PUSHCONST0, PUSHCONST1, PUSHCONST2, PUSHCONST3, 
-  /*e: arithmetics opcodes */
+
+  /* aggregate data */
+  /*s: string opcodes */
+  GETSTRINGCHAR, SETSTRINGCHAR, 
+  /*e: string opcodes */
+  /*s: array opcodes */
+  VECTLENGTH, GETVECTITEM, SETVECTITEM,
+  /*e: array opcodes */
+
+  /* misc */
+  /*s: misc opcodes */
+  RESTART, 
+  GRAB,
+  CLOSURE, 
+  CLOSUREREC,
+  /*e: misc opcodes */
   /*s: debugger opcodes */
   STOP, EVENT, BREAK
   /*e: debugger opcodes */
