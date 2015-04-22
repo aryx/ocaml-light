@@ -15,10 +15,7 @@
 /* structure of the stacks */
 
 #ifndef _stacks_
-/*s: constant _stacks_ */
 #define _stacks_
-/*e: constant _stacks_ */
-
 
 #include "misc.h"
 #include "mlvalues.h"

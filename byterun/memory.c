@@ -226,12 +226,12 @@ void adjust_gc_speed (mlsize_t mem, mlsize_t max)
 }
 /*e: function adjust_gc_speed */
 
+/*s: function initialize */
 /* You must use [initialize] to store the initial value in a field of
    a shared block, unless you are sure the value is not a young block.
    A block value [v] is a shared block if and only if [Is_in_heap (v)]
    is true.
 */
-/*s: function initialize */
 /* [initialize] never calls the GC, so you may call it while an object is
    unfinished (i.e. just after a call to [alloc_shr].) */
 void initialize (value *fp, value val)
@@ -247,10 +247,10 @@ void initialize (value *fp, value val)
 }
 /*e: function initialize */
 
+/*s: function modify */
 /* You must use [modify] to change a field of an existing shared block,
    unless you are sure the value being overwritten is not a shared block and
    the value being written is not a young block. */
-/*s: function modify */
 /* [modify] never calls the GC. */
 void modify (value *fp, value val)
 {

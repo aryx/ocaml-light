@@ -2,10 +2,7 @@
 /* MD5 message digest */
 
 #ifndef _md5
-/*s: constant _md5 */
 #define _md5
-/*e: constant _md5 */
-
 
 #include "mlvalues.h"
 #include "io.h"

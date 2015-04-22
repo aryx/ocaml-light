@@ -15,6 +15,7 @@
 /* Structured input, compact format */
 
 #include <string.h>
+
 #include "alloc.h"
 #include "fail.h"
 #include "gc.h"
@@ -25,7 +26,8 @@
 #include "misc.h"
 #include "reverse.h"
 
-static unsigned char * intern_input, * intern_src;
+static unsigned char * intern_input;
+static unsigned char * intern_src;
 /*s: global intern_input_malloced */
 static int intern_input_malloced;
 /*e: global intern_input_malloced */
@@ -334,6 +336,7 @@ value input_val(struct channel *chan)
 }
 /*e: function input_val */
 
+/*s: function input_value */
 value input_value(value vchan)        /* ML */
 {
   struct channel * chan = Channel(vchan);
@@ -346,6 +349,7 @@ value input_value(value vchan)        /* ML */
   End_roots();
   return res;
 }
+/*e: function input_value */
 
 /*s: function input_val_from_string */
 value input_val_from_string(value str, long int ofs)

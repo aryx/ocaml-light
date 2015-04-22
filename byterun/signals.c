@@ -13,6 +13,7 @@
 /*e: copyright header C xavier and damien */
 
 #include <signal.h>
+
 #include "alloc.h"
 #include "callback.h"
 #include "config.h"

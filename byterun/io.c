@@ -17,13 +17,16 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+
 #include "config.h"
+
 #ifdef HAS_UNISTD
 #include <unistd.h>
 #endif
 #ifdef __STDC__
 #include <limits.h>
 #endif
+
 #include "alloc.h"
 #include "fail.h"
 #include "io.h"
@@ -32,6 +35,7 @@
 #include "mlvalues.h"
 #include "signals.h"
 #include "sys.h"
+
 #ifdef HAS_UI
 #include "ui.h"
 #endif
@@ -523,6 +527,7 @@ value caml_output_partial(value vchannel, value buff, value start, value length)
   return Val_int(res);
 }
 
+/*s: function caml_output */
 value caml_output(value vchannel, value buff, value start, value length) /* ML */
 {
   struct channel * channel = Channel(vchannel);
@@ -540,6 +545,7 @@ value caml_output(value vchannel, value buff, value start, value length) /* ML *
   End_roots();
   return Val_unit;
 }
+/*e: function caml_output */
 
 /*s: function caml_seek_out */
 value caml_seek_out(value vchannel, value pos)    /* ML */
@@ -588,6 +594,7 @@ value caml_input_int(value vchannel)        /* ML */
 }
 /*e: function caml_input_int */
 
+/*s: function caml_input */
 value caml_input(value vchannel, value buff, value start, value length) /* ML */
 {
   struct channel * channel = Channel(vchannel);
@@ -600,6 +607,7 @@ value caml_input(value vchannel, value buff, value start, value length) /* ML */
   End_roots();
   return Val_long(res);
 }
+/*e: function caml_input */
 
 /*s: function caml_seek_in */
 value caml_seek_in(value vchannel, value pos)     /* ML */

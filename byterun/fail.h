@@ -13,12 +13,10 @@
 /*e: copyright header C xavier */
 
 #ifndef _fail_
-/*s: constant _fail_ */
 #define _fail_
-/*e: constant _fail_ */
-
 
 #include <setjmp.h>
+
 #include "misc.h"
 #include "mlvalues.h"
 
@@ -50,8 +48,8 @@
 #define STACK_OVERFLOW_EXN 8    /* "Stack_overflow" */
 /*e: constant STACK_OVERFLOW_EXN */
 
-/*s: struct longjmp_buffer */
 #ifdef POSIX_SIGNALS
+/*s: struct longjmp_buffer */
 struct longjmp_buffer {
   sigjmp_buf buf;
 };

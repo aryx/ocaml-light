@@ -13,9 +13,7 @@
 /*e: copyright header C xavier */
 
 #ifndef _str_
-/*s: constant _str_ */
 #define _str_
-/*e: constant _str_ */
 
 
 #include "misc.h"

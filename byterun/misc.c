@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include "config.h"
 #include "misc.h"
+
 #ifdef HAS_UI
 #include "ui.h"
 #endif

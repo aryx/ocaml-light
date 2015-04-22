@@ -37,13 +37,13 @@ void * stat_resize (void *, asize_t);     /* Size in bytes. */
 /* void shrink_heap (char *);        Only used in compact.c */
 
 #ifdef NATIVE_CODE
-/*s: constant Garbage_collection_function */
+/*s: constant Garbage_collection_function ifdef NATIVE_CODE */
 #define Garbage_collection_function garbage_collection
-/*e: constant Garbage_collection_function */
+/*e: constant Garbage_collection_function ifdef NATIVE_CODE */
 #else
-/*s: constant Garbage_collection_function (byterun/memory.h) */
+/*s: constant Garbage_collection_function */
 #define Garbage_collection_function minor_collection
-/*e: constant Garbage_collection_function (byterun/memory.h) */
+/*e: constant Garbage_collection_function */
 #endif
 
 /*s: function Alloc_small */
@@ -60,10 +60,10 @@ void * stat_resize (void *, asize_t);     /* Size in bytes. */
 }
 /*e: function Alloc_small */
 
+/*s: function Modify */
 /* You must use [Modify] to change a field of an existing shared block,
    unless you are sure the value being overwritten is not a shared block and
    the value being written is not a young block. */
-/*s: function Modify */
 /* [Modify] never calls the GC. */
 
 #define Modify(fp, val) {                                                   \
@@ -179,8 +179,6 @@ extern struct caml__roots_block *local_roots;  /* defined in roots.h */
 /*s: macro End_roots */
 #define End_roots() local_roots = caml__roots_block.next; }
 /*e: macro End_roots */
-
-
 
 
 /* [register_global_root] registers a global C variable as a memory root

@@ -13,9 +13,7 @@
 /*e: copyright header C damien */
 
 #ifndef _gc_
-/*s: constant _gc_ */
 #define _gc_
-/*e: constant _gc_ */
 
 
 #include "mlvalues.h"

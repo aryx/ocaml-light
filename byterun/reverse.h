@@ -15,9 +15,7 @@
 /* Swap byte-order in 32-bit integers and in words */
 
 #ifndef _reverse_
-/*s: constant _reverse_ */
 #define _reverse_
-/*e: constant _reverse_ */
 
 /*s: function Reverse_int32 */
 #define Reverse_int32(w) {                                                    \

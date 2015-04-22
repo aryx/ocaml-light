@@ -7928,8 +7928,6 @@ module IdentSet = Set
 
 <<function Bytelink.check_consistency>>
 
-<<constant Bytelink.debug_info (./bytecomp/bytelink.ml)>>
-
 <<function Bytelink.record_events>>
 
 <<function Bytelink.link_compunit>>
@@ -18218,6 +18216,17 @@ open Clflags
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 \section{C CODE START}
 
 \section{[[byterun/]]}
@@ -18380,15 +18389,6 @@ typedef char schar;
 
 \subsection*{[[byterun/mlvalues.h]]}
 
-
-<<function Wosize_hd>>=
-#define Wosize_hd(hd) ((mlsize_t) ((hd) >> 10))
-@
-
-<<function Hd_val>>=
-#define Hd_val(val) (((header_t *) (val)) [-1])        /* Also an l-value. */
-@
-
 <<function Hd_op>>=
 #define Hd_op(op) (Hd_val (op))                        /* Also an l-value. */
 @
@@ -18417,9 +18417,6 @@ typedef char schar;
 #define Val_op(op) ((value) (op))
 @
 
-<<function Val_hp>>=
-#define Val_hp(hp) ((value) (((header_t *) (hp)) + 1))
-@
 
 <<function Op_hp>>=
 #define Op_hp(hp) ((value *) Val_hp (hp))
@@ -18433,17 +18430,8 @@ typedef char schar;
 #define Num_tags (1 << 8)
 @
 
-<<constant Max_wosize>>=
-#define Max_wosize ((1L << 54) - 1)
-@
 
-<<constant Max_wosize (byterun/mlvalues.h)>>=
-#define Max_wosize ((1 << 22) - 1)
-@
 
-<<function Wosize_val>>=
-#define Wosize_val(val) (Wosize_hd (Hd_val (val)))
-@
 
 <<function Wosize_op>>=
 #define Wosize_op(op) (Wosize_val (op))
@@ -18525,19 +18513,16 @@ typedef char schar;
 #define Bhsize_hd(hd) (Bsize_wsize (Whsize_hd (hd)))
 @
 
-<<function Tag_val>>=
-#define Tag_val(val) (((unsigned char *) (val)) [-1])
-@
 
-<<function Tag_hp>>=
+<<function Tag_hp ifdef ARCH_BIG_ENDIAN>>=
 #define Tag_hp(hp) (((unsigned char *) (hp)) [sizeof(value)-1])
 @
 
-<<function Tag_val (byterun/mlvalues.h)>>=
+<<function Tag_val little endian>>=
 #define Tag_val(val) (((unsigned char *) (val)) [-sizeof(value)])
 @
 
-<<function Tag_hp (byterun/mlvalues.h)>>=
+<<function Tag_hp little endian>>=
 #define Tag_hp(hp) (((unsigned char *) (hp)) [0])
 @
 
@@ -18547,10 +18532,6 @@ typedef char schar;
 #define Op_val(x) ((value *) (x))
 @
 
-<<function Field>>=
-/* Fields are numbered from 0. */
-#define Field(x, i) (((value *)(x)) [i])           /* Also an l-value. */
-@
 
 
 
@@ -18564,13 +18545,6 @@ typedef char schar;
 @
 
 
-<<function Class_val>>=
-#define Class_val(val) Field(val, 0)
-@
-
-<<function Oid_val>>=
-#define Oid_val(val) Long_val(Field(val, 1))
-@
 
 <<function Bp_val>>=
 /* Pointer to the first byte */
@@ -18666,6 +18640,7 @@ typedef unsigned int uint32;  /* Seems like a reasonable assumption anyway. */
 <<constant Val_int>>
 <<function Int_val>>
 
+<<toplevel comment on header format>>
 <<function Tag_hd>>
 <<function Wosize_hd>>
 
@@ -18683,9 +18658,9 @@ typedef unsigned int uint32;  /* Seems like a reasonable assumption anyway. */
 
 <<constant Num_tags>>
 #ifdef ARCH_SIXTYFOUR
-<<constant Max_wosize>>
+<<constant Max_wosize ifdef ARCH_SIXTYFOUR>>
 #else
-<<constant Max_wosize (byterun/mlvalues.h)>>
+<<constant Max_wosize ifndef ARCH_SIXTYFOUR>>
 #endif
 
 <<function Wosize_val>>
@@ -18711,14 +18686,14 @@ typedef unsigned int uint32;  /* Seems like a reasonable assumption anyway. */
 <<function Bhsize_hd>>
 
 #ifdef ARCH_BIG_ENDIAN
-<<function Tag_val>>
+<<function Tag_val ifdef ARCH_BIG_ENDIAN>>
                                                  /* Also an l-value. */
-<<function Tag_hp>>
+<<function Tag_hp ifdef ARCH_BIG_ENDIAN>>
                                                  /* Also an l-value. */
 #else
-<<function Tag_val (byterun/mlvalues.h)>>
+<<function Tag_val little endian>>
                                                  /* Also an l-value. */
-<<function Tag_hp (byterun/mlvalues.h)>>
+<<function Tag_hp little endian>>
                                                  /* Also an l-value. */
 #endif
 
@@ -18856,51 +18831,6 @@ extern char * names_of_cprim[];
 
 \subsection*{[[byterun/memory.h]]}
 
-<<constant Garbage_collection_function>>=
-#define Garbage_collection_function garbage_collection
-@
-% for native code
-
-<<constant Garbage_collection_function (byterun/memory.h)>>=
-#define Garbage_collection_function minor_collection
-@
-% for bytecode
-
-<<function Alloc_small>>=
-#define Alloc_small(result, wosize, tag) {            Assert (wosize >= 1); \
-  young_ptr -= Bhsize_wosize (wosize);                                      \
-  if (young_ptr < young_limit){                                             \
-    Setup_for_gc;                                                           \
-    Garbage_collection_function ();                                         \
-    Restore_after_gc;                                                       \
-    young_ptr -= Bhsize_wosize (wosize);                                    \
-  }                                                                         \
-  Hd_hp (young_ptr) = Make_header ((wosize), (tag), Black);                 \
-  (result) = Val_hp (young_ptr);                                            \
-}
-@
-
-<<function Modify>>=
-/* [Modify] never calls the GC. */
-
-#define Modify(fp, val) {                                                   \
-  value _old_ = *(fp);                                                      \
-  *(fp) = (val);                                                            \
-  if (Is_in_heap (fp)){                                                     \
-    if (gc_phase == Phase_mark) darken (_old_, NULL);                       \
-    if (Is_block (val) && Is_young (val)                                    \
-        && ! (Is_block (_old_) && Is_young (_old_))){                       \
-      *ref_table_ptr++ = (fp);                                              \
-      if (ref_table_ptr >= ref_table_limit){                                \
-        Assert (ref_table_ptr == ref_table_limit);                          \
-        realloc_ref_table ();                                               \
-      }                                                                     \
-    }                                                                       \
-  }                                                                         \
-}                                                                           \
-@
-
-
 
 
 %-------------------------------------------------------------
@@ -18933,16 +18863,13 @@ void * stat_resize (void *, asize_t);     /* Size in bytes. */
 /* void shrink_heap (char *);        Only used in compact.c */
 
 #ifdef NATIVE_CODE
-<<constant Garbage_collection_function>>
+<<constant Garbage_collection_function ifdef NATIVE_CODE>>
 #else
-<<constant Garbage_collection_function (byterun/memory.h)>>
+<<constant Garbage_collection_function>>
 #endif
 
 <<function Alloc_small>>
 
-/* You must use [Modify] to change a field of an existing shared block,
-   unless you are sure the value being overwritten is not a shared block and
-   the value being written is not a young block. */
 <<function Modify>>
 
 <<struct caml__roots_block>>
@@ -19004,8 +18931,6 @@ extern struct caml__roots_block *local_roots;  /* defined in roots.h */
   caml__roots_block.tables[0] = (table);
 
 <<macro End_roots>>
-
-
 
 
 /* [register_global_root] registers a global C variable as a memory root
@@ -19129,6 +19054,11 @@ void adjust_gc_speed (mlsize_t mem, mlsize_t max)
 @
 
 <<function initialize>>=
+/* You must use [initialize] to store the initial value in a field of
+   a shared block, unless you are sure the value is not a young block.
+   A block value [v] is a shared block if and only if [Is_in_heap (v)]
+   is true.
+*/
 /* [initialize] never calls the GC, so you may call it while an object is
    unfinished (i.e. just after a call to [alloc_shr].) */
 void initialize (value *fp, value val)
@@ -19144,13 +19074,6 @@ void initialize (value *fp, value val)
 }
 @
 
-<<function modify>>=
-/* [modify] never calls the GC. */
-void modify (value *fp, value val)
-{
-  Modify (fp, val);
-}
-@
 
 
 
@@ -19209,16 +19132,8 @@ void * stat_resize (void * blk, asize_t sz)
 
 <<function adjust_gc_speed>>
 
-/* You must use [initialize] to store the initial value in a field of
-   a shared block, unless you are sure the value is not a young block.
-   A block value [v] is a shared block if and only if [Is_in_heap (v)]
-   is true.
-*/
 <<function initialize>>
 
-/* You must use [modify] to change a field of an existing shared block,
-   unless you are sure the value being overwritten is not a shared block and
-   the value being written is not a young block. */
 <<function modify>>
 
 <<function stat_alloc>>
@@ -19902,26 +19817,6 @@ int convert_flag_list(value list, int *flags)
 
 \subsection*{[[byterun/gc.h]]}
 
-<<constant _gc_>>=
-#define _gc_
-@
-
-<<constant White>>=
-#define White (0 << 8)
-@
-
-<<constant Gray>>=
-#define Gray  (1 << 8)
-@
-
-<<constant Blue>>=
-#define Blue  (2 << 8)
-@
-
-<<constant Black>>=
-#define Black (3 << 8)
-@
-
 <<function Color_hd>>=
 #define Color_hd(hd) ((color_t) ((hd) & Black))
 @
@@ -19962,13 +19857,6 @@ int convert_flag_list(value list, int *flags)
 #define Bluehd_hd(hd)  (((hd)  & ~Black)  | Blue)
 @
 
-<<function Make_header>>=
-/* This depends on the layout of the header.  See [mlvalues.h]. */
-#define Make_header(wosize, tag, color)                                       \
-       ((header_t) (((header_t) (wosize) << 10)                               \
-                    + (color)                                                 \
-                    + (tag_t) (tag)))
-@
 
 <<function Color_val>>=
 #define Color_val(val) (Color_hd (Hd_val (val)))
@@ -19997,7 +19885,7 @@ int convert_flag_list(value list, int *flags)
 <<copyright header C damien>>
 
 #ifndef _gc_
-<<constant _gc_>>
+#define _gc_
 
 
 #include "mlvalues.h"
@@ -20036,18 +19924,13 @@ int convert_flag_list(value list, int *flags)
 
 \subsection*{[[byterun/gc_ctrl.h]]}
 
-<<constant _gc_ctrl_>>=
-#define _gc_ctrl_
-@
-
-
 %-------------------------------------------------------------
 
 <<byterun/gc_ctrl.h>>=
 <<copyright header C damien>>
 
 #ifndef _gc_ctrl_
-<<constant _gc_ctrl_>>
+#define _gc_ctrl_
 
 #include "misc.h"
 
@@ -21183,14 +21066,6 @@ static void update_weak_pointers (void);
 
 \subsection*{[[byterun/minor_gc.h]]}
 
-<<constant _minor_gc_>>=
-#define _minor_gc_
-@
-
-<<function Is_young>>=
-#define Is_young(val) \
-  ((addr)(val) > (addr)young_start && (addr)(val) < (addr)young_end)
-@
 
 
 %-------------------------------------------------------------
@@ -21199,8 +21074,7 @@ static void update_weak_pointers (void);
 <<copyright header C damien>>
 
 #ifndef _minor_gc_
-<<constant _minor_gc_>>
-
+#define _minor_gc_
 
 #include "misc.h"
 
@@ -21320,29 +21194,6 @@ void oldify (value v, value *p)
 }
 @
 
-<<function minor_collection>>=
-void minor_collection (void)
-{
-  value **r;
-  long prev_alloc_words = allocated_words;
-
-  in_minor_collection = 1;
-  gc_message ("<", 0);
-  oldify_local_roots();
-  for (r = ref_table; r < ref_table_ptr; r++) oldify (**r, *r);
-  stat_minor_words += Wsize_bsize (young_end - young_ptr);
-  young_ptr = young_end;
-  ref_table_ptr = ref_table;
-  ref_table_limit = ref_table_threshold;
-  gc_message (">", 0);
-  in_minor_collection = 0;
-
-  stat_promoted_words += allocated_words - prev_alloc_words;
-  ++ stat_minor_collections;
-  major_collection_slice ();
-  force_major_slice = 0;
-}
-@
 
 <<function check_urgent_gc>>=
 value check_urgent_gc (value extra_root)
@@ -21391,6 +21242,7 @@ void realloc_ref_table (void)
 <<copyright header C damien>>
 
 #include <string.h>
+
 #include "config.h"
 #include "fail.h"
 #include "gc.h"
@@ -21404,11 +21256,22 @@ void realloc_ref_table (void)
 #include "signals.h"
 
 <<global minor_heap_size>>
-char *young_start = NULL, *young_end = NULL;
-char *young_ptr = NULL, *young_limit = NULL;
-static value **ref_table = NULL, **ref_table_end, **ref_table_threshold;
-value **ref_table_ptr = NULL, **ref_table_limit;
-static asize_t ref_table_size, ref_table_reserve;
+char *young_start = NULL;
+char *young_end = NULL;
+
+char *young_ptr = NULL;
+char *young_limit = NULL;
+
+static value **ref_table = NULL;
+static char **ref_table_end;
+stathc char **ref_table_threshold;
+
+value **ref_table_ptr = NULL;
+value **ref_table_limit;
+
+static asize_t ref_table_size;
+static asize_t ref_table_reserve;
+
 <<global in_minor_collection>>
 
 <<function set_minor_heap_size>>
@@ -21425,10 +21288,6 @@ static asize_t ref_table_size, ref_table_reserve;
 
 \subsection*{[[byterun/compact.h]]}
 
-<<constant _compact_>>=
-#define _compact_
-@
-
 
 %-------------------------------------------------------------
 
@@ -21436,8 +21295,7 @@ static asize_t ref_table_size, ref_table_reserve;
 <<copyright header C damien>>
 
 #ifndef _compact_
-<<constant _compact_>>
-
+#define _compact_
 
 #include "config.h"
 #include "misc.h"
@@ -22047,59 +21905,6 @@ static void hash_aux(value obj)
 
 \subsection*{[[byterun/array.c]]}
 
-<<function array_get>>=
-value array_get(value array, value index)   /* ML */
-{
-  long idx = Long_val(index);
-  if (idx < 0 || idx >= Wosize_val(array)) invalid_argument("Array.get");
-  return Field(array, idx);
-}
-@
-
-<<function array_set>>=
-value array_set(value array, value index, value newval)   /* ML */
-{
-  long idx = Long_val(index);
-  if (idx < 0 || idx >= Wosize_val(array)) invalid_argument("Array.set");
-  Modify(&Field(array, idx), newval);
-  return Val_unit;
-}
-@
-
-<<function make_vect>>=
-value make_vect(value len, value init)      /* ML */
-{
-  value res;
-  mlsize_t size, i;
-
-  size = Long_val(len);
-  if (size > Max_wosize) invalid_argument("Array.make");
-
-  Begin_root(init);
-    if (size == 0) {
-      res = Atom(0);
-    }
-    else if (size < Max_young_wosize) {
-      res = alloc(size, 0);
-      for (i = 0; i < size; i++) Field(res, i) = init;
-    }
-    else if (Is_block(init) && Is_young(init)) {
-      minor_collection();
-      res = alloc_shr(size, 0);
-      for (i = 0; i < size; i++) Field(res, i) = init;
-      res = check_urgent_gc (res);
-    }
-    else {
-      res = alloc_shr(size, 0);
-      for (i = 0; i < size; i++) initialize(&Field(res, i), init);
-      res = check_urgent_gc (res);
-    }
-  End_roots();
-  return res;
-}
-@
-
-
 %-------------------------------------------------------------
 
 <<byterun/array.c>>=
@@ -22123,10 +21928,6 @@ value make_vect(value len, value init)      /* ML */
 
 \subsection*{[[byterun/stacks.h]]}
 
-<<constant _stacks_>>=
-#define _stacks_
-@
-
 <<function Trap_pc>>=
 #define Trap_pc(tp) (((code_t *)(tp))[0])
 @
@@ -22144,8 +21945,7 @@ value make_vect(value len, value init)      /* ML */
 /* structure of the stacks */
 
 #ifndef _stacks_
-<<constant _stacks_>>
-
+#define _stacks_
 
 #include "misc.h"
 #include "mlvalues.h"
@@ -22174,93 +21974,8 @@ void change_max_stack_size (unsigned long new_max_size);
 
 \subsection*{[[byterun/stacks.c]]}
 
-<<global stack_low>>=
-value * stack_low;
-@
-
-<<global stack_high>>=
-value * stack_high;
-@
-
-<<global stack_threshold>>=
-value * stack_threshold;
-@
-
-
-
 <<global trap_barrier>>=
 value * trap_barrier;
-@
-
-
-<<global max_stack_size>>=
-unsigned long max_stack_size;            /* also used in gc_ctrl.c */
-@
-
-<<function init_stack>>=
-void init_stack (long unsigned int initial_max_size)
-{
-  stack_low = (value *) stat_alloc(Stack_size);
-  stack_high = stack_low + Stack_size / sizeof (value);
-  stack_threshold = stack_low + Stack_threshold / sizeof (value);
-  extern_sp = stack_high;
-  trapsp = stack_high;
-  trap_barrier = stack_high + 1;
-  max_stack_size = initial_max_size;
-  gc_message ("Initial stack limit: %luk bytes\n",
-          max_stack_size / 1024 * sizeof (value));
-}
-@
-
-<<function realloc_stack>>=
-void realloc_stack(void)
-{        
-  asize_t size;
-  value * new_low, * new_high, * new_sp;
-  value * p;
-
-  Assert(extern_sp >= stack_low);
-  size = stack_high - stack_low;
-  if (size >= max_stack_size) raise_stack_overflow();
-  size *= 2;
-  gc_message ("Growing stack to %luk bytes\n",
-              (unsigned long) size * sizeof(value) / 1024);
-  new_low = (value *) stat_alloc(size * sizeof(value));
-  new_high = new_low + size;
-
-#define shift(ptr) \
-    ((char *) new_high - ((char *) stack_high - (char *) (ptr)))
-
-  new_sp = (value *) shift(extern_sp);
-  bcopy((char *) extern_sp,
-        (char *) new_sp,
-        (stack_high - extern_sp) * sizeof(value));
-  stat_free(stack_low);
-  trapsp = (value *) shift(trapsp);
-  trap_barrier = (value *) shift(trap_barrier);
-  for (p = trapsp; p < new_high; p = Trap_link(p))
-    Trap_link(p) = (value *) shift(Trap_link(p));
-  stack_low = new_low;
-  stack_high = new_high;
-  stack_threshold = stack_low + Stack_threshold / sizeof (value);
-  extern_sp = new_sp;
-
-#undef shift
-}
-@
-
-<<function change_max_stack_size>>=
-void change_max_stack_size (long unsigned int new_max_size)
-{
-  asize_t size = stack_high - extern_sp + Stack_threshold / sizeof (value);
-
-  if (new_max_size < size) new_max_size = size;
-  if (new_max_size != max_stack_size){
-    gc_message ("Changing stack limit to %luk bytes\n",
-                new_max_size * sizeof (value) / 1024);
-  }
-  max_stack_size = new_max_size;
-}
 @
 
 
@@ -22272,6 +21987,7 @@ void change_max_stack_size (long unsigned int new_max_size)
 /* To initialize and resize the stacks */
 
 #include <string.h>
+
 #include "config.h"
 #include "fail.h"
 #include "misc.h"
@@ -22298,10 +22014,6 @@ void change_max_stack_size (long unsigned int new_max_size)
 
 \subsection*{[[byterun/callback.h]]}
 
-<<constant _callback_>>=
-#define _callback_
-@
-
 
 %-------------------------------------------------------------
 
@@ -22311,7 +22023,7 @@ void change_max_stack_size (long unsigned int new_max_size)
 /* Callbacks from C to Caml */
 
 #ifndef _callback_
-<<constant _callback_>>
+#define _callback_
 
 #include "mlvalues.h"
 
@@ -22480,6 +22192,7 @@ value * caml_named_value(char *name)
 /* Callbacks from C to Caml */
 
 #include <string.h>
+
 #include "callback.h"
 #include "memory.h"
 #include "mlvalues.h"
@@ -22710,92 +22423,6 @@ value greaterequal(value v1, value v2)       /* ML */
 
 \subsection*{[[byterun/debugger.h]]}
 
-<<constant _debugger_>>=
-#define _debugger_
-@
-
-<<enum event_kind>>=
-enum event_kind {
-  EVENT_COUNT, BREAKPOINT, PROGRAM_START, PROGRAM_EXIT,
-  TRAP_BARRIER, UNCAUGHT_EXC
-};
-@
-
-<<enum debugger_request>>=
-/* Requests from the debugger to the runtime system */
-
-enum debugger_request {
-  REQ_SET_EVENT = 'e',          /* uint32 pos */
-  /* Set an event on the instruction at position pos */
-  REQ_SET_BREAKPOINT = 'B',     /* uint32 pos */
-  /* Set a breakpoint at position pos */
-  REQ_RESET_INSTR = 'i',        /* uint32 pos */
-  /* Clear an event or breapoint at position pos, restores initial instr. */
-  REQ_CHECKPOINT = 'c',         /* no args */
-  /* Checkpoint the runtime system by forking a child process. 
-     Reply is pid of child process or -1 if checkpoint failed. */
-  REQ_GO = 'g',                 /* uint32 n */
-  /* Run the program for n events.
-     Reply is one of debugger_reply described below. */
-  REQ_STOP = 's',               /* no args */
-  /* Terminate the runtime system */
-  REQ_WAIT = 'w',               /* no args */
-  /* Reap one dead child (a discarded checkpoint). */
-  REQ_INITIAL_FRAME = '0',      /* no args */
-  /* Set current frame to bottom frame (the one currently executing).
-     Reply is stack offset and current pc. */
-  REQ_GET_FRAME = 'f',          /* no args */
-  /* Return current frame location (stack offset + current pc). */
-  REQ_SET_FRAME = 'S',          /* uint32 stack_offset */
-  /* Set current frame to given stack offset. No reply. */
-  REQ_UP_FRAME = 'U',           /* uint32 n */
-  /* Move one frame up. Argument n is size of current frame (in words).
-     Reply is stack offset and current pc, or -1 if top of stack reached. */
-  REQ_SET_TRAP_BARRIER = 'b',   /* uint32 offset */
-  /* Set the trap barrier at the given offset. */
-  REQ_GET_LOCAL = 'L',          /* uint32 slot_number */
-  /* Return the local variable at the given slot in the current frame.
-     Reply is one value. */
-  REQ_GET_ENVIRONMENT = 'E',    /* uint32 slot_number */
-  /* Return the local variable at the given slot in the heap environment
-     of the current frame. Reply is one value. */
-  REQ_GET_GLOBAL = 'G',         /* uint32 global_number */
-  /* Return the specified global variable. Reply is one value. */
-  REQ_GET_ACCU = 'A',           /* no args */
-  /* Return the current contents of the accumulator. Reply is one value. */
-  REQ_GET_HEADER = 'H',         /* mlvalue v */
-  /* As REQ_GET_OBJ, but sends only the header. */
-  REQ_GET_FIELD = 'F',          /* mlvalue v, uint32 fieldnum */
-  /* As REQ_GET_OBJ, but sends only one field. */
-  REQ_MARSHAL_OBJ = 'M',        /* mlvalue v */
-  /* Send a copy of the data structure rooted at v, using the same
-     format as output_value. */
-  REQ_GET_CLOSURE_CODE = 'C'    /* mlvalue v */
-  /* Send the code address of the given closure.
-     Reply is one uint32. */
-};
-@
-
-<<enum debugger_reply>>=
-/* Replies to a REQ_GO request. All replies are followed by three uint32:
-   - the value of the event counter
-   - the position of the stack
-   - the current pc. */
-
-enum debugger_reply {
-  REP_EVENT = 'e',
-  /* Event counter reached 0. */
-  REP_BREAKPOINT = 'b',
-  /* Breakpoint hit. */
-  REP_EXITED = 'x',
-  /* Program exited by calling exit or reaching the end of the source. */
-  REP_TRAP = 's',
-  /* Trap barrier crossed. */
-  REP_UNCAUGHT_EXC = 'u'
-  /* Program exited due to a stray exception. */
-};
-@
-
 
 %-------------------------------------------------------------
 
@@ -22805,7 +22432,7 @@ enum debugger_reply {
 /* Interface with the debugger */
 
 #ifndef _debugger_
-<<constant _debugger_>>
+#define _debugger_
 
 #include "misc.h"
 #include "mlvalues.h"
@@ -22836,21 +22463,21 @@ void debugger (enum event_kind event);
 int debugger_in_use = 0;
 @
 
-<<global event_count>>=
-unsigned long event_count;
-@
 
-<<function debugger_init>>=
+<<function debugger_init ifndef HAS_SOCKETS>>=
 void debugger_init(void)
 {
 }
 @
 
-<<function debugger>>=
+<<function debugger ifndef HAS_SOCKETS>>=
 void debugger(enum event_kind event)
 {
 }
 @
+
+
+
 
 <<global sock_domain>>=
 static int sock_domain;         /* Socket domain for the debugger */
@@ -22904,7 +22531,7 @@ static void close_connection(void)
 }
 @
 
-<<function debugger_init (byterun/debugger.c)>>=
+<<function debugger_init>>=
 void debugger_init(void)
 {
   char * address;
@@ -23002,162 +22629,6 @@ static void safe_output_value(struct channel *chan, value val)
 #define Locals(sp) (sp + 3)
 @
 
-<<function debugger (byterun/debugger.c)>>=
-void debugger(enum event_kind event)
-{
-  int frame_number;
-  value * frame;
-  long i, pos;
-  value val;
-
-  if (dbg_socket == -1) return;  /* Not connected to a debugger. */
-
-  /* Reset current frame */
-  frame_number = 0;
-  frame = extern_sp + 1;
-
-  /* Report the event to the debugger */
-  switch(event) {
-  case PROGRAM_START:           /* Nothing to report */
-    goto command_loop;
-  case EVENT_COUNT:
-    putch(dbg_out, REP_EVENT);
-    break;
-  case BREAKPOINT:
-    putch(dbg_out, REP_BREAKPOINT);
-    break;
-  case PROGRAM_EXIT:
-    putch(dbg_out, REP_EXITED);
-    break;
-  case TRAP_BARRIER:
-    putch(dbg_out, REP_TRAP);
-    break;
-  case UNCAUGHT_EXC:
-    putch(dbg_out, REP_UNCAUGHT_EXC);
-    break;
-  }
-  putword(dbg_out, event_count);
-  if (event == EVENT_COUNT || event == BREAKPOINT) {
-    putword(dbg_out, stack_high - frame);
-    putword(dbg_out, (Pc(frame) - start_code) * sizeof(opcode_t));
-  } else {
-    /* No PC and no stack frame associated with other events */
-    putword(dbg_out, 0);
-    putword(dbg_out, 0);
-  }
-  flush(dbg_out);
-
- command_loop:
-  
-  /* Read and execute the commands sent by the debugger */
-  while(1) {
-    switch(getch(dbg_in)) {
-    case REQ_SET_EVENT:
-      pos = getword(dbg_in);
-      Assert(pos >= 0 && pos < code_size);
-      set_instruction(start_code + pos / sizeof(opcode_t), EVENT);
-      break;
-    case REQ_SET_BREAKPOINT:
-      pos = getword(dbg_in);
-      Assert(pos >= 0 && pos < code_size);
-      set_instruction(start_code + pos / sizeof(opcode_t), BREAK);
-      break;
-    case REQ_RESET_INSTR:
-      pos = getword(dbg_in);
-      Assert(pos >= 0 && pos < code_size);
-      pos = pos / sizeof(opcode_t);
-      set_instruction(start_code + pos, saved_code[pos]);
-      break;
-    case REQ_CHECKPOINT:
-      i = fork();
-      if (i == 0) {
-        close_connection();     /* Close parent connection. */
-        open_connection();      /* Open new connection with debugger */
-      } else {
-        putword(dbg_out, i);
-        flush(dbg_out);
-      }
-      break;
-    case REQ_GO:
-      event_count = getword(dbg_in);
-      return;
-    case REQ_STOP:
-      exit(0);
-      break;
-    case REQ_WAIT:
-      wait(NULL);
-      break;
-    case REQ_INITIAL_FRAME:
-      frame = extern_sp + 1;
-      /* Fall through */
-    case REQ_GET_FRAME:
-      putword(dbg_out, stack_high - frame);
-      putword(dbg_out, (Pc(frame) - start_code) * sizeof(opcode_t));
-      flush(dbg_out);
-      break;
-    case REQ_SET_FRAME:
-      i = getword(dbg_in);
-      frame = stack_high - i;
-      break;
-    case REQ_UP_FRAME:
-      i = getword(dbg_in);
-      if (frame + Extra_args(frame) + i + 3 >= stack_high) {
-        putword(dbg_out, -1);
-      } else {
-        frame += Extra_args(frame) + i + 3;
-        putword(dbg_out, stack_high - frame);
-        putword(dbg_out, (Pc(frame) - start_code) * sizeof(opcode_t));
-      }
-      flush(dbg_out);
-      break;
-    case REQ_SET_TRAP_BARRIER:
-      i = getword(dbg_in);
-      trap_barrier = stack_high - i;
-      break;
-    case REQ_GET_LOCAL:
-      i = getword(dbg_in);
-      putval(dbg_out, Locals(frame)[i]);
-      flush(dbg_out);
-      break;
-    case REQ_GET_ENVIRONMENT:
-      i = getword(dbg_in);
-      putval(dbg_out, Field(Env(frame), i));
-      flush(dbg_out);
-      break;
-    case REQ_GET_GLOBAL:
-      i = getword(dbg_in);
-      putval(dbg_out, Field(global_data, i));
-      flush(dbg_out);
-      break;
-    case REQ_GET_ACCU:
-      putval(dbg_out, *extern_sp);
-      flush(dbg_out);
-      break;
-    case REQ_GET_HEADER:
-      val = getval(dbg_in);
-      putword(dbg_out, Hd_val(val));
-      flush(dbg_out);
-      break;
-    case REQ_GET_FIELD:
-      val = getval(dbg_in);
-      i = getword(dbg_in);
-      putval(dbg_out, Field(val, i));
-      flush(dbg_out);
-      break;
-    case REQ_MARSHAL_OBJ:
-      val = getval(dbg_in);
-      safe_output_value(dbg_out, val);
-      flush(dbg_out);
-      break;
-    case REQ_GET_CLOSURE_CODE:
-      val = getval(dbg_in);
-      putword(dbg_out, (Code_val(val) - start_code) * sizeof(opcode_t));
-      flush(dbg_out);
-      break;
-    }
-  }
-}
-@
 
 
 %-------------------------------------------------------------
@@ -23186,9 +22657,9 @@ void debugger(enum event_kind event)
 
 #if !defined(HAS_SOCKETS)
 
-<<function debugger_init>>
+<<function debugger_init ifndef HAS_SOCKETS>>
 
-<<function debugger>>
+<<function debugger ifndef HAS_SOCKETS>>
 
 #else
 
@@ -23215,7 +22686,7 @@ void debugger(enum event_kind event)
 
 <<function close_connection>>
 
-<<function debugger_init (byterun/debugger.c)>>
+<<function debugger_init>>
 
 <<function getval>>
 
@@ -23228,7 +22699,7 @@ void debugger(enum event_kind event)
 <<function Extra_args>>
 <<function Locals>>
 
-<<function debugger (byterun/debugger.c)>>
+<<function debugger>>
 
 #endif
 @
@@ -23260,7 +22731,6 @@ void disasm_instr (code_t pc);
 
 
 \subsection*{[[byterun/instrtrace.c]]}
-
 
 
 %-------------------------------------------------------------
@@ -23319,11 +22789,11 @@ static unsigned long extern_table_size;
 static byteoffset_t obj_counter;    /* Number of objects emitted so far */
 @
 
-<<function Hash>>=
+<<function Hash ifdef ARCH_SIXTYFOUR>>=
 #define Hash(v) (((unsigned long) ((v) >> 3)) % extern_table_size)
 @
 
-<<function Hash (byterun/extern.c)>>=
+<<function Hash>>=
 #define Hash(v) (((unsigned long) ((v) >> 2)) % extern_table_size)
 @
 
@@ -23751,6 +23221,7 @@ value output_value_to_buffer(value buf, value ofs, value len, value v, value fla
 /* Structured output */
 
 #include <string.h>
+
 #include "alloc.h"
 #include "fail.h"
 #include "gc.h"
@@ -23774,9 +23245,9 @@ typedef unsigned long byteoffset_t;
 <<global obj_counter>>
 
 #ifdef ARCH_SIXTYFOUR
-<<function Hash>>
+<<function Hash ifdef ARCH_SIXTYFOUR>>
 #else
-<<function Hash (byterun/extern.c)>>
+<<function Hash>>
 #endif
 
 <<function alloc_extern_table>>
@@ -23787,7 +23258,9 @@ typedef unsigned long byteoffset_t;
 
 /* To buffer the output */
 
-static char * extern_block, * extern_ptr, * extern_limit;
+static char * extern_block;
+static char * extern_ptr;
+static char * extern_limit;
 <<global extern_block_malloced>>
 
 <<function alloc_extern_block>>
@@ -23831,16 +23304,7 @@ static char * extern_block, * extern_ptr, * extern_limit;
 
 <<function output_val>>
 
-value output_value(value vchan, value v, value flags) /* ML */
-{
-  struct channel * channel = Channel(vchan);
-  Begin_root(v)
-    Lock(channel);
-    output_val(channel, v, flags);
-    Unlock(channel);
-  End_roots();
-  return Val_unit;
-}
+<<function output_value>>
 
 <<function output_value_to_string>>
 
@@ -23850,10 +23314,6 @@ value output_value(value vchan, value v, value flags) /* ML */
 
 
 \subsection*{[[byterun/fail.h]]}
-
-<<constant _fail_>>=
-#define _fail_
-@
 
 <<constant OUT_OF_MEMORY_EXN>>=
 #define OUT_OF_MEMORY_EXN 0     /* "Out_of_memory" */
@@ -23892,7 +23352,6 @@ value output_value(value vchan, value v, value flags) /* ML */
 @
 
 <<struct longjmp_buffer>>=
-#ifdef POSIX_SIGNALS
 struct longjmp_buffer {
   sigjmp_buf buf;
 };
@@ -23905,10 +23364,10 @@ struct longjmp_buffer {
 <<copyright header C xavier>>
 
 #ifndef _fail_
-<<constant _fail_>>
-
+#define _fail_
 
 #include <setjmp.h>
+
 #include "misc.h"
 #include "mlvalues.h"
 
@@ -23922,6 +23381,7 @@ struct longjmp_buffer {
 <<constant MATCH_FAILURE_EXN>>
 <<constant STACK_OVERFLOW_EXN>>
 
+#ifdef POSIX_SIGNALS
 <<struct longjmp_buffer>>
 #else
 struct longjmp_buffer {
@@ -24130,10 +23590,6 @@ void raise_not_found(void)
 
 \subsection*{[[byterun/fix_code.h]]}
 
-<<constant _fix_code_>>=
-#define _fix_code_
-@
-
 
 %-------------------------------------------------------------
 
@@ -24143,7 +23599,7 @@ void raise_not_found(void)
 /* Handling of blocks of bytecode (endianness switch, threading). */
 
 #ifndef _fix_code_
-<<constant _fix_code_>>
+#define _fix_code_
 
 
 #include "config.h"
@@ -24312,6 +23768,7 @@ void set_instruction(code_t pos, opcode_t instr)
 #include "misc.h"
 #include "mlvalues.h"
 #include "reverse.h"
+
 #ifdef HAS_UNISTD
 #include <unistd.h>
 #endif
@@ -24348,10 +23805,6 @@ void set_instruction(code_t pos, opcode_t instr)
 
 
 \subsection*{[[byterun/intext.h]]}
-
-<<constant __intext__>>=
-#define __intext__
-@
 
 <<constant Intext_magic_number>>=
 /* Magic number */
@@ -24504,8 +23957,8 @@ void set_instruction(code_t pos, opcode_t instr)
 
 /* Structured input/output */
 
-#ifndef __intext__
-<<constant __intext__>>
+#ifndef _intext_
+#define _intext_
 
 #include "misc.h"
 #include "mlvalues.h"
@@ -24829,6 +24282,7 @@ unsigned char * code_checksum(void)
 /* Structured input, compact format */
 
 #include <string.h>
+
 #include "alloc.h"
 #include "fail.h"
 #include "gc.h"
@@ -24839,7 +24293,8 @@ unsigned char * code_checksum(void)
 #include "misc.h"
 #include "reverse.h"
 
-static unsigned char * intern_input, * intern_src;
+static unsigned char * intern_input;
+static unsigned char * intern_src;
 <<global intern_input_malloced>>
 <<global intern_dest>>
 <<global obj_counter (byterun/intern.c)>>
@@ -25027,18 +24482,7 @@ static void intern_rec(value *dest)
 
 <<function input_val>>
 
-value input_value(value vchan)        /* ML */
-{
-  struct channel * chan = Channel(vchan);
-  value res = Val_unit;
-
-  Begin_root(res)
-    Lock(chan);
-    res = input_val(chan);
-    Unlock(chan);
-  End_roots();
-  return res;
-}
+<<function input_value>>
 
 <<function input_val_from_string>>
 
@@ -25160,6 +24604,7 @@ value format_int(value fmt, value arg)      /* ML */
 
 #include <stdio.h>
 #include <string.h>
+
 #include "alloc.h"
 #include "fail.h"
 #include "memory.h"
@@ -25550,6 +24995,7 @@ void init_ieee_floats(void)
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "alloc.h"
 #include "fail.h"
 #include "memory.h"
@@ -25659,10 +25105,6 @@ void init_ieee_floats(void)
 
 \subsection*{[[byterun/io.h]]}
 
-<<constant _io_>>=
-#define _io_
-@
-
 <<constant IO_BUFFER_SIZE>>=
 #define IO_BUFFER_SIZE 4096
 @
@@ -25710,8 +25152,7 @@ struct channel {
 /* Buffered input/output */
 
 #ifndef _io_
-<<constant _io_>>
-
+#define _io_
 
 #include "misc.h"
 #include "mlvalues.h"
@@ -26327,13 +25768,16 @@ value caml_input_scan_line(value vchannel)       /* ML */
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+
 #include "config.h"
+
 #ifdef HAS_UNISTD
 #include <unistd.h>
 #endif
 #ifdef __STDC__
 #include <limits.h>
 #endif
+
 #include "alloc.h"
 #include "fail.h"
 #include "io.h"
@@ -26342,6 +25786,7 @@ value caml_input_scan_line(value vchannel)       /* ML */
 #include "mlvalues.h"
 #include "signals.h"
 #include "sys.h"
+
 #ifdef HAS_UI
 #include "ui.h"
 #endif
@@ -26443,23 +25888,7 @@ value caml_output_partial(value vchannel, value buff, value start, value length)
   return Val_int(res);
 }
 
-value caml_output(value vchannel, value buff, value start, value length) /* ML */
-{
-  struct channel * channel = Channel(vchannel);
-  long pos = Long_val(start);
-  long len = Long_val(length);
-
-  Begin_root(buff)
-    Lock(channel);
-      while (len > 0) {
-        int written = putblock(channel, &Byte(buff, pos), len);
-        pos += written;
-        len -= written;
-      }
-    Unlock(channel);
-  End_roots();
-  return Val_unit;
-}
+<<function caml_output>>
 
 <<function caml_seek_out>>
 
@@ -26469,18 +25898,7 @@ value caml_output(value vchannel, value buff, value start, value length) /* ML *
 
 <<function caml_input_int>>
 
-value caml_input(value vchannel, value buff, value start, value length) /* ML */
-{
-  struct channel * channel = Channel(vchannel);
-  long res;
-
-  Begin_root(buff)
-    Lock(channel);
-    res = getblock(channel, &Byte(buff, Long_val(start)), Long_val(length));
-    Unlock(channel);
-  End_roots();
-  return Val_long(res);
-}
+<<function caml_input>>
 
 <<function caml_seek_in>>
 
@@ -26517,13 +25935,13 @@ struct lexing_table {
 };
 @
 
-<<function Short>>=
+<<function Short ifdef ARCH_BIG_ENDIAN>>=
 #define Short(tbl,n) \
   (*((unsigned char *)((tbl) + (n) * sizeof(short))) + \
           (*((schar *)((tbl) + (n) * sizeof(short) + 1)) << 8))
 @
 
-<<function Short (byterun/lexing.c)>>=
+<<function Short>>=
 #define Short(tbl,n) (((short *)(tbl))[n])
 @
 
@@ -26604,9 +26022,9 @@ value lex_engine(struct lexing_table *tbl, value start_state, struct lexer_buffe
 <<struct lexing_table>>
 
 #ifdef ARCH_BIG_ENDIAN
-<<function Short>>
+<<function Short ifdef ARCH_BIG_ENDIAN>>
 #else
-<<function Short (byterun/lexing.c)>>
+<<function Short>>
 #endif
 
 <<function lex_engine>>
@@ -26615,10 +26033,6 @@ value lex_engine(struct lexing_table *tbl, value start_state, struct lexer_buffe
 
 
 \subsection*{[[byterun/md5.h]]}
-
-<<constant _md5>>=
-#define _md5
-@
 
 <<struct MD5Context>>=
 struct MD5Context {
@@ -26635,8 +26049,7 @@ struct MD5Context {
 /* MD5 message digest */
 
 #ifndef _md5
-<<constant _md5>>
-
+#define _md5
 
 #include "mlvalues.h"
 #include "io.h"
@@ -26950,6 +26363,7 @@ void MD5Transform(uint32 *buf, uint32 *in)
 <<copyright header C xavier>>
 
 #include <string.h>
+
 #include "alloc.h"
 #include "fail.h"
 #include "md5.h"
@@ -27413,6 +26827,7 @@ char *aligned_malloc (asize_t size, int modulo, void **block)
 #include <stdio.h>
 #include "config.h"
 #include "misc.h"
+
 #ifdef HAS_UI
 #include "ui.h"
 #endif
@@ -27469,19 +26884,7 @@ value static_resize(value blk, value new_size) /* ML */
 }
 @
 
-<<function obj_is_block>>=
-value obj_is_block(value arg)             /* ML */
-{
-  return Val_bool(Is_block(arg));
-}
-@
 
-<<function obj_tag>>=
-value obj_tag(value arg)                 /* ML */
-{
-  return Val_int(Tag_val(arg));
-}
-@
 
 <<function obj_block>>=
 value obj_block(value tag, value size) /* ML */
@@ -27826,6 +27229,7 @@ value parse_engine(struct parser_tables *tables, struct parser_env *env, value c
 /* The PDA automaton for parsers generated by camlyacc */
 
 #include <stdio.h>
+
 #include "config.h"
 #include "mlvalues.h"
 #include "memory.h"
@@ -27969,9 +27373,11 @@ void fatal_uncaught_exception(value exn)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "fail.h"
 #include "misc.h"
 #include "mlvalues.h"
+
 #ifdef HAS_UI
 #include "ui.h"
 #endif
@@ -27994,9 +27400,6 @@ void fatal_uncaught_exception(value exn)
 
 \subsection*{[[byterun/reverse.h]]}
 
-<<constant _reverse_>>=
-#define _reverse_
-@
 
 <<function Reverse_int32>>=
 #define Reverse_int32(w) {                                                    \
@@ -28045,7 +27448,7 @@ void fatal_uncaught_exception(value exn)
 /* Swap byte-order in 32-bit integers and in words */
 
 #ifndef _reverse_
-<<constant _reverse_>>
+#define _reverse_
 
 <<function Reverse_int32>>
 
@@ -28060,18 +27463,13 @@ void fatal_uncaught_exception(value exn)
 
 \subsection*{[[byterun/signals.h]]}
 
-<<constant _signals_>>=
-#define _signals_
-@
-
-
 %-------------------------------------------------------------
 
 <<byterun/signals.h>>=
 <<copyright header C xavier and damien>>
 
 #ifndef _signals_
-<<constant _signals_>>
+#define _signals_
 
 #include "misc.h"
 #include "mlvalues.h"
@@ -28335,6 +27733,7 @@ value install_signal_handler(value signal_number, value action) /* ML */
 <<copyright header C xavier and damien>>
 
 #include <signal.h>
+
 #include "alloc.h"
 #include "callback.h"
 #include "config.h"
@@ -28439,10 +27838,6 @@ value install_signal_handler(value signal_number, value action) /* ML */
 
 \subsection*{[[byterun/str.h]]}
 
-<<constant _str_>>=
-#define _str_
-@
-
 
 %-------------------------------------------------------------
 
@@ -28450,7 +27845,7 @@ value install_signal_handler(value signal_number, value action) /* ML */
 <<copyright header C xavier>>
 
 #ifndef _str_
-<<constant _str_>>
+#define _str_
 
 
 #include "misc.h"
@@ -28465,96 +27860,7 @@ mlsize_t string_length (value);
 
 \subsection*{[[byterun/str.c]]}
 
-<<function string_length>>=
-mlsize_t string_length(value s)
-{
-  mlsize_t temp;
-  temp = Bosize_val(s) - 1;
-  Assert (Byte (s, temp - Byte (s, temp)) == 0);
-  return temp - Byte (s, temp);
-}
-@
 
-<<function ml_string_length>>=
-value ml_string_length(value s)     /* ML */
-{
-  mlsize_t temp;
-  temp = Bosize_val(s) - 1;
-  Assert (Byte (s, temp - Byte (s, temp)) == 0);
-  return Val_long(temp - Byte (s, temp));
-}
-@
-
-<<function create_string>>=
-value create_string(value len)        /* ML */
-{
-  mlsize_t size = Long_val(len);
-  if (size > Bsize_wsize (Max_wosize) - 1) invalid_argument("String.create");
-  return alloc_string(size);
-}
-@
-
-<<function string_get>>=
-value string_get(value str, value index)    /* ML */
-{
-  long idx = Long_val(index);
-  if (idx < 0 || idx >= string_length(str)) invalid_argument("String.get");
-  return Val_int(Byte_u(str, idx));
-}
-@
-
-<<function string_set>>=
-value string_set(value str, value index, value newval)    /* ML */
-{
-  long idx = Long_val(index);
-  if (idx < 0 || idx >= string_length(str)) invalid_argument("String.set");
-  Byte_u(str, idx) = Int_val(newval);
-  return Val_unit;
-}
-@
-
-<<function string_equal>>=
-value string_equal(value s1, value s2)      /* ML */
-{
-  mlsize_t sz1 = Wosize_val(s1);
-  mlsize_t sz2 = Wosize_val(s2);
-  value * p1, * p2;
-  if (sz1 != sz2) return Val_false;
-  for(p1 = Op_val(s1), p2 = Op_val(s2); sz1 > 0; sz1--, p1++, p2++)
-    if (*p1 != *p2) return Val_false;
-  return Val_true;
-}
-@
-
-<<function string_notequal>>=
-value string_notequal(value s1, value s2)   /* ML */
-{
-  return Val_not(string_equal(s1, s2));
-}
-@
-
-<<function blit_string>>=
-value blit_string(value s1, value ofs1, value s2, value ofs2, value n)   /* ML */
-{
-  bcopy(&Byte(s1, Long_val(ofs1)), &Byte(s2, Long_val(ofs2)), Int_val(n));
-  return Val_unit;
-}
-@
-
-<<function fill_string>>=
-value fill_string(value s, value offset, value len, value init) /* ML */
-{
-  register char * p;
-  register mlsize_t n;
-  register char c;
-
-  c = Long_val(init);
-  for(p = &Byte(s, Long_val(offset)), n = Long_val(len);
-      n > 0; n--, p++)
-    *p = c;
-  return Val_unit;
-}
-@
 
 <<global printable_chars_ascii>>=
 static unsigned char printable_chars_ascii[] = /* 0x20-0x7E */
@@ -28600,6 +27906,7 @@ value bitvect_test(value bv, value n)       /* ML */
 /* Operations on strings */
 
 #include <string.h>
+
 #include "alloc.h"
 #include "fail.h"
 #include "mlvalues.h"
@@ -28635,10 +27942,6 @@ value bitvect_test(value bv, value n)       /* ML */
 
 \subsection*{[[byterun/sys.h]]}
 
-<<constant _sys_>>=
-#define _sys_
-@
-
 <<constant NO_ARG>>=
 #define NO_ARG Val_int(0)
 @
@@ -28650,7 +27953,7 @@ value bitvect_test(value bv, value n)       /* ML */
 <<copyright header C xavier>>
 
 #ifndef _sys_
-<<constant _sys_>>
+#define _sys_
 
 #include "misc.h"
 
@@ -28908,6 +28211,7 @@ char * searchpath(char * name)
 #ifdef HAS_UNISTD
 #include <unistd.h>
 #endif
+
 #include "alloc.h"
 #include "debugger.h"
 #include "fail.h"
@@ -28917,6 +28221,7 @@ char * searchpath(char * name)
 #include "stacks.h"
 #include "str.h"
 #include "sys.h"
+
 #ifdef HAS_UI
 #include "ui.h"
 #endif
@@ -28974,7 +28279,6 @@ extern char * strerror(int);
 <<function sys_get_config>>
 
 /* Search path function */
-
 
 #ifndef S_ISREG
 <<function S_ISREG>>
@@ -29213,7 +28517,6 @@ value weak_get (value ar, value n)        /* ML */
 <<byterun/weak.c>>=
 <<copyright header C damien 1997>>
 
-
 /* Operations on weak arrays */
 
 #include "alloc.h"
@@ -29250,19 +28553,7 @@ value weak_get (value ar, value n)        /* ML */
 #define SEEK_END 2
 @
 
-<<global atom_table>>=
-header_t atom_table[256];
-@
 
-<<function init_atoms>>=
-/* Initialize the atom table */
-
-static void init_atoms(void)
-{
-  int i;
-  for(i = 0; i < 256; i++) atom_table[i] = Make_header(0, i, White);
-}
-@
 
 <<function read_size>>=
 /* Read the trailer of a bytecode file */
@@ -29474,10 +28765,12 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+
 #include "config.h"
 #ifdef HAS_UNISTD
 #include <unistd.h>
 #endif
+
 #include "alloc.h"
 #include "debugger.h"
 #include "exec.h"

@@ -24,17 +24,24 @@
   word: Four bytes on 32 and 16 bit architectures,
         eight bytes on 64 bit architectures.
   long: A C long integer.
+  int32: Four bytes on all architectures.
+
   val: The ML representation of something.  A long or a block or a pointer
        outside the heap.  If it is a block, it is the (encoded) address
        of an object.  If it is a long, it is encoded as well.
+
+  hd: A header.
+  tag: The value of the tag field of the header.
+  color: The value of the color field of the header.
+         This is for use only by the GC.
+
   object: Something allocated.  It always has a header and some
           fields or some number of bytes (a multiple of the word size).
   field: A word-sized val which is part of an object.
-  bp: Pointer to the first byte of an object.  (a char *)
-  op: Pointer to the first field of an object.  (a value *)
-  hp: Pointer to the header of an object.  (a char *)
 
-  int32: Four bytes on all architectures.
+  hp: Pointer to the header of an object.  (a char *)
+  op: Pointer to the first field of an object.  (a value *)
+  bp: Pointer to the first byte of an object.  (a char *)
 
   Remark: An object size is always a multiple of the word size, and at least
           one word plus the header.
@@ -44,10 +51,6 @@
   bhsize: Size (in bytes) of the object with its header.
   whsize: Size (in words) of the object with its header.
 
-  hd: A header.
-  tag: The value of the tag field of the header.
-  color: The value of the color field of the header.
-         This is for use only by the GC.
 */
 /*e: mlvalues.h top comment */
 
@@ -62,7 +65,7 @@ typedef unsigned long mlsize_t;
 typedef unsigned int tag_t;             /* Actually, an unsigned char */
 /*e: typedef tag_t */
 /*s: typedef color_t */
-typedef unsigned long color_t;
+typedef unsigned long color_t; // bit 8-9
 /*e: typedef color_t */
 
 typedef unsigned long mark_t;
@@ -99,7 +102,7 @@ typedef unsigned int uint32;  /* Seems like a reasonable assumption anyway. */
 #define Int_val(x) ((int) Long_val(x))
 /*e: function Int_val */
 
-/*s: function Tag_hd */
+/*s: toplevel comment on header format */
 /* Structure of the header:
 
 For 16-bit and 32-bit architectures:
@@ -116,7 +119,8 @@ For 64-bit architectures:
 bits  63    10 9     8 7   0
 
 */
-
+/*e: toplevel comment on header format */
+/*s: function Tag_hd */
 #define Tag_hd(hd) ((tag_t) ((hd) & 0xFF))
 /*e: function Tag_hd */
 /*s: function Wosize_hd */
@@ -161,13 +165,13 @@ bits  63    10 9     8 7   0
 #define Num_tags (1 << 8)
 /*e: constant Num_tags */
 #ifdef ARCH_SIXTYFOUR
-/*s: constant Max_wosize */
+/*s: constant Max_wosize ifdef ARCH_SIXTYFOUR */
 #define Max_wosize ((1L << 54) - 1)
-/*e: constant Max_wosize */
+/*e: constant Max_wosize ifdef ARCH_SIXTYFOUR */
 #else
-/*s: constant Max_wosize (byterun/mlvalues.h) */
+/*s: constant Max_wosize ifndef ARCH_SIXTYFOUR */
 #define Max_wosize ((1 << 22) - 1)
-/*e: constant Max_wosize (byterun/mlvalues.h) */
+/*e: constant Max_wosize ifndef ARCH_SIXTYFOUR */
 #endif
 
 /*s: function Wosize_val */
@@ -235,22 +239,22 @@ bits  63    10 9     8 7   0
 /*e: function Bhsize_hd */
 
 #ifdef ARCH_BIG_ENDIAN
-/*s: function Tag_val */
+/*s: function Tag_val ifdef ARCH_BIG_ENDIAN */
 #define Tag_val(val) (((unsigned char *) (val)) [-1])
-/*e: function Tag_val */
+/*e: function Tag_val ifdef ARCH_BIG_ENDIAN */
                                                  /* Also an l-value. */
-/*s: function Tag_hp */
+/*s: function Tag_hp ifdef ARCH_BIG_ENDIAN */
 #define Tag_hp(hp) (((unsigned char *) (hp)) [sizeof(value)-1])
-/*e: function Tag_hp */
+/*e: function Tag_hp ifdef ARCH_BIG_ENDIAN */
                                                  /* Also an l-value. */
 #else
-/*s: function Tag_val (byterun/mlvalues.h) */
+/*s: function Tag_val little endian */
 #define Tag_val(val) (((unsigned char *) (val)) [-sizeof(value)])
-/*e: function Tag_val (byterun/mlvalues.h) */
+/*e: function Tag_val little endian */
                                                  /* Also an l-value. */
-/*s: function Tag_hp (byterun/mlvalues.h) */
+/*s: function Tag_hp little endian */
 #define Tag_hp(hp) (((unsigned char *) (hp)) [0])
-/*e: function Tag_hp (byterun/mlvalues.h) */
+/*e: function Tag_hp little endian */
                                                  /* Also an l-value. */
 #endif
 

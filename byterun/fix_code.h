@@ -15,9 +15,7 @@
 /* Handling of blocks of bytecode (endianness switch, threading). */
 
 #ifndef _fix_code_
-/*s: constant _fix_code_ */
 #define _fix_code_
-/*e: constant _fix_code_ */
 
 
 #include "config.h"
