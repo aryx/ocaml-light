@@ -15,9 +15,7 @@
 /* Callbacks from C to Caml */
 
 #ifndef _callback_
-/*s: constant _callback_ */
 #define _callback_
-/*e: constant _callback_ */
 
 #include "mlvalues.h"
 

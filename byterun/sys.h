@@ -13,9 +13,7 @@
 /*e: copyright header C xavier */
 
 #ifndef _sys_
-/*s: constant _sys_ */
 #define _sys_
-/*e: constant _sys_ */
 
 #include "misc.h"
 

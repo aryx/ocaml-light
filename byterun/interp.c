@@ -613,6 +613,17 @@ value interprete(code_t prog, asize_t prog_size)
           pc++;
           modify_newval = *sp++;
           goto modify;
+
+        /*s: [[interpreter()]] before modify label */
+        Instruct(SETFIELD0):
+          modify_dest = &Field(accu, 0);
+          modify_newval = *sp++;
+        /* Fallthrough */
+        /*e: [[interpreter()]] before modify label */
+        modify:
+          Modify(modify_dest, modify_newval);
+          accu = Val_unit;
+          Next;
     /*x: [[interpreter()]] blocks access cases */
 
         Instruct(GETFIELD0):
@@ -624,13 +635,6 @@ value interprete(code_t prog, asize_t prog_size)
         Instruct(GETFIELD3):
           accu = Field(accu, 3); Next;
 
-        Instruct(SETFIELD0):
-          modify_dest = &Field(accu, 0);
-          modify_newval = *sp++;
-        modify:
-          Modify(modify_dest, modify_newval);
-          accu = Val_unit;
-          Next;
         Instruct(SETFIELD1):
           modify_dest = &Field(accu, 1);
           modify_newval = *sp++;

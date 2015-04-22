@@ -12,8 +12,9 @@
 %------------------------------------------------------------------------------
 
 %thx to LP, changed for the better a few things:
-% - found deadcode in ocaml itself :) 
+% - found deadcode in ocaml itself :) with some still in ocaml 4.00
 %   (all.ml, codegen.ml, a few functions, Ident.equal)
+% - found duplicated code (debug_info)
 % 
 
 %thx to codemap/codegraph/scheck:
@@ -860,6 +861,7 @@ and type_variable =
 /* The instruction set. */
 
 enum instructions {
+
   /* integers */
   <<integer arithmetics opcodes>>
 
@@ -878,7 +880,7 @@ enum instructions {
   <<signal opcodes>>
   <<foreign C calls opcodes>>
 
-  /* aggregate data */
+  /* special data */
   <<string opcodes>>
   <<array opcodes>>
 
@@ -913,16 +915,12 @@ enum instructions {
 % note that there is no label here because the bytecode is really
 % closer to Machine.nw than Assembler.nw. Instruction has labels though.
 
-\section{Runtime values}
+\section{Runtime [[value]]s}
 
 %https://rwmj.wordpress.com/2009/08/04/ocaml-internals/
 %see also oreilly book, very good chapter on values
 
-%blocks, will help understand elts from Lambda and Instruct
-
-% big abuse of int ... variant via special tag bit
-% but really should be Long of int | Block of ...?
-% todo: look at zamcov?
+%This section will help understand elts from Lambda and Instruct
 
 <<mlvalues.h top comment>>=
 /* Definitions
@@ -930,17 +928,24 @@ enum instructions {
   word: Four bytes on 32 and 16 bit architectures,
         eight bytes on 64 bit architectures.
   long: A C long integer.
+  int32: Four bytes on all architectures.
+
   val: The ML representation of something.  A long or a block or a pointer
        outside the heap.  If it is a block, it is the (encoded) address
        of an object.  If it is a long, it is encoded as well.
+
+  hd: A header.
+  tag: The value of the tag field of the header.
+  color: The value of the color field of the header.
+         This is for use only by the GC.
+
   object: Something allocated.  It always has a header and some
           fields or some number of bytes (a multiple of the word size).
   field: A word-sized val which is part of an object.
-  bp: Pointer to the first byte of an object.  (a char *)
-  op: Pointer to the first field of an object.  (a value *)
-  hp: Pointer to the header of an object.  (a char *)
 
-  int32: Four bytes on all architectures.
+  hp: Pointer to the header of an object.  (a char *)
+  op: Pointer to the first field of an object.  (a value *)
+  bp: Pointer to the first byte of an object.  (a char *)
 
   Remark: An object size is always a multiple of the word size, and at least
           one word plus the header.
@@ -950,16 +955,36 @@ enum instructions {
   bhsize: Size (in bytes) of the object with its header.
   whsize: Size (in words) of the object with its header.
 
-  hd: A header.
-  tag: The value of the tag field of the header.
-  color: The value of the color field of the header.
-         This is for use only by the GC.
 */
 @
+
+<<toplevel comment on header format>>=
+/* Structure of the header:
+
+For 16-bit and 32-bit architectures:
+     +--------+-------+-----+
+     | wosize | color | tag |
+     +--------+-------+-----+
+bits  31    10 9     8 7   0
+
+For 64-bit architectures:
+
+     +--------+-------+-----+
+     | wosize | color | tag |
+     +--------+-------+-----+
+bits  63    10 9     8 7   0
+
+*/
+@
+
+%FIGURE! where see relation betwen value, fields, byte, tag, etc.
 
 <<typedef value>>=
 typedef long value;
 @
+% big abuse of int ... variant via special tag bit
+% but really should be Long of int | Block of ...?
+% todo: look at zamcov?
 
 
 <<function Is_long>>=
@@ -985,11 +1010,14 @@ typedef long value;
 /* Example: Val_long as in "Val from long" or "Val of long". */
 #define Val_long(x)     (((long)(x) << 1) + 1)
 @
+% >>
+
 
 <<function Long_val>>=
 #define Long_val(x)     ((x) >> 1)
 @
 % Long of val
+% >>
 
 <<constant Val_int>>=
 #define Val_int Val_long
@@ -1003,10 +1031,12 @@ typedef long value;
 <<constant Max_long>>=
 #define Max_long ((1L << (8 * sizeof(value) - 2)) - 1)
 @
+% >>
 
 <<constant Min_long>>=
 #define Min_long (-(1L << (8 * sizeof(value) - 2)))
 @
+% >>
 
 \subsection{Blocks}
 % =~ pointer, when not an int then the long is interpreted
@@ -1014,41 +1044,84 @@ typedef long value;
 
 \subsubsection{Header}
 
-<<function Tag_hd>>=
-/* Structure of the header:
-
-For 16-bit and 32-bit architectures:
-     +--------+-------+-----+
-     | wosize | color | tag |
-     +--------+-------+-----+
-bits  31    10 9     8 7   0
-
-For 64-bit architectures:
-
-     +--------+-------+-----+
-     | wosize | color | tag |
-     +--------+-------+-----+
-bits  63    10 9     8 7   0
-
-*/
-
-#define Tag_hd(hd) ((tag_t) ((hd) & 0xFF))
-@
-% Tag of hd
-
-% 10-31 -> max size of string is?
+% seen figure before. 
 
 <<typedef header_t>>=
 typedef unsigned long header_t;
 @
 % the whole thing
 
+
+
+% 10-31 -> max size of string is?
+
+<<constant Max_wosize ifndef ARCH_SIXTYFOUR>>=
+#define Max_wosize ((1 << 22) - 1)
+@
+%>>
+<<constant Max_wosize ifdef ARCH_SIXTYFOUR>>=
+#define Max_wosize ((1L << 54) - 1)
+@
+%>>
+
+
+
+
+<<function Tag_hd>>=
+#define Tag_hd(hd) ((tag_t) ((hd) & 0xFF))
+@
+% Tag of hd
+
 <<typedef tag_t>>=
 typedef unsigned int tag_t;             /* Actually, an unsigned char */
 @
 
 <<typedef color_t>>=
-typedef unsigned long color_t;
+typedef unsigned long color_t; // bit 8-9
+@
+% will see in Gc section
+
+
+<<function Wosize_hd>>=
+#define Wosize_hd(hd) ((mlsize_t) ((hd) >> 10))
+@
+% >>
+
+<<function Make_header>>=
+/* This depends on the layout of the header.  See [mlvalues.h]. */
+#define Make_header(wosize, tag, color)                                       \
+       ((header_t) (((header_t) (wosize) << 10)                               \
+                    + (color)                                                 \
+                    + (tag_t) (tag)))
+@
+% no color << 8 because the color value do that
+
+
+\subsubsection{Header pointer vs value}
+
+% value is always just after the header.
+
+<<function Val_hp>>=
+#define Val_hp(hp) ((value) (((header_t *) (hp)) + 1))
+@
+% +1 ? pointer arithmetic so really it adds 4
+% the "value" is represented as a pointer just after the header
+% (why not directly the header? wins?)
+
+<<function Hd_val>>=
+#define Hd_val(val) (((header_t *) (val)) [-1])        /* Also an l-value. */
+@
+
+
+
+% so if want the tag of a value, just get the header, and then
+% get the first byte
+<<function Tag_val ifdef ARCH_BIG_ENDIAN>>=
+#define Tag_val(val) (((unsigned char *) (val)) [-1])
+@
+
+<<function Wosize_val>>=
+#define Wosize_val(val) (Wosize_hd (Hd_val (val)))
 @
 
 \subsubsection{Tags}
@@ -1057,15 +1130,13 @@ typedef unsigned long color_t;
 
 % tagspace: 0 -> 251 -> 255.
 %/* 1- If tag < No_scan_tag : a tuple of fields.  */
-% and so the Field macri will be used
+% and so the Field macro will be used
 %/* 2- If tag > No_scan_tag : a sequence of bytes. */
 % and so the Bp_val macro will be used. No scan because
 % the gc should not traverse this data
 
-<<constant Object_tag>>=
-/* Another special case: objects */
-#define Object_tag 248
-@
+% special values are then used here in builtin_hash and builtin_compare
+% to do special things.
 
 <<constant Infix_tag>>=
 /* Infix_tag must be 1 modulo 4 and infix headers can only occur in objects
@@ -1092,18 +1163,6 @@ typedef unsigned long color_t;
 #define Abstract_tag 251
 @
 
-<<constant String_tag>>=
-/* Strings. */
-#define String_tag 252
-@
-<<constant Double_tag>>=
-/* Floating-point numbers. */
-#define Double_tag 253
-@
-<<constant Double_array_tag>>=
-/* Arrays of floating-point numbers. */
-#define Double_array_tag 254
-@
 
 <<constant Final_tag>>=
 /* Finalized things.  Just like abstract things, but the GC will call the
@@ -1131,6 +1190,7 @@ typedef unsigned long color_t;
 
 #define Val_bool(x) Val_int((x) != 0)
 @
+% could assert passed x is 0 or 1?
 
 <<function Bool_val>>=
 #define Bool_val(x) Int_val(x)
@@ -1153,20 +1213,51 @@ typedef unsigned long color_t;
 @
 
 \subsubsection{Atoms}
-% ???
+% =~ simple constructors with no arguments? =~ enums?
+
+%/* 3- Atoms are 0-tuples.  They are statically allocated once and for all. */
 
 <<function Atom>>=
 #define Atom(tag) (Val_hp (&(atom_table [tag])))
 @
+% prebuilt pointers for simple tags! so Foo is a pointer
+% to en entry in atom_table with tag value at 0, wosize 0.
 
 <<function Is_atom>>=
 #define Is_atom(v) ((v) >= Atom(0) && (v) <= Atom(255))
 @
 
+%/* Is_atom tests whether a well-formed block is statically allocated
+%   outside the heap. For the bytecode system, only zero-sized block (Atoms)
+%   fall in this class. For the native-code generator, data
+%   emitted by the code generator (as described in the table
+%   caml_data_segments) are also atoms. */
 
 
 
+<<global atom_table>>=
+header_t atom_table[256];
+@
 
+% caml_main? -> <>
+<<function init_atoms>>=
+/* Initialize the atom table */
+
+static void init_atoms(void)
+{
+  int i;
+  for(i = 0; i < 256; i++) atom_table[i] = Make_header(0, i, White);
+}
+@
+
+
+\subsubsection{Objects}
+% in the general sense
+
+<<function Field>>=
+/* Fields are numbered from 0. */
+#define Field(x, i) (((value *)(x)) [i])           /* Also an l-value. */
+@
 
 %\section{Native CMM, lambda, etc?}
 
@@ -9315,7 +9406,7 @@ MAKEBLOCK,
       Next;
     }
 @
-
+% will see Alloc_small later
 
 <<blocks allocation opcodes>>=
   PUSHATOM,
@@ -9394,7 +9485,51 @@ value * modify_dest, modify_newval;
       pc++;
       modify_newval = *sp++;
       goto modify;
+
+    <<[[interpreter()]] before modify label>>
+    modify:
+      Modify(modify_dest, modify_newval);
+      accu = Val_unit;
+      Next;
 @
+
+
+<<function Modify>>=
+/* You must use [Modify] to change a field of an existing shared block,
+   unless you are sure the value being overwritten is not a shared block and
+   the value being written is not a young block. */
+/* [Modify] never calls the GC. */
+
+#define Modify(fp, val) {                                                   \
+  value _old_ = *(fp);                                                      \
+  *(fp) = (val);                                                            \
+  if (Is_in_heap (fp)){                                                     \
+    if (gc_phase == Phase_mark) darken (_old_, NULL);                       \
+    if (Is_block (val) && Is_young (val)                                    \
+        && ! (Is_block (_old_) && Is_young (_old_))){                       \
+      *ref_table_ptr++ = (fp);                                              \
+      if (ref_table_ptr >= ref_table_limit){                                \
+        Assert (ref_table_ptr == ref_table_limit);                          \
+        realloc_ref_table ();                                               \
+      }                                                                     \
+    }                                                                       \
+  }                                                                         \
+}                                                                           \
+@
+
+<<function modify>>=
+/* You must use [modify] to change a field of an existing shared block,
+   unless you are sure the value being overwritten is not a shared block and
+   the value being written is not a young block. */
+/* [modify] never calls the GC. */
+void modify (value *fp, value val)
+{
+  Modify (fp, val);
+}
+@
+
+
+
 
 <<blocks access opcodes>>=
   GETFIELD0, GETFIELD1, GETFIELD2, GETFIELD3,
@@ -9402,6 +9537,14 @@ value * modify_dest, modify_newval;
 @
 
 \ifallcode
+
+<<[[interpreter()]] before modify label>>=
+Instruct(SETFIELD0):
+  modify_dest = &Field(accu, 0);
+  modify_newval = *sp++;
+/* Fallthrough */
+@
+
 <<[[interpreter()]] blocks access cases>>=
 
     Instruct(GETFIELD0):
@@ -9413,13 +9556,6 @@ value * modify_dest, modify_newval;
     Instruct(GETFIELD3):
       accu = Field(accu, 3); Next;
 
-    Instruct(SETFIELD0):
-      modify_dest = &Field(accu, 0);
-      modify_newval = *sp++;
-    modify:
-      Modify(modify_dest, modify_newval);
-      accu = Val_unit;
-      Next;
     Instruct(SETFIELD1):
       modify_dest = &Field(accu, 1);
       modify_newval = *sp++;
@@ -9977,27 +10113,6 @@ CLOSUREREC,
     }
 @
 
-\subsection{Other operations}
-
-% deleted. But then compatibility pb? no, just use make boostrap.
-
-%<<oo opcodes>>=
-%  GETMETHOD,
-%@
-%
-%<<[[interpreter()]] oo cases>>=
-%/* Object-oriented operations */
-%
-%#define Lookup(obj, lab) \
-%  Field (Field (Field (obj, 0), ((lab) >> 16) / sizeof (value)), \
-%         ((lab) / sizeof (value)) & 0xFF)
-%
-%    Instruct(GETMETHOD):
-%      accu = Lookup(sp[0], accu);
-%      Next;
-%@
-
-
 
 \subsection{XXX}
 
@@ -10166,6 +10281,24 @@ static char *expand_heap (mlsize_t request)
 
 \section{Stack}
 
+<<global stack_low>>=
+value * stack_low;
+@
+
+<<global stack_high>>=
+value * stack_high;
+@
+
+<<global stack_threshold>>=
+value * stack_threshold;
+@
+
+
+<<global max_stack_size>>=
+unsigned long max_stack_size;            /* also used in gc_ctrl.c */
+@
+
+
 <<constant Stack_size>>=
 /* Initial size of stack (bytes). */
 #define Stack_size (4096 * sizeof(value))
@@ -10182,11 +10315,123 @@ static char *expand_heap (mlsize_t request)
 @
 
 
+<<function init_stack>>=
+void init_stack (long unsigned int initial_max_size)
+{
+  stack_low = (value *) stat_alloc(Stack_size);
+  stack_high = stack_low + Stack_size / sizeof (value);
+  stack_threshold = stack_low + Stack_threshold / sizeof (value);
+  extern_sp = stack_high;
+  trapsp = stack_high;
+  trap_barrier = stack_high + 1;
+  max_stack_size = initial_max_size;
+  gc_message ("Initial stack limit: %luk bytes\n",
+          max_stack_size / 1024 * sizeof (value));
+}
+@
+
+<<function realloc_stack>>=
+void realloc_stack(void)
+{        
+  asize_t size;
+  value * new_low, * new_high, * new_sp;
+  value * p;
+
+  Assert(extern_sp >= stack_low);
+  size = stack_high - stack_low;
+  if (size >= max_stack_size) raise_stack_overflow();
+  size *= 2;
+  gc_message ("Growing stack to %luk bytes\n",
+              (unsigned long) size * sizeof(value) / 1024);
+  new_low = (value *) stat_alloc(size * sizeof(value));
+  new_high = new_low + size;
+
+#define shift(ptr) \
+    ((char *) new_high - ((char *) stack_high - (char *) (ptr)))
+
+  new_sp = (value *) shift(extern_sp);
+  bcopy((char *) extern_sp,
+        (char *) new_sp,
+        (stack_high - extern_sp) * sizeof(value));
+  stat_free(stack_low);
+  trapsp = (value *) shift(trapsp);
+  trap_barrier = (value *) shift(trap_barrier);
+  for (p = trapsp; p < new_high; p = Trap_link(p))
+    Trap_link(p) = (value *) shift(Trap_link(p));
+  stack_low = new_low;
+  stack_high = new_high;
+  stack_threshold = stack_low + Stack_threshold / sizeof (value);
+  extern_sp = new_sp;
+
+#undef shift
+}
+@
+
+
+<<function change_max_stack_size>>=
+void change_max_stack_size (long unsigned int new_max_size)
+{
+  asize_t size = stack_high - extern_sp + Stack_threshold / sizeof (value);
+
+  if (new_max_size < size) new_max_size = size;
+  if (new_max_size != max_stack_size){
+    gc_message ("Changing stack limit to %luk bytes\n",
+                new_max_size * sizeof (value) / 1024);
+  }
+  max_stack_size = new_max_size;
+}
+@
+
+
 \section{Primitives}
+
+%typedef value (*c_primitive)();
+%
+%extern c_primitive cprim[];
+%extern char * names_of_cprim[];
+
+\section{Foreign calls}
+
+\subsection{Calling C from OCaml}
+
+\subsection{Calling OCaml from C}
+% callback.c
 
 \chapter{Garbage Collection}
 
+\section{Colors}
+
+% bits 8-9 are for colors in a block header
+% and one of Make_header argument is a color
+
+<<constant White>>=
+#define White (0 << 8)
+@
+
+<<constant Gray>>=
+#define Gray  (1 << 8)
+@
+
+<<constant Blue>>=
+#define Blue  (2 << 8)
+@
+
+<<constant Black>>=
+#define Black (3 << 8)
+@
+
 \section{Roots}
+
+%/* [register_global_root] registers a global C variable as a memory root
+%   for the duration of the program, or until [remove_global_root] is
+%   called. */
+%
+%void register_global_root (value *);
+%
+%/* [remove_global_root] removes a memory root registered on a global C
+%   variable with [register_global_root]. */
+%
+%void remove_global_root (value *);
 
 <<struct caml__roots_block>>=
 /*
@@ -10245,6 +10490,60 @@ struct caml__roots_block {
 \section{Minor collection}
 
 
+<<function Alloc_small>>=
+#define Alloc_small(result, wosize, tag) {            Assert (wosize >= 1); \
+  young_ptr -= Bhsize_wosize (wosize);                                      \
+  if (young_ptr < young_limit){                                             \
+    Setup_for_gc;                                                           \
+    Garbage_collection_function ();                                         \
+    Restore_after_gc;                                                       \
+    young_ptr -= Bhsize_wosize (wosize);                                    \
+  }                                                                         \
+  Hd_hp (young_ptr) = Make_header ((wosize), (tag), Black);                 \
+  (result) = Val_hp (young_ptr);                                            \
+}
+@
+% will see gc stuff far later
+
+
+<<constant Garbage_collection_function>>=
+#define Garbage_collection_function minor_collection
+@
+% for bytecode
+
+
+<<function minor_collection>>=
+void minor_collection (void)
+{
+  value **r;
+  long prev_alloc_words = allocated_words;
+
+  in_minor_collection = 1;
+  gc_message ("<", 0);
+  oldify_local_roots();
+  for (r = ref_table; r < ref_table_ptr; r++) oldify (**r, *r);
+  stat_minor_words += Wsize_bsize (young_end - young_ptr);
+  young_ptr = young_end;
+  ref_table_ptr = ref_table;
+  ref_table_limit = ref_table_threshold;
+  gc_message (">", 0);
+  in_minor_collection = 0;
+
+  stat_promoted_words += allocated_words - prev_alloc_words;
+  ++ stat_minor_collections;
+  major_collection_slice ();
+  force_major_slice = 0;
+}
+@
+
+
+
+<<function Is_young>>=
+#define Is_young(val) \
+  ((addr)(val) > (addr)young_start && (addr)(val) < (addr)young_end)
+@
+
+
 <<constant Max_young_wosize>>=
 /* Maximum size of a block allocated in the young generation (words). */
 /* Must be > 4 */
@@ -10268,6 +10567,8 @@ struct caml__roots_block {
 /* Default size of the minor zone. (words)  */
 #define Minor_heap_def 32768
 @
+
+\section{Compaction}
 
 
 \chapter{Native Code Generation}
@@ -10306,6 +10607,9 @@ val cmxa_magic_number: string
    ((v) >= Atom(0) && (v) <= Atom(255))))
 @
 
+<<constant Garbage_collection_function ifdef NATIVE_CODE>>=
+#define Garbage_collection_function garbage_collection
+@
 
 
 \chapter{Debugging Support}
@@ -10322,27 +10626,21 @@ let debug = ref false                   (* -g *)
 
 <<constant Bytelink.debug_info>>=
 (* Second pass: link in the required units *)
-
-let debug_info = ref ([] : debug_event list list)
-@
-
-
-<<constant Bytelink.debug_info (./bytecomp/bytelink.ml)>>=
 (* Relocate and record compilation events *)
 
 let debug_info = ref ([] : debug_event list list)
 @
-% dupe??
+
 
 <<function Bytelink.record_events>>=
 let record_events orig evl =
   if evl <> [] then begin
     evl |> List.iter (fun ev ->
-         ev.ev_pos <- orig + ev.ev_pos;
-         (match ev.ev_repr with
-         |  Event_parent repr -> repr := ev.ev_pos
-         | _                 -> ()
-         )
+       ev.ev_pos <- orig + ev.ev_pos;
+       (match ev.ev_repr with
+       |  Event_parent repr -> repr := ev.ev_pos
+       | _                 -> ()
+       )
     );
     debug_info := evl :: !debug_info
   end
@@ -10433,10 +10731,16 @@ let record_event ev =
   events := ev :: !events
 @
 
-\subsection{Interpreter control}
+\section{Interpreter hooks}
+
+\subsection{Debugger opcodes}
 
 <<debugger opcodes>>=
 STOP, EVENT, BREAK
+@
+
+<<global event_count>>=
+unsigned long event_count;
 @
 
 <<[[interpreter()]] debugger cases>>=
@@ -10483,10 +10787,263 @@ STOP, EVENT, BREAK
   goto dispatch_instr
 @
 
+\ifallcode
 <<macro Restart_curr_instr if THREADED_CODE>>=
 #define Restart_curr_instr \
   goto *(jumptable[saved_code[pc - 1 - start_code]])
 @
+\fi
+
+\subsection{Debugger events}
+
+<<enum event_kind>>=
+enum event_kind {
+  EVENT_COUNT, BREAKPOINT, PROGRAM_START, PROGRAM_EXIT,
+  TRAP_BARRIER, UNCAUGHT_EXC
+};
+@
+
+\subsection{Debugger protocol}
+
+\subsubsection{Request}
+
+<<enum debugger_request>>=
+/* Requests from the debugger to the runtime system */
+
+enum debugger_request {
+  REQ_SET_EVENT = 'e',          /* uint32 pos */
+  /* Set an event on the instruction at position pos */
+  REQ_SET_BREAKPOINT = 'B',     /* uint32 pos */
+  /* Set a breakpoint at position pos */
+  REQ_RESET_INSTR = 'i',        /* uint32 pos */
+  /* Clear an event or breapoint at position pos, restores initial instr. */
+  REQ_CHECKPOINT = 'c',         /* no args */
+  /* Checkpoint the runtime system by forking a child process. 
+     Reply is pid of child process or -1 if checkpoint failed. */
+  REQ_GO = 'g',                 /* uint32 n */
+  /* Run the program for n events.
+     Reply is one of debugger_reply described below. */
+  REQ_STOP = 's',               /* no args */
+  /* Terminate the runtime system */
+  REQ_WAIT = 'w',               /* no args */
+  /* Reap one dead child (a discarded checkpoint). */
+  REQ_INITIAL_FRAME = '0',      /* no args */
+  /* Set current frame to bottom frame (the one currently executing).
+     Reply is stack offset and current pc. */
+  REQ_GET_FRAME = 'f',          /* no args */
+  /* Return current frame location (stack offset + current pc). */
+  REQ_SET_FRAME = 'S',          /* uint32 stack_offset */
+  /* Set current frame to given stack offset. No reply. */
+  REQ_UP_FRAME = 'U',           /* uint32 n */
+  /* Move one frame up. Argument n is size of current frame (in words).
+     Reply is stack offset and current pc, or -1 if top of stack reached. */
+  REQ_SET_TRAP_BARRIER = 'b',   /* uint32 offset */
+  /* Set the trap barrier at the given offset. */
+  REQ_GET_LOCAL = 'L',          /* uint32 slot_number */
+  /* Return the local variable at the given slot in the current frame.
+     Reply is one value. */
+  REQ_GET_ENVIRONMENT = 'E',    /* uint32 slot_number */
+  /* Return the local variable at the given slot in the heap environment
+     of the current frame. Reply is one value. */
+  REQ_GET_GLOBAL = 'G',         /* uint32 global_number */
+  /* Return the specified global variable. Reply is one value. */
+  REQ_GET_ACCU = 'A',           /* no args */
+  /* Return the current contents of the accumulator. Reply is one value. */
+  REQ_GET_HEADER = 'H',         /* mlvalue v */
+  /* As REQ_GET_OBJ, but sends only the header. */
+  REQ_GET_FIELD = 'F',          /* mlvalue v, uint32 fieldnum */
+  /* As REQ_GET_OBJ, but sends only one field. */
+  REQ_MARSHAL_OBJ = 'M',        /* mlvalue v */
+  /* Send a copy of the data structure rooted at v, using the same
+     format as output_value. */
+  REQ_GET_CLOSURE_CODE = 'C'    /* mlvalue v */
+  /* Send the code address of the given closure.
+     Reply is one uint32. */
+};
+@
+
+\subsubsection{Reply}
+
+<<enum debugger_reply>>=
+/* Replies to a REQ_GO request. All replies are followed by three uint32:
+   - the value of the event counter
+   - the position of the stack
+   - the current pc. */
+
+enum debugger_reply {
+  REP_EVENT = 'e',
+  /* Event counter reached 0. */
+  REP_BREAKPOINT = 'b',
+  /* Breakpoint hit. */
+  REP_EXITED = 'x',
+  /* Program exited by calling exit or reaching the end of the source. */
+  REP_TRAP = 's',
+  /* Trap barrier crossed. */
+  REP_UNCAUGHT_EXC = 'u'
+  /* Program exited due to a stray exception. */
+};
+@
+
+\subsection{[[debugger()]]}
+
+<<function debugger>>=
+void debugger(enum event_kind event)
+{
+  int frame_number;
+  value * frame;
+  long i, pos;
+  value val;
+
+  if (dbg_socket == -1) return;  /* Not connected to a debugger. */
+
+  /* Reset current frame */
+  frame_number = 0;
+  frame = extern_sp + 1;
+
+  /* Report the event to the debugger */
+  switch(event) {
+  case PROGRAM_START:           /* Nothing to report */
+    goto command_loop;
+  case EVENT_COUNT:
+    putch(dbg_out, REP_EVENT);
+    break;
+  case BREAKPOINT:
+    putch(dbg_out, REP_BREAKPOINT);
+    break;
+  case PROGRAM_EXIT:
+    putch(dbg_out, REP_EXITED);
+    break;
+  case TRAP_BARRIER:
+    putch(dbg_out, REP_TRAP);
+    break;
+  case UNCAUGHT_EXC:
+    putch(dbg_out, REP_UNCAUGHT_EXC);
+    break;
+  }
+  putword(dbg_out, event_count);
+  if (event == EVENT_COUNT || event == BREAKPOINT) {
+    putword(dbg_out, stack_high - frame);
+    putword(dbg_out, (Pc(frame) - start_code) * sizeof(opcode_t));
+  } else {
+    /* No PC and no stack frame associated with other events */
+    putword(dbg_out, 0);
+    putword(dbg_out, 0);
+  }
+  flush(dbg_out);
+
+ command_loop:
+  
+  /* Read and execute the commands sent by the debugger */
+  while(1) {
+    switch(getch(dbg_in)) {
+    case REQ_SET_EVENT:
+      pos = getword(dbg_in);
+      Assert(pos >= 0 && pos < code_size);
+      set_instruction(start_code + pos / sizeof(opcode_t), EVENT);
+      break;
+    case REQ_SET_BREAKPOINT:
+      pos = getword(dbg_in);
+      Assert(pos >= 0 && pos < code_size);
+      set_instruction(start_code + pos / sizeof(opcode_t), BREAK);
+      break;
+    case REQ_RESET_INSTR:
+      pos = getword(dbg_in);
+      Assert(pos >= 0 && pos < code_size);
+      pos = pos / sizeof(opcode_t);
+      set_instruction(start_code + pos, saved_code[pos]);
+      break;
+    case REQ_CHECKPOINT:
+      i = fork();
+      if (i == 0) {
+        close_connection();     /* Close parent connection. */
+        open_connection();      /* Open new connection with debugger */
+      } else {
+        putword(dbg_out, i);
+        flush(dbg_out);
+      }
+      break;
+    case REQ_GO:
+      event_count = getword(dbg_in);
+      return;
+    case REQ_STOP:
+      exit(0);
+      break;
+    case REQ_WAIT:
+      wait(NULL);
+      break;
+    case REQ_INITIAL_FRAME:
+      frame = extern_sp + 1;
+      /* Fall through */
+    case REQ_GET_FRAME:
+      putword(dbg_out, stack_high - frame);
+      putword(dbg_out, (Pc(frame) - start_code) * sizeof(opcode_t));
+      flush(dbg_out);
+      break;
+    case REQ_SET_FRAME:
+      i = getword(dbg_in);
+      frame = stack_high - i;
+      break;
+    case REQ_UP_FRAME:
+      i = getword(dbg_in);
+      if (frame + Extra_args(frame) + i + 3 >= stack_high) {
+        putword(dbg_out, -1);
+      } else {
+        frame += Extra_args(frame) + i + 3;
+        putword(dbg_out, stack_high - frame);
+        putword(dbg_out, (Pc(frame) - start_code) * sizeof(opcode_t));
+      }
+      flush(dbg_out);
+      break;
+    case REQ_SET_TRAP_BARRIER:
+      i = getword(dbg_in);
+      trap_barrier = stack_high - i;
+      break;
+    case REQ_GET_LOCAL:
+      i = getword(dbg_in);
+      putval(dbg_out, Locals(frame)[i]);
+      flush(dbg_out);
+      break;
+    case REQ_GET_ENVIRONMENT:
+      i = getword(dbg_in);
+      putval(dbg_out, Field(Env(frame), i));
+      flush(dbg_out);
+      break;
+    case REQ_GET_GLOBAL:
+      i = getword(dbg_in);
+      putval(dbg_out, Field(global_data, i));
+      flush(dbg_out);
+      break;
+    case REQ_GET_ACCU:
+      putval(dbg_out, *extern_sp);
+      flush(dbg_out);
+      break;
+    case REQ_GET_HEADER:
+      val = getval(dbg_in);
+      putword(dbg_out, Hd_val(val));
+      flush(dbg_out);
+      break;
+    case REQ_GET_FIELD:
+      val = getval(dbg_in);
+      i = getword(dbg_in);
+      putval(dbg_out, Field(val, i));
+      flush(dbg_out);
+      break;
+    case REQ_MARSHAL_OBJ:
+      val = getval(dbg_in);
+      safe_output_value(dbg_out, val);
+      flush(dbg_out);
+      break;
+    case REQ_GET_CLOSURE_CODE:
+      val = getval(dbg_in);
+      putword(dbg_out, (Code_val(val) - start_code) * sizeof(opcode_t));
+      flush(dbg_out);
+      break;
+    }
+  }
+}
+@
+
+\section{[[ocamldebug]]}
 
 \section{Backtraces}
 
@@ -10625,6 +11182,61 @@ VECTLENGTH, GETVECTITEM, SETVECTITEM,
       goto modify;
 @
 
+%Array.get external spec:
+%Array.set external spec:
+
+%runtime support
+<<function array_get>>=
+value array_get(value array, value index)   /* ML */
+{
+  long idx = Long_val(index);
+  if (idx < 0 || idx >= Wosize_val(array)) invalid_argument("Array.get");
+  return Field(array, idx);
+}
+@
+
+<<function array_set>>=
+value array_set(value array, value index, value newval)   /* ML */
+{
+  long idx = Long_val(index);
+  if (idx < 0 || idx >= Wosize_val(array)) invalid_argument("Array.set");
+  Modify(&Field(array, idx), newval);
+  return Val_unit;
+}
+@
+
+<<function make_vect>>=
+value make_vect(value len, value init)      /* ML */
+{
+  value res;
+  mlsize_t size, i;
+
+  size = Long_val(len);
+  if (size > Max_wosize) invalid_argument("Array.make");
+
+  Begin_root(init);
+    if (size == 0) {
+      res = Atom(0);
+    }
+    else if (size < Max_young_wosize) {
+      res = alloc(size, 0);
+      for (i = 0; i < size; i++) Field(res, i) = init;
+    }
+    else if (Is_block(init) && Is_young(init)) {
+      minor_collection();
+      res = alloc_shr(size, 0);
+      for (i = 0; i < size; i++) Field(res, i) = init;
+      res = check_urgent_gc (res);
+    }
+    else {
+      res = alloc_shr(size, 0);
+      for (i = 0; i < size; i++) initialize(&Field(res, i), init);
+      res = check_urgent_gc (res);
+    }
+  End_roots();
+  return res;
+}
+@
 
 \subsection{[[-unsafe]]}
 
@@ -10644,12 +11256,22 @@ let array_function str name =
 
 \section{Floats}
 
+% lambda
 <<[[Lambda.primitive]] float operations cases>>=
 | Pintoffloat | Pfloatofint
 | Pnegfloat | Pabsfloat
 | Paddfloat | Psubfloat | Pmulfloat | Pdivfloat
 | Pfloatcomp of comparison
 @
+
+% values
+<<constant Double_tag>>=
+/* Floating-point numbers. */
+#define Double_tag 253
+@
+
+% bytecode
+% no builtins? float operations are regular C external calls?
 
 \subsection{Floats array optimisation}
 
@@ -10660,6 +11282,11 @@ let array_function str name =
 <<[[Lambda.primitive]] operations on heap blocks other cases>>=
 | Pfloatfield of int
 | Psetfloatfield of int
+@
+
+<<constant Double_array_tag>>=
+/* Arrays of floating-point numbers. */
+#define Double_array_tag 254
 @
 
 \section{Character ranges}
@@ -10726,6 +11353,12 @@ GETSTRINGCHAR, SETSTRINGCHAR,
       Next;
 @
 
+% values
+<<constant String_tag>>=
+/* Strings. */
+#define String_tag 252
+@
+
 \section{[[assert()]], and [[-noassert]]}
 
 <<[[Lexer.keyword_table]] elements>>=
@@ -10789,6 +11422,42 @@ let mklazy e =
   let r = mkexp (Pexp_ident (Ldot (Lident "Pervasives", "ref"))) in
   mkexp (Pexp_apply (r, [df]))
 @
+
+\section{Objects}
+
+% deleted. But then compatibility pb? no, just use make boostrap.
+
+%<<oo opcodes>>=
+%  GETMETHOD,
+%@
+%
+%<<[[interpreter()]] oo cases>>=
+%/* Object-oriented operations */
+%
+%#define Lookup(obj, lab) \
+%  Field (Field (Field (obj, 0), ((lab) >> 16) / sizeof (value)), \
+%         ((lab) / sizeof (value)) & 0xFF)
+%
+%    Instruct(GETMETHOD):
+%      accu = Lookup(sp[0], accu);
+%      Next;
+%@
+
+<<constant Object_tag>>=
+/* Another special case: objects */
+#define Object_tag 248
+@
+% delete?
+
+
+<<function Class_val>>=
+#define Class_val(val) Field(val, 0)
+@
+
+<<function Oid_val>>=
+#define Oid_val(val) Long_val(Field(val, 1))
+@
+
 
 \chapter{Advanced Topics}
 
@@ -11035,7 +11704,7 @@ and directive_argument =
   | Pdir_ident of Longident.t
 @
 
-\section{Interpreter optimisation}
+\section{Interpreter optimisations}
 % Threaded interpreter? but can be confusing
 % thread in this context means something else
 
@@ -12743,7 +13412,7 @@ let report_error = function
       print_string " is not a bytecode object file"
 @
 
-\chapter{Standard Library}
+\chapter{Utilities Library}
 
 \section{Lists}
 
@@ -12952,6 +13621,206 @@ let no_overflow_sub a b = (a lxor (lnot b)) lor (b lxor (a-b)) < 0
 
 % lots of use of Format, maybe could be good to explain,
 % as it's not as common as other stuff from stdlib/
+
+
+\chapter{Standard Library}
+
+\section{Generic comparisons}
+%byterun/compare.c?
+
+\section{Hash tables}
+
+\section{Strings}
+
+<<function string_length>>=
+mlsize_t string_length(value s)
+{
+  mlsize_t temp;
+  temp = Bosize_val(s) - 1;
+  Assert (Byte (s, temp - Byte (s, temp)) == 0);
+  return temp - Byte (s, temp);
+}
+@
+
+
+<<function ml_string_length>>=
+value ml_string_length(value s)     /* ML */
+{
+  mlsize_t temp;
+  temp = Bosize_val(s) - 1;
+  Assert (Byte (s, temp - Byte (s, temp)) == 0);
+  return Val_long(temp - Byte (s, temp));
+}
+@
+
+<<function create_string>>=
+value create_string(value len)        /* ML */
+{
+  mlsize_t size = Long_val(len);
+  if (size > Bsize_wsize (Max_wosize) - 1) invalid_argument("String.create");
+  return alloc_string(size);
+}
+@
+
+<<function string_get>>=
+value string_get(value str, value index)    /* ML */
+{
+  long idx = Long_val(index);
+  if (idx < 0 || idx >= string_length(str)) invalid_argument("String.get");
+  return Val_int(Byte_u(str, idx));
+}
+@
+
+<<function string_set>>=
+value string_set(value str, value index, value newval)    /* ML */
+{
+  long idx = Long_val(index);
+  if (idx < 0 || idx >= string_length(str)) invalid_argument("String.set");
+  Byte_u(str, idx) = Int_val(newval);
+  return Val_unit;
+}
+@
+
+<<function string_equal>>=
+value string_equal(value s1, value s2)      /* ML */
+{
+  mlsize_t sz1 = Wosize_val(s1);
+  mlsize_t sz2 = Wosize_val(s2);
+  value * p1, * p2;
+  if (sz1 != sz2) return Val_false;
+  for(p1 = Op_val(s1), p2 = Op_val(s2); sz1 > 0; sz1--, p1++, p2++)
+    if (*p1 != *p2) return Val_false;
+  return Val_true;
+}
+@
+
+<<function string_notequal>>=
+value string_notequal(value s1, value s2)   /* ML */
+{
+  return Val_not(string_equal(s1, s2));
+}
+@
+
+<<function blit_string>>=
+value blit_string(value s1, value ofs1, value s2, value ofs2, value n)   /* ML */
+{
+  bcopy(&Byte(s1, Long_val(ofs1)), &Byte(s2, Long_val(ofs2)), Int_val(n));
+  return Val_unit;
+}
+@
+
+<<function fill_string>>=
+value fill_string(value s, value offset, value len, value init) /* ML */
+{
+  register char * p;
+  register mlsize_t n;
+  register char c;
+
+  c = Long_val(init);
+  for(p = &Byte(s, Long_val(offset)), n = Long_val(len);
+      n > 0; n--, p++)
+    *p = c;
+  return Val_unit;
+}
+@
+
+
+\section{IO channels}
+
+\subsection{Output}
+
+<<function caml_output>>=
+value caml_output(value vchannel, value buff, value start, value length) /* ML */
+{
+  struct channel * channel = Channel(vchannel);
+  long pos = Long_val(start);
+  long len = Long_val(length);
+
+  Begin_root(buff)
+    Lock(channel);
+      while (len > 0) {
+        int written = putblock(channel, &Byte(buff, pos), len);
+        pos += written;
+        len -= written;
+      }
+    Unlock(channel);
+  End_roots();
+  return Val_unit;
+}
+@
+
+\subsection{Input}
+
+<<function caml_input>>=
+value caml_input(value vchannel, value buff, value start, value length) /* ML */
+{
+  struct channel * channel = Channel(vchannel);
+  long res;
+
+  Begin_root(buff)
+    Lock(channel);
+    res = getblock(channel, &Byte(buff, Long_val(start)), Long_val(length));
+    Unlock(channel);
+  End_roots();
+  return Val_long(res);
+}
+@
+
+\section{Marshalling}
+
+\subsection{Output}
+
+%byterun/extern.c?
+
+
+% called "structured output"
+
+<<function output_value>>=
+value output_value(value vchan, value v, value flags) /* ML */
+{
+  struct channel * channel = Channel(vchan);
+  Begin_root(v)
+    Lock(channel);
+    output_val(channel, v, flags);
+    Unlock(channel);
+  End_roots();
+  return Val_unit;
+}
+@
+
+\subsection{Input}
+%byterun/intext.c
+
+<<function input_value>>=
+value input_value(value vchan)        /* ML */
+{
+  struct channel * chan = Channel(vchan);
+  value res = Val_unit;
+
+  Begin_root(res)
+    Lock(chan);
+    res = input_val(chan);
+    Unlock(chan);
+  End_roots();
+  return res;
+}
+@
+
+\section{Obj meta module}
+
+<<function obj_tag>>=
+value obj_tag(value arg)                 /* ML */
+{
+  return Val_int(Tag_val(arg));
+}
+@
+
+<<function obj_is_block>>=
+value obj_is_block(value arg)             /* ML */
+{
+  return Val_bool(Is_block(arg));
+}
+@
 
 
 \chapter{Extra Code}

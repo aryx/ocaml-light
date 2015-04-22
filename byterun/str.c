@@ -15,6 +15,7 @@
 /* Operations on strings */
 
 #include <string.h>
+
 #include "alloc.h"
 #include "fail.h"
 #include "mlvalues.h"

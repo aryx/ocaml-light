@@ -15,9 +15,7 @@
 /* Interface with the debugger */
 
 #ifndef _debugger_
-/*s: constant _debugger_ */
 #define _debugger_
-/*e: constant _debugger_ */
 
 #include "misc.h"
 #include "mlvalues.h"

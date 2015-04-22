@@ -15,6 +15,7 @@
 /* Structured output */
 
 #include <string.h>
+
 #include "alloc.h"
 #include "fail.h"
 #include "gc.h"
@@ -51,13 +52,13 @@ static byteoffset_t obj_counter;    /* Number of objects emitted so far */
 /*e: global obj_counter */
 
 #ifdef ARCH_SIXTYFOUR
-/*s: function Hash */
+/*s: function Hash ifdef ARCH_SIXTYFOUR */
 #define Hash(v) (((unsigned long) ((v) >> 3)) % extern_table_size)
-/*e: function Hash */
+/*e: function Hash ifdef ARCH_SIXTYFOUR */
 #else
-/*s: function Hash (byterun/extern.c) */
+/*s: function Hash */
 #define Hash(v) (((unsigned long) ((v) >> 2)) % extern_table_size)
-/*e: function Hash (byterun/extern.c) */
+/*e: function Hash */
 #endif
 
 /*s: function alloc_extern_table */
@@ -118,7 +119,9 @@ static void free_extern_table(void)
 
 /* To buffer the output */
 
-static char * extern_block, * extern_ptr, * extern_limit;
+static char * extern_block;
+static char * extern_ptr;
+static char * extern_limit;
 /*s: global extern_block_malloced */
 static int extern_block_malloced;
 /*e: global extern_block_malloced */
@@ -456,6 +459,7 @@ void output_val(struct channel *chan, value v, value flags)
 }
 /*e: function output_val */
 
+/*s: function output_value */
 value output_value(value vchan, value v, value flags) /* ML */
 {
   struct channel * channel = Channel(vchan);
@@ -466,6 +470,7 @@ value output_value(value vchan, value v, value flags) /* ML */
   End_roots();
   return Val_unit;
 }
+/*e: function output_value */
 
 /*s: function output_value_to_string */
 value output_value_to_string(value v, value flags) /* ML */

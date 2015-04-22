@@ -13,6 +13,7 @@
 /*e: copyright header C damien */
 
 #include <string.h>
+
 #include "config.h"
 #include "fail.h"
 #include "gc.h"
@@ -28,11 +29,22 @@
 /*s: global minor_heap_size */
 asize_t minor_heap_size;
 /*e: global minor_heap_size */
-char *young_start = NULL, *young_end = NULL;
-char *young_ptr = NULL, *young_limit = NULL;
-static value **ref_table = NULL, **ref_table_end, **ref_table_threshold;
-value **ref_table_ptr = NULL, **ref_table_limit;
-static asize_t ref_table_size, ref_table_reserve;
+char *young_start = NULL;
+char *young_end = NULL;
+
+char *young_ptr = NULL;
+char *young_limit = NULL;
+
+static value **ref_table = NULL;
+static value **ref_table_end;
+static value **ref_table_threshold;
+
+value **ref_table_ptr = NULL;
+value **ref_table_limit;
+
+static asize_t ref_table_size;
+static asize_t ref_table_reserve;
+
 /*s: global in_minor_collection */
 int in_minor_collection = 0;
 /*e: global in_minor_collection */

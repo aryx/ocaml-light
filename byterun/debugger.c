@@ -37,17 +37,17 @@ unsigned long event_count;
 
 #if !defined(HAS_SOCKETS)
 
-/*s: function debugger_init */
+/*s: function debugger_init ifndef HAS_SOCKETS */
 void debugger_init(void)
 {
 }
-/*e: function debugger_init */
+/*e: function debugger_init ifndef HAS_SOCKETS */
 
-/*s: function debugger */
+/*s: function debugger ifndef HAS_SOCKETS */
 void debugger(enum event_kind event)
 {
 }
-/*e: function debugger */
+/*e: function debugger ifndef HAS_SOCKETS */
 
 #else
 
@@ -110,7 +110,7 @@ static void close_connection(void)
 }
 /*e: function close_connection */
 
-/*s: function debugger_init (byterun/debugger.c) */
+/*s: function debugger_init */
 void debugger_init(void)
 {
   char * address;
@@ -155,7 +155,7 @@ void debugger_init(void)
   debugger_in_use = 1;
   trap_barrier = stack_high;
 }
-/*e: function debugger_init (byterun/debugger.c) */
+/*e: function debugger_init */
 
 /*s: function getval */
 static value getval(struct channel *chan)
@@ -205,7 +205,7 @@ static void safe_output_value(struct channel *chan, value val)
 #define Locals(sp) (sp + 3)
 /*e: function Locals */
 
-/*s: function debugger (byterun/debugger.c) */
+/*s: function debugger */
 void debugger(enum event_kind event)
 {
   int frame_number;
@@ -360,7 +360,7 @@ void debugger(enum event_kind event)
     }
   }
 }
-/*e: function debugger (byterun/debugger.c) */
+/*e: function debugger */
 
 #endif
 /*e: byterun/debugger.c */

@@ -44,15 +44,15 @@ struct lexing_table {
 /*e: struct lexing_table */
 
 #ifdef ARCH_BIG_ENDIAN
-/*s: function Short */
+/*s: function Short ifdef ARCH_BIG_ENDIAN */
 #define Short(tbl,n) \
   (*((unsigned char *)((tbl) + (n) * sizeof(short))) + \
           (*((schar *)((tbl) + (n) * sizeof(short) + 1)) << 8))
-/*e: function Short */
+/*e: function Short ifdef ARCH_BIG_ENDIAN */
 #else
-/*s: function Short (byterun/lexing.c) */
+/*s: function Short */
 #define Short(tbl,n) (((short *)(tbl))[n])
-/*e: function Short (byterun/lexing.c) */
+/*e: function Short */
 #endif
 
 /*s: function lex_engine */

@@ -13,9 +13,7 @@
 /*e: copyright header C xavier and damien */
 
 #ifndef _signals_
-/*s: constant _signals_ */
 #define _signals_
-/*e: constant _signals_ */
 
 #include "misc.h"
 #include "mlvalues.h"

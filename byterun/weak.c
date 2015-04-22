@@ -12,7 +12,6 @@
 /***********************************************************************/
 /*e: copyright header C damien 1997 */
 
-
 /* Operations on weak arrays */
 
 #include "alloc.h"

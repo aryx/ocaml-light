@@ -15,10 +15,7 @@
 /* Buffered input/output */
 
 #ifndef _io_
-/*s: constant _io_ */
 #define _io_
-/*e: constant _io_ */
-
 
 #include "misc.h"
 #include "mlvalues.h"

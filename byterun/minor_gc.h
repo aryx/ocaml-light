@@ -13,10 +13,7 @@
 /*e: copyright header C damien */
 
 #ifndef _minor_gc_
-/*s: constant _minor_gc_ */
 #define _minor_gc_
-/*e: constant _minor_gc_ */
-
 
 #include "misc.h"
 

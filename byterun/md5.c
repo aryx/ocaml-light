@@ -13,6 +13,7 @@
 /*e: copyright header C xavier */
 
 #include <string.h>
+
 #include "alloc.h"
 #include "fail.h"
 #include "md5.h"

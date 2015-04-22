@@ -28,6 +28,7 @@
 #ifdef HAS_UNISTD
 #include <unistd.h>
 #endif
+
 #include "alloc.h"
 #include "debugger.h"
 #include "fail.h"
@@ -37,6 +38,7 @@
 #include "stacks.h"
 #include "str.h"
 #include "sys.h"
+
 #ifdef HAS_UI
 #include "ui.h"
 #endif
@@ -240,7 +242,6 @@ value sys_get_config(value unit)  /* ML */
 /*e: function sys_get_config */
 
 /* Search path function */
-
 
 #ifndef S_ISREG
 /*s: function S_ISREG */

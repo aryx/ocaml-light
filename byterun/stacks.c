@@ -15,6 +15,7 @@
 /* To initialize and resize the stacks */
 
 #include <string.h>
+
 #include "config.h"
 #include "fail.h"
 #include "misc.h"

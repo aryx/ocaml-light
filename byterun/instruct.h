@@ -16,6 +16,7 @@
 /* The instruction set. */
 
 enum instructions {
+
   /* integers */
   /*s: integer arithmetics opcodes */
   CONSTINT,
@@ -116,7 +117,7 @@ enum instructions {
     C_CALL1, C_CALL2, C_CALL3, C_CALL4, C_CALL5,
   /*e: foreign C calls opcodes */
 
-  /* aggregate data */
+  /* special data */
   /*s: string opcodes */
   GETSTRINGCHAR, SETSTRINGCHAR, 
   /*e: string opcodes */

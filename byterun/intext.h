@@ -14,10 +14,8 @@
 
 /* Structured input/output */
 
-#ifndef __intext__
-/*s: constant __intext__ */
-#define __intext__
-/*e: constant __intext__ */
+#ifndef _intext_
+#define _intext_
 
 #include "misc.h"
 #include "mlvalues.h"

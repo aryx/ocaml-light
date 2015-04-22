@@ -13,10 +13,7 @@
 /*e: copyright header C damien */
 
 #ifndef _compact_
-/*s: constant _compact_ */
 #define _compact_
-/*e: constant _compact_ */
-
 
 #include "config.h"
 #include "misc.h"

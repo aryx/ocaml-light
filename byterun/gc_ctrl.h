@@ -13,9 +13,7 @@
 /*e: copyright header C damien */
 
 #ifndef _gc_ctrl_
-/*s: constant _gc_ctrl_ */
 #define _gc_ctrl_
-/*e: constant _gc_ctrl_ */
 
 #include "misc.h"
 
