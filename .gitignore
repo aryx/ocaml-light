@@ -2,6 +2,7 @@
 
 *.o
 *.a
+asmrun/*.c
 
 .md5sum_*
 
