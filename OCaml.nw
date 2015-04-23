@@ -395,6 +395,9 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 
 \section{Code organization}
 
+%config/m.h machine config
+%config/s.h (operating) system config
+
 % datarepr.ml:  
 %  "Compute constructor and label descriptions from type declarations, determining their representation"
 % ctype.ml: 
