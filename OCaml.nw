@@ -13412,6 +13412,208 @@ let report_error = function
       print_string " is not a bytecode object file"
 @
 
+\chapter{Standard Library}
+
+\section{Generic comparisons}
+%byterun/compare.c?
+
+\section{Hash tables}
+
+\section{Strings}
+
+<<function string_length>>=
+mlsize_t string_length(value s)
+{
+  mlsize_t temp;
+  temp = Bosize_val(s) - 1;
+  Assert (Byte (s, temp - Byte (s, temp)) == 0);
+  return temp - Byte (s, temp);
+}
+@
+
+
+<<function ml_string_length>>=
+value ml_string_length(value s)     /* ML */
+{
+  mlsize_t temp;
+  temp = Bosize_val(s) - 1;
+  Assert (Byte (s, temp - Byte (s, temp)) == 0);
+  return Val_long(temp - Byte (s, temp));
+}
+@
+
+<<function create_string>>=
+value create_string(value len)        /* ML */
+{
+  mlsize_t size = Long_val(len);
+  if (size > Bsize_wsize (Max_wosize) - 1) invalid_argument("String.create");
+  return alloc_string(size);
+}
+@
+
+<<function string_get>>=
+value string_get(value str, value index)    /* ML */
+{
+  long idx = Long_val(index);
+  if (idx < 0 || idx >= string_length(str)) invalid_argument("String.get");
+  return Val_int(Byte_u(str, idx));
+}
+@
+
+<<function string_set>>=
+value string_set(value str, value index, value newval)    /* ML */
+{
+  long idx = Long_val(index);
+  if (idx < 0 || idx >= string_length(str)) invalid_argument("String.set");
+  Byte_u(str, idx) = Int_val(newval);
+  return Val_unit;
+}
+@
+
+<<function string_equal>>=
+value string_equal(value s1, value s2)      /* ML */
+{
+  mlsize_t sz1 = Wosize_val(s1);
+  mlsize_t sz2 = Wosize_val(s2);
+  value * p1, * p2;
+  if (sz1 != sz2) return Val_false;
+  for(p1 = Op_val(s1), p2 = Op_val(s2); sz1 > 0; sz1--, p1++, p2++)
+    if (*p1 != *p2) return Val_false;
+  return Val_true;
+}
+@
+
+<<function string_notequal>>=
+value string_notequal(value s1, value s2)   /* ML */
+{
+  return Val_not(string_equal(s1, s2));
+}
+@
+
+<<function blit_string>>=
+value blit_string(value s1, value ofs1, value s2, value ofs2, value n)   /* ML */
+{
+  bcopy(&Byte(s1, Long_val(ofs1)), &Byte(s2, Long_val(ofs2)), Int_val(n));
+  return Val_unit;
+}
+@
+
+<<function fill_string>>=
+value fill_string(value s, value offset, value len, value init) /* ML */
+{
+  register char * p;
+  register mlsize_t n;
+  register char c;
+
+  c = Long_val(init);
+  for(p = &Byte(s, Long_val(offset)), n = Long_val(len);
+      n > 0; n--, p++)
+    *p = c;
+  return Val_unit;
+}
+@
+
+
+\section{IO channels}
+
+\subsection{Output}
+
+<<function caml_output>>=
+value caml_output(value vchannel, value buff, value start, value length) /* ML */
+{
+  struct channel * channel = Channel(vchannel);
+  long pos = Long_val(start);
+  long len = Long_val(length);
+
+  Begin_root(buff)
+    Lock(channel);
+      while (len > 0) {
+        int written = putblock(channel, &Byte(buff, pos), len);
+        pos += written;
+        len -= written;
+      }
+    Unlock(channel);
+  End_roots();
+  return Val_unit;
+}
+@
+
+\subsection{Input}
+
+<<function caml_input>>=
+value caml_input(value vchannel, value buff, value start, value length) /* ML */
+{
+  struct channel * channel = Channel(vchannel);
+  long res;
+
+  Begin_root(buff)
+    Lock(channel);
+    res = getblock(channel, &Byte(buff, Long_val(start)), Long_val(length));
+    Unlock(channel);
+  End_roots();
+  return Val_long(res);
+}
+@
+
+\section{Marshalling}
+
+\subsection{Output}
+
+%byterun/extern.c?
+
+
+% called "structured output"
+
+<<function output_value>>=
+value output_value(value vchan, value v, value flags) /* ML */
+{
+  struct channel * channel = Channel(vchan);
+  Begin_root(v)
+    Lock(channel);
+    output_val(channel, v, flags);
+    Unlock(channel);
+  End_roots();
+  return Val_unit;
+}
+@
+
+\subsection{Input}
+%byterun/intext.c
+
+<<function input_value>>=
+value input_value(value vchan)        /* ML */
+{
+  struct channel * chan = Channel(vchan);
+  value res = Val_unit;
+
+  Begin_root(res)
+    Lock(chan);
+    res = input_val(chan);
+    Unlock(chan);
+  End_roots();
+  return res;
+}
+@
+
+\section{Obj meta module}
+
+<<function obj_tag>>=
+value obj_tag(value arg)                 /* ML */
+{
+  return Val_int(Tag_val(arg));
+}
+@
+
+<<function obj_is_block>>=
+value obj_is_block(value arg)             /* ML */
+{
+  return Val_bool(Is_block(arg));
+}
+@
+
+\section{Operating system interaction}
+%sys.c
+
 \chapter{Utilities Library}
 
 \section{Lists}
@@ -13621,206 +13823,6 @@ let no_overflow_sub a b = (a lxor (lnot b)) lor (b lxor (a-b)) < 0
 
 % lots of use of Format, maybe could be good to explain,
 % as it's not as common as other stuff from stdlib/
-
-
-\chapter{Standard Library}
-
-\section{Generic comparisons}
-%byterun/compare.c?
-
-\section{Hash tables}
-
-\section{Strings}
-
-<<function string_length>>=
-mlsize_t string_length(value s)
-{
-  mlsize_t temp;
-  temp = Bosize_val(s) - 1;
-  Assert (Byte (s, temp - Byte (s, temp)) == 0);
-  return temp - Byte (s, temp);
-}
-@
-
-
-<<function ml_string_length>>=
-value ml_string_length(value s)     /* ML */
-{
-  mlsize_t temp;
-  temp = Bosize_val(s) - 1;
-  Assert (Byte (s, temp - Byte (s, temp)) == 0);
-  return Val_long(temp - Byte (s, temp));
-}
-@
-
-<<function create_string>>=
-value create_string(value len)        /* ML */
-{
-  mlsize_t size = Long_val(len);
-  if (size > Bsize_wsize (Max_wosize) - 1) invalid_argument("String.create");
-  return alloc_string(size);
-}
-@
-
-<<function string_get>>=
-value string_get(value str, value index)    /* ML */
-{
-  long idx = Long_val(index);
-  if (idx < 0 || idx >= string_length(str)) invalid_argument("String.get");
-  return Val_int(Byte_u(str, idx));
-}
-@
-
-<<function string_set>>=
-value string_set(value str, value index, value newval)    /* ML */
-{
-  long idx = Long_val(index);
-  if (idx < 0 || idx >= string_length(str)) invalid_argument("String.set");
-  Byte_u(str, idx) = Int_val(newval);
-  return Val_unit;
-}
-@
-
-<<function string_equal>>=
-value string_equal(value s1, value s2)      /* ML */
-{
-  mlsize_t sz1 = Wosize_val(s1);
-  mlsize_t sz2 = Wosize_val(s2);
-  value * p1, * p2;
-  if (sz1 != sz2) return Val_false;
-  for(p1 = Op_val(s1), p2 = Op_val(s2); sz1 > 0; sz1--, p1++, p2++)
-    if (*p1 != *p2) return Val_false;
-  return Val_true;
-}
-@
-
-<<function string_notequal>>=
-value string_notequal(value s1, value s2)   /* ML */
-{
-  return Val_not(string_equal(s1, s2));
-}
-@
-
-<<function blit_string>>=
-value blit_string(value s1, value ofs1, value s2, value ofs2, value n)   /* ML */
-{
-  bcopy(&Byte(s1, Long_val(ofs1)), &Byte(s2, Long_val(ofs2)), Int_val(n));
-  return Val_unit;
-}
-@
-
-<<function fill_string>>=
-value fill_string(value s, value offset, value len, value init) /* ML */
-{
-  register char * p;
-  register mlsize_t n;
-  register char c;
-
-  c = Long_val(init);
-  for(p = &Byte(s, Long_val(offset)), n = Long_val(len);
-      n > 0; n--, p++)
-    *p = c;
-  return Val_unit;
-}
-@
-
-
-\section{IO channels}
-
-\subsection{Output}
-
-<<function caml_output>>=
-value caml_output(value vchannel, value buff, value start, value length) /* ML */
-{
-  struct channel * channel = Channel(vchannel);
-  long pos = Long_val(start);
-  long len = Long_val(length);
-
-  Begin_root(buff)
-    Lock(channel);
-      while (len > 0) {
-        int written = putblock(channel, &Byte(buff, pos), len);
-        pos += written;
-        len -= written;
-      }
-    Unlock(channel);
-  End_roots();
-  return Val_unit;
-}
-@
-
-\subsection{Input}
-
-<<function caml_input>>=
-value caml_input(value vchannel, value buff, value start, value length) /* ML */
-{
-  struct channel * channel = Channel(vchannel);
-  long res;
-
-  Begin_root(buff)
-    Lock(channel);
-    res = getblock(channel, &Byte(buff, Long_val(start)), Long_val(length));
-    Unlock(channel);
-  End_roots();
-  return Val_long(res);
-}
-@
-
-\section{Marshalling}
-
-\subsection{Output}
-
-%byterun/extern.c?
-
-
-% called "structured output"
-
-<<function output_value>>=
-value output_value(value vchan, value v, value flags) /* ML */
-{
-  struct channel * channel = Channel(vchan);
-  Begin_root(v)
-    Lock(channel);
-    output_val(channel, v, flags);
-    Unlock(channel);
-  End_roots();
-  return Val_unit;
-}
-@
-
-\subsection{Input}
-%byterun/intext.c
-
-<<function input_value>>=
-value input_value(value vchan)        /* ML */
-{
-  struct channel * chan = Channel(vchan);
-  value res = Val_unit;
-
-  Begin_root(res)
-    Lock(chan);
-    res = input_val(chan);
-    Unlock(chan);
-  End_roots();
-  return res;
-}
-@
-
-\section{Obj meta module}
-
-<<function obj_tag>>=
-value obj_tag(value arg)                 /* ML */
-{
-  return Val_int(Tag_val(arg));
-}
-@
-
-<<function obj_is_block>>=
-value obj_is_block(value arg)             /* ML */
-{
-  return Val_bool(Is_block(arg));
-}
-@
 
 
 \chapter{Extra Code}
