@@ -55,11 +55,7 @@ extern unsigned long extra_heap_memory;
 #define Phase_idle 2
 /*e: constant Phase_idle */
 
-#ifdef __alpha
-typedef int page_table_entry;
-#else
 typedef char page_table_entry;
-#endif
 
 extern char *heap_start;
 extern char *heap_end;

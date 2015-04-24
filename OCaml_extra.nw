@@ -18237,16 +18237,6 @@ open Clflags
 #define bcopy(src,dst,len) memmove((dst), (src), (len))
 @
 
-<<function bcopy (byterun/config.h)>>=
-#define bcopy(src,dst,len) memmov((dst), (src), (len))
-@
-%memmov not memmove here
-
-<<constant USING_MEMMOV>>=
-#define USING_MEMMOV
-@
-
-
 
 
 
@@ -18303,18 +18293,7 @@ open Clflags
 
 /* Library dependencies */
 
-#ifdef HAS_MEMMOVE
-#undef bcopy
 <<function bcopy>>
-#else
-#ifdef HAS_BCOPY
-/* Nothing to do */
-#else
-#undef bcopy
-<<function bcopy (byterun/config.h)>>
-<<constant USING_MEMMOV>>
-#endif
-#endif
 
 /* We use threaded code interpretation if the compiler provides labels
    as first-class values (GCC 2.x).
@@ -18328,11 +18307,7 @@ open Clflags
 
 /* Signed char type */
 
-#if defined(__STDC__) || defined(SIGNED_CHAR_WORKS)
 typedef signed char schar;
-#else
-typedef char schar;
-#endif
 
 <<constant Page_size>>
 
@@ -20564,11 +20539,7 @@ extern unsigned long extra_heap_memory;
 <<constant Phase_sweep>>
 <<constant Phase_idle>>
 
-#ifdef __alpha
-typedef int page_table_entry;
-#else
 typedef char page_table_entry;
-#endif
 
 extern char *heap_start;
 extern char *heap_end;
@@ -21012,15 +20983,8 @@ void init_major_heap (asize_t heap_size)
 #include "roots.h"
 #include "weak.h"
 
-#ifdef __STDC__
+// LONG_MAX
 #include <limits.h>
-#else
-#ifdef ARCH_SIXTYFOUR
-<<constant LONG_MAX>>
-#else
-<<constant LONG_MAX (byterun/major_gc.c)>>
-#endif
-#endif
 
 <<global percent_free>>
 <<global major_heap_increment>>
@@ -22656,16 +22620,11 @@ static void safe_output_value(struct channel *chan, value val)
 <<global event_count>>
 
 #if !defined(HAS_SOCKETS)
-
 <<function debugger_init ifndef HAS_SOCKETS>>
-
 <<function debugger ifndef HAS_SOCKETS>>
-
 #else
 
-#ifdef HAS_UNISTD
 #include <unistd.h>
-#endif
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
@@ -23769,9 +23728,7 @@ void set_instruction(code_t pos, opcode_t instr)
 #include "mlvalues.h"
 #include "reverse.h"
 
-#ifdef HAS_UNISTD
 #include <unistd.h>
-#endif
 
 <<global start_code>>
 <<global code_size>>
@@ -25209,22 +25166,6 @@ extern void (*channel_mutex_unlock_exn) (void);
 
 \subsection*{[[byterun/io.c]]}
 
-<<constant INT_MAX>>=
-#define INT_MAX 0x7FFFFFFF
-@
-
-<<constant SEEK_SET>>=
-#define SEEK_SET 0
-@
-
-<<constant SEEK_CUR>>=
-#define SEEK_CUR 1
-@
-
-<<constant SEEK_END>>=
-#define SEEK_END 2
-@
-
 <<global channel_mutex_free>>=
 /* Hooks for locking channels */
 
@@ -25433,11 +25374,7 @@ static int do_read(int fd, char *p, unsigned int n)
 
   Assert(!Is_young(p));
   enter_blocking_section();
-#ifdef EINTR
   do { retcode = read(fd, p, n); } while (retcode == -1 && errno == EINTR);
-#else
-  retcode = read(fd, p, n);
-#endif
   leave_blocking_section();
   if (retcode == -1) sys_error(NO_ARG);
   return retcode;
@@ -25757,18 +25694,17 @@ value caml_input_scan_line(value vchannel)       /* ML */
 
 /* Buffered input/output. */
 
+// EINTR, EAGAIN, EWOULDBLOCK
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
 
 #include "config.h"
 
-#ifdef HAS_UNISTD
+// SEEK_xxx
 #include <unistd.h>
-#endif
-#ifdef __STDC__
+// INT_MAX
 #include <limits.h>
-#endif
 
 #include "alloc.h"
 #include "fail.h"
@@ -25778,16 +25714,6 @@ value caml_input_scan_line(value vchannel)       /* ML */
 #include "mlvalues.h"
 #include "signals.h"
 #include "sys.h"
-
-#ifndef INT_MAX
-<<constant INT_MAX>>
-#endif
-
-#ifndef SEEK_SET
-<<constant SEEK_SET>>
-<<constant SEEK_CUR>>
-<<constant SEEK_END>>
-#endif
 
 <<global channel_mutex_free>>
 <<global channel_mutex_lock>>
@@ -25801,16 +25727,6 @@ value caml_input_scan_line(value vchannel)       /* ML */
 <<function channel_size>>
 
 /* Output */
-
-#ifndef EINTR
-<<constant EINTR>>
-#endif
-#ifndef EAGAIN
-<<constant EAGAIN>>
-#endif
-#ifndef EWOULDBLOCK
-<<constant EWOULDBLOCK>>
-#endif
 
 <<function do_write>>
 
@@ -26540,10 +26456,6 @@ value available_primitives(value unit)
 
 %less: rename compatibility.h?
 
-<<constant NULL>>=
-#define NULL 0
-@
-
 <<constant Noreturn>>=
 /* Works only in GCC 2.5 and later */
 #define Noreturn __attribute ((noreturn))
@@ -26551,13 +26463,6 @@ value available_primitives(value unit)
 
 <<constant Noreturn (byterun/misc.h)>>=
 #define Noreturn
-@
-
-<<constant __LINE__>>=
-#define __LINE__ 0
-@
-<<constant __FILE__>>=
-#define __FILE__ "(?)"
 @
 
 <<function Assert>>=
@@ -26580,22 +26485,12 @@ value available_primitives(value unit)
 
 /* Standard definitions */
 
-#ifdef __STDC__
 #include <stddef.h>
 #include <stdlib.h>
-#endif
 
 /* Basic types and constants */
 
-#ifdef __STDC__
 typedef size_t asize_t;
-#else
-typedef int asize_t;
-#endif
-
-#ifndef NULL
-<<constant NULL>>
-#endif
 
 typedef char * addr;
 
@@ -26608,17 +26503,7 @@ typedef char * addr;
 /* Assertions */
 
 #ifdef DEBUG
-#ifdef __STDC__
 #define Assert(x) if (!(x)) failed_assert ( #x , __FILE__, __LINE__)
-#else
-#ifndef __LINE__
-<<constant __LINE__>>
-#endif
-#ifndef __FILE__
-<<constant __FILE__>>
-#endif
-#define Assert(x) if (!(x)) failed_assert ("(?)" , __FILE__, __LINE__)
-#endif
 #else
 <<function Assert>>
 #endif
@@ -26699,80 +26584,80 @@ void fatal_error_arg (char *fmt, char *arg)
 }
 @
 
-<<function memmov>>=
-/* This should work on 64-bit machines as well as 32-bit machines.
-   It assumes a long is the natural size for memory reads and writes.
-*/
-void memmov (char * dst, char * src, unsigned long length)
-{
-  unsigned long i;
-
-  if ((unsigned long) dst <= (unsigned long) src){
-
-      /* Copy in ascending order. */
-    if (((unsigned long) src - (unsigned long) dst) % sizeof (long) != 0){
-
-        /* The pointers are not equal modulo sizeof (long).
-           Copy byte by byte. */
-      for (; length != 0; length--){
-        *dst++ = *src++;
-      }
-    }else{
-
-        /* Copy the first few bytes. */
-      i = (unsigned long) dst % sizeof (long);
-      if (i != 0){
-        i = sizeof (long) - i;              /* Number of bytes to copy. */
-        if (i > length) i = length;         /* Never copy more than length.*/
-        for (; i != 0; i--){
-          *dst++ = *src++; --length;
-        }
-      }                    Assert ((unsigned long) dst % sizeof (long) == 0);
-                           Assert ((unsigned long) src % sizeof (long) == 0);
-
-      /* Then copy as many entire words as possible. */
-      for (i = length / sizeof (long); i > 0; i--){
-        *(long *) dst = *(long *) src;
-        dst += sizeof (long); src += sizeof (long);
-      }
-
-      /* Then copy the last few bytes. */
-      for (i = length % sizeof (long); i > 0; i--){
-        *dst++ = *src++;
-      }
-    }
-  }else{                                       /* Copy in descending order. */
-    src += length; dst += length;
-    if (((unsigned long) dst - (unsigned long) src) % sizeof (long) != 0){
-
-        /* The pointers are not equal modulo sizeof (long).
-           Copy byte by byte. */
-      for (; length > 0; length--){
-        *--dst = *--src;
-      }
-    }else{
-
-        /* Copy the first few bytes. */
-      i = (unsigned long) dst % sizeof (long);
-      if (i > length) i = length;           /* Never copy more than length. */
-      for (; i > 0; i--){
-        *--dst = *--src; --length;
-      }
-
-        /* Then copy as many entire words as possible. */
-      for (i = length / sizeof (long); i > 0; i--){
-        dst -= sizeof (long); src -= sizeof (long);
-        *(long *) dst = *(long *) src;
-      }
-
-        /* Then copy the last few bytes. */
-      for (i = length % sizeof (long); i > 0; i--){
-        *--dst = *--src;
-      }
-    }
-  }
-}
-@
+%<<function memmov>>=
+%/* This should work on 64-bit machines as well as 32-bit machines.
+%   It assumes a long is the natural size for memory reads and writes.
+%*/
+%void memmov (char * dst, char * src, unsigned long length)
+%{
+%  unsigned long i;
+%
+%  if ((unsigned long) dst <= (unsigned long) src){
+%
+%      /* Copy in ascending order. */
+%    if (((unsigned long) src - (unsigned long) dst) % sizeof (long) != 0){
+%
+%        /* The pointers are not equal modulo sizeof (long).
+%           Copy byte by byte. */
+%      for (; length != 0; length--){
+%        *dst++ = *src++;
+%      }
+%    }else{
+%
+%        /* Copy the first few bytes. */
+%      i = (unsigned long) dst % sizeof (long);
+%      if (i != 0){
+%        i = sizeof (long) - i;              /* Number of bytes to copy. */
+%        if (i > length) i = length;         /* Never copy more than length.*/
+%        for (; i != 0; i--){
+%          *dst++ = *src++; --length;
+%        }
+%      }                    Assert ((unsigned long) dst % sizeof (long) == 0);
+%                           Assert ((unsigned long) src % sizeof (long) == 0);
+%
+%      /* Then copy as many entire words as possible. */
+%      for (i = length / sizeof (long); i > 0; i--){
+%        *(long *) dst = *(long *) src;
+%        dst += sizeof (long); src += sizeof (long);
+%      }
+%
+%      /* Then copy the last few bytes. */
+%      for (i = length % sizeof (long); i > 0; i--){
+%        *dst++ = *src++;
+%      }
+%    }
+%  }else{                                       /* Copy in descending order. */
+%    src += length; dst += length;
+%    if (((unsigned long) dst - (unsigned long) src) % sizeof (long) != 0){
+%
+%        /* The pointers are not equal modulo sizeof (long).
+%           Copy byte by byte. */
+%      for (; length > 0; length--){
+%        *--dst = *--src;
+%      }
+%    }else{
+%
+%        /* Copy the first few bytes. */
+%      i = (unsigned long) dst % sizeof (long);
+%      if (i > length) i = length;           /* Never copy more than length. */
+%      for (; i > 0; i--){
+%        *--dst = *--src; --length;
+%      }
+%
+%        /* Then copy as many entire words as possible. */
+%      for (i = length / sizeof (long); i > 0; i--){
+%        dst -= sizeof (long); src -= sizeof (long);
+%        *(long *) dst = *(long *) src;
+%      }
+%
+%        /* Then copy the last few bytes. */
+%      for (i = length % sizeof (long); i > 0; i--){
+%        *--dst = *--src;
+%      }
+%    }
+%  }
+%}
+%@
 
 <<function aligned_malloc>>=
 char *aligned_malloc (asize_t size, int modulo, void **block)
@@ -26819,12 +26704,6 @@ char *aligned_malloc (asize_t size, int modulo, void **block)
 <<function fatal_error>>
 
 <<function fatal_error_arg>>
-
-#ifdef USING_MEMMOV
-
-<<function memmov>>
-
-#endif /* USING_MEMMOV */
 
 <<function aligned_malloc>>
 @
@@ -28044,11 +27923,7 @@ value sys_chdir(value dirname)        /* ML */
 value sys_getcwd(value unit)          /* ML */
 {
   char buff[4096];
-#ifdef HAS_GETCWD
   if (getcwd(buff, sizeof(buff)) == 0) sys_error(NO_ARG);
-#else
-  if (getwd(buff) == 0) sys_error(NO_ARG);
-#endif /* HAS_GETCWD */
   return copy_string(buff);
 }
 @
@@ -28158,9 +28033,7 @@ char * searchpath(char * name)
 #include <sys/stat.h>
 
 #include "config.h"
-#ifdef HAS_UNISTD
 #include <unistd.h>
-#endif
 
 #include "alloc.h"
 #include "debugger.h"
@@ -28495,10 +28368,6 @@ value weak_get (value ar, value n)        /* ML */
 #define O_BINARY 0
 @
 
-<<constant SEEK_END (byterun/startup.c)>>=
-#define SEEK_END 2
-@
-
 
 
 <<function read_size>>=
@@ -28713,9 +28582,7 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
 #include <fcntl.h>
 
 #include "config.h"
-#ifdef HAS_UNISTD
 #include <unistd.h>
-#endif
 
 #include "alloc.h"
 #include "debugger.h"
@@ -28738,9 +28605,6 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
 <<constant O_BINARY (byterun/startup.c)>>
 #endif
 
-#ifndef SEEK_END
-<<constant SEEK_END (byterun/startup.c)>>
-#endif
 
 <<global atom_table>>
 

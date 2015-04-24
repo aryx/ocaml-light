@@ -24,9 +24,7 @@
 #include "mlvalues.h"
 #include "reverse.h"
 
-#ifdef HAS_UNISTD
 #include <unistd.h>
-#endif
 
 /*s: global start_code */
 code_t start_code;

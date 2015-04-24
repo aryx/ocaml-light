@@ -36,24 +36,19 @@ unsigned long event_count;
 /*e: global event_count */
 
 #if !defined(HAS_SOCKETS)
-
 /*s: function debugger_init ifndef HAS_SOCKETS */
 void debugger_init(void)
 {
 }
 /*e: function debugger_init ifndef HAS_SOCKETS */
-
 /*s: function debugger ifndef HAS_SOCKETS */
 void debugger(enum event_kind event)
 {
 }
 /*e: function debugger ifndef HAS_SOCKETS */
-
 #else
 
-#ifdef HAS_UNISTD
 #include <unistd.h>
-#endif
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/socket.h>

@@ -65,9 +65,14 @@
 
 /* Define HAS_STRERROR if you have strerror(). */
 
+
+
+
+
 /* 2. For the Unix library. */
 
 #define HAS_SOCKETS
+// also for the debugger
 
 /* Define HAS_SOCKETS if you have BSD sockets. */
 

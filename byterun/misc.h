@@ -22,24 +22,12 @@
 
 /* Standard definitions */
 
-#ifdef __STDC__
 #include <stddef.h>
 #include <stdlib.h>
-#endif
 
 /* Basic types and constants */
 
-#ifdef __STDC__
 typedef size_t asize_t;
-#else
-typedef int asize_t;
-#endif
-
-#ifndef NULL
-/*s: constant NULL */
-#define NULL 0
-/*e: constant NULL */
-#endif
 
 typedef char * addr;
 
@@ -57,21 +45,7 @@ typedef char * addr;
 /* Assertions */
 
 #ifdef DEBUG
-#ifdef __STDC__
 #define Assert(x) if (!(x)) failed_assert ( #x , __FILE__, __LINE__)
-#else
-#ifndef __LINE__
-/*s: constant __LINE__ */
-#define __LINE__ 0
-/*e: constant __LINE__ */
-#endif
-#ifndef __FILE__
-/*s: constant __FILE__ */
-#define __FILE__ "(?)"
-/*e: constant __FILE__ */
-#endif
-#define Assert(x) if (!(x)) failed_assert ("(?)" , __FILE__, __LINE__)
-#endif
 #else
 /*s: function Assert */
 #define Assert(x)

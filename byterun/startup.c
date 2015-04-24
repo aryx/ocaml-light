@@ -20,9 +20,7 @@
 #include <fcntl.h>
 
 #include "config.h"
-#ifdef HAS_UNISTD
 #include <unistd.h>
-#endif
 
 #include "alloc.h"
 #include "debugger.h"
@@ -47,11 +45,6 @@
 /*e: constant O_BINARY (byterun/startup.c) */
 #endif
 
-#ifndef SEEK_END
-/*s: constant SEEK_END (byterun/startup.c) */
-#define SEEK_END 2
-/*e: constant SEEK_END (byterun/startup.c) */
-#endif
 
 /*s: global atom_table */
 header_t atom_table[256];
