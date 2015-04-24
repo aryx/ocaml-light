@@ -69,7 +69,7 @@ let add_available_units units =
 
 let digest_interface unit loadpath =
   let filename = Misc.find_in_path loadpath (String.uncapitalize unit ^ ".cmi") in
-  let ic = open_in_bin filename in
+  let ic = open_in filename in
   try
     let buffer = String.create (String.length Config.cmi_magic_number) in
     really_input ic buffer 0 (String.length Config.cmi_magic_number);
@@ -139,7 +139,7 @@ let load_compunit ic file_name compunit =
   end
 
 let loadfile file_name =
-  let ic = open_in_bin file_name in
+  let ic = open_in file_name in
   try
     let buffer = String.create (String.length Config.cmo_magic_number) in
     really_input ic buffer 0 (String.length Config.cmo_magic_number);

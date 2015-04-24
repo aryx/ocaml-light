@@ -387,7 +387,7 @@ val read_float : unit -> float
 type open_flag =
     Open_rdonly | Open_wronly | Open_append
   | Open_creat | Open_trunc | Open_excl
-  | Open_binary | Open_text | Open_nonblock
+  | Open_nonblock
         (* Opening modes for [open_out_gen] and [open_in_gen].
 -          [Open_rdonly]: open for reading.
 -          [Open_wronly]: open for writing.
@@ -395,8 +395,6 @@ type open_flag =
 -          [Open_creat]: create the file if it does not exist.
 -          [Open_trunc]: empty the file if it already exists.
 -          [Open_excl]: fail if the file already exists.
--          [Open_binary]: open in binary mode (no conversion).
--          [Open_text]: open in text mode (may perform conversions).
 -          [Open_nonblock]: open in non-blocking mode. *)
            
 val open_out : string -> out_channel
@@ -405,11 +403,6 @@ val open_out : string -> out_channel
            file is truncated to zero length if it already exists. It
            is created if it does not already exists.
            Raise [Sys_error] if the file could not be opened. *)
-val open_out_bin : string -> out_channel
-        (* Same as [open_out], but the file is opened in binary mode,
-           so that no translation takes place during writes. On operating
-           systems that do not distinguish between text mode and binary
-           mode, this function behaves like [open_out]. *)
 val open_out_gen : open_flag list -> int -> string -> out_channel
         (* [open_out_gen mode rights filename] opens the file named
            [filename] for writing, as above. The extra argument [mode]
@@ -468,11 +461,6 @@ val open_in : string -> in_channel
         (* Open the named file for reading, and return a new input channel
            on that file, positionned at the beginning of the file.
            Raise [Sys_error] if the file could not be opened. *)
-val open_in_bin : string -> in_channel
-        (* Same as [open_in], but the file is opened in binary mode,
-           so that no translation takes place during reads. On operating
-           systems that do not distinguish between text mode and binary
-           mode, this function behaves like [open_in]. *)
 val open_in_gen : open_flag list -> int -> string -> in_channel
         (* [open_in_gen mode rights filename] opens the file named
            [filename] for reading, as above. The extra arguments
