@@ -74,3 +74,4 @@ boot/Saved
 /OCaml.pdf
 /OCaml.tex
 /OCaml.toc
+/tests/hello.byte
