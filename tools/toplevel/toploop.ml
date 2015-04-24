@@ -192,7 +192,7 @@ let use_print_results = ref true
 let use_file name =
   try
     let filename = find_in_path !Config.load_path name in
-    let ic = open_in_bin filename in
+    let ic = open_in filename in
     let lb = Lexing.from_channel ic in
     (* Skip initial #! line if any *)
     let buffer = String.create 2 in

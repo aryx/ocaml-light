@@ -81,7 +81,7 @@ let scan_file obj_name tolink =
       find_in_path !load_path obj_name
     with Not_found ->
       raise(Error(File_not_found obj_name)) in
-  let ic = open_in_bin file_name in
+  let ic = open_in file_name in
   try
     let buffer = String.create (String.length cmo_magic_number) in
     really_input ic buffer 0 (String.length cmo_magic_number);
@@ -192,7 +192,7 @@ let link_compunit output_fun currpos_fun inchan file_name compunit =
 (* Link in a .cmo file *)
 
 let link_object output_fun currpos_fun file_name compunit =
-  let inchan = open_in_bin file_name in
+  let inchan = open_in file_name in
   try
     link_compunit output_fun currpos_fun inchan file_name compunit;
     close_in inchan
@@ -207,7 +207,7 @@ let link_object output_fun currpos_fun file_name compunit =
 (* Link in a .cma file *)
 
 let link_archive output_fun currpos_fun file_name units_required =
-  let inchan = open_in_bin file_name in
+  let inchan = open_in file_name in
   try
     List.iter
       (fun cu ->
@@ -236,13 +236,13 @@ let link_file output_fun currpos_fun = function
 
 let link_bytecode objfiles exec_name copy_header =
   let tolink = List.fold_right scan_file objfiles [] in
-  let outchan = open_out_gen [Open_wronly; Open_trunc; Open_creat; Open_binary]
+  let outchan = open_out_gen [Open_wronly; Open_trunc; Open_creat]
                              0o777 exec_name in
   try
     (* Copy the header *)
     if copy_header then begin
       try
-        let inchan = open_in_bin (find_in_path !load_path "camlheader") in
+        let inchan = open_in (find_in_path !load_path "camlheader") in
         copy_file inchan outchan;
         close_in inchan
       with Not_found | Sys_error _ -> ()
@@ -411,9 +411,9 @@ let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
   match Sys.os_type with
   | _ ->
       let oc =
-        open_out_gen [Open_wronly; Open_append; Open_binary] 0
+        open_out_gen [Open_wronly; Open_append] 0
                                  !Clflags.exec_name in
-      let ic = open_in_bin bytecode_name in
+      let ic = open_in bytecode_name in
       copy_file ic oc;
       close_in ic;
       close_out oc;

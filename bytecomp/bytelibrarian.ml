@@ -48,7 +48,7 @@ let copy_object_file oc name =
       find_in_path !load_path name
     with Not_found ->
       raise(Error(File_not_found name)) in
-  let ic = open_in_bin file_name in
+  let ic = open_in file_name in
   try
     let buffer = String.create (String.length cmo_magic_number) in
     really_input ic buffer 0 (String.length cmo_magic_number);
@@ -76,7 +76,7 @@ let copy_object_file oc name =
 
 (*s: function Bytelibrarian.create_archive *)
 let create_archive file_list lib_name =
-  let outchan = open_out_bin lib_name in
+  let outchan = open_out lib_name in
   try
     output_string outchan cma_magic_number;
     let ofs_pos_toc = pos_out outchan in

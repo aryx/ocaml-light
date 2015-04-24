@@ -78,7 +78,7 @@ exception Outdated_version
 
 (*s: function Compile.parse_file *)
 let parse_file inputfile parse_fun ast_magic =
-  let ic = open_in_bin inputfile in
+  let ic = open_in inputfile in
   (*s: [[Compile.parse_file()]] let is_ast_file *)
   let is_ast_file =
     try
@@ -154,7 +154,7 @@ let implementation sourcefile =
   let ast = parse_file inputfile Parse.implementation ast_impl_magic_number in
 
   let objfile = prefixname ^ ".cmo" in
-  let oc = open_out_bin objfile in
+  let oc = open_out objfile in
   try
 
     (* typing *)
