@@ -1,4 +1,5 @@
 (*s: asmcomp/schedgen.mli *)
+(*s: copyright header 1997 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,7 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright header 1997 *)
 
 (*s: type Schedgen.code_dag_node *)
 (* Instruction scheduling *)

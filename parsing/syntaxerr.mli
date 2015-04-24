@@ -1,4 +1,5 @@
 (*s: ./parsing/syntaxerr.mli *)
+(*s: copyright header 1997 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,7 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright header 1997 *)
 
 (*s: type Syntaxerr.error *)
 (* Auxiliary type for reporting syntax errors *)

@@ -125,6 +125,7 @@ let scan_file obj_name tolink =
 
 (*s: constant Bytelink.debug_info *)
 (* Second pass: link in the required units *)
+(* Relocate and record compilation events *)
 
 let debug_info = ref ([] : debug_event list list)
 (*e: constant Bytelink.debug_info *)
@@ -155,21 +156,15 @@ let check_consistency file_name cu =
     cu.cu_imports
 (*e: function Bytelink.check_consistency *)
 
-(*s: constant Bytelink.debug_info (./bytecomp/bytelink.ml) *)
-(* Relocate and record compilation events *)
-
-let debug_info = ref ([] : debug_event list list)
-(*e: constant Bytelink.debug_info (./bytecomp/bytelink.ml) *)
-
 (*s: function Bytelink.record_events *)
 let record_events orig evl =
   if evl <> [] then begin
     evl |> List.iter (fun ev ->
-         ev.ev_pos <- orig + ev.ev_pos;
-         (match ev.ev_repr with
-         |  Event_parent repr -> repr := ev.ev_pos
-         | _                 -> ()
-         )
+       ev.ev_pos <- orig + ev.ev_pos;
+       (match ev.ev_repr with
+       |  Event_parent repr -> repr := ev.ev_pos
+       | _                 -> ()
+       )
     );
     debug_info := evl :: !debug_info
   end

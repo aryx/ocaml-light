@@ -1,4 +1,5 @@
 (*s: ./parsing/linenum.mli *)
+(*s: copyright header 1997 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,7 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright header 1997 *)
 
 (*s: signature Linenum.for_position *)
 (* An auxiliary lexer for determining the line number corresponding to

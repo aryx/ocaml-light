@@ -778,6 +778,7 @@ SRC_VIEWS= \
 
 sync::
 	$(MAKE) sync2
+	@echo do not forget also make sync_c
 
 sync_ml:
 	$(MAKE) sync
