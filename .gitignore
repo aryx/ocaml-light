@@ -4,6 +4,9 @@
 *.a
 asmrun/*.c
 
+# when compile for plan9
+byterun/*.8
+
 .md5sum_*
 
 boot/Saved
@@ -55,3 +58,19 @@ boot/Saved
 /tools/misc/ocamldep
 /tools/misc/ocamldep.ml
 /tools/misc/ocamlprof
+/graph_code.marshall
+/graph_code.marshall.opti
+/layer_bottomup.json
+/layer_graphcode_stats.json
+/layer_topdown.json
+/tests/a.out
+/PFFF_DB.json
+/PFFF_DB.marshall
+/TAGS
+/OCaml.aux
+/OCaml.brf
+/OCaml.log
+/OCaml.out
+/OCaml.pdf
+/OCaml.tex
+/OCaml.toc
