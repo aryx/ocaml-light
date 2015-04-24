@@ -25303,9 +25303,6 @@ static int do_write(int fd, char *p, int n)
   int retcode;
 
   Assert(!Is_young(p));
-#ifdef HAS_UI
-  retcode = ui_write(fd, p, n);
-#else
 again:
   enter_blocking_section();
   retcode = write(fd, p, n);
@@ -25322,7 +25319,6 @@ again:
       if (n > 1) { n = 1; goto again; }
     }
   }
-#endif
   if (retcode == -1) sys_error(NO_ARG);
   return retcode;
 }
@@ -25437,14 +25433,10 @@ static int do_read(int fd, char *p, unsigned int n)
 
   Assert(!Is_young(p));
   enter_blocking_section();
-#ifdef HAS_UI
-  retcode = ui_read(fd, p, n);
-#else
 #ifdef EINTR
   do { retcode = read(fd, p, n); } while (retcode == -1 && errno == EINTR);
 #else
   retcode = read(fd, p, n);
-#endif
 #endif
   leave_blocking_section();
   if (retcode == -1) sys_error(NO_ARG);
@@ -25786,10 +25778,6 @@ value caml_input_scan_line(value vchannel)       /* ML */
 #include "mlvalues.h"
 #include "signals.h"
 #include "sys.h"
-
-#ifdef HAS_UI
-#include "ui.h"
-#endif
 
 #ifndef INT_MAX
 <<constant INT_MAX>>
@@ -26689,12 +26677,8 @@ int verb_gc;
 void gc_message (char *msg, long unsigned int arg)
 {
   if (verb_gc){
-#ifdef HAS_UI
-    ui_print_stderr(msg, (void *) arg);
-#else
     fprintf (stderr, msg, arg);
     fflush (stderr);
-#endif
   }
 }
 @
@@ -26702,26 +26686,16 @@ void gc_message (char *msg, long unsigned int arg)
 <<function fatal_error>>=
 void fatal_error (char *msg)
 {
-#ifdef HAS_UI
-  ui_print_stderr("%s", msg);
-  ui_exit (2);
-#else
   fprintf (stderr, "%s", msg);
   exit(2);
-#endif
 }
 @
 
 <<function fatal_error_arg>>=
 void fatal_error_arg (char *fmt, char *arg)
 {
-#ifdef HAS_UI
-  ui_print_stderr(fmt, arg);
-  ui_exit (2);
-#else
   fprintf (stderr, fmt, arg);
   exit(2);
-#endif
 }
 @
 
@@ -26827,10 +26801,6 @@ char *aligned_malloc (asize_t size, int modulo, void **block)
 #include <stdio.h>
 #include "config.h"
 #include "misc.h"
-
-#ifdef HAS_UI
-#include "ui.h"
-#endif
 
 #ifdef DEBUG
 
@@ -27306,10 +27276,6 @@ static void add_string(struct stringbuf *buf, char *s)
 @
 
 <<function errprintf>>=
-#define errprintf(fmt,arg) ui_print_stderr(fmt, arg)
-@
-
-<<function errprintf (byterun/printexc.c)>>=
 #define errprintf(fmt,arg) fprintf(stderr, fmt, arg)
 @
 
@@ -27354,11 +27320,7 @@ void fatal_uncaught_exception(value exn)
   }
   *buf.ptr = 0;              /* Terminate string */
   errprintf("Fatal error: uncaught exception %s\n", buf.data);
-#ifdef HAS_UI
-  ui_exit(2);
-#else
   exit(2);
-#endif
 }
 @
 
@@ -27378,21 +27340,13 @@ void fatal_uncaught_exception(value exn)
 #include "misc.h"
 #include "mlvalues.h"
 
-#ifdef HAS_UI
-#include "ui.h"
-#endif
-
 <<struct stringbuf>>
 
 <<function add_char>>
 
 <<function add_string>>
   
-#ifdef HAS_UI
 <<function errprintf>>
-#else
-<<function errprintf (byterun/printexc.c)>>
-#endif
 
 <<function fatal_uncaught_exception>>
 @
@@ -28004,11 +27958,7 @@ value sys_exit(value retcode)          /* ML */
 #ifndef NATIVE_CODE
   debugger(PROGRAM_EXIT);
 #endif
-#ifdef HAS_UI
-  ui_exit(Int_val(retcode));
-#else
   exit(Int_val(retcode));
-#endif
   return Val_unit;
 }
 @
@@ -28221,10 +28171,6 @@ char * searchpath(char * name)
 #include "stacks.h"
 #include "str.h"
 #include "sys.h"
-
-#ifdef HAS_UI
-#include "ui.h"
-#endif
 
 extern int errno;
 

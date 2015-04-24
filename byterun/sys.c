@@ -39,10 +39,6 @@
 #include "str.h"
 #include "sys.h"
 
-#ifdef HAS_UI
-#include "ui.h"
-#endif
-
 extern int errno;
 
 extern char * strerror(int);
@@ -82,11 +78,7 @@ value sys_exit(value retcode)          /* ML */
 #ifndef NATIVE_CODE
   debugger(PROGRAM_EXIT);
 #endif
-#ifdef HAS_UI
-  ui_exit(Int_val(retcode));
-#else
   exit(Int_val(retcode));
-#endif
   return Val_unit;
 }
 /*e: function sys_exit */
