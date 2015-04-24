@@ -24,19 +24,8 @@
 #include "roots.h"
 #include "weak.h"
 
-#ifdef __STDC__
+// LONG_MAX
 #include <limits.h>
-#else
-#ifdef ARCH_SIXTYFOUR
-/*s: constant LONG_MAX */
-#define LONG_MAX 0x7FFFFFFFFFFFFFFF
-/*e: constant LONG_MAX */
-#else
-/*s: constant LONG_MAX (byterun/major_gc.c) */
-#define LONG_MAX 0x7FFFFFFF
-/*e: constant LONG_MAX (byterun/major_gc.c) */
-#endif
-#endif
 
 /*s: global percent_free */
 unsigned long percent_free;

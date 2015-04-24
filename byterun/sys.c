@@ -25,9 +25,7 @@
 #include <sys/stat.h>
 
 #include "config.h"
-#ifdef HAS_UNISTD
 #include <unistd.h>
-#endif
 
 #include "alloc.h"
 #include "debugger.h"
@@ -170,11 +168,7 @@ value sys_chdir(value dirname)        /* ML */
 value sys_getcwd(value unit)          /* ML */
 {
   char buff[4096];
-#ifdef HAS_GETCWD
   if (getcwd(buff, sizeof(buff)) == 0) sys_error(NO_ARG);
-#else
-  if (getwd(buff) == 0) sys_error(NO_ARG);
-#endif /* HAS_GETCWD */
   return copy_string(buff);
 }
 /*e: function sys_getcwd */

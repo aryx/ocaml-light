@@ -14,18 +14,17 @@
 
 /* Buffered input/output. */
 
+// EINTR, EAGAIN, EWOULDBLOCK
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
 
 #include "config.h"
 
-#ifdef HAS_UNISTD
+// SEEK_xxx
 #include <unistd.h>
-#endif
-#ifdef __STDC__
+// INT_MAX
 #include <limits.h>
-#endif
 
 #include "alloc.h"
 #include "fail.h"
@@ -35,24 +34,6 @@
 #include "mlvalues.h"
 #include "signals.h"
 #include "sys.h"
-
-#ifndef INT_MAX
-/*s: constant INT_MAX */
-#define INT_MAX 0x7FFFFFFF
-/*e: constant INT_MAX */
-#endif
-
-#ifndef SEEK_SET
-/*s: constant SEEK_SET */
-#define SEEK_SET 0
-/*e: constant SEEK_SET */
-/*s: constant SEEK_CUR */
-#define SEEK_CUR 1
-/*e: constant SEEK_CUR */
-/*s: constant SEEK_END */
-#define SEEK_END 2
-/*e: constant SEEK_END */
-#endif
 
 /*s: global channel_mutex_free */
 /* Hooks for locking channels */
@@ -112,22 +93,6 @@ long channel_size(struct channel *channel)
 /*e: function channel_size */
 
 /* Output */
-
-#ifndef EINTR
-/*s: constant EINTR */
-#define EINTR (-1)
-/*e: constant EINTR */
-#endif
-#ifndef EAGAIN
-/*s: constant EAGAIN */
-#define EAGAIN (-1)
-/*e: constant EAGAIN */
-#endif
-#ifndef EWOULDBLOCK
-/*s: constant EWOULDBLOCK */
-#define EWOULDBLOCK (-1)
-/*e: constant EWOULDBLOCK */
-#endif
 
 /*s: function do_write */
 static int do_write(int fd, char *p, int n)
@@ -265,11 +230,7 @@ static int do_read(int fd, char *p, unsigned int n)
 
   Assert(!Is_young(p));
   enter_blocking_section();
-#ifdef EINTR
   do { retcode = read(fd, p, n); } while (retcode == -1 && errno == EINTR);
-#else
-  retcode = read(fd, p, n);
-#endif
   leave_blocking_section();
   if (retcode == -1) sys_error(NO_ARG);
   return retcode;

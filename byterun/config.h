@@ -21,24 +21,9 @@
 
 /* Library dependencies */
 
-#ifdef HAS_MEMMOVE
-#undef bcopy
 /*s: function bcopy */
 #define bcopy(src,dst,len) memmove((dst), (src), (len))
 /*e: function bcopy */
-#else
-#ifdef HAS_BCOPY
-/* Nothing to do */
-#else
-#undef bcopy
-/*s: function bcopy (byterun/config.h) */
-#define bcopy(src,dst,len) memmov((dst), (src), (len))
-/*e: function bcopy (byterun/config.h) */
-/*s: constant USING_MEMMOV */
-#define USING_MEMMOV
-/*e: constant USING_MEMMOV */
-#endif
-#endif
 
 /* We use threaded code interpretation if the compiler provides labels
    as first-class values (GCC 2.x).
@@ -54,11 +39,7 @@
 
 /* Signed char type */
 
-#if defined(__STDC__) || defined(SIGNED_CHAR_WORKS)
 typedef signed char schar;
-#else
-typedef char schar;
-#endif
 
 /*s: constant Page_size */
 /* Do not change this definition. */
