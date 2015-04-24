@@ -35,7 +35,7 @@ let main () =
   for i = 3 to Array.length Sys.argv - 1 do
     to_keep := StringSet.add (String.capitalize Sys.argv.(i)) !to_keep
   done;
-  let ic = open_in_bin input_name in
+  let ic = open_in input_name in
   let pos_trailer =
     in_channel_length ic - 20 - String.length Config.exec_magic_number in
   seek_in ic pos_trailer;
@@ -55,7 +55,7 @@ let main () =
     close_out c
   end;
   let oc =
-    open_out_gen [Open_wronly; Open_creat; Open_trunc; Open_binary] 0o777
+    open_out_gen [Open_wronly; Open_creat; Open_trunc] 0o777
                  output_name in
   (* Copy the file up to the symbol section as is *)
   seek_in ic 0;

@@ -252,7 +252,7 @@ let update_global_table () =
 
 let init_toplevel () =
   (* Read back the known global symbols from the executable file *)
-  let ic = open_in_bin Sys.argv.(0) in
+  let ic = open_in Sys.argv.(0) in
   let pos_trailer =
     in_channel_length ic - 20 - String.length Config.exec_magic_number in
   seek_in ic pos_trailer;

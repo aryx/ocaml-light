@@ -102,7 +102,7 @@ let imported_units = ref ([] : (string * Digest.t) list)
 
 (*s: function Env.read_pers_struct *)
 let read_pers_struct modname filename =
-  let ic = open_in_bin filename in
+  let ic = open_in filename in
   try
     let buffer = String.create (String.length cmi_magic_number) in
     really_input ic buffer 0 (String.length cmi_magic_number);
@@ -581,7 +581,7 @@ let save_signature sg modname filename =
         components_of_module empty Subst.identity
             (Pident(Ident.create_persistent modname)) (Tmty_signature sg) } 
   in
-  let oc = open_out_bin filename in
+  let oc = open_out filename in
   output_string oc cmi_magic_number;
   output_value oc ps;
   flush oc;

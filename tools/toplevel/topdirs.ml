@@ -78,7 +78,7 @@ let load_compunit ic filename compunit =
 let dir_load name =
   try
     let filename = find_in_path !Config.load_path name in
-    let ic = open_in_bin filename in
+    let ic = open_in filename in
     let buffer = String.create (String.length Config.cmo_magic_number) in
     really_input ic buffer 0 (String.length Config.cmo_magic_number);
     begin try

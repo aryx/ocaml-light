@@ -56,7 +56,7 @@ rule skip_line = parse
 {
 
 let for_position file loc =
-  let ic = open_in_bin file in
+  let ic = open_in file in
   let lb = Lexing.from_channel ic in
   filename := file;
   linenum := 1;

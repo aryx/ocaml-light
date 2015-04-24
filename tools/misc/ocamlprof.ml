@@ -267,7 +267,7 @@ and rewrite_str_item item =
 
 (* Rewrite a .ml file *)
 let rewrite_file srcfile =
-  inchan := open_in_bin srcfile;
+  inchan := open_in srcfile;
   let lb = Lexing.from_channel !inchan in
   Location.input_name := srcfile;
   List.iter rewrite_str_item (Parse.implementation lb);
@@ -309,7 +309,7 @@ let process_file filename =
   end else begin
     (* Results mode *)
     insert_action := add_val_counter;
-    let ic = open_in_bin !dumpfile in
+    let ic = open_in !dumpfile in
     let allcounters =
       (input_value ic : (string * (string * int array)) list) in
     close_in ic;
