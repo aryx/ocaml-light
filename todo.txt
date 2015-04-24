@@ -30,6 +30,10 @@ it's confusing anyway
 
 **** less: remove tbl? just use map?
 
+**** remove terminfo
+
+**** remove stdlib/stream.ml?
+
 *** refactoring
 
 **** less: remove Ident.xxx that are really a Map?

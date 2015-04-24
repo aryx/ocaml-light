@@ -27,7 +27,7 @@ let substring str ofs len =
   else unsafe_string str ofs len
 
 let file filename =
-  let ic = open_in_bin filename in
+  let ic = open_in filename in
   let d = channel ic (in_channel_length ic) in
   close_in ic;
   d

@@ -166,7 +166,7 @@ let stderr = open_descriptor_out 2
 type open_flag =
     Open_rdonly | Open_wronly | Open_append
   | Open_creat | Open_trunc | Open_excl
-  | Open_binary | Open_text | Open_nonblock
+  | Open_nonblock
 
 external open_desc: string -> open_flag list -> int -> int = "sys_open"
 
@@ -174,10 +174,7 @@ let open_out_gen mode perm name =
   open_descriptor_out(open_desc name mode perm)
 
 let open_out name =
-  open_out_gen [Open_wronly; Open_creat; Open_trunc; Open_text] 0o666 name
-
-let open_out_bin name =
-  open_out_gen [Open_wronly; Open_creat; Open_trunc; Open_binary] 0o666 name
+  open_out_gen [Open_wronly; Open_creat; Open_trunc] 0o666 name
 
 external flush : out_channel -> unit = "caml_flush"
 
@@ -213,10 +210,7 @@ let open_in_gen mode perm name =
   open_descriptor_in(open_desc name mode perm)
 
 let open_in name =
-  open_in_gen [Open_rdonly; Open_text] 0 name
-
-let open_in_bin name =
-  open_in_gen [Open_rdonly; Open_binary] 0 name
+  open_in_gen [Open_rdonly] 0 name
 
 external input_char : in_channel -> char = "caml_input_char"
 
