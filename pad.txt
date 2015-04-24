@@ -93,6 +93,7 @@ Then I did many modifications, mostly removing stuff:
  - I moved the debugger/ and toplevel/ under tools/
  - I removed some support for macintosh in byterun/ and otherlibs/str
  - I removed some support for win32 in byterun/ and otherlibs/unix
+ - I removed the code and the ifdefs for HAS_UI
 
 I have also rewritten a few:
  - if then else if --> match () with when
