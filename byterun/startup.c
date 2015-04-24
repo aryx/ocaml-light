@@ -39,12 +39,6 @@
 #include "stacks.h"
 #include "sys.h"
 
-#ifndef O_BINARY
-/*s: constant O_BINARY (byterun/startup.c) */
-#define O_BINARY 0
-/*e: constant O_BINARY (byterun/startup.c) */
-#endif
-
 
 /*s: global atom_table */
 header_t atom_table[256];
@@ -110,7 +104,7 @@ static int attempt_open(char **name, struct exec_trailer *trail, int do_open_scr
 
   truename = searchpath(*name);
   if (truename == 0) truename = *name; else *name = truename;
-  fd = open(truename, O_RDONLY | O_BINARY);
+  fd = open(truename, O_RDONLY);
   if (fd == -1) return FILE_NOT_FOUND;
   if (!do_open_script){
     err = read (fd, buf, 2);
