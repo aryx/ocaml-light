@@ -1,4 +1,5 @@
 (*s: asmcomp/arm/reload.ml *)
+(*s: copyright header 1998 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,8 +10,9 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-open Reloadgen
+(*e: copyright header 1998 *)
 
+open Reloadgen
 
 (*s: function Reload.fundecl *)
 (* Reloading for the ARM *)

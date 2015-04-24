@@ -61,10 +61,10 @@ type primitive =
   | Paddfloat | Psubfloat | Pmulfloat | Pdivfloat
   | Pfloatcomp of comparison
   (*e: [[Lambda.primitive]] float operations cases *)
-
   (* String operations *)
+  (*s: [[Lambda.primitive]] string operations cases *)
   | Pstringlength | Pstringrefu | Pstringsetu | Pstringrefs | Pstringsets
-
+  (*e: [[Lambda.primitive]] string operations cases *)
   (* Array operations *)
   (*s: [[Lambda.primitive]] array operations cases *)
   | Pmakearray of array_kind

@@ -1,5 +1,5 @@
 /*(*s: ./parsing/parser.mly *)*/
-/*(*s: copyright header C *)*/
+/*(*s: copyright header C xavier *)*/
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -10,7 +10,7 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-/*(*e: copyright header C *)*/
+/*(*e: copyright header C xavier *)*/
 
 /* The parser definition */
 

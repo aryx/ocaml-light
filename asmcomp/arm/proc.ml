@@ -1,4 +1,5 @@
 (*s: asmcomp/arm/proc.ml *)
+(*s: copyright header 1998 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,7 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright header 1998 *)
 
 (* Description of the ARM processor *)
 

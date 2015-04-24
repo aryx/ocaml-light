@@ -1,4 +1,5 @@
 (*s: ./parsing/syntaxerr.ml *)
+(*s: copyright header 1997 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,7 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright header 1997 *)
 
 (* Auxiliary type for reporting syntax errors *)
 
@@ -55,6 +56,5 @@ let report_error = function
       Location.print loc;
       print_string "Syntax error"
 (*e: function Syntaxerr.report_error *)
-
 
 (*e: ./parsing/syntaxerr.ml *)

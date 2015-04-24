@@ -1,4 +1,5 @@
 (*s: asmcomp/reloadgen.mli *)
+(*s: copyright header 1997 *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,6 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
+(*e: copyright header 1997 *)
 
 (*s: type Reloadgen.reloader *)
 
