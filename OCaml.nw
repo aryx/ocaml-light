@@ -440,6 +440,9 @@ let nopervasives = ref false            (* -nopervasives *)
 % boot/ocamlc. But there is also boot/ocamlrun, so it should
 % work!
 
+% plan9 port: need an ocamlrun, need an ocamlc, and then need boot/*.cmi
+% stdlib.cma and std_exit.cmo at the standard place (/usr/local/lib/ocaml)
+
 %###############################################################################
 
 \chapter{Core Data Structures}
