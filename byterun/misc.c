@@ -16,10 +16,6 @@
 #include "config.h"
 #include "misc.h"
 
-#ifdef HAS_UI
-#include "ui.h"
-#endif
-
 #ifdef DEBUG
 
 /*s: function failed_assert */
@@ -53,12 +49,8 @@ int verb_gc;
 void gc_message (char *msg, long unsigned int arg)
 {
   if (verb_gc){
-#ifdef HAS_UI
-    ui_print_stderr(msg, (void *) arg);
-#else
     fprintf (stderr, msg, arg);
     fflush (stderr);
-#endif
   }
 }
 /*e: function gc_message */
@@ -66,26 +58,16 @@ void gc_message (char *msg, long unsigned int arg)
 /*s: function fatal_error */
 void fatal_error (char *msg)
 {
-#ifdef HAS_UI
-  ui_print_stderr("%s", msg);
-  ui_exit (2);
-#else
   fprintf (stderr, "%s", msg);
   exit(2);
-#endif
 }
 /*e: function fatal_error */
 
 /*s: function fatal_error_arg */
 void fatal_error_arg (char *fmt, char *arg)
 {
-#ifdef HAS_UI
-  ui_print_stderr(fmt, arg);
-  ui_exit (2);
-#else
   fprintf (stderr, fmt, arg);
   exit(2);
-#endif
 }
 /*e: function fatal_error_arg */
 

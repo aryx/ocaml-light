@@ -36,10 +36,6 @@
 #include "signals.h"
 #include "sys.h"
 
-#ifdef HAS_UI
-#include "ui.h"
-#endif
-
 #ifndef INT_MAX
 /*s: constant INT_MAX */
 #define INT_MAX 0x7FFFFFFF
@@ -139,9 +135,6 @@ static int do_write(int fd, char *p, int n)
   int retcode;
 
   Assert(!Is_young(p));
-#ifdef HAS_UI
-  retcode = ui_write(fd, p, n);
-#else
 again:
   enter_blocking_section();
   retcode = write(fd, p, n);
@@ -158,7 +151,6 @@ again:
       if (n > 1) { n = 1; goto again; }
     }
   }
-#endif
   if (retcode == -1) sys_error(NO_ARG);
   return retcode;
 }
@@ -273,14 +265,10 @@ static int do_read(int fd, char *p, unsigned int n)
 
   Assert(!Is_young(p));
   enter_blocking_section();
-#ifdef HAS_UI
-  retcode = ui_read(fd, p, n);
-#else
 #ifdef EINTR
   do { retcode = read(fd, p, n); } while (retcode == -1 && errno == EINTR);
 #else
   retcode = read(fd, p, n);
-#endif
 #endif
   leave_blocking_section();
   if (retcode == -1) sys_error(NO_ARG);

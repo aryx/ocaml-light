@@ -22,10 +22,6 @@
 #include "misc.h"
 #include "mlvalues.h"
 
-#ifdef HAS_UI
-#include "ui.h"
-#endif
-
 /*s: struct stringbuf */
 struct stringbuf {
   char * ptr;
@@ -51,15 +47,9 @@ static void add_string(struct stringbuf *buf, char *s)
 }
 /*e: function add_string */
   
-#ifdef HAS_UI
 /*s: function errprintf */
-#define errprintf(fmt,arg) ui_print_stderr(fmt, arg)
-/*e: function errprintf */
-#else
-/*s: function errprintf (byterun/printexc.c) */
 #define errprintf(fmt,arg) fprintf(stderr, fmt, arg)
-/*e: function errprintf (byterun/printexc.c) */
-#endif
+/*e: function errprintf */
 
 /*s: function fatal_uncaught_exception */
 void fatal_uncaught_exception(value exn)
@@ -102,11 +92,7 @@ void fatal_uncaught_exception(value exn)
   }
   *buf.ptr = 0;              /* Terminate string */
   errprintf("Fatal error: uncaught exception %s\n", buf.data);
-#ifdef HAS_UI
-  ui_exit(2);
-#else
   exit(2);
-#endif
 }
 /*e: function fatal_uncaught_exception */
 /*e: byterun/printexc.c */

@@ -21,9 +21,6 @@
 #include "misc.h"
 #include "mlvalues.h"
 #include "sys.h"
-#ifdef HAS_UI
-#include "ui.h"
-#endif
 
 header_t atom_table[256];
 char * static_data_start, * static_data_end;
