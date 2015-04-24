@@ -34,7 +34,7 @@ long stat_minor_words = 0,
      stat_heap_size = 0,           /* bytes */
      stat_compactions = 0;
 
-extern asize_t major_heap_increment;  /* bytes; cf. major_gc.c */
+extern long major_heap_increment;  /* bytes; cf. major_gc.c */
 extern unsigned long percent_free;    /*        cf. major_gc.c */
 extern unsigned long percent_max;     /*        cf. compact.c */
 
