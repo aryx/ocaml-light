@@ -27842,26 +27842,9 @@ value sys_exit(value retcode)          /* ML */
 }
 @
 
-<<constant O_BINARY>>=
-#define O_BINARY 0
-@
-
-<<constant O_TEXT>>=
-#define O_TEXT 0
-@
-
-<<constant O_NONBLOCK>>=
-#define O_NONBLOCK O_NDELAY
-@
-
-<<constant O_NONBLOCK (byterun/sys.c)>>=
-#define O_NONBLOCK 0
-@
-
 <<global sys_open_flags>>=
 static int sys_open_flags[] = {
-  O_RDONLY, O_WRONLY, O_APPEND, O_CREAT, O_TRUNC, O_EXCL,
-  O_BINARY, O_TEXT, O_NONBLOCK
+  O_RDONLY, O_WRONLY, O_APPEND, O_CREAT, O_TRUNC, O_EXCL, O_NONBLOCK
 };
 @
 
@@ -28023,6 +28006,7 @@ char * searchpath(char * name)
 /* Basic system calls */
 
 #include <errno.h>
+// O_NONBLOCK
 #include <fcntl.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -28054,20 +28038,6 @@ extern char * strerror(int);
 <<function sys_error>>
 
 <<function sys_exit>>
-
-#ifndef O_BINARY
-<<constant O_BINARY>>
-#endif
-#ifndef O_TEXT
-<<constant O_TEXT>>
-#endif
-#ifndef O_NONBLOCK
-#ifdef O_NDELAY
-<<constant O_NONBLOCK>>
-#else
-<<constant O_NONBLOCK (byterun/sys.c)>>
-#endif
-#endif
 
 <<global sys_open_flags>>
 
@@ -28364,10 +28334,6 @@ value weak_get (value ar, value n)        /* ML */
 
 \subsection*{[[byterun/startup.c]]}
 
-<<constant O_BINARY (byterun/startup.c)>>=
-#define O_BINARY 0
-@
-
 
 
 <<function read_size>>=
@@ -28422,7 +28388,7 @@ static int attempt_open(char **name, struct exec_trailer *trail, int do_open_scr
 
   truename = searchpath(*name);
   if (truename == 0) truename = *name; else *name = truename;
-  fd = open(truename, O_RDONLY | O_BINARY);
+  fd = open(truename, O_RDONLY);
   if (fd == -1) return FILE_NOT_FOUND;
   if (!do_open_script){
     err = read (fd, buf, 2);
@@ -28600,10 +28566,6 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
 #include "prims.h"
 #include "stacks.h"
 #include "sys.h"
-
-#ifndef O_BINARY
-<<constant O_BINARY (byterun/startup.c)>>
-#endif
 
 
 <<global atom_table>>

@@ -15,6 +15,7 @@
 /* Basic system calls */
 
 #include <errno.h>
+// O_NONBLOCK
 #include <fcntl.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -81,32 +82,9 @@ value sys_exit(value retcode)          /* ML */
 }
 /*e: function sys_exit */
 
-#ifndef O_BINARY
-/*s: constant O_BINARY */
-#define O_BINARY 0
-/*e: constant O_BINARY */
-#endif
-#ifndef O_TEXT
-/*s: constant O_TEXT */
-#define O_TEXT 0
-/*e: constant O_TEXT */
-#endif
-#ifndef O_NONBLOCK
-#ifdef O_NDELAY
-/*s: constant O_NONBLOCK */
-#define O_NONBLOCK O_NDELAY
-/*e: constant O_NONBLOCK */
-#else
-/*s: constant O_NONBLOCK (byterun/sys.c) */
-#define O_NONBLOCK 0
-/*e: constant O_NONBLOCK (byterun/sys.c) */
-#endif
-#endif
-
 /*s: global sys_open_flags */
 static int sys_open_flags[] = {
-  O_RDONLY, O_WRONLY, O_APPEND, O_CREAT, O_TRUNC, O_EXCL,
-  O_BINARY, O_TEXT, O_NONBLOCK
+  O_RDONLY, O_WRONLY, O_APPEND, O_CREAT, O_TRUNC, O_EXCL, O_NONBLOCK
 };
 /*e: global sys_open_flags */
 
