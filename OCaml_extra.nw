@@ -7027,7 +7027,7 @@ let copy_object_file oc name =
       find_in_path !load_path name
     with Not_found ->
       raise(Error(File_not_found name)) in
-  let ic = open_in_bin file_name in
+  let ic = open_in file_name in
   try
     let buffer = String.create (String.length cmo_magic_number) in
     really_input ic buffer 0 (String.length cmo_magic_number);
@@ -7055,7 +7055,7 @@ let copy_object_file oc name =
 
 <<function Bytelibrarian.create_archive>>=
 let create_archive file_list lib_name =
-  let outchan = open_out_bin lib_name in
+  let outchan = open_out lib_name in
   try
     output_string outchan cma_magic_number;
     let ofs_pos_toc = pos_out outchan in
@@ -7432,7 +7432,7 @@ let update_global_table () =
 
 let init_toplevel () =
   (* Read back the known global symbols from the executable file *)
-  let ic = open_in_bin Sys.argv.(0) in
+  let ic = open_in Sys.argv.(0) in
   let pos_trailer =
     in_channel_length ic - 20 - String.length Config.exec_magic_number in
   seek_in ic pos_trailer;
@@ -7663,7 +7663,7 @@ let scan_file obj_name tolink =
       find_in_path !load_path obj_name
     with Not_found ->
       raise(Error(File_not_found obj_name)) in
-  let ic = open_in_bin file_name in
+  let ic = open_in file_name in
   try
     let buffer = String.create (String.length cmo_magic_number) in
     really_input ic buffer 0 (String.length cmo_magic_number);
@@ -7728,7 +7728,7 @@ let link_compunit output_fun currpos_fun inchan file_name compunit =
 (* Link in a .cmo file *)
 
 let link_object output_fun currpos_fun file_name compunit =
-  let inchan = open_in_bin file_name in
+  let inchan = open_in file_name in
   try
     link_compunit output_fun currpos_fun inchan file_name compunit;
     close_in inchan
@@ -7743,7 +7743,7 @@ let link_object output_fun currpos_fun file_name compunit =
 (* Link in a .cma file *)
 
 let link_archive output_fun currpos_fun file_name units_required =
-  let inchan = open_in_bin file_name in
+  let inchan = open_in file_name in
   try
     List.iter
       (fun cu ->
@@ -7869,9 +7869,9 @@ let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
   match Sys.os_type with
   | _ ->
       let oc =
-        open_out_gen [Open_wronly; Open_append; Open_binary] 0
+        open_out_gen [Open_wronly; Open_append] 0
                                  !Clflags.exec_name in
-      let ic = open_in_bin bytecode_name in
+      let ic = open_in bytecode_name in
       copy_file ic oc;
       close_in ic;
       close_out oc;
