@@ -1403,7 +1403,7 @@ let implementation sourcefile =
   let ast = parse_file inputfile Parse.implementation ast_impl_magic_number in
 
   let objfile = prefixname ^ ".cmo" in
-  let oc = open_out_bin objfile in
+  let oc = open_out objfile in
   try
 
     (* typing *)
@@ -2235,7 +2235,7 @@ opt_semi:
 
 <<function Compile.parse_file>>=
 let parse_file inputfile parse_fun ast_magic =
-  let ic = open_in_bin inputfile in
+  let ic = open_in inputfile in
   <<[[Compile.parse_file()]] let is_ast_file>>
   let ast =
     try
@@ -4803,7 +4803,7 @@ let save_signature sg modname filename =
         components_of_module empty Subst.identity
             (Pident(Ident.create_persistent modname)) (Tmty_signature sg) } 
   in
-  let oc = open_out_bin filename in
+  let oc = open_out filename in
   output_string oc cmi_magic_number;
   output_value oc ps;
   flush oc;
@@ -4818,7 +4818,7 @@ let save_signature sg modname filename =
 % find_pers_struct -> <>
 <<function Env.read_pers_struct>>=
 let read_pers_struct modname filename =
-  let ic = open_in_bin filename in
+  let ic = open_in filename in
   try
     let buffer = String.create (String.length cmi_magic_number) in
     really_input ic buffer 0 (String.length cmi_magic_number);
@@ -8369,13 +8369,13 @@ let link objfiles =
 
 let link_bytecode objfiles exec_name copy_header =
   let tolink = List.fold_right scan_file objfiles [] in
-  let outchan = open_out_gen [Open_wronly; Open_trunc; Open_creat; Open_binary]
+  let outchan = open_out_gen [Open_wronly; Open_trunc; Open_creat]
                              0o777 exec_name in
   try
     (* Copy the header *)
     if copy_header then begin
       try
-        let inchan = open_in_bin (find_in_path !load_path "camlheader") in
+        let inchan = open_in (find_in_path !load_path "camlheader") in
         copy_file inchan outchan;
         close_in inchan
       with Not_found | Sys_error _ -> ()
