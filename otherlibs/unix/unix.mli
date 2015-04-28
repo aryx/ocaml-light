@@ -105,11 +105,20 @@ val handle_unix_error : ('a -> 'b) -> 'a -> 'b
            describing the error and exits with code 2. *)
 
 
-(*** Interface with the parent process *)
+(*** Access to the process environment *)
 
 external environment : unit -> string array = "unix_environment"
         (* Return the process environment, as an array of strings
-           with the format ``variable=value''. See also [Sys.getenv]. *)
+           with the format ``variable=value''. *)
+external getenv: string -> string = "sys_getenv"
+        (* Return the value associated to a variable in the process
+           environment. Raise [Not_found] if the variable is unbound.
+           (This function is identical to [Sys.getenv].) *)
+external putenv: string -> string -> unit = "unix_putenv"
+        (* [Unix.putenv name value] sets the value associated to a
+           variable in the process environment.
+           [name] is the name of the environment variable,
+           and [value] its new associated value. *)
 
 (*** Process handling *)
 
