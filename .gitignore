@@ -5,7 +5,8 @@
 asmrun/*.c
 
 # when compile for plan9
-byterun/*.8
+*.8
+8.out
 
 .md5sum_*
 
