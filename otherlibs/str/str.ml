@@ -91,3 +91,32 @@ let bounded_split expr text num =
 
 let split expr text = bounded_split expr text 0
 
+
+(* ported from 3.12 *)
+let opt_search_forward re s pos =
+  try Some(search_forward re s pos) with Not_found -> None
+
+let opt_search_forward_progress expr text start =
+  match opt_search_forward expr text start with
+  | None -> None
+  | Some pos ->
+      if match_end() > start then
+        Some pos
+      else if start < String.length text then
+        opt_search_forward expr text (start + 1)
+      else None
+
+let bounded_split_delim expr text num =
+  let rec split accu start n =
+    if start > String.length text then accu else
+    if n = 1 then string_after text start :: accu else
+      match opt_search_forward_progress expr text start with
+      | None ->
+          string_after text start :: accu
+      | Some pos ->
+          split (String.sub text start (pos-start) :: accu)
+                (match_end()) (n-1)
+  in
+    if text = "" then [] else List.rev (split [] 0 num)
+
+let split_delim expr text = bounded_split_delim expr text 0

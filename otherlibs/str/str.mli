@@ -119,6 +119,16 @@ val bounded_split: regexp -> string -> int -> string list
         (* Same as [split], but splits into at most [n] substrings,
            where [n] is the extra integer parameter. *)
 
+
+(* ported from 3.12 *)
+val split_delim : regexp -> string -> string list
+(** Same as {!Str.split} but occurrences of the
+   delimiter at the beginning and at the end of the string are
+   recognized and returned as empty strings in the result.
+   For instance, [split_delim (regexp " ") " abc "]
+   returns [[""; "abc"; ""]], while [split] with the same
+   arguments returns [["abc"]]. *)
+
 (*** Extracting substrings *)
 
 val string_before: string -> int -> string
