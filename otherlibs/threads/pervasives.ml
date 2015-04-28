@@ -396,3 +396,6 @@ let (|>) o f =
 (* ported from ocaml 3.12 *)
 let ignore _ = () (* %ignore normally *)
 
+external float_of_int : int -> float = "%floatofint"
+external int_of_float : float -> int = "%intoffloat"
+

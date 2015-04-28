@@ -328,3 +328,6 @@ let (|>) o f =
 
 (*external ignore : 'a -> unit = "%ignore"*)
 let ignore _ = ()
+
+external float_of_int : int -> float = "%floatofint"
+external int_of_float : float -> int = "%intoffloat"
