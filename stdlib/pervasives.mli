@@ -591,3 +591,11 @@ val ignore : 'a -> unit (*= "%ignore"*)
    [f x; ()], except that the latter may generate a
    compiler warning; writing [ignore(f x)] instead
    avoids the warning. *)
+
+external float_of_int : int -> float = "%floatofint"
+(** Convert an integer to floating-point. *)
+
+external int_of_float : float -> int = "%intoffloat"
+(** Truncate the given floating-point number to an integer.
+   The result is unspecified if the argument is [nan] or falls outside the
+   range of representable integers. *)
