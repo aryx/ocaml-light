@@ -158,6 +158,7 @@ Then I backported a few things from a more recent ocaml distribution:
         from the epoch).  This fixes a year 2005 problem on 32-bit platforms.
         Functions affected: stat, lstat, fstat, time, gmtime, localtime,
         mktime, utimes.
+      - Added putenv.
 
     * The str library: added Str.quote, Str.regexp_string,
       Str.regexp_string_case_fold.
