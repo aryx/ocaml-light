@@ -106,7 +106,11 @@ again:
   leave_blocking_section();
   if (retcode == -1) {
     if (errno == EINTR) goto again;
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    if (errno == EAGAIN 
+#ifdef EWOULDBLOCK
+       || errno == EWOULDBLOCK
+#endif
+) {
       /* We couldn't do a partial write here, probably because
          n <= PIPE_BUF and POSIX says that writes of less than
          PIPE_BUF characters must be atomic.
