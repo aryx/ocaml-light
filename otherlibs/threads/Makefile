@@ -19,7 +19,8 @@ LIB_OBJS=pervasives.cmo \
   $(LIB)/stream.cmo $(LIB)/printf.cmo $(LIB)/format.cmo $(LIB)/arg.cmo \
   $(LIB)/printexc.cmo $(LIB)/gc.cmo $(LIB)/digest.cmo $(LIB)/random.cmo \
   $(LIB)/genlex.cmo $(LIB)/callback.cmo $(LIB)/weak.cmo \
-  $(LIB)/lazy.cmo 
+  $(LIB)/lazy.cmo \
+  $(LIB)/buffer.cmo 
 
 all: libthreads.a threads.cma stdlib.cma
 
