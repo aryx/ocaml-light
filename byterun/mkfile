@@ -10,15 +10,14 @@
 # for mk install, the name for /bin
 TARG=ocamlrun
 
-OFILES=interp.$O misc.$O stacks.$O fix_code.$O startup.$O main.$O \
+OFILES1=interp.$O misc.$O stacks.$O fix_code.$O startup.$O main.$O \
   freelist.$O major_gc.$O minor_gc.$O memory.$O alloc.$O roots.$O \
   fail.$O signals.$O printexc.$O \
   compare.$O ints.$O floats.$O str.$O array.$O io.$O extern.$O intern.$O \
   hash.$O sys.$O meta.$O parsing.$O gc_ctrl.$O terminfo.$O md5.$O obj.$O \
-  lexing.$O callback.$O debugger.$O weak.$O compact.$O \
-  prims.$O
+  lexing.$O callback.$O debugger.$O weak.$O compact.$O 
 
-HFILES=\
+OFILES=$OFILES1 prims.$O
 
 BIN=/$objtype/bin
 
@@ -47,14 +46,21 @@ LDFLAGS=
 #opnames.h:
 #        make opnames.h
 
+lib:V: libcamlrun.a
+
+libcamlrun.a: $OFILES1
+	rm -f $target
+	iar vu $target $OFILES1              
+
 ROOT=/home/pad/plan9/ROOT/
 
-install: 8.out
+install: 8.out libcamlrun.a
 	cp -f 8.out $ROOT/usr/local/bin/ocamlrun
     cp ../ocamlc $ROOT/usr/local/bin/
     cp ../ocaml $ROOT/usr/local/bin/
     cp ../lex/ocamllex $ROOT/usr/local/bin/
     cp ../stdlib/*.cm* $ROOT/usr/local/lib/ocaml
+    cp libcamlrun.a $ROOT/usr/local/lib/ocaml/
     cp ../otherlibs/unix/*.cm* $ROOT/usr/local/lib/ocaml
     cp ../otherlibs/str/*.cm* $ROOT/usr/local/lib/ocaml
     cp ../otherlibs/threads/*.cm* $ROOT/usr/local/lib/ocaml/threads
