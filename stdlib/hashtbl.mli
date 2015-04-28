@@ -82,3 +82,17 @@ external hash_param : int -> int -> 'a -> int = "hash_univ_param" "noalloc"
            value, and therefore collisions are less likely to happen.
            However, hashing takes longer. The parameters [m] and [n]
            govern the tradeoff between accuracy and speed. *)
+
+(* ported from 3.12 *)
+val mem : ('a, 'b) t -> 'a -> bool
+(** [Hashtbl.mem tbl x] checks if [x] is bound in [tbl]. *)
+val fold : ('a -> 'b -> 'c -> 'c) -> ('a, 'b) t -> 'c -> 'c
+(** [Hashtbl.fold f tbl init] computes
+   [(f kN dN ... (f k1 d1 init)...)],
+   where [k1 ... kN] are the keys of all bindings in [tbl],
+   and [d1 ... dN] are the associated values.
+   Each binding is presented exactly once to [f].
+   The order in which the bindings are passed to [f] is unspecified.
+   However, if the table contains several bindings for the same key,
+   they are passed to [f] in reverse order of introduction, that is,
+   the most recent binding is passed first. *)
