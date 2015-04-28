@@ -11071,7 +11071,12 @@ void debugger(enum event_kind event)
 
 %less: could put 'when' here too
 
+
+%less: maybe can add ignore as a builtin so faster,
+% where see the %ignore, Pignore, and maybe even instruction?
+
 \section{Arrays}
+
 
 % AST
 <<[[Parsetree.expression_desc]] cases>>=

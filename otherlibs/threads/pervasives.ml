@@ -389,5 +389,10 @@ let exit retcode =
   do_at_exit ();
   sys_exit retcode
 
+(* ported from ocaml 4.00 *)
 let (|>) o f =
   f o
+
+(* ported from ocaml 3.12 *)
+let ignore _ = () (* %ignore normally *)
+

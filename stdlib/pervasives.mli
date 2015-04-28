@@ -567,7 +567,14 @@ val at_exit: (unit -> unit) -> unit
            executes [exit]. They will not be called if the program
            terminates because of an uncaught exception. *)
 
-(*--*)
+
+(*** For system use only, not for the casual user *)
+
+val unsafe_really_input : in_channel -> string -> int -> int -> unit
+
+val do_at_exit: unit -> unit
+
+(* ported from ocaml 4.0 *)
 
 val ( |> ) : 'a -> ('a -> 'b) -> 'b
 (** Reverse-application operator: [x |> f |> g] is exactly equivalent
@@ -575,9 +582,12 @@ val ( |> ) : 'a -> ('a -> 'b) -> 'b
    @since 4.01
 *)
 
+(* ported from ocaml 3.12 *)
 
-(*** For system use only, not for the casual user *)
-
-val unsafe_really_input : in_channel -> string -> int -> int -> unit
-
-val do_at_exit: unit -> unit
+val ignore : 'a -> unit (*= "%ignore"*)
+(** Discard the value of its argument and return [()].
+   For instance, [ignore(f x)] discards the result of
+   the side-effecting function [f].  It is equivalent to
+   [f x; ()], except that the latter may generate a
+   compiler warning; writing [ignore(f x)] instead
+   avoids the warning. *)
