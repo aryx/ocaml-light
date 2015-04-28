@@ -111,6 +111,50 @@ Then I backported a few things from a more recent ocaml distribution:
  - b8238a8b61696e454e5fc391dec9d71555b909e9
    PR#5662 : typo in md5.c when clearing sensitive data in context
 
+* Forward Port
+
+    Objective Caml 3.01:
+    --------------------
+    Standard library:
+    - Module Hashtbl: added Hashtbl.replace.
+    
+    Objective Caml 3.00:
+    --------------------
+    
+    Standard library:
+    - Module List: added List.sort, List.stable_sort; fixed bug in List.rev_map2.
+    
+    Objective Caml 2.02:
+    --------------------
+    
+    * Standard library:
+      - Added the "ignore" primitive function, which just throws away its
+        argument and returns "()".  It allows to write
+        "ignore(f x); y" if "f x" doesn't have type unit and you don't
+        want the warning caused by "f x; y".
+      - Added the "Buffer" module (extensible string buffers).
+      - Module List: added find, filter, partition.
+    
+    * The str library:
+      - Added split_delim, full_split as variants of split that control
+        more precisely what happens to delimiters.
+    
+    Objective Caml 2.01:
+    --------------------
+    
+    * Standard library:
+      - Module Pervasives: added float_of_int (synonymous for float),
+        int_of_float (truncate), 
+        (NOT YET int_of_char (Char.code), char_of_int (Char.chr),  bool_of_string.)
+    
+    Objective Caml 2.00:
+    --------------------
+    
+    * Language:
+      - Record copying with update "{r with lbl1 = expr1; ...}".
+
+
+
 
 * Compile
 

@@ -7281,6 +7281,11 @@ val check_partial:
 
 \subsection{Dead statements}
 
+%port check added in 2.01:
+% "also check when do a; b  that a returns unit indeed
+%catches silly mistake such as
+%    "record.lbl = newval; ..." instead of "record.lbl <- newval; ...".
+
 \subsection{Dead patterns}
 %was \section{Unused pattern matches (dead code)}
 
@@ -11063,17 +11068,25 @@ void debugger(enum event_kind event)
 
 \chapter{Extra Features}
 % advanced? hmm not really more advanced, very often it's just sugar
-% but I can't use "extensions" either
+% but I can't use "extensions" either.
 
 % objects? meh can do with records, even super, self, cf native code
 %  gen chapter :)
 % functors? can be interesting to understand how it's compiled
 
+
 %less: could put 'when' here too
 
+%less: maybe can put here the  ignore as a builtin so faster
+% (so see the %ignore, Pignore, and maybe even instruction)
 
-%less: maybe can add ignore as a builtin so faster,
-% where see the %ignore, Pignore, and maybe even instruction?
+\section{Records adjustments, [[with]]}
+
+% Could have included the construction before, or even merged
+% it with Pexpr_record (as originally did by Leroy),
+% but better to add a new constructor so can more easily aspectize it.
+% We can see how easy it is to extend ocaml when the extension is really
+% just sugar.
 
 \section{Arrays}
 
@@ -11321,6 +11334,7 @@ let rec mkrangepat c1 c2 =
     else mkpat(Ppat_or(mkpat(Ppat_constant(Const_char c1)),
                        mkrangepat (Char.chr(Char.code c1 + 1)) c2))
 @
+% simple :) recursive unsugaring!
 
 \section{Strings}
 
@@ -11433,8 +11447,6 @@ let mklazy e =
   let r = mkexp (Pexp_ident (Ldot (Lident "Pervasives", "ref"))) in
   mkexp (Pexp_apply (r, [df]))
 @
-
-\section{Records adjustments, [[with]]}
 
 \section{Objects}
 
