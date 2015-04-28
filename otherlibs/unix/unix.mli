@@ -277,9 +277,9 @@ type stats =
     st_gid : int;                       (* Group id of the owner *)
     st_rdev : int;                      (* Device minor number *)
     st_size : int;                      (* Size in bytes *)
-    st_atime : int;                     (* Last access time *)
-    st_mtime : int;                     (* Last modification time *)
-    st_ctime : int }                    (* Last status change time *)
+    st_atime : float;                   (* Last access time *)
+    st_mtime : float;                   (* Last modification time *)
+    st_ctime : float }                  (* Last status change time *)
 
         (* The informations returned by the [stat] calls. *)
 
@@ -512,18 +512,18 @@ type tm =
 
         (* The type representing wallclock time and calendar date. *)
 
-external time : unit -> int = "unix_time"
+external time : unit -> float = "unix_time"
         (* Return the current time since 00:00:00 GMT, Jan. 1, 1970,
            in seconds. *)
 external gettimeofday : unit -> float = "unix_gettimeofday"
         (* Same as [time], but with resolution better than 1 second. *)
-external gmtime : int -> tm = "unix_gmtime"
+external gmtime : float -> tm = "unix_gmtime"
         (* Convert a time in seconds, as returned by [time], into a date and
            a time. Assumes Greenwich meridian time zone. *)
-external localtime : int -> tm = "unix_localtime"
+external localtime : float -> tm = "unix_localtime"
         (* Convert a time in seconds, as returned by [time], into a date and
            a time. Assumes the local time zone. *)
-external mktime : tm -> int * tm = "unix_mktime"
+external mktime : tm -> float * tm = "unix_mktime"
         (* Convert a date and time, specified by the [tm] argument, into
            a time in seconds, as returned by [time]. Also return a normalized
            copy of the given [tm] record, with the [tm_wday] and [tm_yday]
@@ -535,7 +535,7 @@ external sleep : int -> unit = "unix_sleep"
 external times : unit -> process_times =
               "unix_times_bytecode" "unix_times_native"
         (* Return the execution times of the process. *)
-external utimes : string -> int -> int -> unit = "unix_utimes"
+external utimes : string -> float -> float -> unit = "unix_utimes"
         (* Set the last access time (second arg) and last modification time
            (third arg) for a file. Times are expressed in seconds from
            00:00:00 GMT, Jan. 1, 1970. *)
