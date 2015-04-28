@@ -115,3 +115,26 @@ let iter f h =
     do_bucket d.(i)
   done
 
+
+(* ported from 3.12 *)
+let mem h key =
+  let rec mem_in_bucket = function
+  | Empty ->
+      false
+  | Cons(k, d, rest) ->
+      compare k key = 0 || mem_in_bucket rest in
+  mem_in_bucket h.data.((hash key) mod (Array.length h.data))
+
+let fold f h init =
+  let rec do_bucket b accu =
+    match b with
+      Empty ->
+        accu
+    | Cons(k, d, rest) ->
+        do_bucket rest (f k d accu) in
+  let d = h.data in
+  let accu = ref init in
+  for i = 0 to Array.length d - 1 do
+    accu := do_bucket d.(i) !accu
+  done;
+  !accu
