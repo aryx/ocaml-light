@@ -11434,6 +11434,8 @@ let mklazy e =
   mkexp (Pexp_apply (r, [df]))
 @
 
+\section{Records adjustments, [[with]]}
+
 \section{Objects}
 
 % deleted. But then compatibility pb? no, just use make boostrap.
