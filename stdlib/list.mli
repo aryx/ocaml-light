@@ -139,3 +139,18 @@ val sort : ('a -> 'a -> int) -> 'a list -> 'a list
    The current implementation uses Merge Sort. It runs in constant
    heap space and logarithmic stack space.
 *)
+
+val filter : ('a -> bool) -> 'a list -> 'a list
+(** [filter p l] returns all the elements of the list [l]
+   that satisfy the predicate [p].  The order of the elements
+   in the input list is preserved.  *)
+
+val find_all : ('a -> bool) -> 'a list -> 'a list
+(** [find_all] is another name for {!List.filter}. *)
+
+val partition : ('a -> bool) -> 'a list -> 'a list * 'a list
+(** [partition p l] returns a pair of lists [(l1, l2)], where
+   [l1] is the list of all the elements of [l] that
+   satisfy the predicate [p], and [l2] is the list of all the
+   elements of [l] that do not satisfy [p].
+   The order of the elements in the input list is preserved. *)
