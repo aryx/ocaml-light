@@ -10,8 +10,9 @@ the object extensions were added
 It seemed like a good candidate for a fork. I think it was better 
 than caml light because caml _special_ light had: 
  - a module system (the possibility to qualify, and #open -> open)
- - a better code organization, code splitted in many directories (parsing/,
+ - a better code organization with code splitted in many directories (parsing/,
    typing/, bytecomp/, etc)
+ - it was compatible with lots of my code also
 and it was far simpler than recent ocaml because it didn't have:
  - an object system! simpler typechecker!
  - labels
@@ -48,7 +49,7 @@ to compile csl with ocamlc requires many modifications:
    some external declarations with old C function names (e.g.
    seek_in instead of caml_seek_in), which forced to modify
    most external declarations
- - other stuff probably
+ - ...
 
 Enter ocaml 1.07, a version with a working byterun/ocamlrun boot/ocamlc!
 finally.
@@ -58,7 +59,7 @@ finally.
 In addition to the fact that ocaml 1.07 is the oldest version
 that I could get my hand on with a working byterun/ocamlrun boot/ocamlc,
 which makes it obviously the only possible starting point 
-candidate for a fork, I think that even though it has the object system,
+candidate for a fork, I think that even though it has the object system
 it is maybe also a better candidate in the end for a fork because it has:
  - a byterun/ with ANSI C declarations (and no more the old style prototype)
    => can use pfff -lpize
@@ -110,8 +111,8 @@ Then I backported a few things from a more recent ocaml distribution:
    and to not use -fno-defer-pop for darwin (clang)
  - b8238a8b61696e454e5fc391dec9d71555b909e9
    PR#5662 : typo in md5.c when clearing sensitive data in context
+ - the items listed below
 
-* Forward Port
 
     Objective Caml 3.01:
     --------------------
@@ -185,6 +186,62 @@ but make bootstrap should already be a good test
 ** make ocamlrund
 ocamlrund -t => trace!
 
+* Installation trace
+
+if test -d /usr/local/bin; then : ; else mkdir -p /usr/local/bin; fi
+if test -d /usr/local/lib/ocaml; then : ; else mkdir -p /usr/local/lib/ocaml; fi
+if test -d /usr/local/man/man1; then : ; else mkdir -p /usr/local/man/man1; fi
+cd byterun; /Library/Developer/CommandLineTools/usr/bin/make install
+cp ocamlrun /usr/local/bin/ocamlrun
+cp libcamlrun.a /usr/local/lib/ocaml/libcamlrun.a
+cd /usr/local/lib/ocaml; ranlib libcamlrun.a
+if test -d /usr/local/lib/ocaml/caml; then : ; else mkdir /usr/local/lib/ocaml/caml; fi
+cp mlvalues.h alloc.h misc.h callback.h /usr/local/lib/ocaml/caml
+sed -e '/#include ".*\/m.h/r ../config/m.h' \
+            -e '/#include ".*\/s.h/r ../config/s.h' \
+            -e '/#include "/d' config.h > /usr/local/lib/ocaml/caml/config.h
+sed -e '/#include ".*gc\.h"/d' \
+	    -e '/#define Alloc_small/,/^}/d' \
+	    -e '/Modify/,/^}/d' memory.h > /usr/local/lib/ocaml/caml/memory.h
+cp ocamlc /usr/local/bin/ocamlc
+cp ocaml /usr/local/bin/ocaml
+cd stdlib; /Library/Developer/CommandLineTools/usr/bin/make install
+cp stdlib.cma std_exit.cmo *.cmi *.mli *.ml camlheader /usr/local/lib/ocaml
+cp lex/ocamllex /usr/local/bin/ocamllex
+cp yacc/ocamlyacc /usr/local/bin/ocamlyacc
+boot/ocamlrun boot/ocamlc -I boot -a -o /usr/local/lib/ocaml/toplevellib.cma utils/misc.cmo utils/tbl.cmo utils/config.cmo utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo parsing/linenum.cmo parsing/location.cmo parsing/longident.cmo parsing/syntaxerr.cmo parsing/parser.cmo parsing/lexer.cmo parsing/parse.cmo typing/ident.cmo typing/path.cmo typing/primitive.cmo typing/types.cmo typing/subst.cmo typing/predef.cmo typing/datarepr.cmo typing/env.cmo typing/ctype.cmo typing/typedtree.cmo typing/printtyp.cmo typing/mtype.cmo typing/includecore.cmo typing/includemod.cmo typing/parmatch.cmo typing/typetexp.cmo typing/typecore.cmo typing/typedecl.cmo typing/typemod.cmo  bytecomp/lambda.cmo bytecomp/printlambda.cmo bytecomp/matching.cmo bytecomp/translcore.cmo bytecomp/translmod.cmo bytecomp/simplif.cmo bytecomp/runtimedef.cmo bytecomp/meta.cmo bytecomp/instruct.cmo bytecomp/bytegen.cmo bytecomp/printinstr.cmo bytecomp/opcodes.cmo bytecomp/emitcode.cmo bytecomp/symtable.cmo bytecomp/bytelibrarian.cmo bytecomp/bytelink.cmo driver/errors.cmo driver/compile.cmo tools/toplevel/genprintval.cmo tools/toplevel/printval.cmo tools/toplevel/toploop.cmo tools/toplevel/trace.cmo tools/toplevel/topdirs.cmo
+cp expunge /usr/local/lib/ocaml
+cp tools/toplevel/topmain.cmo /usr/local/lib/ocaml
+cp tools/toplevel/toploop.cmi tools/toplevel/topdirs.cmi /usr/local/lib/ocaml
+cd tools/misc; /Library/Developer/CommandLineTools/usr/bin/make install
+cp ocamldep /usr/local/bin/ocamldep
+cp ocamlprof /usr/local/bin/ocamlprof
+cp ocamlcp /usr/local/bin/ocamlcp
+cp profiling.cmi profiling.cmo /usr/local/lib/ocaml
+cp ocamlmktop /usr/local/bin/ocamlmktop
+cd docs/man; for i in *.m; do cp $i /usr/local/man/man1/`basename $i .m`.1; done
+for i in unix str num dynlink threads dbm; do (cd otherlibs/$i; /Library/Developer/CommandLineTools/usr/bin/make install); done
+cp libunix.a /usr/local/lib/ocaml/libunix.a
+cd /usr/local/lib/ocaml; ranlib libunix.a
+cp unix.cmi unix.cma unix.mli /usr/local/lib/ocaml
+cp libstr.a /usr/local/lib/ocaml/libstr.a
+cd /usr/local/lib/ocaml; ranlib libstr.a
+cp str.cma str.cmi str.mli /usr/local/lib/ocaml
+cp libnums.a /usr/local/lib/ocaml/libnums.a
+cd /usr/local/lib/ocaml; ranlib libnums.a
+cp nums.cma big_int.cmi nat.cmi num.cmi ratio.cmi arith_status.cmi big_int.mli nat.mli num.mli ratio.mli arith_status.mli /usr/local/lib/ocaml
+cp dynlink.cmi dynlink.cma extract_crc /usr/local/lib/ocaml
+cp libthreads.a /usr/local/lib/ocaml/libthreads.a
+cd /usr/local/lib/ocaml; ranlib libthreads.a
+if test -d /usr/local/lib/ocaml/threads; then : ; else mkdir /usr/local/lib/ocaml/threads; fi
+cp thread.cmi mutex.cmi condition.cmi event.cmi threadUnix.cmi threads.cma stdlib.cma /usr/local/lib/ocaml/threads
+cp thread.mli mutex.mli condition.mli event.mli threadUnix.mli /usr/local/lib/ocaml
+cp libmldbm.a /usr/local/lib/ocaml/libmldbm.a
+cd /usr/local/lib/ocaml; ranlib libmldbm.a
+cp dbm.cma dbm.cmi dbm.mli /usr/local/lib/ocaml
+if test -f ocamlopt; then /Library/Developer/CommandLineTools/usr/bin/make installopt; else :; fi
+if test -f tools/debugger/ocamldebug; then (cd tools/debugger; /Library/Developer/CommandLineTools/usr/bin/make install); else :; fi
+master/home/pad/github/fork-ocaml $ 
 
 * Compilation trace for ocaml 4.03
 
