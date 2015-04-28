@@ -4,6 +4,8 @@ arg.cmo: array.cmi list.cmi printf.cmi string.cmi sys.cmi arg.cmi
 arg.cmx: array.cmx list.cmx printf.cmx string.cmx sys.cmx arg.cmi 
 array.cmo: list.cmi array.cmi 
 array.cmx: list.cmx array.cmi 
+buffer.cmo: string.cmi sys.cmi buffer.cmi 
+buffer.cmx: string.cmx sys.cmx buffer.cmi 
 callback.cmo: obj.cmi callback.cmi 
 callback.cmx: obj.cmx callback.cmi 
 char.cmo: char.cmi 
@@ -16,8 +18,8 @@ format.cmo: obj.cmi string.cmi format.cmi
 format.cmx: obj.cmx string.cmx format.cmi 
 gc.cmo: printf.cmi gc.cmi 
 gc.cmx: printf.cmx gc.cmi 
-genlex.cmo: char.cmi hashtbl.cmi list.cmi stream.cmi string.cmi genlex.cmi 
-genlex.cmx: char.cmx hashtbl.cmx list.cmx stream.cmx string.cmx genlex.cmi 
+genlex.cmo: hashtbl.cmi list.cmi stream.cmi string.cmi genlex.cmi 
+genlex.cmx: hashtbl.cmx list.cmx stream.cmx string.cmx genlex.cmi 
 hashtbl.cmo: array.cmi hashtbl.cmi 
 hashtbl.cmx: array.cmx hashtbl.cmi 
 lazy.cmo: lazy.cmi 
@@ -32,10 +34,6 @@ marshal.cmo: string.cmi marshal.cmi
 marshal.cmx: string.cmx marshal.cmi 
 obj.cmo: marshal.cmi obj.cmi 
 obj.cmx: marshal.cmx obj.cmi 
-oo.cmo: array.cmi hashtbl.cmi list.cmi map.cmi obj.cmi random.cmi sort.cmi \
-    sys.cmi oo.cmi 
-oo.cmx: array.cmx hashtbl.cmx list.cmx map.cmx obj.cmx random.cmx sort.cmx \
-    sys.cmx oo.cmi 
 parsing.cmo: array.cmi lexing.cmi obj.cmi parsing.cmi 
 parsing.cmx: array.cmx lexing.cmx obj.cmx parsing.cmi 
 pervasives.cmo: pervasives.cmi 
