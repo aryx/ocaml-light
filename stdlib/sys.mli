@@ -64,6 +64,10 @@ external signal: int -> signal_behavior -> unit = "install_signal_handler"
         (* Set the behavior of the system on receipt of a given signal.
            The first argument is the signal number. *)
 
+(* ported from 3.12 *)
+val set_signal : int -> signal_behavior -> unit
+(** Same as {!Sys.signal} but return value is ignored. *)
+
 val sigabrt: int   (* Abnormal termination *)
 val sigalrm: int   (* Timeout *)
 val sigfpe: int    (* Arithmetic exception *)

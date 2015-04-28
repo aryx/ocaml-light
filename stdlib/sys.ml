@@ -38,6 +38,10 @@ type signal_behavior =
 
 external signal: int -> signal_behavior -> unit = "install_signal_handler"
 
+(* ported from 3.12 *)
+let set_signal sig_num sig_beh = ignore(signal sig_num sig_beh)
+
+
 let sigabrt = -1
 let sigalrm = -2
 let sigfpe = -3
