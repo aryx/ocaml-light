@@ -414,79 +414,169 @@ let event_function exp lam =
 (*e: function Translcore.event_function *)
 
 (* Translation of expressions *)
-
+(*s: function Translcore.transl_exp *)
 let rec transl_exp e =
   match e.exp_desc with
-    Texp_ident(path, {val_prim = Some p}) ->
-      transl_primitive p
-  | Texp_ident(path, desc) ->
-      transl_path path
-  | Texp_constant cst ->
-      Lconst(Const_base cst)
-  | Texp_let(rec_flag, pat_expr_list, body) ->
-      transl_let rec_flag pat_expr_list (event_before body (transl_exp body))
-  | Texp_function pat_expr_list ->
-      let ((kind, params), body) =
-        event_function e
-          (function repr ->
-             transl_function e.exp_loc !Clflags.native_code repr pat_expr_list)
-      in
-      Lfunction(kind, params, body)
-  | Texp_apply({exp_desc = Texp_ident(path, {val_prim = Some p})}, args)
-    when List.length args = p.prim_arity ->
-      let prim = transl_prim p args in
-      let lam = Lprim(prim, transl_list args) in
-      begin match prim with Pccall _ -> event_after e lam | _ -> lam end
-  | Texp_apply(funct, args) ->
-      let lam =
-        match transl_exp funct with
-         lexp ->
-            Lapply(lexp, transl_list args) in
-      event_after e lam
-  | Texp_match({exp_desc = Texp_tuple argl} as arg, pat_expr_list) ->
-      Matching.for_multiple_match e.exp_loc
-        (transl_list argl) (transl_cases pat_expr_list)
-  | Texp_match(arg, pat_expr_list) ->
-      Matching.for_function e.exp_loc None
-        (transl_exp arg) (transl_cases pat_expr_list)
-  | Texp_try(body, pat_expr_list) ->
-      let id = name_pattern "exn" pat_expr_list in
-      Ltrywith(transl_exp body, id,
-               Matching.for_trywith (Lvar id) (transl_cases pat_expr_list))
-  | Texp_tuple el ->
-      let ll = transl_list el in
-      begin try
-        Lconst(Const_block(0, List.map extract_constant ll))
-      with Not_constant ->
-        Lprim(Pmakeblock(0, Immutable), ll)
-      end
-  | Texp_construct(cstr, args) ->
-      let ll = transl_list args in
-      begin match cstr.cstr_tag with
-        Cstr_constant n ->
-          Lconst(Const_pointer n)
-      | Cstr_block n ->
-          begin try
-            Lconst(Const_block(n, List.map extract_constant ll))
+  (*s: [[Translcore.transl_exp()]] cases *)
+      Texp_ident(path, {val_prim = Some p}) ->
+        transl_primitive p
+    | Texp_ident(path, desc) ->
+        transl_path path
+    | Texp_constant cst ->
+        Lconst(Const_base cst)
+    | Texp_let(rec_flag, pat_expr_list, body) ->
+        transl_let rec_flag pat_expr_list (event_before body (transl_exp body))
+    | Texp_function pat_expr_list ->
+        let ((kind, params), body) =
+          event_function e
+            (function repr ->
+               transl_function e.exp_loc !Clflags.native_code repr pat_expr_list)
+        in
+        Lfunction(kind, params, body)
+    | Texp_apply({exp_desc = Texp_ident(path, {val_prim = Some p})}, args)
+      when List.length args = p.prim_arity ->
+        let prim = transl_prim p args in
+        let lam = Lprim(prim, transl_list args) in
+        begin match prim with Pccall _ -> event_after e lam | _ -> lam end
+    | Texp_apply(funct, args) ->
+        let lam =
+          match transl_exp funct with
+           lexp ->
+              Lapply(lexp, transl_list args) in
+        event_after e lam
+    | Texp_match({exp_desc = Texp_tuple argl} as arg, pat_expr_list) ->
+        Matching.for_multiple_match e.exp_loc
+          (transl_list argl) (transl_cases pat_expr_list)
+    | Texp_match(arg, pat_expr_list) ->
+        Matching.for_function e.exp_loc None
+          (transl_exp arg) (transl_cases pat_expr_list)
+    | Texp_try(body, pat_expr_list) ->
+        let id = name_pattern "exn" pat_expr_list in
+        Ltrywith(transl_exp body, id,
+                 Matching.for_trywith (Lvar id) (transl_cases pat_expr_list))
+    | Texp_tuple el ->
+        let ll = transl_list el in
+        begin try
+          Lconst(Const_block(0, List.map extract_constant ll))
+        with Not_constant ->
+          Lprim(Pmakeblock(0, Immutable), ll)
+        end
+    | Texp_construct(cstr, args) ->
+        let ll = transl_list args in
+        begin match cstr.cstr_tag with
+          Cstr_constant n ->
+            Lconst(Const_pointer n)
+        | Cstr_block n ->
+            begin try
+              Lconst(Const_block(n, List.map extract_constant ll))
+            with Not_constant ->
+              Lprim(Pmakeblock(n, Immutable), ll)
+            end
+        | Cstr_exception path ->
+            Lprim(Pmakeblock(0, Immutable), transl_path path :: ll)
+        end
+    | Texp_record ((lbl1, _) :: _ as lbl_expr_list) ->
+        let lv = Array.create (Array.length lbl1.lbl_all) Lstaticfail in
+        List.iter
+          (fun (lbl, expr) -> lv.(lbl.lbl_pos) <- transl_exp expr)
+          lbl_expr_list;
+        let ll = Array.to_list lv in
+        if List.exists (fun (lbl, expr) -> lbl.lbl_mut = Mutable) lbl_expr_list
+        then begin
+          match lbl1.lbl_repres with
+            Record_regular -> Lprim(Pmakeblock(0, Mutable), ll)
+          | Record_float -> Lprim(Pmakearray Pfloatarray, ll)
+        end else begin
+          try
+            let cl = List.map extract_constant ll in
+            match lbl1.lbl_repres with
+              Record_regular -> Lconst(Const_block(0, cl))
+            | Record_float ->
+                Lconst(Const_float_array(List.map extract_float cl))
           with Not_constant ->
-            Lprim(Pmakeblock(n, Immutable), ll)
-          end
-      | Cstr_exception path ->
-          Lprim(Pmakeblock(0, Immutable), transl_path path :: ll)
-      end
-  | Texp_record ((lbl1, _) :: _ as lbl_expr_list) ->
-      let lv = Array.create (Array.length lbl1.lbl_all) Lstaticfail in
+            match lbl1.lbl_repres with
+              Record_regular -> Lprim(Pmakeblock(0, Immutable), ll)
+            | Record_float -> Lprim(Pmakearray Pfloatarray, ll)
+        end
+    | Texp_field(arg, lbl) ->
+        let access =
+          match lbl.lbl_repres with
+            Record_regular -> Pfield lbl.lbl_pos
+          | Record_float -> Pfloatfield lbl.lbl_pos in
+        Lprim(access, [transl_exp arg])
+    | Texp_setfield(arg, lbl, newval) ->
+        let access =
+          match lbl.lbl_repres with
+            Record_regular -> Psetfield(lbl.lbl_pos, maybe_pointer newval)
+          | Record_float -> Psetfloatfield lbl.lbl_pos in
+        Lprim(access, [transl_exp arg; transl_exp newval])
+    | Texp_array expr_list ->
+        let kind = array_kind e in
+        let len = List.length expr_list in
+        if len <= Config.max_young_wosize then
+          Lprim(Pmakearray kind, transl_list expr_list)
+        else begin
+          let v = Ident.create "makearray" in
+          let rec fill_fields pos = function
+            [] ->
+              Lvar v
+          | arg :: rem ->
+              Lsequence(Lprim(Parraysetu kind,
+                              [Lvar v;
+                               Lconst(Const_base(Const_int pos));
+                               transl_exp arg]),
+                        fill_fields (pos+1) rem) in
+          Llet(Strict, v,
+               Lprim(Pccall prim_makearray,
+                     [Lconst(Const_base(Const_int len));
+                      transl_exp (List.hd expr_list)]),
+               fill_fields 1 (List.tl expr_list))
+        end
+    | Texp_ifthenelse(cond, ifso, Some ifnot) ->
+        Lifthenelse(transl_exp cond,
+                    event_before ifso (transl_exp ifso),
+                    event_before ifnot (transl_exp ifnot))
+    | Texp_ifthenelse(cond, ifso, None) ->
+        Lifthenelse(transl_exp cond,
+                    event_before ifso (transl_exp ifso),
+                    lambda_unit)
+    | Texp_sequence(expr1, expr2) ->
+        Lsequence(transl_exp expr1, event_before expr2 (transl_exp expr2))
+    | Texp_while(cond, body) ->
+        Lwhile(transl_exp cond, event_before body (transl_exp body))
+    | Texp_for(param, low, high, dir, body) ->
+        Lfor(param, transl_exp low, transl_exp high, dir,
+             event_before body (transl_exp body))
+    | Texp_when(cond, body) ->
+        event_before cond
+          (Lifthenelse(transl_exp cond, event_before body (transl_exp body),
+                       Lstaticfail))
+  (*x: [[Translcore.transl_exp()]] cases *)
+  | Texp_record_with (init_expr, ((lbl1, _) :: _ as lbl_expr_list)) ->
+
+      let all_labels = lbl1.lbl_all in
+      let lv = Array.create (Array.length all_labels) Lstaticfail in
+      let init_id = Ident.create "init" in
+      for i = 0 to Array.length all_labels - 1 do
+        let access =
+          match all_labels.(i).lbl_repres with
+            Record_regular -> Pfield i
+          | Record_float -> Pfloatfield i 
+        in
+        lv.(i) <- Lprim(access, [Lvar init_id])
+      done;
+
       List.iter
         (fun (lbl, expr) -> lv.(lbl.lbl_pos) <- transl_exp expr)
         lbl_expr_list;
       let ll = Array.to_list lv in
-      if List.exists (fun (lbl, expr) -> lbl.lbl_mut = Mutable) lbl_expr_list
-      then begin
-        match lbl1.lbl_repres with
-          Record_regular -> Lprim(Pmakeblock(0, Mutable), ll)
-        | Record_float -> Lprim(Pmakearray Pfloatarray, ll)
-      end else begin
+      let mut =
+        if List.exists (fun (lbl, expr) -> lbl.lbl_mut = Mutable) lbl_expr_list
+        then Mutable
+        else Immutable in
+      let lam =
         try
+          if mut = Mutable then raise Not_constant;
           let cl = List.map extract_constant ll in
           match lbl1.lbl_repres with
             Record_regular -> Lconst(Const_block(0, cl))
@@ -494,64 +584,14 @@ let rec transl_exp e =
               Lconst(Const_float_array(List.map extract_float cl))
         with Not_constant ->
           match lbl1.lbl_repres with
-            Record_regular -> Lprim(Pmakeblock(0, Immutable), ll)
-          | Record_float -> Lprim(Pmakearray Pfloatarray, ll)
-      end
-  | Texp_field(arg, lbl) ->
-      let access =
-        match lbl.lbl_repres with
-          Record_regular -> Pfield lbl.lbl_pos
-        | Record_float -> Pfloatfield lbl.lbl_pos in
-      Lprim(access, [transl_exp arg])
-  | Texp_setfield(arg, lbl, newval) ->
-      let access =
-        match lbl.lbl_repres with
-          Record_regular -> Psetfield(lbl.lbl_pos, maybe_pointer newval)
-        | Record_float -> Psetfloatfield lbl.lbl_pos in
-      Lprim(access, [transl_exp arg; transl_exp newval])
-  | Texp_array expr_list ->
-      let kind = array_kind e in
-      let len = List.length expr_list in
-      if len <= Config.max_young_wosize then
-        Lprim(Pmakearray kind, transl_list expr_list)
-      else begin
-        let v = Ident.create "makearray" in
-        let rec fill_fields pos = function
-          [] ->
-            Lvar v
-        | arg :: rem ->
-            Lsequence(Lprim(Parraysetu kind,
-                            [Lvar v;
-                             Lconst(Const_base(Const_int pos));
-                             transl_exp arg]),
-                      fill_fields (pos+1) rem) in
-        Llet(Strict, v,
-             Lprim(Pccall prim_makearray,
-                   [Lconst(Const_base(Const_int len));
-                    transl_exp (List.hd expr_list)]),
-             fill_fields 1 (List.tl expr_list))
-      end
-  | Texp_ifthenelse(cond, ifso, Some ifnot) ->
-      Lifthenelse(transl_exp cond,
-                  event_before ifso (transl_exp ifso),
-                  event_before ifnot (transl_exp ifnot))
-  | Texp_ifthenelse(cond, ifso, None) ->
-      Lifthenelse(transl_exp cond,
-                  event_before ifso (transl_exp ifso),
-                  lambda_unit)
-  | Texp_sequence(expr1, expr2) ->
-      Lsequence(transl_exp expr1, event_before expr2 (transl_exp expr2))
-  | Texp_while(cond, body) ->
-      Lwhile(transl_exp cond, event_before body (transl_exp body))
-  | Texp_for(param, low, high, dir, body) ->
-      Lfor(param, transl_exp low, transl_exp high, dir,
-           event_before body (transl_exp body))
-  | Texp_when(cond, body) ->
-      event_before cond
-        (Lifthenelse(transl_exp cond, event_before body (transl_exp body),
-                     Lstaticfail))
+              Record_regular -> Lprim(Pmakeblock(0, mut), ll)
+            | Record_float -> Lprim(Pmakearray Pfloatarray, ll) 
+      in
+      Llet(Strict, init_id, transl_exp init_expr, lam)
+  (*e: [[Translcore.transl_exp()]] cases *)
   | _ ->
       fatal_error "Translcore.transl"
+(*e: function Translcore.transl_exp *)
 
 and transl_list expr_list =
   List.map transl_exp expr_list
@@ -564,6 +604,7 @@ and transl_cases pat_expr_list =
 and transl_tupled_cases patl_expr_list =
   List.map (fun (patl, expr) -> (patl, transl_exp expr)) patl_expr_list
 
+(*s: function Translcore.transl_function *)
 and transl_function loc untuplify_fn repr pat_expr_list =
   match pat_expr_list with
     [pat, ({exp_desc = Texp_function pl} as exp)] ->
@@ -593,7 +634,9 @@ and transl_function loc untuplify_fn repr pat_expr_list =
       ((Curried, [param]),
        Matching.for_function loc repr (Lvar param)
          (transl_cases pat_expr_list))
+(*e: function Translcore.transl_function *)
 
+(*s: function Translcore.transl_let *)
 and transl_let rec_flag pat_expr_list body =
   match rec_flag with
     Nonrecursive ->
@@ -617,6 +660,8 @@ and transl_let rec_flag pat_expr_list body =
           raise(Error(expr.exp_loc, Illegal_letrec_expr));
         (id, lam) in
       Lletrec(List.map2 transl_case pat_expr_list idlist, body)
+
+(*e: function Translcore.transl_let *)
 
 (*s: function Translcore.transl_exception *)
 (* Compile an exception definition *)

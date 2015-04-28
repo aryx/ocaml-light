@@ -65,7 +65,6 @@ type expression =
 and expression_desc =
   | Pexp_constant of Asttypes.constant
   | Pexp_construct of Longident.t * expression option
-  (* todo: Pexp_record_with *)
   | Pexp_record of (Longident.t * expression) list
   | Pexp_tuple of expression list
 
@@ -93,6 +92,8 @@ and expression_desc =
   | Pexp_for of string * expression * expression * direction_flag * expression
 
   | Pexp_try of expression * (pattern * expression) list
+  (*x: [[Parsetree.expression_desc]] cases *)
+  | Pexp_record_with of expression * (Longident.t * expression) list
   (*x: [[Parsetree.expression_desc]] cases *)
   | Pexp_array of expression list
   (*e: [[Parsetree.expression_desc]] cases *)

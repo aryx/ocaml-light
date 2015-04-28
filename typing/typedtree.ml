@@ -76,6 +76,8 @@ and expression_desc =
       Ident.t * expression * expression * direction_flag * expression
 
   (*s: [[Typedtree.expression_desc]] cases *)
+  | Texp_record_with of expression * (label_description * expression) list
+  (*x: [[Typedtree.expression_desc]] cases *)
   | Texp_array of expression list
   (*e: [[Typedtree.expression_desc]] cases *)
 (*e: type Typedtree.expression_desc *)

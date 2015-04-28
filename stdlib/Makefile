@@ -11,6 +11,7 @@ CAMLOPT=$(RUNTIME) $(OPTCOMPILER)
 OPTCOMPFLAGS=
 CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
 
+#coupling: modify also otherlibs/threads/Makefile
 OBJS=pervasives.cmo list.cmo char.cmo string.cmo array.cmo sys.cmo \
   hashtbl.cmo sort.cmo filename.cmo marshal.cmo obj.cmo \
   lexing.cmo parsing.cmo \
