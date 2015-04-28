@@ -9,7 +9,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sort.mli,v 1.4 1996/04/30 14:50:36 xleroy Exp $ *)
+(** Sorting and merging lists.
+
+   @deprecated This module is obsolete and exists only for backward
+   compatibility.
+   The sorting functions in {!Array} and {!List} should be used instead.
+   The new functions are faster and use less memory.
+*)
+
 
 (* Module [Sort]: sorting and merging lists *)
 
