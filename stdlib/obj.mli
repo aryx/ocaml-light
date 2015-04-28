@@ -32,3 +32,8 @@ external new_block : int -> int -> t = "obj_block"
 
 val marshal : t -> string
 val unmarshal : string -> int -> t * int
+
+(* from 3.12 *)
+(*
+external is_int : t -> bool = "%obj_is_int"
+*)

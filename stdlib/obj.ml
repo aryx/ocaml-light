@@ -29,3 +29,7 @@ let marshal (obj: t) =
   Marshal.to_string obj []
 let unmarshal str pos =
   (Marshal.from_string str pos, pos + Marshal.total_size str pos)
+
+(* todo:
+external is_int : t -> bool = "%obj_is_int"
+*)
