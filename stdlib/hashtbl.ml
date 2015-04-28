@@ -138,3 +138,23 @@ let fold f h init =
     accu := do_bucket d.(i) !accu
   done;
   !accu
+
+
+let replace h key info =
+  let rec replace_bucket = function
+      Empty ->
+        raise Not_found
+    | Cons(k, i, next) ->
+        if compare k key = 0
+        then Cons(k, info, next)
+        else Cons(k, i, replace_bucket next) in
+  let i = (hash key) mod (Array.length h.data) in
+  let l = h.data.(i) in
+  try
+    h.data.(i) <- replace_bucket l
+  with Not_found ->
+    h.data.(i) <- Cons(key, info, l);
+(* TODO
+    h.size <- succ h.size;
+    if h.size > Array.length h.data lsl 1 then resize hash h
+*)

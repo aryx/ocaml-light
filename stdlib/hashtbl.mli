@@ -96,3 +96,10 @@ val fold : ('a -> 'b -> 'c -> 'c) -> ('a, 'b) t -> 'c -> 'c
    However, if the table contains several bindings for the same key,
    they are passed to [f] in reverse order of introduction, that is,
    the most recent binding is passed first. *)
+
+val replace : ('a, 'b) t -> 'a -> 'b -> unit
+(** [Hashtbl.replace tbl x y] replaces the current binding of [x]
+   in [tbl] by a binding of [x] to [y].  If [x] is unbound in [tbl],
+   a binding of [x] to [y] is added to [tbl].
+   This is functionally equivalent to {!Hashtbl.remove}[ tbl x]
+   followed by {!Hashtbl.add}[ tbl x y]. *)
