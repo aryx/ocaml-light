@@ -7,9 +7,6 @@
 #   #undef HAS_TERMCAP
 # and then run mk
 
-# for mk install, the name for /bin
-TARG=ocamlrun
-
 OFILES1=interp.$O misc.$O stacks.$O fix_code.$O startup.$O main.$O \
   freelist.$O major_gc.$O minor_gc.$O memory.$O alloc.$O roots.$O \
   fail.$O signals.$O printexc.$O \
@@ -18,8 +15,6 @@ OFILES1=interp.$O misc.$O stacks.$O fix_code.$O startup.$O main.$O \
   lexing.$O callback.$O debugger.$O weak.$O compact.$O 
 
 OFILES=$OFILES1 prims.$O
-
-BIN=/$objtype/bin
 
 </sys/src/cmd/mkone
 
@@ -40,11 +35,7 @@ CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION
 # -DDEBUG
 LDFLAGS=
 
-#prims.c:
-#        make prims.c
-#
-#opnames.h:
-#        make opnames.h
+default:V: 8.out libcamlrun.a
 
 lib:V: libcamlrun.a
 
@@ -65,5 +56,6 @@ install: 8.out libcamlrun.a
     cp ../otherlibs/str/*.cm* $ROOT/usr/local/lib/ocaml
     cp ../otherlibs/threads/*.cm* $ROOT/usr/local/lib/ocaml/threads
 
-#clean:V:
-#        rm *.a
+clean:V:
+	rm -f *.[58] [58].out y.tab.? lex.yy.c y.debug y.output  $CLEANFILES
+	rm -f libcamlrun.a
