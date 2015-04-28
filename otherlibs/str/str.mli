@@ -44,6 +44,17 @@ val regexp_case_fold: string -> regexp
            in a case-insensitive way: uppercase and lowercase letters will
            be considered equivalent. *)
 
+
+val quote: string -> string
+        (* [Str.quote s] returns a regexp string that matches exactly
+           [s] and nothing else. *)
+val regexp_string: string -> regexp
+val regexp_string_case_fold: string -> regexp
+        (* [Str.regexp_string s] returns a regular expression
+           that matches exactly [s] and nothing else.
+           [Str.regexp_string_case_fold] is similar, but the regexp
+           matches in a case-insensitive way. *)
+
 (*** String matching and searching *)
 
 external string_match: regexp -> string -> int -> bool = "str_string_match"

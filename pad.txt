@@ -159,6 +159,8 @@ Then I backported a few things from a more recent ocaml distribution:
         Functions affected: stat, lstat, fstat, time, gmtime, localtime,
         mktime, utimes.
 
+    * The str library: added Str.quote, Str.regexp_string,
+      Str.regexp_string_case_fold.
 
 
 * Compile
