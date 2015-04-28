@@ -153,6 +153,11 @@ Then I backported a few things from a more recent ocaml distribution:
     * Language:
       - Record copying with update "{r with lbl1 = expr1; ...}".
 
+    * The Unix library:
+      - Use float instead of int to represent Unix times (number of seconds
+        from the epoch).  This fixes a year 2005 problem on 32-bit platforms.
+        Functions affected: stat, lstat, fstat, time, gmtime, localtime,
+        mktime, utimes.
 
 
 
