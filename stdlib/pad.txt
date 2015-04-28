@@ -1,0 +1,3 @@
+I ported buffer.ml from 3.12 and ported a few functions here and there
+(in list.ml, pervasives.ml, str.ml, etc)
+
