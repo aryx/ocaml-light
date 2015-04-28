@@ -218,6 +218,14 @@ let rec is_nonexpansive exp =
   | Texp_field(exp, lbl) -> is_nonexpansive exp
   | Texp_array [] -> true
 
+  (*s: [[Typecore.is_nonexpansive()]] extra cases *)
+  | Texp_record_with (exp, lbl_exp_list) ->
+      lbl_exp_list |> List.for_all (fun (lbl, exp) -> 
+        lbl.lbl_mut = Immutable & is_nonexpansive exp
+       ) &&
+      is_nonexpansive exp
+  (*e: [[Typecore.is_nonexpansive()]] extra cases *)
+
   | _ -> false
 (*e: function Typecore.is_nonexpansive *)
 
@@ -516,6 +524,43 @@ let rec type_exp env sexp =
       { exp_desc = Texp_try(body, cases);
         exp_loc = sexp.pexp_loc;
         exp_type = body.exp_type }
+  (*x: [[Typecore.type_exp()]] match cases *)
+  | Pexp_record_with (sexp, lid_sexp_list) ->
+      let ty = newvar() in
+      let num_fields = ref 0 in
+      let type_label_exp (lid, sarg) =
+        let label =
+          try
+            Env.lookup_label lid env
+          with Not_found ->
+            raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+        in
+        let (ty_arg, ty_res) = instance_label label in
+        (try
+          unify env ty_res ty
+        with Unify ->
+          raise(Error(sexp.pexp_loc, Label_mismatch(lid, ty_res, ty)))
+        );
+        let arg = type_expect env sarg ty_arg in
+        num_fields := Array.length label.lbl_all;
+        (label, arg) 
+      in
+      let lbl_exp_list = List.map type_label_exp lid_sexp_list in
+
+      let rec check_duplicates = function
+        [] -> ()
+      | (lid, sarg) :: remainder ->
+          if List.mem_assoc lid remainder
+          then raise(Error(sexp.pexp_loc, Label_multiply_defined lid))
+          else check_duplicates remainder 
+      in
+      check_duplicates lid_sexp_list;
+
+      let exp = type_expect env sexp ty in
+
+      { exp_desc = Texp_record_with (exp, lbl_exp_list);
+        exp_loc = sexp.pexp_loc;
+        exp_type = ty }
   (*x: [[Typecore.type_exp()]] match cases *)
   | Pexp_array(sargl) ->
       let ty = newvar() in

@@ -532,6 +532,9 @@ simple_expr:
   | LPAREN seq_expr type_constraint RPAREN
       { mkexp(Pexp_constraint($2, $3)) }
   /*(*x: rule simple_expr cases *)*/
+  | LBRACE simple_expr WITH lbl_expr_list opt_semi RBRACE
+      { mkexp(Pexp_record_with($2, List.rev $4)) }
+  /*(*x: rule simple_expr cases *)*/
   | LBRACKETBAR expr_semi_list opt_semi BARRBRACKET
       { mkexp(Pexp_array(List.rev $2)) }
   | LBRACKETBAR BARRBRACKET
