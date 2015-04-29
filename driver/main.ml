@@ -41,9 +41,10 @@ let process_file name =
         or Filename.check_suffix name ".cma" ->
       objfiles := name :: !objfiles
   (*x: [[Main.process_file()]] cases *)
-  | _ when Filename.check_suffix name ext_obj
-        or Filename.check_suffix name ext_lib ->
+  | _ when Filename.check_suffix name Config.ext_obj
+        or Filename.check_suffix name Config.ext_lib ->
       ccobjs := name :: !ccobjs
+  (*x: [[Main.process_file()]] cases *)
   | _ when Filename.check_suffix name ".c" ->
       Compile.c_file name;
       ccobjs := (Filename.chop_suffix (Filename.basename name) ".c" ^ ext_obj)
@@ -100,10 +101,11 @@ let main () =
        (*x: [[Main.main()]] command line options *)
        "-cclib", Arg.String(fun s -> ccobjs := s :: !ccobjs),
              "<opt>  Pass option <opt> to the C linker";
-       "-ccopt", Arg.String(fun s -> ccopts := s :: !ccopts),
-             "<opt>  Pass option <opt> to the C compiler and linker";
        (*x: [[Main.main()]] command line options *)
        "-custom", Arg.Set custom_runtime, " Link in custom mode";
+       (*x: [[Main.main()]] command line options *)
+       "-ccopt", Arg.String(fun s -> ccopts := s :: !ccopts),
+             "<opt>  Pass option <opt> to the C compiler and linker";
        (*x: [[Main.main()]] command line options *)
        "-linkall", Arg.Set link_everything,
              " Link all modules, even unused ones";

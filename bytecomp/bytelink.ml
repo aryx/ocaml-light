@@ -410,9 +410,7 @@ let build_custom_runtime prim_name exec_name =
 let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
   match Sys.os_type with
   | _ ->
-      let oc =
-        open_out_gen [Open_wronly; Open_append] 0
-                                 !Clflags.exec_name in
+      let oc = open_out_gen [Open_wronly; Open_append] 0 !Clflags.exec_name in
       let ic = open_in bytecode_name in
       copy_file ic oc;
       close_in ic;
@@ -424,7 +422,6 @@ let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
 (*s: function Bytelink.fix_exec_name *)
 (* Fix the name of the output file, if the C compiler changes it behind
    our back. *)
-
 let fix_exec_name name =
   match Sys.os_type with
   | _ -> name
@@ -435,41 +432,47 @@ let fix_exec_name name =
 
 let link objfiles =
   let objfiles = "stdlib.cma" :: (objfiles @ ["std_exit.cmo"]) in
-  if not !Clflags.custom_runtime 
-  then link_bytecode objfiles !Clflags.exec_name true
-  else 
-   (*s: [[Bytelink.link()]] if custom runtime *)
-   if not !Clflags.output_c_object then begin
-     let bytecode_name = Filename.temp_file "camlcode" "" in
-     let prim_name = Filename.temp_file "camlprim" ".c" in
-     try
-       link_bytecode objfiles bytecode_name false;
-       let poc = open_out prim_name in
-       Symtable.output_primitive_table poc;
-       close_out poc;
-       let exec_name = fix_exec_name !Clflags.exec_name in
-       if build_custom_runtime prim_name exec_name <> 0
-       then raise(Error Custom_runtime);
-       append_bytecode_and_cleanup bytecode_name exec_name prim_name
-     with x ->
-       remove_file bytecode_name;
-       remove_file prim_name;
-       raise x
-   end else begin
-     let c_file =
-       Filename.chop_suffix !Clflags.object_name Config.ext_obj ^ ".c" in
-     if Sys.file_exists c_file then raise(Error(File_exists c_file));
-     try
-       link_bytecode_as_c objfiles c_file;
-       if Ccomp.compile_file_bytecode c_file <> 0
-       then raise(Error Custom_runtime);
-       remove_file c_file
-     with x ->
-       remove_file c_file;
-       remove_file !Clflags.object_name;
-       raise x
-   end
-   (*e: [[Bytelink.link()]] if custom runtime *)
+  (match () with
+  | _ when not !Clflags.custom_runtime ->
+      link_bytecode objfiles !Clflags.exec_name (*copy_header*)true
+  | _ when not !Clflags.output_c_object ->
+      (*s: [[Bytelink.link()]] if custom runtime *)
+      let bytecode_name = Filename.temp_file "camlcode" "" in
+      let prim_name = Filename.temp_file "camlprim" ".c" in
+      (try
+        link_bytecode objfiles bytecode_name (*copy_header*)false;
+        let poc = open_out prim_name in
+        Symtable.output_primitive_table poc;
+        close_out poc;
+        let exec_name = fix_exec_name !Clflags.exec_name in
+        if build_custom_runtime prim_name exec_name <> 0
+        then raise(Error Custom_runtime);
+        append_bytecode_and_cleanup bytecode_name exec_name prim_name
+      with x ->
+      (* TODO temporarily keep
+        remove_file bytecode_name;
+        remove_file prim_name;
+      *)
+        raise x
+      )
+      (*e: [[Bytelink.link()]] if custom runtime *)
+  | _ ->
+      (*s: [[Bytelink.link()]] if output obj *)
+      let c_file =
+        Filename.chop_suffix !Clflags.object_name Config.ext_obj ^ ".c" in
+      if Sys.file_exists c_file then raise(Error(File_exists c_file));
+      (try
+        link_bytecode_as_c objfiles c_file;
+        if Ccomp.compile_file_bytecode c_file <> 0
+        then raise(Error Custom_runtime);
+        remove_file c_file
+      with x ->
+        remove_file c_file;
+        remove_file !Clflags.object_name;
+        raise x
+      )
+      (*e: [[Bytelink.link()]] if output obj *)
+  )
 (*e: function Bytelink.link *)
 
 (* Error report *)

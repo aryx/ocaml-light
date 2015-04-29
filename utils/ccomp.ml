@@ -56,9 +56,6 @@ let compile_file_native name =
 let create_archive archive file_list =
   Misc.remove_file archive;
   match Config.system with
-    "win32" ->
-      command(Printf.sprintf "lib /nologo /debugtype:cv /out:%s %s"
-                                 archive (String.concat " " file_list))
   | _ ->
       let r1 =
         command(Printf.sprintf "ar rc %s %s"
