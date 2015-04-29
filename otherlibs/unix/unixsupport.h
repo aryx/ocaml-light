@@ -11,9 +11,8 @@
 
 /* $Id: unixsupport.h,v 1.4 1997/09/02 12:54:49 xleroy Exp $ */
 
-#ifdef HAS_UNISTD
+#include <sys/types.h> // for plan9, must be before unistd.h
 #include <unistd.h>
-#endif
 
 #define Nothing ((value) 0)
 

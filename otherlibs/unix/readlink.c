@@ -16,8 +16,15 @@
 
 #ifdef HAS_SYMLINK
 
+#include <sys/stat.h> // for plan9
 #include <sys/param.h>
 #include "unixsupport.h"
+
+#ifndef MAXPATHLEN // for plan9
+#include <limits.h>
+#define MAXPATHLEN _POSIX_PATH_MAX 
+#endif
+
 
 value unix_readlink(value path)        /* ML */
 {
