@@ -8603,10 +8603,14 @@ val link: string list -> unit
 
 let link objfiles =
   let objfiles = "stdlib.cma" :: (objfiles @ ["std_exit.cmo"]) in
-  if not !Clflags.custom_runtime 
-  then link_bytecode objfiles !Clflags.exec_name true
-  else 
-   <<[[Bytelink.link()]] if custom runtime>>
+  (match () with
+  | _ when not !Clflags.custom_runtime ->
+      link_bytecode objfiles !Clflags.exec_name (*copy_header*)true
+  | _ when not !Clflags.output_c_object ->
+      <<[[Bytelink.link()]] if custom runtime>>
+  | _ ->
+      <<[[Bytelink.link()]] if output obj>>
+  )
 @
 
 
@@ -8678,6 +8682,11 @@ val exec_magic_number: string
 @
 
 
+\subsection{Standard primitives table}
+
+% we let the host linker to do the work when building ocamlrun.
+% we only need to agree on the primitive table, and the
+% file prims.c
 
 \section{Safe linking}
 
@@ -8720,16 +8729,17 @@ let make_archive = ref false            (* -a *)
 "-a", Arg.Set make_archive, " Build a library";
 @
 
+<<constant Clflags.archive_name>>=
+let archive_name = ref "library.cma"    (* -o *)
+@
+
+
 <<[[Main.main()]] if make archive case>>=
 | _ when !make_archive ->
     Compile.init_path();
     Bytelibrarian.create_archive (List.rev !objfiles) !archive_name
 @
 
-
-<<constant Clflags.archive_name>>=
-let archive_name = ref "library.cma"    (* -o *)
-@
 
 <<signature Bytelibrarian.create_archive>>=
 (* Format of a library file:
@@ -8767,127 +8777,41 @@ let ccobjs = ref ([] : string list)     (* .o, .a and -lxxx files *)
 @
 
 <<[[Main.process_file()]] cases>>=
-| _ when Filename.check_suffix name ext_obj
-      or Filename.check_suffix name ext_lib ->
+| _ when Filename.check_suffix name Config.ext_obj
+      or Filename.check_suffix name Config.ext_lib ->
     ccobjs := name :: !ccobjs
-| _ when Filename.check_suffix name ".c" ->
-    Compile.c_file name;
-    ccobjs := (Filename.chop_suffix (Filename.basename name) ".c" ^ ext_obj)
-     :: !ccobjs
 @
 
-<<signature Compile.c_file>>=
-val c_file: string -> unit
+
+<<signature Config.ext_obj>>=
+val ext_obj: string
+        (* Extension for object files, e.g. [.o] under Unix. *)
+@
+<<signature Config.ext_lib>>=
+val ext_lib: string
+        (* Extension for library files, e.g. [.a] under Unix. *)
 @
 
-<<function Compile.c_file>>=
-let c_file name =
-  if Ccomp.compile_file_bytecode name <> 0 then exit 2
-@
 
-<<constant Clflags.ccopts>>=
-let ccopts = ref ([] : string list)     (* -ccopt *)
-@
 
 <<[[Main.main()]] command line options>>=
 "-cclib", Arg.String(fun s -> ccobjs := s :: !ccobjs),
       "<opt>  Pass option <opt> to the C linker";
-"-ccopt", Arg.String(fun s -> ccopts := s :: !ccopts),
-      "<opt>  Pass option <opt> to the C compiler and linker";
 @
+
 
 \subsection{Foreign function interface}
 % ffi
 
-\subsection{C compilation}
-
-<<signature Ccomp.command>>=
-val command: string -> int
-@
-
-<<signature Ccomp.compile_file_bytecode>>=
-val compile_file_bytecode: string -> int
-@
-
-<<signature Ccomp.compile_file_native>>=
-val compile_file_native: string -> int
-@
-
-<<signature Ccomp.create_archive>>=
-val create_archive: string -> string list -> int
-@
-
-
-
-<<function Ccomp.compile_file_bytecode>>=
-let compile_file_bytecode name =
-  command
-   (Printf.sprintf
-     "%s -c %s %s -I%s %s"
-     Config.bytecomp_c_compiler
-     (String.concat " " (List.rev !Clflags.ccopts))
-     (String.concat " "
-       (List.map (fun dir -> "-I" ^ dir) 
-                 (List.rev !Clflags.include_dirs)))
-     Config.standard_library
-     name)
-@
-
-<<signature Config.bytecomp_c_compiler>>=
-val bytecomp_c_compiler: string
-        (* The C compiler to use for the custom runtime mode of the
-           bytecode compiler *)
-@
-
-
-<<function Ccomp.compile_file_native>>=
-let compile_file_native name =
-  command
-   (Printf.sprintf
-     "%s -c %s %s -I%s %s"
-     Config.native_c_compiler
-     (String.concat " " (List.rev !Clflags.ccopts))
-     (String.concat " "
-       (List.map (fun dir -> "-I" ^ dir) 
-                 (List.rev !Clflags.include_dirs)))
-     Config.standard_library
-     name)
-@
-
-<<signature Config.native_c_compiler>>=
-val native_c_compiler: string
-        (* The C compiler to use for the native code compiler *)
-@
-
-
-<<function Ccomp.create_archive>>=
-let create_archive archive file_list =
-  Misc.remove_file archive;
-  match Config.system with
-    "win32" ->
-      command(Printf.sprintf "lib /nologo /debugtype:cv /out:%s %s"
-                                 archive (String.concat " " file_list))
-  | _ ->
-      let r1 =
-        command(Printf.sprintf "ar rc %s %s"
-                                   archive (String.concat " " file_list)) in
-      if r1 <> 0 or String.length Config.ranlib = 0
-      then r1
-      else command(Config.ranlib ^ " " ^ archive)
-@
-
-<<signature Config.ranlib>>=
-val ranlib: string
-        (* Command to randomize a library, or "" if not needed *)
-@
-
-\section{Advanced linking issues}
-
 \subsection{[[-custom]]}
-% put in section about linking with C? can link with C and
-% not use -custom?
 
-% it also adds the .so in it no?
+% I put in section about linking with C and not in advanced
+% link because you can't really statically link with C and
+% not use -custom
+
+%note: it also adds the .so in it no? no, it adds the .a (well
+% it calls the linker to build a custom runtime with the standard
+% runtime primitives + your new C functions.
 
 <<constant Clflags.custom_runtime>>=
 let custom_runtime = ref false          (* -custom *)
@@ -8898,37 +8822,55 @@ let custom_runtime = ref false          (* -custom *)
 
 
 <<[[Bytelink.link()]] if custom runtime>>=
-if not !Clflags.output_c_object then begin
-  let bytecode_name = Filename.temp_file "camlcode" "" in
-  let prim_name = Filename.temp_file "camlprim" ".c" in
-  try
-    link_bytecode objfiles bytecode_name false;
-    let poc = open_out prim_name in
-    Symtable.output_primitive_table poc;
-    close_out poc;
-    let exec_name = fix_exec_name !Clflags.exec_name in
-    if build_custom_runtime prim_name exec_name <> 0
-    then raise(Error Custom_runtime);
-    append_bytecode_and_cleanup bytecode_name exec_name prim_name
-  with x ->
-    remove_file bytecode_name;
-    remove_file prim_name;
-    raise x
-end else begin
-  let c_file =
-    Filename.chop_suffix !Clflags.object_name Config.ext_obj ^ ".c" in
-  if Sys.file_exists c_file then raise(Error(File_exists c_file));
-  try
-    link_bytecode_as_c objfiles c_file;
-    if Ccomp.compile_file_bytecode c_file <> 0
-    then raise(Error Custom_runtime);
-    remove_file c_file
-  with x ->
-    remove_file c_file;
-    remove_file !Clflags.object_name;
-    raise x
-end
+let bytecode_name = Filename.temp_file "camlcode" "" in
+let prim_name = Filename.temp_file "camlprim" ".c" in
+(try
+  link_bytecode objfiles bytecode_name (*copy_header*)false;
+  let poc = open_out prim_name in
+  Symtable.output_primitive_table poc;
+  close_out poc;
+  let exec_name = fix_exec_name !Clflags.exec_name in
+  if build_custom_runtime prim_name exec_name <> 0
+  then raise(Error Custom_runtime);
+  append_bytecode_and_cleanup bytecode_name exec_name prim_name
+with x ->
+(* TODO temporarily keep
+  remove_file bytecode_name;
+  remove_file prim_name;
+*)
+  raise x
+)
 @
+
+<<function Bytelink.fix_exec_name>>=
+(* Fix the name of the output file, if the C compiler changes it behind
+   our back. *)
+let fix_exec_name name =
+  match Sys.os_type with
+  | _ -> name
+@
+
+
+<<function Bytelink.append_bytecode_and_cleanup>>=
+let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
+  match Sys.os_type with
+  | _ ->
+      let oc = open_out_gen [Open_wronly; Open_append] 0 !Clflags.exec_name in
+      let ic = open_in bytecode_name in
+      copy_file ic oc;
+      close_in ic;
+      close_out oc;
+      remove_file bytecode_name;
+      remove_file prim_name
+@
+
+
+\subsection{Custom primitives table}
+
+\subsection{Calling host command}
+
+\subsection{Calling host linker}
+
 
 <<function Bytelink.build_custom_runtime>>=
 let build_custom_runtime prim_name exec_name =
@@ -8960,6 +8902,132 @@ let build_custom_runtime prim_name exec_name =
 val c_libraries: string
         (* The C libraries to link with custom runtimes *)
 @
+
+
+
+<<signature Ccomp.command>>=
+val command: string -> int
+@
+% =~ Sys.command + -verbose handling. See appendix.
+
+\subsection{C compilation}
+
+
+<<[[Main.process_file()]] cases>>=
+| _ when Filename.check_suffix name ".c" ->
+    Compile.c_file name;
+    ccobjs := (Filename.chop_suffix (Filename.basename name) ".c" ^ ext_obj)
+     :: !ccobjs
+@
+
+<<constant Clflags.ccopts>>=
+let ccopts = ref ([] : string list)     (* -ccopt *)
+@
+
+<<[[Main.main()]] command line options>>=
+"-ccopt", Arg.String(fun s -> ccopts := s :: !ccopts),
+      "<opt>  Pass option <opt> to the C compiler and linker";
+@
+
+
+
+<<signature Compile.c_file>>=
+val c_file: string -> unit
+@
+
+<<function Compile.c_file>>=
+let c_file name =
+  if Ccomp.compile_file_bytecode name <> 0 
+  then exit 2
+@
+
+
+
+
+
+
+
+
+
+\subsection{Calling host compiler}
+
+<<signature Ccomp.compile_file_bytecode>>=
+val compile_file_bytecode: string -> int
+@
+
+<<function Ccomp.compile_file_bytecode>>=
+let compile_file_bytecode name =
+  command
+   (Printf.sprintf
+     "%s -c %s %s -I%s %s"
+     Config.bytecomp_c_compiler
+     (String.concat " " (List.rev !Clflags.ccopts))
+     (String.concat " "
+       (List.map (fun dir -> "-I" ^ dir) 
+                 (List.rev !Clflags.include_dirs)))
+     Config.standard_library
+     name)
+@
+
+<<signature Config.bytecomp_c_compiler>>=
+val bytecomp_c_compiler: string
+        (* The C compiler to use for the custom runtime mode of the
+           bytecode compiler *)
+@
+
+
+
+
+<<signature Ccomp.compile_file_native>>=
+val compile_file_native: string -> int
+@
+
+<<function Ccomp.compile_file_native>>=
+let compile_file_native name =
+  command
+   (Printf.sprintf
+     "%s -c %s %s -I%s %s"
+     Config.native_c_compiler
+     (String.concat " " (List.rev !Clflags.ccopts))
+     (String.concat " "
+       (List.map (fun dir -> "-I" ^ dir) 
+                 (List.rev !Clflags.include_dirs)))
+     Config.standard_library
+     name)
+@
+
+<<signature Config.native_c_compiler>>=
+val native_c_compiler: string
+        (* The C compiler to use for the native code compiler *)
+@
+
+
+\subsection{Calling host librarian}
+
+<<signature Ccomp.create_archive>>=
+val create_archive: string -> string list -> int
+@
+
+% -> <>
+<<function Ccomp.create_archive>>=
+let create_archive archive file_list =
+  Misc.remove_file archive;
+  match Config.system with
+  | _ ->
+      let r1 =
+        command(Printf.sprintf "ar rc %s %s"
+                                   archive (String.concat " " file_list)) in
+      if r1 <> 0 or String.length Config.ranlib = 0
+      then r1
+      else command(Config.ranlib ^ " " ^ archive)
+@
+
+<<signature Config.ranlib>>=
+val ranlib: string
+        (* Command to randomize a library, or "" if not needed *)
+@
+
+\section{Advanced linking issues}
 
 
 \subsection{[[-linkall]]}
@@ -8995,6 +9063,58 @@ let output_c_object = ref false         (* -output-obj *)
 "-output-obj", Arg.Unit(fun () -> output_c_object := true;
                                   custom_runtime := true),
       "Output a C object file instead of an executable";
+@
+
+
+<<[[Bytelink.link()]] if output obj>>=
+let c_file =
+  Filename.chop_suffix !Clflags.object_name Config.ext_obj ^ ".c" in
+if Sys.file_exists c_file then raise(Error(File_exists c_file));
+(try
+  link_bytecode_as_c objfiles c_file;
+  if Ccomp.compile_file_bytecode c_file <> 0
+  then raise(Error Custom_runtime);
+  remove_file c_file
+with x ->
+  remove_file c_file;
+  remove_file !Clflags.object_name;
+  raise x
+)
+@
+
+<<function Bytelink.link_bytecode_as_c>>=
+(* Output a bytecode executable as a C file *)
+
+let link_bytecode_as_c objfiles outfile =
+  let tolink = List.fold_right scan_file objfiles [] in
+  let outchan = open_out outfile in
+  try
+    (* The bytecode *)
+    output_string outchan "static int caml_code[] = {\n";
+    Symtable.init();
+    Hashtbl.clear crc_interfaces;
+    let output_fun = output_code_string outchan
+    and currpos_fun () = fatal_error "Bytelink.link_bytecode_as_c" in
+    List.iter (link_file output_fun currpos_fun) tolink;
+    (* The final STOP instruction *)
+    Printf.fprintf outchan "\n0x%x};\n\n" Opcodes.opSTOP;
+    (* The table of global data *)
+    output_string outchan "static char * caml_data =\n";
+    output_data_string outchan
+      (Marshal.to_string (Symtable.initial_global_table()) []);
+    (* The table of primitives *)
+    Symtable.output_primitive_table outchan;
+    (* The entry point *)
+    output_string outchan "\n
+void caml_startup(argv)
+        char ** argv;
+{
+  caml_startup_code(caml_code, sizeof(caml_code), caml_data, argv);
+}\n";
+    close_out outchan
+  with x ->
+    close_out outchan;
+    raise x
 @
 
 
@@ -12211,7 +12331,7 @@ if (prog == NULL) {           /* Interpreter is initializing */
 let verbose = ref false                 (* -verbose *)
 @
 
-% when compiling c stuff? calling assembler? -> <>
+% when compiling c stuff, calling linker, compiler, etc -> <>
 <<function Ccomp.command>>=
 let command cmdline =
   if !Clflags.verbose then begin

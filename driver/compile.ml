@@ -200,6 +200,7 @@ let implementation sourcefile =
 
 (*s: function Compile.c_file *)
 let c_file name =
-  if Ccomp.compile_file_bytecode name <> 0 then exit 2
+  if Ccomp.compile_file_bytecode name <> 0 
+  then exit 2
 (*e: function Compile.c_file *)
 (*e: ./driver/compile.ml *)

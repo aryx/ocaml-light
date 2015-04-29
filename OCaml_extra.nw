@@ -28,20 +28,12 @@ val system: string
         (* Name of operating system for the native-code compiler *)
 @
 
-<<signature Config.ext_obj>>=
-val ext_obj: string
-        (* Extension for object files, e.g. [.o] under Unix. *)
-@
 
 <<signature Config.ext_asm>>=
 val ext_asm: string
         (* Extension for assembler files, e.g. [.s] under Unix. *)
 @
 
-<<signature Config.ext_lib>>=
-val ext_lib: string
-        (* Extension for library files, e.g. [.a] under Unix. *)
-@
 
 
 %-------------------------------------------------------------
@@ -7631,40 +7623,6 @@ let output_data_string outchan data =
   output_string outchan "\";\n\n"
 @
 
-<<function Bytelink.link_bytecode_as_c>>=
-(* Output a bytecode executable as a C file *)
-
-let link_bytecode_as_c objfiles outfile =
-  let tolink = List.fold_right scan_file objfiles [] in
-  let outchan = open_out outfile in
-  try
-    (* The bytecode *)
-    output_string outchan "static int caml_code[] = {\n";
-    Symtable.init();
-    Hashtbl.clear crc_interfaces;
-    let output_fun = output_code_string outchan
-    and currpos_fun () = fatal_error "Bytelink.link_bytecode_as_c" in
-    List.iter (link_file output_fun currpos_fun) tolink;
-    (* The final STOP instruction *)
-    Printf.fprintf outchan "\n0x%x};\n\n" Opcodes.opSTOP;
-    (* The table of global data *)
-    output_string outchan "static char * caml_data =\n";
-    output_data_string outchan
-      (Marshal.to_string (Symtable.initial_global_table()) []);
-    (* The table of primitives *)
-    Symtable.output_primitive_table outchan;
-    (* The entry point *)
-    output_string outchan "\n
-void caml_startup(argv)
-        char ** argv;
-{
-  caml_startup_code(caml_code, sizeof(caml_code), caml_data, argv);
-}\n";
-    close_out outchan
-  with x ->
-    close_out outchan;
-    raise x
-@
 
 <<function Bytelink.extract>>=
 (* Build a custom runtime *)
@@ -7674,31 +7632,6 @@ let rec extract suffix l =
   | [] -> []
   | h::t when Filename.check_suffix h suffix -> h :: (extract suffix t)
   | h::t -> extract suffix t
-@
-
-
-<<function Bytelink.append_bytecode_and_cleanup>>=
-let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
-  match Sys.os_type with
-  | _ ->
-      let oc =
-        open_out_gen [Open_wronly; Open_append] 0
-                                 !Clflags.exec_name in
-      let ic = open_in bytecode_name in
-      copy_file ic oc;
-      close_in ic;
-      close_out oc;
-      remove_file bytecode_name;
-      remove_file prim_name
-@
-
-<<function Bytelink.fix_exec_name>>=
-(* Fix the name of the output file, if the C compiler changes it behind
-   our back. *)
-
-let fix_exec_name name =
-  match Sys.os_type with
-  | _ -> name
 @
 
 
