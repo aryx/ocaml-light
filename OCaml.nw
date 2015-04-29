@@ -32,7 +32,9 @@
 % - TODO how compiler backends work (register, liveness, etc)
 % - how type inference works in caml itself,
 %   type schema, generalization, instantiation, value restriction (partially)
+% - bootstrapping, so simple, make bootstrap
 % - the -custom, libs, libxxx.a, etc
+% - SEMI setitimer and SIGVTALRM and how to write a user-level scheduler
 
 %history LP-ization:
 % - skeleton, mostly copy paste of Template.nw skeleton
@@ -99,7 +101,7 @@
 \allcodefalse
 % used for 
 % - extra copyright, 
-% - composite operations opti in interprete()
+% - composite operations optimisations in interprete()
 % - other stuff??
 
 %\setcounter{tocdepth}{1}
@@ -171,7 +173,7 @@ you fully understand how things work under the hood.
 %  - objects
 %  - functors
 % (indeed they were not that used in the code of ocaml itself ... hmm)
-% good increments over C (see section below in first chapter).
+% Good increments over C (see section below in first chapter).
 % And the compiler code is quite elegant.
 
 %%good to vary a bit, not always C code written by the same people :)
@@ -190,7 +192,7 @@ Here are other candidates that were considered but ultimately discarded:
 \item Scala
 % too big, don't need objects anyway.
 % implicits are nice, but controversial, just like OO they can
-% lead to spaghetti code or hard to follow code more easily
+% lead to spaghetti code or hard to follow code
 \item Rust
 % excellent for low-level high-level language, but want here
 % high-level high-level language :)
@@ -207,7 +209,7 @@ Here are other candidates that were considered but ultimately discarded:
 
 \section{Requirements}
 
-% actually code presented below is written in OCaml so you
+% actually the code presented below is written in OCaml so you
 % need to understand OCaml :)
 
 % also help to understand target language (in addition to host),
@@ -332,8 +334,6 @@ those parts are copyright by INRIA.
 % for typing/
 \fi
 
-% some are also just copyright doligez, but not that many
-
 
 The prose is mine and is licensed under the GNU Free Documentation
 License.
@@ -353,9 +353,9 @@ the main author of OCaml.
 % have seen C in other book, which is a big improvment over assembly:
 % - functions, more structured and typed than CALL
 % - while/if/..., more structured than JMP
-% - struct/array, more structured than manual offsets manip
 % - expressions better than limited 3 address code
-% - pointers? needed for complex structures (e.g. lists, hashtbl, etc)
+% - struct/union/array, more structured than manual offsets manipulation,
+%   and pointers? needed for complex structures (e.g. lists, hashtbl, etc)
 
 %ocaml has many advanced features not in C, so it is good increment too:
 % - gc (no more malloc/free and bugs), which imply special bit
@@ -364,7 +364,7 @@ the main author of OCaml.
 %   which imply boxing values for certain implementation strategy
 % - closures (can factorize more code, no more loop for everything)
 % - ADT and pattern matching (no more enum/switch loophole)
-%   had type "and", now have type "or"!
+%   had type "and", now have really a type "or"!
 % - type inference (less boilerplate, especially needed when have
 %   polymorphism and closures and quite complicated types)
 % - references: disciplined safe pointers!
@@ -383,6 +383,7 @@ the main author of OCaml.
 % toadd: 
 %  - type classes (no more + vs +., print_xxx, can factorize more code)
 %  - compile time metaprogramming? (no more boilerplate, show, map, visit, etc)
+%    staging?
 
 \section{[[ocamlc]] services}
 
@@ -442,7 +443,8 @@ let nopervasives = ref false            (* -nopervasives *)
 % work!
 
 % plan9 port: need an ocamlrun, need an ocamlc, and then need boot/*.cmi
-% stdlib.cma and std_exit.cmo at the standard place (/usr/local/lib/ocaml)
+% stdlib.cma and std_exit.cmo at the standard place (/usr/local/lib/ocaml).
+% And that's it!
 
 %###############################################################################
 
@@ -480,7 +482,6 @@ val none: t
 <<constant Location.none>>=
 let none = { loc_start = -1; loc_end = -1 }
 @
-
 
 <<signature Location.symbol_loc>>=
 val symbol_loc: unit -> t
@@ -628,8 +629,8 @@ type expression =
     pexp_loc: Location.t }
 @
 
-% rich, this includes also statements, locals, and so
-% functions/constants/globals since ocaml is very regular
+% rich type; this includes also statements, locals, and even
+% functions/constants/globals since ocaml is very regular.
 
 <<type Parsetree.expression_desc>>=
 and expression_desc =
@@ -703,6 +704,8 @@ and pattern_desc =
 
 | Pexp_try of expression * (pattern * expression) list
 @
+% the first expression for 'for' needs to be a special kind of expr?
+% like i = 1? for introduce a new variable!
 
 <<type Asttypes.direction_flag>>=
 type direction_flag = Upto | Downto
@@ -821,11 +824,11 @@ type type_expr =
 % Tconstr, type "constructor"
 % diff with core_type_desc: 
 % - no more Any
-% - no more type aliases (but I removed them)
+% - no more type aliases (but I removed them in the previous basic chunk)
 % - no manifest (type abbreviations) (but I aspectized it)
-% diff with thih
+% diff with THIH
 % - arrow is seens as a form of type constructor but with a higher kind
-%   not sure it simplifies things
+%   (not sure it simplifies things)
 
 <<type Types.type_variable>>=
 and type_variable = 
@@ -897,7 +900,7 @@ enum instructions {
 @
 %note: I changed the order with what was originally there, I think it's
 % more logical that way, better grouping. I added the comments.
-%THE ORDER IS IMPORTANT!! if you change it then you will not be able
+%But the order is important!! if you change it then you will not be able
 % to run boot/ocamlc because it will use a different order
 % for the opcodes. But remember that there is boot/ocamlrun too! 
 % so you can change things if you do make bootstrap.
@@ -1006,6 +1009,9 @@ typedef long value;
 % to add you need to do stuff, etc. It complicates things.
 % Why not opposite? why not use bit 31 as the marker instead of bit0?
 % look at zinc report?
+% but that way it's convenient for pointer which anyway need to be
+% word aligned and so for blocks can dereference the value directly;
+% no need any conversion.
 
 % what about is_pointer_outside_heap?
 
@@ -1038,6 +1044,8 @@ typedef long value;
 #define Max_long ((1L << (8 * sizeof(value) - 2)) - 1)
 @
 % >>
+% 4 * 8 because 8 bits * 4 bytes, - 2 because 1 bit for
+% the mark, 1 bit for the sign, and the final because ?
 
 <<constant Min_long>>=
 #define Min_long (-(1L << (8 * sizeof(value) - 2)))
@@ -1100,16 +1108,20 @@ typedef unsigned long color_t; // bit 8-9
                     + (color)                                                 \
                     + (tag_t) (tag)))
 @
-% no color << 8 because the color value do that
+% no color << 8 because the color value do that already,
+%  see Grey, Black, White macros
 
 
 \subsubsection{Header pointer vs value}
 
 % value is always just after the header.
+% the header is really metadata for the GC, so it's not
+% really the value itself.
 
 <<function Val_hp>>=
 #define Val_hp(hp) ((value) (((header_t *) (hp)) + 1))
 @
+% Val(ue) of header pointer.
 % +1 ? pointer arithmetic so really it adds 4
 % the "value" is represented as a pointer just after the header
 % (why not directly the header? wins?)
@@ -1180,7 +1192,7 @@ typedef unsigned long color_t; // bit 8-9
 
 \subsection{Values}
 
-% How is represented:
+% How are represented:
 % - true?
 % - 1? 
 % - Foo? 
@@ -1255,7 +1267,7 @@ static void init_atoms(void)
   for(i = 0; i < 256; i++) atom_table[i] = Make_header(0, i, White);
 }
 @
-
+% white? means? do not gc?
 
 \subsubsection{Objects}
 % in the general sense
