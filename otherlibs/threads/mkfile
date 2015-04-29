@@ -1,0 +1,23 @@
+</$objtype/mkfile
+
+LIB=libthreads.a
+
+OFILES=scheduler.$O
+
+INCLUDES=-I../../byterun
+
+</sys/src/cmd/mklib
+
+CC=pcc
+LD=pcc
+CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION $INCLUDES
+LDFLAGS=
+
+ROOT=/home/pad/plan9/ROOT
+
+install:V: libthreads.a
+	cp libthreads.a $ROOT/usr/local/lib/ocaml/
+
+clean:
+	rm -f *.[58] y.tab.? y.output y.error $CLEANFILES
+	rm libthreads.a
