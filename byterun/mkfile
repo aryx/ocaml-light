@@ -47,6 +47,7 @@ libcamlrun.a: $OFILES1
 
 ROOT=/home/pad/plan9/ROOT
 
+# do not use ../boot/..., use the latest compiled stuff
 install:V: 8.out libcamlrun.a
 	cp -f 8.out $ROOT/usr/local/bin/ocamlrun
     cp ../ocamlc $ROOT/usr/local/bin/
