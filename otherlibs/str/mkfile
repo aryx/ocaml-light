@@ -10,3 +10,8 @@ LD=pcc
 INCLUDES=-I../../byterun
 CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION $INCLUDES
 LDFLAGS=
+
+ROOT=/home/pad/plan9/ROOT
+
+install:V: libstr.a
+	cp libstr.a $ROOT/usr/local/lib/ocaml
