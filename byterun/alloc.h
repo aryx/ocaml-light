@@ -20,6 +20,7 @@
 #include "mlvalues.h"
 
 value alloc (mlsize_t, tag_t);
+value alloc_small (mlsize_t, tag_t);
 value alloc_tuple (mlsize_t);
 value alloc_string (mlsize_t);
 value alloc_final (mlsize_t, final_fun, mlsize_t, mlsize_t);

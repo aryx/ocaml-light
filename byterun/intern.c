@@ -281,11 +281,8 @@ static void intern_alloc(mlsize_t whsize, mlsize_t num_objects)
   } else {
     wosize = Wosize_whsize(whsize);
     if (wosize > Max_wosize) failwith("intern: structure too big");
-    if (wosize < Max_young_wosize) {
-      intern_block = alloc(wosize, String_tag);
-    } else {
-      intern_block = alloc_shr(wosize, String_tag);
-    }
+
+    intern_block = alloc(wosize, String_tag);
     intern_header = Hd_val(intern_block);
     intern_color = Color_hd(intern_header);
     Assert (intern_color == White || intern_color == Black);

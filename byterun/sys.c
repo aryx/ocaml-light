@@ -197,7 +197,7 @@ value sys_get_config(value unit)  /* ML */
 
   ostype = copy_string(OCAML_OS_TYPE);
   Begin_root(ostype);
-    result = alloc_tuple(2);
+    result = alloc_small (2, 0);
     Field(result, 0) = ostype;
     Field(result, 1) = Val_long (8 * sizeof(value));
   End_roots ();

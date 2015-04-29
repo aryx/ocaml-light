@@ -34,7 +34,7 @@ value unix_accept(value sock)          /* ML */
   if (retcode == -1) uerror("accept", Nothing);
   a = alloc_sockaddr();
   Begin_root (a);
-    res = alloc_tuple(2);
+    res = alloc_small(2, 0);
     Field(res, 0) = Val_int(retcode);
     Field(res, 1) = a;
   End_roots();

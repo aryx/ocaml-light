@@ -110,7 +110,169 @@ struct caml__roots_block {
 };
 /*e: struct caml__roots_block */
 
-extern struct caml__roots_block *local_roots;  /* defined in roots.h */
+extern struct caml__roots_block *local_roots;  /* defined in roots.c */
+
+
+
+/* The following macros are used to declare C local variables and
+   function parameters of type [value].
+
+   The function body must start with one of the [CAMLparam] macros.
+   If the function has no parameter of type [value], use [CAMLparam0].
+   If the function has 1 to 5 [value] parameters, use the corresponding
+   [CAMLparam] with the parameters as arguments.
+   If the function has more than 5 [value] parameters, use [CAMLparam5]
+   for the first 5 parameters, and one or more calls to the [CAMLxparam]
+   macros for the others.
+
+   If you need local variables of type [value], declare them with one
+   or more calls to the [CAMLlocal] macros.
+   Use [CAMLlocalN] to declare an array of [value]s.
+
+   Your function may raise and exception or return a [value] with the
+   [CAMLreturn] macro.  Its argument is simply the [value] returned by
+   your function.  Do NOT directly return a [value] with the [return]
+   keyword.
+
+   All the identifiers beginning with "caml__" are reserved by Caml.
+   Do not use them for anything (local or global variables, struct or
+   union tags, macros, etc.)
+*/
+
+#define CAMLparam0() \
+  caml__roots_block *caml__frame = local_roots
+
+#define CAMLparam1(x) \
+  CAMLparam0 (); \
+  CAMLxparam1 (x)
+
+#define CAMLparam2(x, y) \
+  CAMLparam0 (); \
+  CAMLxparam2 (x, y)
+
+#define CAMLparam3(x, y, z) \
+  CAMLparam0 (); \
+  CAMLxparam3 (x, y, z)
+
+#define CAMLparam4(x, y, z, t) \
+  CAMLparam0 (); \
+  CAMLxparam4 (x, y, z, t)
+
+#define CAMLparam5(x, y, z, t, u) \
+  CAMLparam0 (); \
+  CAMLxparam4 (x, y, z, t, u)
+
+#define CAMLxparam1(x) \
+  caml__roots_block caml__roots_##x; \
+  void *caml__dummy_##x = ( \
+    caml__frame, \
+    (caml__roots_##x.next = local_roots), \
+    (local_roots = &caml__roots##x), \
+    (caml__roots_##x.nitems = 1), \
+    (caml__roots_##x.ntables = 1), \
+    (caml__roots_##x.tables [0] = &x), \
+    NULL)
+
+#define CAMLxparam2(x, y) \
+  caml__roots_block caml__roots_##x; \
+  void *caml__dummy_##x = ( \
+    caml__frame, \
+    (caml__roots_##x.next = local_roots), \
+    (local_roots = &caml__roots##x), \
+    (caml__roots_##x.nitems = 1), \
+    (caml__roots_##x.ntables = 2), \
+    (caml__roots_##x.tables [0] = &x), \
+    (caml__roots_##x.tables [1] = &y), \
+    NULL)
+
+#define CAMLxparam3(x, y, z) \
+  caml__roots_block caml__roots_##x; \
+  void *caml__dummy_##x = ( \
+    caml__frame, \
+    (caml__roots_##x.next = local_roots), \
+    (local_roots = &caml__roots##x), \
+    (caml__roots_##x.nitems = 1), \
+    (caml__roots_##x.ntables = 3), \
+    (caml__roots_##x.tables [0] = &x), \
+    (caml__roots_##x.tables [1] = &y), \
+    (caml__roots_##x.tables [2] = &z), \
+    NULL)
+
+#define CAMLxparam4(x, y, z, t) \
+  caml__roots_block caml__roots_##x; \
+  void *caml__dummy_##x = ( \
+    caml__frame, \
+    (caml__roots_##x.next = local_roots), \
+    (local_roots = &caml__roots##x), \
+    (caml__roots_##x.nitems = 1), \
+    (caml__roots_##x.ntables = 4), \
+    (caml__roots_##x.tables [0] = &x), \
+    (caml__roots_##x.tables [1] = &y), \
+    (caml__roots_##x.tables [2] = &z), \
+    (caml__roots_##x.tables [3] = &t), \
+    NULL)
+
+#define CAMLxparam5(x, y, z, t, u) \
+  caml__roots_block caml__roots_##x; \
+  void *caml__dummy_##x = ( \
+    caml__frame, \
+    (caml__roots_##x.next = local_roots), \
+    (local_roots = &caml__roots##x), \
+    (caml__roots_##x.nitems = 1), \
+    (caml__roots_##x.ntables = 5), \
+    (caml__roots_##x.tables [0] = &x), \
+    (caml__roots_##x.tables [1] = &y), \
+    (caml__roots_##x.tables [2] = &z), \
+    (caml__roots_##x.tables [3] = &t), \
+    (caml__roots_##x.tables [4] = &u), \
+    NULL)
+
+#define CAMLlocal1(x) \
+  value x = Val_unit; \
+  CAMLxparam1 (x)
+
+#define CAMLlocal2(x, y) \
+  value x = Val_unit, y = Val_unit; \
+  CAMLxparam1 (x, y)
+
+#define CAMLlocal3(x, y, z) \
+  value x = Val_unit, y = Val_unit, z = Val_unit; \
+  CAMLxparam1 (x, y, z)
+
+#define CAMLlocal4(x, y, z, t) \
+  value x = Val_unit, y = Val_unit, z = Val_unit, t = Val_unit; \
+  CAMLxparam1 (x, y, z, t)
+
+#define CAMLlocal5(x, y, z, t, u) \
+  value x = Val_unit, y = Val_unit, z = Val_unit, t = Val_unit, u = Val_unit; \
+  CAMLxparam1 (x, y, z, t, u)
+
+#define CAMLlocalN(x, size) \
+  value x [(size)] = { NULL }; \
+  caml__roots_block caml__roots_##x; \
+  void *caml__dummy_##x = ( \
+  caml_frame, \
+  (caml_roots_##x.next = local_roots), \
+  (local_roots = &caml__roots##x), \
+  (caml__roots_##x.nitems = (size)), \
+  (caml__roots_##x.ntables = 1), \
+  (caml__roots_##x.tables [0] = &(x [0])), \
+  NULL)
+
+#define CAMLreturn(x) \
+  local_roots = caml__frame; \
+  return (x)
+
+/* convenience macro */
+#define Store_field(block, offset, val) modify (&Field (block, offset), val)
+
+
+/*
+    NOTE: [Begin_roots] and [End_roots] are superseded by [CAMLparam]*,
+    [CAMLxparam]*, [CAMLlocal]*, [CAMLreturn].
+*/
+
+
 
 /*s: constant Begin_root */
 #define Begin_root Begin_roots1

@@ -46,7 +46,7 @@ value reify_bytecode(value prog, value len) /* ML */
 #ifdef THREADED_CODE
   thread_code((code_t) prog, (asize_t) Long_val(len));
 #endif
-  clos = alloc(1, Closure_tag);
+  clos = alloc_small (1, Closure_tag);
   Code_val(clos) = (code_t) prog;
   return clos;
 }

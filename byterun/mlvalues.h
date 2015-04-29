@@ -35,21 +35,21 @@
   color: The value of the color field of the header.
          This is for use only by the GC.
 
-  object: Something allocated.  It always has a header and some
+  block: Something allocated.  It always has a header and some
           fields or some number of bytes (a multiple of the word size).
-  field: A word-sized val which is part of an object.
+  field: A word-sized val which is part of a block.
 
-  hp: Pointer to the header of an object.  (a char *)
-  op: Pointer to the first field of an object.  (a value *)
-  bp: Pointer to the first byte of an object.  (a char *)
+  hp: Pointer to the header of a block.  (a char *)
+  op: Pointer to the first field of a block.  (a value *)
+  bp: Pointer to the first byte of a block.  (a char *)
 
-  Remark: An object size is always a multiple of the word size, and at least
+  Remark: A block size is always a multiple of the word size, and at least
           one word plus the header.
 
   bosize: Size (in bytes) of the "bytes" part.
   wosize: Size (in words) of the "fields" part.
-  bhsize: Size (in bytes) of the object with its header.
-  whsize: Size (in words) of the object with its header.
+  bhsize: Size (in bytes) of the block with its header.
+  whsize: Size (in words) of the block with its header.
 
 */
 /*e: mlvalues.h top comment */
@@ -294,7 +294,7 @@ typedef opcode_t * code_t;
 /* If tag == Infix_tag : an infix header inside a closure */
 /* Infix_tag must be odd so that the infix header is scanned as an integer */
 /*s: constant Infix_tag */
-/* Infix_tag must be 1 modulo 4 and infix headers can only occur in objects
+/* Infix_tag must be 1 modulo 4 and infix headers can only occur in blocks
    with tag Closure_tag (see compact.c). */
 
 #define Infix_tag 249

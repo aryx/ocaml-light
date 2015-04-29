@@ -268,7 +268,7 @@ value caml_thread_initialize(value unit)   /* ML */
     mu = caml_mutex_new(Val_unit);
     caml_mutex_lock(mu);
     /* Create a descriptor for the current thread */
-    descr = alloc_tuple(3);
+    descr = alloc_small(3, 0);
     Ident(descr) = Val_long(thread_next_ident);
     Start_closure(descr) = Val_unit;
     Terminated(descr) = mu;
@@ -351,7 +351,7 @@ value caml_thread_new(value clos)          /* ML */
     mu = caml_mutex_new(Val_unit);
     caml_mutex_lock(mu);
     /* Create a descriptor for the new thread */
-    descr = alloc_tuple(3);
+    descr = alloc_small(3, 0);
     Ident(descr) = Val_long(thread_next_ident);
     Start_closure(descr) = clos;
     Terminated(descr) = mu;
