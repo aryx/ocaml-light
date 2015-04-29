@@ -19,6 +19,11 @@
 
 #include <sys/param.h>
 
+#ifndef MAXPATHLEN // for plan9
+#include <limits.h>
+#define MAXPATHLEN _POSIX_PATH_MAX 
+#endif
+
 value unix_getcwd(value unit)     /* ML */
 {
   char buff[MAXPATHLEN];

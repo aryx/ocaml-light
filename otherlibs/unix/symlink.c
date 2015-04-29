@@ -12,6 +12,7 @@
 /* $Id: symlink.c,v 1.5 1997/09/02 12:54:47 xleroy Exp $ */
 
 #include <mlvalues.h>
+#include <sys/stat.h> // for plan9
 #include "unixsupport.h"
 
 #ifdef HAS_SYMLINK

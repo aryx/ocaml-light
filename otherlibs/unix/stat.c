@@ -54,7 +54,8 @@ static value stat_aux(struct stat *buf)
     Field (v, 4) = Val_int (buf->st_nlink);
     Field (v, 5) = Val_int (buf->st_uid);
     Field (v, 6) = Val_int (buf->st_gid);
-    Field (v, 7) = Val_int (buf->st_rdev);
+//    Field (v, 7) = Val_int (buf->st_rdev); not in plan9
+    Field (v, 7) = Val_int (0);
     Field (v, 8) = Val_int (buf->st_size);
     Field (v, 9) = atime;
     Field (v, 10) = ctime;

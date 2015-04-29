@@ -16,10 +16,8 @@
 #include <str.h>
 #include "unixsupport.h"
 
-#ifdef HAS_PUTENV
-
-#include <stdlib.h>
-#include <string.h>
+//#include <stdlib.h>
+//#include <string.h>
 
 value unix_putenv(value name, value val) /* ML */
 {
@@ -34,10 +32,3 @@ value unix_putenv(value name, value val) /* ML */
   if (putenv(s) == -1) uerror("putenv", name);
   return Val_unit;
 }
-
-#else
-
-value unix_putenv(value name, value val) /* ML */
-{ invalid_argument("putenv not implemented"); }
-
-#endif

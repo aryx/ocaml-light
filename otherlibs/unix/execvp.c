@@ -15,7 +15,7 @@
 #include <memory.h>
 #include "unixsupport.h"
 
-extern char ** cstringvect();
+extern char ** cstringvect(value arg);
 extern char ** environ;
 
 value unix_execvp(value path, value args)     /* ML */
