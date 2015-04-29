@@ -1348,7 +1348,6 @@ let exec_name = ref "a.out"             (* -o *)
 
 <<[[Main.main()]] command line options>>=
 "-v", Arg.Unit print_version_number, " Print compiler version number";
-"-verbose", Arg.Set verbose, " Print calls to external commands";
 @
 
 <<function Main.print_version_number>>=
@@ -12325,10 +12324,15 @@ if (prog == NULL) {           /* Interpreter is initializing */
 \chapter{Debugging}
 
 
-\section{Verbose mode, [[-v]]}
+\section{Verbose mode, [[-verbose]]}
+% different of -v which just print ocaml version and where the libs
+% are installed
 
 <<constant Clflags.verbose>>=
 let verbose = ref false                 (* -verbose *)
+@
+<<[[Main.main()]] command line options>>=
+"-verbose", Arg.Set verbose, " Print calls to external commands";
 @
 
 % when compiling c stuff, calling linker, compiler, etc -> <>
