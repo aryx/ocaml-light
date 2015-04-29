@@ -54,7 +54,7 @@ value unix_times_native(void)               /* ML */
   struct tms buffer;
 
   times(&buffer);
-  res = alloc(4 * Double_wosize, Double_array_tag);
+  res = alloc_small(4 * Double_wosize, Double_array_tag);
   Store_double_field(res, 0, (double) buffer.tms_utime / CLK_TCK);
   Store_double_field(res, 1, (double) buffer.tms_stime / CLK_TCK);
   Store_double_field(res, 2, (double) buffer.tms_cutime / CLK_TCK);

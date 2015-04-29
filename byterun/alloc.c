@@ -35,6 +35,25 @@
 value alloc (mlsize_t wosize, tag_t tag)
 {
   value result;
+  mlsize_t i;
+
+  Assert (wosize > 0);
+  if (wosize <= Max_young_wosize){
+    Alloc_small (result, wosize, tag);
+    if (tag < No_scan_tag){
+      for (i = 0; i < wosize; i++) Field (result, i) = 0;
+    }
+  }else{
+    result = alloc_shr (wosize, tag);
+    if (tag < No_scan_tag) memset (Bp_val (result), 0, Bsize_wsize (wosize));
+    result = check_urgent_gc (result);
+  }
+  return result;
+}
+
+value alloc_small (mlsize_t wosize, tag_t tag)
+{
+  value result;
   
   Assert (wosize > 0 && wosize <= Max_young_wosize);
   Alloc_small (result, wosize, tag);
@@ -105,8 +124,7 @@ value alloc_array(value (*funct)(char *), char ** arr)
   if (nbr == 0) {
     return Atom(0);
   } else {
-    result = nbr < Max_young_wosize ? alloc(nbr, 0) : alloc_shr(nbr, 0);
-    for (n = 0; n < nbr; n++) Field(result, n) = Val_int(0);
+    result = alloc (nbr, 0);
     Begin_root(result);
       for (n = 0; n < nbr; n++) {
     /* The two statements below must be separate because of evaluation

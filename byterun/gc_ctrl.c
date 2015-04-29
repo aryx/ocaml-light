@@ -109,7 +109,7 @@ value gc_stat(value v) /* ML */
   
   Assert (live_words + free_words + fragments == Wsize_bsize (stat_heap_size));
 
-  res = alloc (14, 0);
+  res = alloc_small (14, 0);
   Field (res, 0) = Val_long (stat_minor_words
                              + Wsize_bsize (young_end - young_ptr));
   Field (res, 1) = Val_long (stat_promoted_words);
@@ -135,7 +135,7 @@ value gc_get(value v) /* ML */
   value res;
 
   Assert (v == Val_unit);
-  res = alloc (6, 0);
+  res = alloc_small (6, 0);
   Field (res, 0) = Wsize_bsize (Val_long (minor_heap_size));
   Field (res, 1) = Wsize_bsize (Val_long (major_heap_increment));
   Field (res, 2) = Val_long (percent_free);

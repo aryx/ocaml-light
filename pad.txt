@@ -118,12 +118,14 @@ Then I backported a few things from a more recent ocaml distribution:
     --------------------
     Standard library:
     - Module Hashtbl: added Hashtbl.replace.
+     !PARTIAL! the DS does not have the size field, so I commented out some code
     
     Objective Caml 3.00:
     --------------------
     
     Standard library:
     - Module List: added List.sort, List.stable_sort; fixed bug in List.rev_map2.
+      !PARTIAL! didn't fix the List.rev_map2 thing
     
     Objective Caml 2.02:
     --------------------
@@ -133,6 +135,7 @@ Then I backported a few things from a more recent ocaml distribution:
         argument and returns "()".  It allows to write
         "ignore(f x); y" if "f x" doesn't have type unit and you don't
         want the warning caused by "f x; y".
+        !PARTIAL! wrote a regular function instead of a primitive
       - Added the "Buffer" module (extensible string buffers).
       - Module List: added find, filter, partition.
     
@@ -146,13 +149,19 @@ Then I backported a few things from a more recent ocaml distribution:
     * Standard library:
       - Module Pervasives: added float_of_int (synonymous for float),
         int_of_float (truncate), 
-        (NOT YET int_of_char (Char.code), char_of_int (Char.chr),  bool_of_string.)
+        !PARTIAL! int_of_char (Char.code), char_of_int (Char.chr),  bool_of_string.)
+
+    * C interface:
+      - New macros CAMLparam... and CAMLlocal... to simplify the handling
+        of local roots in C code.
+      - Simplified procedure for allocating and filling Caml blocks from C.
     
     Objective Caml 2.00:
     --------------------
     
     * Language:
       - Record copying with update "{r with lbl1 = expr1; ...}".
+        !PARTIAL! opted for a new constructor instead of patching Pexp_record
 
     * The Unix library:
       - Use float instead of int to represent Unix times (number of seconds

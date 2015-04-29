@@ -20,7 +20,7 @@ value unix_pipe(void)                /* ML */
   int fd[2];
   value res;
   if (pipe(fd) == -1) uerror("pipe", Nothing);
-  res = alloc_tuple(2);
+  res = alloc_small(2, 0);
   Field(res, 0) = Val_int(fd[0]);
   Field(res, 1) = Val_int(fd[1]);
   return res;
