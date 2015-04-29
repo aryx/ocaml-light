@@ -32,34 +32,12 @@
 #include "Cannot compile libthreads, system calls missing"
 #endif
 
-#ifdef __OpenBSD__
-#include <string.h>
-#endif
-
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
-#ifdef HAS_UNISTD
 #include <unistd.h>
-#endif
-#ifdef HAS_SYS_SELECT_H
 #include <sys/select.h>
-#endif
-
-#ifndef FD_ISSET
-/* Assume old-style BSD 4.2 fd sets */
-typedef int fd_set;
-#define FD_SETSIZE (sizeof(int) * 8)
-#define FD_SET(fd,fds) (*(fds) |= 1 << (fd))
-#define FD_CLR(fd,fds) (*(fds) &= ~(1 << (fd)))
-#define FD_ISSET(fd,fds) (*(fds) & (1 << (fd)))
-#define FD_ZERO(fds) (*(fds) = 0)
-#endif
-
-#ifndef HAS_WAITPID
-#define waitpid(pid,status,opts) wait4(pid,status,opts,NULL)
-#endif
 
 /* Configuration */
 
@@ -144,7 +122,7 @@ static void thread_scan_roots(scanning_action action)
 
 value thread_initialize(value unit)       /* ML */
 {
-  struct itimerval timer;
+  //struct itimerval timer;
   /* Create a descriptor for the current thread */
   curr_thread =
     (thread_t) alloc_shr(sizeof(struct thread_struct) / sizeof(value), 0);
@@ -169,10 +147,10 @@ value thread_initialize(value unit)       /* ML */
   prev_scan_roots_hook = scan_roots_hook;
   scan_roots_hook = thread_scan_roots;
   /* Initialize interval timer */
-  timer.it_interval.tv_sec = 0;
-  timer.it_interval.tv_usec = Thread_timeout;
-  timer.it_value = timer.it_interval;
-  setitimer(ITIMER_VIRTUAL, &timer, NULL);
+  //timer.it_interval.tv_sec = 0;
+  //timer.it_interval.tv_usec = Thread_timeout;
+  //timer.it_value = timer.it_interval;
+  //setitimer(ITIMER_VIRTUAL, &timer, NULL);
   return Val_unit;
 }
 
@@ -245,6 +223,10 @@ static double timeofday(void)
 static value alloc_process_status(int pid, int status);
 static void add_fdlist_to_set(value fdl, fd_set *set);
 static value inter_fdlist_set(value fdl, fd_set *set);
+
+#ifndef FD_SETSIZE // for plan9
+#define FD_SETSIZE (sizeof(int) * 8) // from otherlibs/unix/select.c
+#endif
 
 static value schedule_thread(void)
 {
