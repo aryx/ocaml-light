@@ -953,21 +953,21 @@ enum instructions {
   color: The value of the color field of the header.
          This is for use only by the GC.
 
-  object: Something allocated.  It always has a header and some
+  block: Something allocated.  It always has a header and some
           fields or some number of bytes (a multiple of the word size).
-  field: A word-sized val which is part of an object.
+  field: A word-sized val which is part of a block.
 
-  hp: Pointer to the header of an object.  (a char *)
-  op: Pointer to the first field of an object.  (a value *)
-  bp: Pointer to the first byte of an object.  (a char *)
+  hp: Pointer to the header of a block.  (a char *)
+  op: Pointer to the first field of a block.  (a value *)
+  bp: Pointer to the first byte of a block.  (a char *)
 
-  Remark: An object size is always a multiple of the word size, and at least
+  Remark: A block size is always a multiple of the word size, and at least
           one word plus the header.
 
   bosize: Size (in bytes) of the "bytes" part.
   wosize: Size (in words) of the "fields" part.
-  bhsize: Size (in bytes) of the object with its header.
-  whsize: Size (in words) of the object with its header.
+  bhsize: Size (in bytes) of the block with its header.
+  whsize: Size (in words) of the block with its header.
 
 */
 @
@@ -1173,7 +1173,7 @@ typedef unsigned long color_t; // bit 8-9
 % to do special things.
 
 <<constant Infix_tag>>=
-/* Infix_tag must be 1 modulo 4 and infix headers can only occur in objects
+/* Infix_tag must be 1 modulo 4 and infix headers can only occur in blocks
    with tag Closure_tag (see compact.c). */
 
 #define Infix_tag 249
@@ -10430,6 +10430,25 @@ external_raise = &raise_buf;
 value alloc (mlsize_t wosize, tag_t tag)
 {
   value result;
+  mlsize_t i;
+
+  Assert (wosize > 0);
+  if (wosize <= Max_young_wosize){
+    Alloc_small (result, wosize, tag);
+    if (tag < No_scan_tag){
+      for (i = 0; i < wosize; i++) Field (result, i) = 0;
+    }
+  }else{
+    result = alloc_shr (wosize, tag);
+    if (tag < No_scan_tag) memset (Bp_val (result), 0, Bsize_wsize (wosize));
+    result = check_urgent_gc (result);
+  }
+  return result;
+}
+
+value alloc_small (mlsize_t wosize, tag_t tag)
+{
+  value result;
   
   Assert (wosize > 0 && wosize <= Max_young_wosize);
   Alloc_small (result, wosize, tag);
@@ -11339,10 +11358,10 @@ void debugger(enum event_kind event)
 
 % AST
 <<[[Parsetree.expression_desc]] cases>>=
-| Pexp_record_with of expression * expression list
+| Pexp_record_with of expression * (Longident.t * expression) list
 @
 <<[[Typedtree.expression_desc]] cases>>=
-| Texp_record_with of expression * expression list
+| Texp_record_with of expression * (label_description * expression) list
 @
 
 % parsing
@@ -11388,7 +11407,7 @@ void debugger(enum event_kind event)
 
     let exp = type_expect env sexp ty in
 
-    { exp_desc = Pexp_record_with (exp, lbl_exp_list);
+    { exp_desc = Texp_record_with (exp, lbl_exp_list);
       exp_loc = sexp.pexp_loc;
       exp_type = ty }
 @
@@ -11406,7 +11425,7 @@ void debugger(enum event_kind event)
 
 
 <<[[Translcore.transl_exp()]] cases>>=
-| Texp_record_with (init_expr, (lbl1, _) :: _ as lbl_expr_list) ->
+| Texp_record_with (init_expr, ((lbl1, _) :: _ as lbl_expr_list)) ->
 
     let all_labels = lbl1.lbl_all in
     let lv = Array.create (Array.length all_labels) Lstaticfail in
@@ -11415,7 +11434,8 @@ void debugger(enum event_kind event)
       let access =
         match all_labels.(i).lbl_repres with
           Record_regular -> Pfield i
-        | Record_float -> Pfloatfield i in
+        | Record_float -> Pfloatfield i 
+      in
       lv.(i) <- Lprim(access, [Lvar init_id])
     done;
 
@@ -11423,20 +11443,11 @@ void debugger(enum event_kind event)
       (fun (lbl, expr) -> lv.(lbl.lbl_pos) <- transl_exp expr)
       lbl_expr_list;
     let ll = Array.to_list lv in
-
-    if List.exists (fun (lbl, expr) -> lbl.lbl_mut = Mutable) lbl_expr_list
-    then begin
-      match lbl1.lbl_repres with
-        Record_regular -> Lprim(Pmakeblock(0, Mutable), ll)
-      | Record_float -> Lprim(Pmakearray Pfloatarray, ll)
-    end else begin
-
     let mut =
       if List.exists (fun (lbl, expr) -> lbl.lbl_mut = Mutable) lbl_expr_list
       then Mutable
       else Immutable in
     let lam =
-
       try
         if mut = Mutable then raise Not_constant;
         let cl = List.map extract_constant ll in
@@ -11447,9 +11458,9 @@ void debugger(enum event_kind event)
       with Not_constant ->
         match lbl1.lbl_repres with
             Record_regular -> Lprim(Pmakeblock(0, mut), ll)
-          | Record_float -> Lprim(Pmakearray Pfloatarray, ll) in
-       Llet(Strict, init_id, transl_exp init_expr, lam)
-    end
+          | Record_float -> Lprim(Pmakearray Pfloatarray, ll) 
+    in
+    Llet(Strict, init_id, transl_exp init_expr, lam)
 @
 
 %TODO: port optimisation of 2.02:
