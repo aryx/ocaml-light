@@ -1,0 +1,42 @@
+</$objtype/mkfile
+
+LIB=libunix.a
+
+# do not compile, no corresponding functions in plan9/ape
+# chroot.$O 
+# fchmod.$O fchown.$O getgr.$O getgroups.$O getpw.$O
+# gethostname.$O sockopt.$O
+# itimer.$O lockf.$O nice.$O termios.$O truncate.$O 
+
+OFILES=accept.$O access.$O addrofstr.$O alarm.$O bind.$O chdir.$O chmod.$O \
+  chown.$O  close.$O closedir.$O connect.$O cst2constr.$O cstringv.$O \
+  dup.$O dup2.$O envir.$O errmsg.$O execv.$O execve.$O execvp.$O exit.$O \
+  fcntl.$O fork.$O ftruncate.$O getcwd.$O getegid.$O \
+  geteuid.$O getgid.$O  gethost.$O  \
+  getlogin.$O getpeername.$O getpid.$O getppid.$O getproto.$O  \
+  gettimeofday.$O getserv.$O getsockname.$O getuid.$O \
+  gmtime.$O  kill.$O link.$O listen.$O  lseek.$O mkdir.$O \
+  mkfifo.$O  open.$O opendir.$O pause.$O pipe.$O putenv.$O read.$O \
+  readdir.$O readlink.$O rename.$O rewinddir.$O rmdir.$O select.$O sendrecv.$O \
+  setgid.$O setsid.$O setuid.$O shutdown.$O sleep.$O socket.$O socketaddr.$O \
+  socketpair.$O stat.$O strofaddr.$O symlink.$O  \
+  time.$O times.$O umask.$O unixsupport.$O unlink.$O \
+  utimes.$O wait.$O write.$O
+
+INCLUDES=-I../../byterun
+
+</sys/src/cmd/mklib
+
+CC=pcc
+LD=pcc
+CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION $INCLUDES
+LDFLAGS=
+
+ROOT=/home/pad/plan9/ROOT
+
+install:V: libunix.a
+	cp libunix.a $ROOT/usr/local/lib/ocaml
+
+clean:V:
+	rm -f *.[58] y.tab.? y.output y.error $CLEANFILES
+	rm -f *.a
