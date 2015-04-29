@@ -423,6 +423,11 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 % .cmi! contain signature info (Obj.marshall of types really),
 % kinda .h
 
+% http://caml.inria.fr/pub/docs/manual-ocaml-4.00/manual033.html#c:intf-c
+% "The OCaml runtime system comprises three main parts: the bytecode
+% interpreter, the memory manager, and a set of C functions that
+% implement the primitive operations"
+
 \section{Bootstrapping}
 
 <<constant Clflags.nopervasives>>=
@@ -995,6 +1000,17 @@ typedef long value;
 % but really should be Long of int | Block of ...?
 % todo: look at zamcov?
 
+%http://caml.inria.fr/pub/docs/manual-ocaml-4.00/manual033.html#c:intf-c
+%"All OCaml objects are represented by the C type value, defined in the
+%include file caml/mlvalues.h, along with macros to manipulate values
+%of that type. An object of type value is either:
+% - an unboxed integer;
+% - a pointer to a block inside the heap (such as the blocks allocated
+%   through one of the caml_alloc_* functions below);
+% - a pointer to an object outside the heap (e.g., a pointer to a block
+%   allocated by malloc, or to a C variable).
+%"
+
 
 <<function Is_long>>=
 /* Longs vs blocks. */
@@ -1200,6 +1216,10 @@ typedef unsigned long color_t; // bit 8-9
 % - (1,2)?
 % - [1;2] ?
 % - ...
+
+%http://caml.inria.fr/pub/docs/manual-ocaml-4.00/manual033.html#toc144
+% interesting that in the manual they better classify those macros
+% than in the actual code.
 
 \subsubsection{Booleans}
 
@@ -8739,6 +8759,9 @@ val cma_magic_number: string
 
 \section{Linking with C}
 
+%Chapter 19  Interfacing C with OCaml
+%http://caml.inria.fr/pub/docs/manual-ocaml-4.00/manual033.html#c:intf-c
+
 <<constant Clflags.ccobjs>>=
 let ccobjs = ref ([] : string list)     (* .o, .a and -lxxx files *)
 @
@@ -8861,6 +8884,8 @@ val ranlib: string
 \section{Advanced linking issues}
 
 \subsection{[[-custom]]}
+% put in section about linking with C? can link with C and
+% not use -custom?
 
 % it also adds the .so in it no?
 
@@ -8973,6 +8998,8 @@ let output_c_object = ref false         (* -output-obj *)
 @
 
 
+%\subsection{[[-make-runtime]]}
+% and -use-runtime, but was not in ocaml 1.07 yet
 
 \chapter{Interpreting}
 % Running
