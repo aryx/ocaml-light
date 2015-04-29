@@ -4,11 +4,10 @@ include ../../config/Makefile
 
 # Compilation options
 CC=$(BYTECC)
-CFLAGS=-O -I$(REGEXLIB) -I../../byterun $(BYTECCCOMPOPTS)
+CFLAGS=-O  -I../../byterun $(BYTECCCOMPOPTS)
 CAMLC=../../boot/ocamlrun ../../boot/ocamlc -I ../../stdlib
 CAMLOPT=../../boot/ocamlrun ../../ocamlopt -I ../../stdlib
-REGEXLIB=regex-0.12
-COBJS=strstubs.o $(REGEXLIB)/regex.o
+COBJS=strstubs.o
 
 all: libstr.a str.cmi str.cma
 
@@ -25,9 +24,6 @@ str.cma: str.cmo
 str.cmxa: str.cmx
 	$(CAMLOPT) -a -o str.cmxa str.cmx
 
-$(REGEXLIB)/regex.o: $(REGEXLIB)/regex.c $(REGEXLIB)/regex.h
-	cd $(REGEXLIB); CC="$(CC)" sh configure; $(MAKE)
-
 str.cmx: ../../ocamlopt
 
 partialclean:
@@ -35,7 +31,6 @@ partialclean:
 
 clean: partialclean
 	rm -f *.a *.o
-	cd $(REGEXLIB); if test -f Makefile; then $(MAKE) distclean; else exit 0; fi
 
 install:
 	cp libstr.a $(LIBDIR)/libstr.a
