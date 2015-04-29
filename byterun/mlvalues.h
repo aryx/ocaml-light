@@ -348,6 +348,7 @@ typedef opcode_t * code_t;
 /*s: function String_val */
 #define String_val(x) ((char *) Bp_val(x))
 /*e: function String_val */
+extern mlsize_t string_length (value v);   /* size in bytes */
 
 /*s: constant Double_tag */
 /* Floating-point numbers. */

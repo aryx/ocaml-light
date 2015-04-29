@@ -2,12 +2,11 @@
 
 LIB=libstr.a
 OFILES=strstubs.$O
-# regex-0.12/regex.$O
 
 </sys/src/cmd/mklib
 
 CC=pcc
 LD=pcc
-INCLUDES=-Iregex-0.12 -I../../byterun
+INCLUDES=-I../../byterun
 CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION $INCLUDES
 LDFLAGS=
