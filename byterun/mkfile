@@ -50,11 +50,14 @@ ROOT=/home/pad/plan9/ROOT
 # do not use ../boot/..., use the latest compiled stuff
 install:V: 8.out libcamlrun.a
 	cp -f 8.out $ROOT/usr/local/bin/ocamlrun
+    cp libcamlrun.a $ROOT/usr/local/lib/ocaml/
+    mk install2
+
+install2:V:
     cp ../ocamlc $ROOT/usr/local/bin/
     cp ../ocaml $ROOT/usr/local/bin/
     cp ../lex/ocamllex $ROOT/usr/local/bin/
     cp ../stdlib/*.cm* $ROOT/usr/local/lib/ocaml
-    cp libcamlrun.a $ROOT/usr/local/lib/ocaml/
     cp ../otherlibs/unix/*.cm* $ROOT/usr/local/lib/ocaml
     cp ../otherlibs/str/*.cm* $ROOT/usr/local/lib/ocaml
     cp ../otherlibs/threads/*.cm* $ROOT/usr/local/lib/ocaml/threads

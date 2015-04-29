@@ -81,7 +81,6 @@ let main () =
              "<file>  Set output file name to <file> (default a.out)";
        (*x: [[Main.main()]] command line options *)
        "-v", Arg.Unit print_version_number, " Print compiler version number";
-       "-verbose", Arg.Set verbose, " Print calls to external commands";
        (*x: [[Main.main()]] command line options *)
        "-", Arg.String process_file,
             "<file>  Treat <file> as a file name (even if it starts with `-')";
@@ -127,6 +126,8 @@ let main () =
        (*x: [[Main.main()]] command line options *)
        "-pp", Arg.String(fun s -> preprocessor := Some s),
              "<command>  Pipe sources through preprocessor <command>";
+       (*x: [[Main.main()]] command line options *)
+       "-verbose", Arg.Set verbose, " Print calls to external commands";
        (*x: [[Main.main()]] command line options *)
        "-dlambda", Arg.Set dump_lambda, " (undocumented)";
        "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
