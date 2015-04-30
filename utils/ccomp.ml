@@ -21,7 +21,14 @@ let command cmdline =
     prerr_string cmdline;
     prerr_newline()
   end;
-  Sys.command cmdline
+  let ret = Sys.command cmdline in
+  if !Clflags.verbose then begin
+    prerr_string "- ";
+    prerr_int ret;
+    prerr_newline()
+  end;
+  ret
+  
 (*e: function Ccomp.command *)
 
 (*s: function Ccomp.compile_file_bytecode *)
