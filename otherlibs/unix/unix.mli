@@ -626,13 +626,14 @@ external getpwnam : string -> passwd_entry = "unix_getpwnam"
 external getgrnam : string -> group_entry = "unix_getgrnam"
         (* Find an entry in [group] with the given name, or raise
            [Not_found]. *)
+(*
 external getpwuid : int -> passwd_entry = "unix_getpwuid"
         (* Find an entry in [passwd] with the given user id, or raise
            [Not_found]. *)
 external getgrgid : int -> group_entry = "unix_getgrgid"
         (* Find an entry in [group] with the given group id, or raise
            [Not_found]. *)
-
+*)
 
 (*** Internet addresses *)
 
