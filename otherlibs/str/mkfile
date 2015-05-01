@@ -15,3 +15,7 @@ ROOT=/home/pad/plan9/ROOT
 
 install:V: libstr.a
 	cp libstr.a $ROOT/usr/local/lib/ocaml
+
+clean:V:
+	rm -f *.[58] y.tab.? y.output y.error $CLEANFILES
+	rm -f *.a

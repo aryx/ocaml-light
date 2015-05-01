@@ -1,11 +1,18 @@
 </$objtype/mkfile
 
-# If you want to cross compile ocamlrun, you just need
-# to add this to config.h
+# If you want to cross compile ocamlrun and ocamlc, you need to add 
+# this to byterun/config.h
 #   #undef __GNUC__
 #   #undef ARCH_SIXTYFOUR
 #   #undef HAS_TERMCAP
-# and then run mk
+# You also need to modify the utils/config.ml file and adjust
+#   let bytecomp_c_compiler = "pcc "
+#   let c_libraries = ""
+# Then run mk and mk install
+# For the other libraries you currently need to go in each
+# otherlibs/str otherlibs/unix and otherlibs/threads and run
+# mk; mk install from there.
+
 
 OFILES1=interp.$O misc.$O stacks.$O fix_code.$O startup.$O main.$O \
   freelist.$O major_gc.$O minor_gc.$O memory.$O alloc.$O roots.$O \
@@ -29,7 +36,7 @@ OFILES=$OFILES1 prims.$O
 CC=pcc
 LD=pcc
 # I removed -T because prims.c (a generated file) has wrong signatures 
-# but it's ok
+# but it's ok.
 # I added here some -D_xxx instead of config.h because some files 
 # don't include config.h, so simpler to do it here once and for all.
 CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION
