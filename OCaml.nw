@@ -8908,6 +8908,7 @@ val c_libraries: string
 val command: string -> int
 @
 % =~ Sys.command + -verbose handling. See appendix.
+% Sys.command capture stderr? no.
 
 \subsection{C compilation}
 
@@ -11446,7 +11447,7 @@ void debugger(enum event_kind event)
 \section{Backtraces}
 
 % OCAMLRUNPARAM=b
-% very useful
+% very very very useful
 
 \chapter{Profiling Support}
 

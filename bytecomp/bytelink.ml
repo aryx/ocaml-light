@@ -449,10 +449,8 @@ let link objfiles =
         then raise(Error Custom_runtime);
         append_bytecode_and_cleanup bytecode_name exec_name prim_name
       with x ->
-      (* TODO temporarily keep
         remove_file bytecode_name;
         remove_file prim_name;
-      *)
         raise x
       )
       (*e: [[Bytelink.link()]] if custom runtime *)
