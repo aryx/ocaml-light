@@ -5,6 +5,7 @@
 #   #undef __GNUC__
 #   #undef ARCH_SIXTYFOUR
 #   #undef HAS_TERMCAP
+#   #undef HAS_SETITIMER
 # You also need to modify the utils/config.ml file and adjust
 #   let bytecomp_c_compiler = "pcc "
 #   let c_libraries = ""
@@ -61,13 +62,15 @@ install:V: 8.out libcamlrun.a
     mk install2
 
 install2:V:
-    cp ../ocamlc $ROOT/usr/local/bin/
-    cp ../ocaml $ROOT/usr/local/bin/
-    cp ../lex/ocamllex $ROOT/usr/local/bin/
     cp ../stdlib/*.cm* $ROOT/usr/local/lib/ocaml
     cp ../otherlibs/unix/*.cm* $ROOT/usr/local/lib/ocaml
     cp ../otherlibs/str/*.cm* $ROOT/usr/local/lib/ocaml
     cp ../otherlibs/threads/*.cm* $ROOT/usr/local/lib/ocaml/threads
+
+install3:V:
+    cp ../ocamlc $ROOT/usr/local/bin/
+    cp ../ocaml $ROOT/usr/local/bin/
+    cp ../lex/ocamllex $ROOT/usr/local/bin/
 
 clean:V:
 	rm -f *.[58] [58].out y.tab.? lex.yy.c y.debug y.output  $CLEANFILES
