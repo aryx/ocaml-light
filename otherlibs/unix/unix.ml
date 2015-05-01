@@ -331,9 +331,10 @@ type group_entry =
 external getlogin : unit -> string = "unix_getlogin"
 external getpwnam : string -> passwd_entry = "unix_getpwnam"
 external getgrnam : string -> group_entry = "unix_getgrnam"
+(*
 external getpwuid : int -> passwd_entry = "unix_getpwuid"
 external getgrgid : int -> group_entry = "unix_getgrgid"
-
+*)
 type inet_addr
 
 external inet_addr_of_string : string -> inet_addr
