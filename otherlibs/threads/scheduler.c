@@ -25,8 +25,9 @@
 #include "memory.h"
 #include "signals.h"
 
+//defined(HAS_SETITIMER) && \ for plan9 for now, TODO!!
+
 #if ! (defined(HAS_SELECT) && \
-       defined(HAS_SETITIMER) && \
        defined(HAS_GETTIMEOFDAY) && \
        (defined(HAS_WAITPID) || defined(HAS_WAIT4)))
 #include "Cannot compile libthreads, system calls missing"
