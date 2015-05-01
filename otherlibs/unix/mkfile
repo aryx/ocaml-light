@@ -15,7 +15,7 @@ OFILES=accept.$O access.$O addrofstr.$O alarm.$O bind.$O chdir.$O chmod.$O \
   geteuid.$O getgid.$O  gethost.$O  \
   getlogin.$O getpeername.$O getpid.$O getppid.$O getproto.$O  \
   gettimeofday.$O getserv.$O getsockname.$O getuid.$O \
-  gmtime.$O  kill.$O link.$O listen.$O  lseek.$O mkdir.$O \
+  gmtime.$O itimer.$O  kill.$O link.$O listen.$O  lseek.$O mkdir.$O \
   mkfifo.$O  open.$O opendir.$O pause.$O pipe.$O putenv.$O read.$O \
   readdir.$O readlink.$O rename.$O rewinddir.$O rmdir.$O select.$O sendrecv.$O \
   setgid.$O setsid.$O setuid.$O shutdown.$O sleep.$O socket.$O socketaddr.$O \
