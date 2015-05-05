@@ -1,19 +1,22 @@
 </$objtype/mkfile
 
-# If you want to cross compile ocamlrun and ocamlc, you need to add 
-# this to byterun/config.h
+# If you want to cross compile ocamlrun, you need to add this 
+# to byterun/config.h:
 #   #undef __GNUC__
 #   #undef ARCH_SIXTYFOUR
 #   #undef HAS_TERMCAP
 #   #undef HAS_SETITIMER
-# You also need to modify the utils/config.ml file and adjust
+# If you want to cross compile ocamlc, that is to produce an ocamlc
+# that will work under plan9, ou also need to modify utils/config.ml and put:
 #   let bytecomp_c_compiler = "pcc "
 #   let c_libraries = ""
 #   let ext_obj = ".8"
 # Then run mk and mk install
+#
 # For the other libraries you currently need to go in each
 # otherlibs/str otherlibs/unix and otherlibs/threads and run
 # mk; mk install from there.
+# You also need to comment the call using sigvtalarm in otherlibs/threads/.
 
 
 OFILES1=interp.$O misc.$O stacks.$O fix_code.$O startup.$O main.$O \
@@ -59,7 +62,8 @@ libcamlrun.a: $OFILES1
 
 ROOT=/home/pad/plan9/ROOT
 
-# do not use ../boot/..., use the latest compiled stuff
+# do not use ../boot/...; use the latest compiled stuff
+# don't forget to modify byterun/config.h 
 install:V: 8.out libcamlrun.a
 	cp -f 8.out $ROOT/usr/local/bin/ocamlrun
     cp libcamlrun.a $ROOT/usr/local/lib/ocaml/
@@ -72,7 +76,9 @@ install2:V:
     cp ../otherlibs/str/*.cm* $ROOT/usr/local/lib/ocaml
     cp ../otherlibs/threads/*.cm* $ROOT/usr/local/lib/ocaml/threads
 
-# install the compilers
+# for the otherlibs you need to go in each directory
+
+# install the compilers, don't forget to modify utils/config.ml
 install3:V:
     cp ../ocamlc $ROOT/usr/local/bin/
     cp ../ocaml $ROOT/usr/local/bin/
