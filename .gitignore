@@ -10,6 +10,9 @@ asmrun/*.c
 
 .md5sum_*
 
+# patch -p1 < ...
+*.rej
+
 boot/Saved
 
 /boot/camlheader
