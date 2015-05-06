@@ -50,6 +50,19 @@ let globals = ref ([||] : global_table_entry array) (* Global map *)
 let primitives = ref ([||] : string array)     (* Table of primitives *)
 let objfile = ref false                        (* true if dumping a .zo *)
 
+
+(* Events (indexed by PC) *)
+
+let record_events orig evl =
+  evl |> List.iter  (fun ev ->
+    (*
+    relocate_event orig ev;
+    Hashtbl.add event_table ev.ev_pos ev
+    *)
+    ()
+  )
+    
+
 (* Print a structured constant *)
 
 let rec print_struct_const = function
@@ -320,13 +333,24 @@ let dump_exe ic =
     let (_, sym_table) = (input_value ic : int * (Ident.t, int) Tbl.t) in
     Tbl.iter (fun id pos -> !globals.(pos) <- Global id) sym_table
   end;
+  if debug_size > 0 then begin
+    seek_in ic (trailer_pos - debug_size);
+    let num_eventlists = input_binary_int ic in
+    printf "debug event: %d\n" num_eventlists;
+    for i = 1 to num_eventlists do
+      let orig = input_binary_int ic in
+      printf " orig: %d\n" orig;
+      let evl = (input_value ic : Instruct.debug_event list) in
+      record_events orig evl
+    done
+  end;
   seek_in ic (trailer_pos - debug_size - symbol_size -
               data_size - prim_size - code_size);
   print_code ic code_size
 
 let main() =
   for i = 1 to Array.length Sys.argv - 1 do
-    let ic = open_in_bin Sys.argv.(i) in
+    let ic = open_in Sys.argv.(i) in
     begin try
       objfile := false; dump_exe ic
     with Not_exec ->

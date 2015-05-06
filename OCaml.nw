@@ -1302,7 +1302,7 @@ static void init_atoms(void)
 
 
 \chapter{[[Main.main()]]}
-% main of ocamlc, there is also the main of ocamlrun!
+% main of ocamlc (there is also the main of ocamlrun!)
 
 <<toplevel Main._1>>=
 let _ = 
@@ -7342,6 +7342,9 @@ let compile_only = ref false            (* -c *)
 @
 
 
+% source (.ml) -> 
+% typed AST -> untyped lambda -> bytecode assembly -> 
+% bytecode object (.cmo)
 
 \section{Descriptions and representations}
 % this is very compiler oriented no? not really typing.
@@ -8455,7 +8458,7 @@ type reloc_info =
   | Reloc_primitive of string               (* C primitive number *)
 @
 
-
+% relocation! just like in a regular assembler/linker
 
 
 
@@ -8563,6 +8566,9 @@ let imported_units() = !imported_units
 imported_units := (name, crc) :: !imported_units;
 @
 
+
+
+
 \chapter{Linking}
 
 <<[[Main.process_file()]] cases>>=
@@ -8578,13 +8584,50 @@ let include_dirs = ref ([] : string list)(* -I *)
 "-I", Arg.String(fun dir -> include_dirs := dir :: !include_dirs),
       "<dir>  Add <dir> to the list of include directories";
 @
-
+% to find the .cma
 
 % reput section on linking in the main() chapter
 % and the call to bytelink.link()
 
 \section{Bytecode executable format [[.byte]]}
-% the trailer, see below
+
+<<exec.h toplevel comment>>=
+/*  offset 0 --->  initial junk
+
+                   code block
+                   names of primitives
+                   data block
+                   symbol table
+                   debug infos
+
+                   trailer
+ end of file --->
+*/
+@
+
+<<struct exec_trailer>>=
+struct exec_trailer {
+  unsigned int code_size;      /* Size of the code block (in bytes) */
+  unsigned int prim_size;      /* Size of the primitive table (in bytes) */
+  unsigned int data_size;      /* Size of the global data table (bytes) */
+  unsigned int symbol_size;    /* Size of the symbol table (bytes) */
+  unsigned int debug_size;     /* Size of the debug infos (bytes) */
+  char magic[12];              /* A magic string */
+};
+@
+
+<<constant TRAILER_SIZE>>=
+/* Structure of the trailer.
+   Sizes are 32-bit unsigned integers, big endian */
+
+#define TRAILER_SIZE (5*4+12)
+@
+
+<<constant EXEC_MAGIC>>=
+/* Magic number for this release */
+
+#define EXEC_MAGIC "Caml1999X002"
+@
 
 
 % opcode.opXxx generated automatically from instruct.h?
@@ -8592,7 +8635,7 @@ let include_dirs = ref ([] : string list)(* -I *)
 \section{Basic linking}
 
 <<signature Bytelink.link>>=
-(* Link .cmo files and produce a bytecode executable. *)
+(* Link .cmo/.cma files and produce a bytecode executable. *)
 
 val link: string list -> unit
 @
@@ -8604,7 +8647,7 @@ val link: string list -> unit
 let link objfiles =
   let objfiles = "stdlib.cma" :: (objfiles @ ["std_exit.cmo"]) in
   (match () with
-  | _ when not !Clflags.custom_runtime ->
+  | _ when not !Clflags.custom_runtime && not !Clflags.output_c_object  ->
       link_bytecode objfiles !Clflags.exec_name (*copy_header*)true
   | _ when not !Clflags.output_c_object ->
       <<[[Bytelink.link()]] if custom runtime>>
@@ -8612,7 +8655,7 @@ let link objfiles =
       <<[[Bytelink.link()]] if output obj>>
   )
 @
-
+% I added the not output_c_object in the first case. I think it's needed
 
 
 <<function Bytelink.link_bytecode>>=
@@ -8624,41 +8667,22 @@ let link_bytecode objfiles exec_name copy_header =
                              0o777 exec_name in
   try
     (* Copy the header *)
-    if copy_header then begin
-      try
-        let inchan = open_in (find_in_path !load_path "camlheader") in
-        copy_file inchan outchan;
-        close_in inchan
-      with Not_found | Sys_error _ -> ()
-    end;
+    <<[[link_bytecode()]] copy header>>
 
     (* The bytecode *)
-    let pos1 = pos_out outchan in
-    Symtable.init();
-    Hashtbl.clear crc_interfaces;
-    let output_fun = output_string outchan
-    and currpos_fun () = pos_out outchan - pos1 in
-    tolink |> List.iter (link_file output_fun currpos_fun);
-
-    (* The final STOP instruction *)
-    output_byte outchan Opcodes.opSTOP;
-    output_byte outchan 0; output_byte outchan 0; output_byte outchan 0;
+    <<[[link_bytecode()]] set pos1 and generate bytecode>>
 
     (* The names of all primitives *)
-    let pos2 = pos_out outchan in
-    Symtable.output_primitive_names outchan;
+    <<[[link_bytecode()]] set pos2 and generate primitives>>
 
     (* The table of global data *)
-    let pos3 = pos_out outchan in
-    output_value outchan (Symtable.initial_global_table());
+    <<[[link_bytecode()]] set pos3 and generate global data>>
 
     (* The map of global identifiers *)
-    let pos4 = pos_out outchan in
-    Symtable.output_global_map outchan;
+    <<[[link_bytecode()]] set pos4 and generate symbol table>>
 
     (* Debug info *)
-    let pos5 = pos_out outchan in
-    if !Clflags.debug then output_value outchan !debug_info;
+    <<[[link_bytecode()]] set pos5 and generate debug infos>>
 
     (* The trailer *)
     let pos6 = pos_out outchan in
@@ -8682,11 +8706,61 @@ val exec_magic_number: string
 @
 
 
-\subsection{Standard primitives table}
+\subsection{File optional header [[#!/usr/local/bin/ocamlrun]]}
+
+<<[[link_bytecode()]] copy header>>=
+if copy_header then begin
+  try
+    let inchan = open_in (find_in_path !load_path "camlheader") in
+    copy_file inchan outchan;
+    close_in inchan
+  with Not_found | Sys_error _ -> ()
+end;
+@
+
+\subsection{Bytecode}
+
+<<[[link_bytecode()]] set pos1 and generate bytecode>>=
+let pos1 = pos_out outchan in
+Symtable.init();
+Hashtbl.clear crc_interfaces;
+let output_fun = output_string outchan
+and currpos_fun () = pos_out outchan - pos1 in
+tolink |> List.iter (link_file output_fun currpos_fun);
+
+(* The final STOP instruction *)
+output_byte outchan Opcodes.opSTOP;
+output_byte outchan 0; output_byte outchan 0; output_byte outchan 0;
+@
+
+\subsection{Primitives table}
+
+<<[[link_bytecode()]] set pos2 and generate primitives>>=
+let pos2 = pos_out outchan in
+Symtable.output_primitive_names outchan;
+@
 
 % we let the host linker to do the work when building ocamlrun.
 % we only need to agree on the primitive table, and the
 % file prims.c
+
+\subsection{Globals table}
+
+<<[[link_bytecode()]] set pos3 and generate global data>>=
+let pos3 = pos_out outchan in
+output_value outchan (Symtable.initial_global_table());
+@
+
+\subsection{Symbols table}
+
+<<[[link_bytecode()]] set pos4 and generate symbol table>>=
+let pos4 = pos_out outchan in
+Symtable.output_global_map outchan;
+@
+
+%\subsection{Debug infos}
+% later
+
 
 \section{Safe linking}
 
@@ -8834,10 +8908,8 @@ let prim_name = Filename.temp_file "camlprim" ".c" in
   then raise(Error Custom_runtime);
   append_bytecode_and_cleanup bytecode_name exec_name prim_name
 with x ->
-(* TODO temporarily keep
   remove_file bytecode_name;
   remove_file prim_name;
-*)
   raise x
 )
 @
@@ -9122,6 +9194,12 @@ void caml_startup(argv)
 %\subsection{[[-make-runtime]]}
 % and -use-runtime, but was not in ocaml 1.07 yet
 
+
+
+
+
+
+
 \chapter{Interpreting}
 % Running
 
@@ -9139,6 +9217,7 @@ typedef opcode_t * code_t;
 % for start of array, or for idx in array
 
 % asize_t is in misc.h = int
+% but seems that prog_size is actually not used
 
 \section{[[main()]] (of [[ocamlrun]])}
 
@@ -9153,6 +9232,9 @@ int main(int argc, char **argv)
   return 0; /* not reached */
 }
 @
+% note that having a main() in libcamlrun.a is annoying for 8l.
+% I had to patch 8l to force the loading of libcamlrun.a(main.o).
+
 
 \subsection{[[caml_main()]]}
 
@@ -9192,8 +9274,7 @@ void caml_main(char **argv)
       case FILE_NOT_FOUND:
         fatal_error_arg("Fatal error: cannot find file %s\n", argv[pos]);
         break;
-      case TRUNCATED_FILE:
-      case BAD_MAGIC_NUM:
+      case BAD_BYTECODE:
         fatal_error_arg(
           "Fatal error: the file %s is not a bytecode executable file\n",
           argv[pos]);
@@ -9224,7 +9305,7 @@ void caml_main(char **argv)
     /* Load the globals */
     chan = open_descriptor(fd);
     global_data = input_val(chan);
-    close_channel(chan);
+    close_channel(chan); // close also fd
     /* Ensure that the globals are in the major heap. */
     oldify(global_data, &global_data);
 
@@ -9237,8 +9318,10 @@ void caml_main(char **argv)
     interprete(start_code, trail.code_size);
 
   } else {
-    extern_sp = &exn_bucket; /* The debugger needs the exception value. */
-    debugger(UNCAUGHT_EXC);
+    if (debugger_in_use) {
+      extern_sp = &exn_bucket; /* The debugger needs the exception value. */
+      debugger(UNCAUGHT_EXC);
+    }
     fatal_uncaught_exception(exn_bucket);
   }
 }
@@ -9255,6 +9338,9 @@ static int parse_command_line(char **argv)
 
   for(i = 1; argv[i] != NULL && argv[i][0] == '-'; i++) {
     switch(argv[i][1]) {
+    case 'b':
+      init_backtrace();
+      break;
     <<[[parse_command_line()]] cases>>
     default:
       fatal_error_arg("Unknown option %s.\n", argv[i]);
@@ -9264,45 +9350,10 @@ static int parse_command_line(char **argv)
 }
 @
 
-\subsection{Bytecode executable format}
+\subsection{Bytecode executable format, [[.byte]]}
 % again, but this time in C for ocamlrun to read
 
-<<exec.h toplevel comment>>=
-/*  offset 0 --->  initial junk
-                   code block
-                   names of primitives
-                   data block
-                   symbol table
-                   debug infos
-                   trailer
- end of file --->
-*/
-@
-
-<<constant TRAILER_SIZE>>=
-/* Structure of the trailer.
-   Sizes are 32-bit unsigned integers, big endian */
-
-#define TRAILER_SIZE (5*4+12)
-@
-
-<<struct exec_trailer>>=
-struct exec_trailer {
-  unsigned int code_size;      /* Size of the code block (in bytes) */
-  unsigned int prim_size;      /* Size of the primitive table (in bytes) */
-  unsigned int data_size;      /* Size of the global data table (bytes) */
-  unsigned int symbol_size;    /* Size of the symbol table (bytes) */
-  unsigned int debug_size;     /* Size of the debug infos (bytes) */
-  char magic[12];              /* A magic string */
-};
-@
-
-<<constant EXEC_MAGIC>>=
-/* Magic number for this release */
-
-#define EXEC_MAGIC "Caml1999X002"
-@
-
+% see section in linker
 
 
 \subsection{Loading the executable}
@@ -9310,6 +9361,10 @@ struct exec_trailer {
 \subsection{Initializing}
 
 \section{[[interprete()]]}
+
+% todo: maybe do a simpler version of the interpter
+% without all those ifdef THREADED_CODE acting
+% as a simpler model. Those #else are ugly otherwise.
 
 % // array<opcode>
 <<function interpreter>>=
@@ -9359,6 +9414,7 @@ value interprete(code_t prog, asize_t prog_size)
 % them, so easier to name the intermediate chunks.
 %note: dispatch_instr seems used only for debugger
 
+%less: reorder and group like for instruct.h?
 %coupling? order of labels here must correspond to order
 % of instruct.h? is it an assumption for jumptbl.h to work?
 % I don't think so.
@@ -9505,7 +9561,7 @@ CONSTINT,
 NEGINT, ADDINT, SUBINT, MULINT, DIVINT, MODINT,
 @
 
-% builtins! finally, but handling the special int encoding used
+% builtins! finally, but handling the special int encoding used by ocaml
 <<[[interpreter()]] arithmetics cases>>=
 /* Integer arithmetic */
 
@@ -9588,7 +9644,7 @@ LTINT, LEINT, GTINT, GEINT,
 <<integer arithmetics opcodes>>=
 OFFSETINT, OFFSETREF,
 @
-
+% ????
 
 <<[[interpreter()]] arithmetics cases>>=
     Instruct(OFFSETINT):
@@ -9609,7 +9665,7 @@ OFFSETINT, OFFSETREF,
 % it's about sp mainly (and accu)
 
 <<basic stack operations opcodes>>=
-ACC, 
+ACC,
 PUSH,
 POP, 
 ASSIGN,
@@ -10290,10 +10346,12 @@ RAISE,
     Instruct(RAISE):
     raise_exception:
       if (trapsp >= trap_barrier) debugger(TRAP_BARRIER);
+      if (backtrace_active) stash_backtrace(accu, pc, sp);
       sp = trapsp;
       if ((char *) sp >= (char *) stack_high - initial_sp_offset) {
         exn_bucket = accu;
         external_raise = initial_external_raise;
+        extern_sp = sp;
         siglongjmp(external_raise->buf, 1);
       }
       pc = Trap_pc(sp);
@@ -10522,8 +10580,10 @@ struct longjmp_buffer raise_buf;
 <<[[interprete()]] exception initialisations>>=
 if (sigsetjmp(raise_buf.buf, 1)) {
   local_roots = initial_local_roots;
+  sp = extern_sp;
   callback_depth = initial_callback_depth;
   accu = exn_bucket;
+  pc = NULL;
   goto raise_exception;
 }
 external_raise = &raise_buf;
@@ -11014,6 +11074,7 @@ val cmxa_magic_number: string
 
 \chapter{Debugging Support}
 
+%input: a flag
 <<constant Clflags.debug>>=
 let debug = ref false                   (* -g *)
 @
@@ -11021,30 +11082,24 @@ let debug = ref false                   (* -g *)
 "-g", Arg.Set debug, " Save debugging information";
 @
 
+%output: a debugging section in the executable
+
+% record that have debug table in .byte file (and also in .cmo)
+
+<<[[link_bytecode()]] set pos5 and generate debug infos>>=
+let pos5 = pos_out outchan in
+if !Clflags.debug then output_debug_info outchan;
+@
+
+<<constant Bytelink.debug_info>>=
+(* Relocate and record compilation events *)
+
+let debug_info = ref ([] : (int * string) list)
+@
+
 
 \section{Events}
 
-<<constant Bytelink.debug_info>>=
-(* Second pass: link in the required units *)
-(* Relocate and record compilation events *)
-
-let debug_info = ref ([] : debug_event list list)
-@
-
-
-<<function Bytelink.record_events>>=
-let record_events orig evl =
-  if evl <> [] then begin
-    evl |> List.iter (fun ev ->
-       ev.ev_pos <- orig + ev.ev_pos;
-       (match ev.ev_repr with
-       |  Event_parent repr -> repr := ev.ev_pos
-       | _                 -> ()
-       )
-    );
-    debug_info := evl :: !debug_info
-  end
-@
 
 \subsection{Lambda events}
 
@@ -11068,6 +11123,9 @@ and lambda_event_kind =
 @
 
 \subsection{Instruction events}
+% for .cmo and for .byte
+
+% this will be marshalled directly in the executable
 
 %(* The ce_stack component gives locations of variables residing 
 %   in the stack. The locations are offsets w.r.t. the origin of the
@@ -11089,6 +11147,7 @@ type debug_event =
     ev_module: string;                  (* Name of defining module *)
     ev_char: int;                       (* Location in source file *)
     ev_kind: debug_event_kind;          (* Before/after event *)
+
     ev_info: debug_event_info;          (* Extra information *)
     ev_typenv: unit(*Env.summary*);             (* Typing environment *)
     ev_compenv: compilation_env;        (* Compilation environment *)
@@ -11117,12 +11176,13 @@ and debug_event_repr =
   | Event_child of int ref
 @
 
-\subsection{Bytecode events}
+\subsection{Bytecode object events}
+%  in .cmo?
 
 <<constant Emitcode.events>>=
 (* Debugging events *)
 
-let events = ref ([] : debug_event list)
+let events = ref ([] : Instruct.debug_event list)
 @
 
 <<function Emitcode.record_event>>=
@@ -11130,6 +11190,23 @@ let record_event ev =
   ev.ev_pos <- !out_position;
   events := ev :: !events
 @
+% out_position?
+
+
+\subsection{Bytecode executable events}
+
+% ?? -> <>
+<<function Bytelink.record_events>>=
+@
+
+\section{Backtraces}
+% simpler than debugger, and illustrates some of the use of
+% debug events so can be good to put before the section on the debugger.
+
+% OCAMLRUNPARAM=b
+% very very very useful
+% see fork-efuns on plan9 and Array.get exn, so much easier if have
+% full backtrace.
 
 \section{Interpreter hooks}
 
@@ -11443,11 +11520,6 @@ void debugger(enum event_kind event)
 }
 @
 
-\section{Backtraces}
-
-% OCAMLRUNPARAM=b
-% very very very useful
-
 \section{[[ocamldebug]]}
 
 \chapter{Profiling Support}
@@ -11544,7 +11616,6 @@ void debugger(enum event_kind event)
 
 %compiling
 
-
 <<[[Translcore.transl_exp()]] cases>>=
 | Texp_record_with (init_expr, ((lbl1, _) :: _ as lbl_expr_list)) ->
 
@@ -11560,9 +11631,9 @@ void debugger(enum event_kind event)
       lv.(i) <- Lprim(access, [Lvar init_id])
     done;
 
-    List.iter
-      (fun (lbl, expr) -> lv.(lbl.lbl_pos) <- transl_exp expr)
-      lbl_expr_list;
+    lbl_expr_list |> List.iter (fun (lbl, expr) -> 
+      lv.(lbl.lbl_pos) <- transl_exp expr
+    );
     let ll = Array.to_list lv in
     let mut =
       if List.exists (fun (lbl, expr) -> lbl.lbl_mut = Mutable) lbl_expr_list
@@ -11813,7 +11884,7 @@ let array_function str name =
 #define Double_array_tag 254
 @
 
-\section{Character ranges}
+\section{Character ranges patterns}
 
 <<[[Lexer.token()]] operator cases>>=
 | ".." { DOTDOT }
@@ -11937,7 +12008,7 @@ let noassert = ref false                (* -noassert *)
 @
 %$
 
-% lazy x --> ?
+% lazy x -->  ref (Lazy.Delayed (fun () -> e))
 <<function Parser.mklazy>>=
 let mklazy e =
   let void_pat = mkpat (Ppat_construct (Lident "()", None)) in
@@ -11972,7 +12043,7 @@ let mklazy e =
 /* Another special case: objects */
 #define Object_tag 248
 @
-% delete?
+%todo: delete? yes!
 
 
 <<function Class_val>>=
@@ -12012,6 +12083,8 @@ let thread_safe = ref false             (* -thread *)
 <<[[Main.main()]] command line options>>=
 "-thread", Arg.Set thread_safe, " Use thread-safe standard library";
 @
+
+% needs lots of space to explain the scheduler
 
 \section{Preprocessing}
 
@@ -12071,7 +12144,8 @@ val for_position: string -> int -> string * int * int
 % in linenum.mll
 
 \section{AST files}
-% useful?
+%todo: useful? meh, comment it, so have less noise in ocamlc --help
+
 
 %  let ast = parse_file inputfile Parse.implementation ast_impl_magic_number in
 %  let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
@@ -12345,7 +12419,14 @@ let command cmdline =
     prerr_string cmdline;
     prerr_newline()
   end;
-  Sys.command cmdline
+  let ret = Sys.command cmdline in
+  if !Clflags.verbose then begin
+    prerr_string "- ";
+    prerr_int ret;
+    prerr_newline()
+  end;
+  ret
+  
 @
 
 \section{Dumpers, [[-dxxx]]}
@@ -13145,6 +13226,9 @@ let dump_linear = ref false             (* -dlinear *)
 @
 
 \subsubsection{[[-dcmm]]}
+
+\section{[[dump_obj]]}
+% for .cmo, and also for .byte
 
 \section{Verbose interpreter, [[ocamlrun -v]]}
 

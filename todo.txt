@@ -151,24 +151,6 @@ Date:   Tue Aug 28 14:47:48 2001 +0000
 ?
 
 
-commit 0f0fd99ae2eb7fdc570161725ea8a5001225d651
-Author: Xavier Leroy <xavier.leroy@inria.fr>
-Date:   Tue Feb 27 09:51:24 2001 +0000
-
-    Ajout de backtrace
-
-commit 913d33aa9ec4b999a9fad1f7792bf83d99cda37b
-Author: Xavier Leroy <xavier.leroy@inria.fr>
-Date:   Mon Feb 19 12:40:33 2001 +0000
-
-    Backtrace
-
-commit 4b84fcf843140a9a3f9ccd86036b7a314dcd216a
-Author: Xavier Leroy <xavier.leroy@inria.fr>
-Date:   Mon Feb 19 12:29:00 2001 +0000
-
-    Ajout du backtrace
-
 
 commit ddc93821b88710566a5816f6e3e712bcf8cc3c9d
 ajout assert pour eviter le bug d'alignement des racines

@@ -123,11 +123,12 @@ let scan_file obj_name tolink =
     close_in ic; raise x
 (*e: function Bytelink.scan_file *)
 
-(*s: constant Bytelink.debug_info *)
 (* Second pass: link in the required units *)
+
+(*s: constant Bytelink.debug_info *)
 (* Relocate and record compilation events *)
 
-let debug_info = ref ([] : debug_event list list)
+let debug_info = ref ([] : (int * string) list)
 (*e: constant Bytelink.debug_info *)
 
 (*s: constant Bytelink.crc_interfaces *)
@@ -157,17 +158,6 @@ let check_consistency file_name cu =
 (*e: function Bytelink.check_consistency *)
 
 (*s: function Bytelink.record_events *)
-let record_events orig evl =
-  if evl <> [] then begin
-    evl |> List.iter (fun ev ->
-       ev.ev_pos <- orig + ev.ev_pos;
-       (match ev.ev_repr with
-       |  Event_parent repr -> repr := ev.ev_pos
-       | _                 -> ()
-       )
-    );
-    debug_info := evl :: !debug_info
-  end
 (*e: function Bytelink.record_events *)
 
 (*s: function Bytelink.link_compunit *)
@@ -181,12 +171,33 @@ let link_compunit output_fun currpos_fun inchan file_name compunit =
   Symtable.patch_object code_block compunit.cu_reloc;
   if !Clflags.debug && compunit.cu_debug > 0 then begin
     seek_in inchan compunit.cu_debug;
-    record_events (currpos_fun()) (input_value inchan : debug_event list)
+    let buffer = String.create compunit.cu_debugsize in
+    really_input inchan buffer 0 compunit.cu_debugsize;
+    debug_info := (currpos_fun(), buffer) :: !debug_info
   end;
   output_fun code_block;
   if !Clflags.link_everything then
     List.iter Symtable.require_primitive compunit.cu_primitives
 (*e: function Bytelink.link_compunit *)
+
+
+(* Output the debugging information *)
+(* Format is:
+      <int32>          number of event lists
+      <int32>          offset of first event list
+      <output_value>   first event list
+      ...
+      <int32>          offset of last event list
+      <output_value>   last event list *)
+
+let output_debug_info oc =
+  output_binary_int oc (List.length !debug_info);
+  !debug_info |> List.iter (fun (ofs, evl) -> 
+    output_binary_int oc ofs; 
+    output_string oc evl
+  );
+  debug_info := []
+
 
 (*s: function Bytelink.link_object *)
 (* Link in a .cmo file *)
@@ -240,6 +251,7 @@ let link_bytecode objfiles exec_name copy_header =
                              0o777 exec_name in
   try
     (* Copy the header *)
+    (*s: [[link_bytecode()]] copy header *)
     if copy_header then begin
       try
         let inchan = open_in (find_in_path !load_path "camlheader") in
@@ -247,8 +259,10 @@ let link_bytecode objfiles exec_name copy_header =
         close_in inchan
       with Not_found | Sys_error _ -> ()
     end;
+    (*e: [[link_bytecode()]] copy header *)
 
     (* The bytecode *)
+    (*s: [[link_bytecode()]] set pos1 and generate bytecode *)
     let pos1 = pos_out outchan in
     Symtable.init();
     Hashtbl.clear crc_interfaces;
@@ -259,22 +273,31 @@ let link_bytecode objfiles exec_name copy_header =
     (* The final STOP instruction *)
     output_byte outchan Opcodes.opSTOP;
     output_byte outchan 0; output_byte outchan 0; output_byte outchan 0;
+    (*e: [[link_bytecode()]] set pos1 and generate bytecode *)
 
     (* The names of all primitives *)
+    (*s: [[link_bytecode()]] set pos2 and generate primitives *)
     let pos2 = pos_out outchan in
     Symtable.output_primitive_names outchan;
+    (*e: [[link_bytecode()]] set pos2 and generate primitives *)
 
     (* The table of global data *)
+    (*s: [[link_bytecode()]] set pos3 and generate global data *)
     let pos3 = pos_out outchan in
     output_value outchan (Symtable.initial_global_table());
+    (*e: [[link_bytecode()]] set pos3 and generate global data *)
 
     (* The map of global identifiers *)
+    (*s: [[link_bytecode()]] set pos4 and generate symbol table *)
     let pos4 = pos_out outchan in
     Symtable.output_global_map outchan;
+    (*e: [[link_bytecode()]] set pos4 and generate symbol table *)
 
     (* Debug info *)
+    (*s: [[link_bytecode()]] set pos5 and generate debug infos *)
     let pos5 = pos_out outchan in
-    if !Clflags.debug then output_value outchan !debug_info;
+    if !Clflags.debug then output_debug_info outchan;
+    (*e: [[link_bytecode()]] set pos5 and generate debug infos *)
 
     (* The trailer *)
     let pos6 = pos_out outchan in
@@ -433,7 +456,7 @@ let fix_exec_name name =
 let link objfiles =
   let objfiles = "stdlib.cma" :: (objfiles @ ["std_exit.cmo"]) in
   (match () with
-  | _ when not !Clflags.custom_runtime ->
+  | _ when not !Clflags.custom_runtime && not !Clflags.output_c_object  ->
       link_bytecode objfiles !Clflags.exec_name (*copy_header*)true
   | _ when not !Clflags.output_c_object ->
       (*s: [[Bytelink.link()]] if custom runtime *)

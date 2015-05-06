@@ -73,6 +73,7 @@ struct caml_thread_struct {
   value * trapsp;               /* Saved value of trapsp for this thread */
   struct caml__roots_block * local_roots; /* Saved value of local_roots */
   struct longjmp_buffer * external_raise; /* Saved external_raise */
+// TODO value backtrace_last_exn;
 #endif
 };
 

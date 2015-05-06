@@ -21,6 +21,8 @@
 #include "fail.h"
 #include "misc.h"
 #include "mlvalues.h"
+#include "backtrace.h"
+#include "debugger.h"
 
 /*s: struct stringbuf */
 struct stringbuf {
@@ -92,6 +94,8 @@ void fatal_uncaught_exception(value exn)
   }
   *buf.ptr = 0;              /* Terminate string */
   errprintf("Fatal error: uncaught exception %s\n", buf.data);
+  if (backtrace_active && !debugger_in_use) print_exception_backtrace();
+
   exit(2);
 }
 /*e: function fatal_uncaught_exception */

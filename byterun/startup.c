@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include "alloc.h"
+#include "backtrace.h"
 #include "debugger.h"
 #include "exec.h"
 #include "fail.h"
@@ -38,6 +39,7 @@
 #include "prims.h"
 #include "stacks.h"
 #include "sys.h"
+#include "startup.h"
 
 
 /*s: global atom_table */
@@ -57,6 +59,14 @@ static void init_atoms(void)
 /*s: function read_size */
 /* Read the trailer of a bytecode file */
 
+//static void fixup_endianness_trailer(uint32 * p)
+//{
+//#ifndef ARCH_BIG_ENDIAN
+//  Reverse_32(p, p);
+//#endif
+//}
+
+
 static unsigned long read_size(char * ptr)
 {
   unsigned char * p = (unsigned char *) ptr;
@@ -66,13 +76,10 @@ static unsigned long read_size(char * ptr)
 /*e: function read_size */
 
 /*s: constant FILE_NOT_FOUND */
-#define FILE_NOT_FOUND (-1)
 /*e: constant FILE_NOT_FOUND */
 /*s: constant TRUNCATED_FILE */
-#define TRUNCATED_FILE (-2)
 /*e: constant TRUNCATED_FILE */
 /*s: constant BAD_MAGIC_NUM */
-#define BAD_MAGIC_NUM (-3)
 /*e: constant BAD_MAGIC_NUM */
 
 /*s: function read_trailer */
@@ -81,7 +88,9 @@ static int read_trailer(int fd, struct exec_trailer *trail)
   char buffer[TRAILER_SIZE];
 
   lseek(fd, (long) -TRAILER_SIZE, SEEK_END);
-  if (read(fd, buffer, TRAILER_SIZE) < TRAILER_SIZE) return TRUNCATED_FILE;
+  if (read(fd, buffer, TRAILER_SIZE) < TRAILER_SIZE) 
+    return BAD_BYTECODE;
+  //fixup_endianness_trailer(&trail->num_sections);
   trail->code_size = read_size(buffer);
   trail->prim_size = read_size(buffer + 4);
   trail->data_size = read_size(buffer + 8);
@@ -90,12 +99,12 @@ static int read_trailer(int fd, struct exec_trailer *trail)
   if (strncmp(buffer + 20, EXEC_MAGIC, 12) == 0)
     return 0;
   else
-    return BAD_MAGIC_NUM;
+    return BAD_BYTECODE; // was BAD_MAGIC_NUM
 }
 /*e: function read_trailer */
 
 /*s: function attempt_open */
-static int attempt_open(char **name, struct exec_trailer *trail, int do_open_script)
+int attempt_open(char **name, struct exec_trailer *trail, int do_open_script)
 {
   char * truename;
   int fd;
@@ -103,19 +112,29 @@ static int attempt_open(char **name, struct exec_trailer *trail, int do_open_scr
   char buf [2];
 
   truename = searchpath(*name);
-  if (truename == 0) truename = *name; else *name = truename;
+  if (truename == 0) 
+    truename = *name; 
+  else 
+    *name = truename;
   fd = open(truename, O_RDONLY);
   if (fd == -1) return FILE_NOT_FOUND;
   if (!do_open_script){
     err = read (fd, buf, 2);
-    if (err < 2) { close(fd); return TRUNCATED_FILE; }
-    if (buf [0] == '#' && buf [1] == '!') { close(fd); return BAD_MAGIC_NUM; }
+    if ((err < 2) || (buf [0] == '#' && buf [1] == '!')) { 
+      close(fd); 
+      return BAD_BYTECODE; 
+    }
   }
   err = read_trailer(fd, trail);
-  if (err != 0) { close(fd); return err; }
+  if (err != 0) { 
+    close(fd); 
+    return err; 
+  }
   return fd;
 }
 /*e: function attempt_open */
+
+
 
 /*s: function check_primitives */
 /* Check the primitives used by the bytecode file against the table of
@@ -200,6 +219,9 @@ static int parse_command_line(char **argv)
 
   for(i = 1; argv[i] != NULL && argv[i][0] == '-'; i++) {
     switch(argv[i][1]) {
+    case 'b':
+      init_backtrace();
+      break;
     /*s: [[parse_command_line()]] cases */
     case 'v':
       verbose_init = 1;
@@ -250,6 +272,7 @@ static void parse_camlrunparam(void)
       case 'o': scanmult (opt, &percent_free_init); break;
       case 'O': scanmult (opt, &max_percent_free_init); break;
       case 'v': scanmult (opt, &verbose_init); break;
+      case 'b': init_backtrace(); break;
       }
     }
   }
@@ -294,8 +317,7 @@ void caml_main(char **argv)
       case FILE_NOT_FOUND:
         fatal_error_arg("Fatal error: cannot find file %s\n", argv[pos]);
         break;
-      case TRUNCATED_FILE:
-      case BAD_MAGIC_NUM:
+      case BAD_BYTECODE:
         fatal_error_arg(
           "Fatal error: the file %s is not a bytecode executable file\n",
           argv[pos]);
@@ -326,7 +348,7 @@ void caml_main(char **argv)
     /* Load the globals */
     chan = open_descriptor(fd);
     global_data = input_val(chan);
-    close_channel(chan);
+    close_channel(chan); // close also fd
     /* Ensure that the globals are in the major heap. */
     oldify(global_data, &global_data);
 
@@ -339,8 +361,10 @@ void caml_main(char **argv)
     interprete(start_code, trail.code_size);
 
   } else {
-    extern_sp = &exn_bucket; /* The debugger needs the exception value. */
-    debugger(UNCAUGHT_EXC);
+    if (debugger_in_use) {
+      extern_sp = &exn_bucket; /* The debugger needs the exception value. */
+      debugger(UNCAUGHT_EXC);
+    }
     fatal_uncaught_exception(exn_bucket);
   }
 }

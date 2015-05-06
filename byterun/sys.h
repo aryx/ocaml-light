@@ -20,10 +20,13 @@
 /*s: constant NO_ARG */
 #define NO_ARG Val_int(0)
 /*e: constant NO_ARG */
-void sys_error (value);
-void sys_init (char **);
-value sys_exit (value);
-char * searchpath (char * name);
+extern void sys_error (value);
+extern void sys_init (char **);
+extern value sys_exit (value);
+extern char * searchpath (char * name);
+
+// used also by backtrace.c
+extern char ** caml_main_argv;
 
 #endif /* _sys_ */
 /*e: byterun/sys.h */

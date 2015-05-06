@@ -15,6 +15,7 @@
 /* The bytecode interpreter */
 
 #include "alloc.h"
+#include "backtrace.h"
 #include "callback.h"
 #include "debugger.h"
 #include "fail.h"
@@ -212,8 +213,10 @@ value interprete(code_t prog, asize_t prog_size)
   /*s: [[interprete()]] exception initialisations */
   if (sigsetjmp(raise_buf.buf, 1)) {
     local_roots = initial_local_roots;
+    sp = extern_sp;
     callback_depth = initial_callback_depth;
     accu = exn_bucket;
+    pc = NULL;
     goto raise_exception;
   }
   external_raise = &raise_buf;
@@ -726,10 +729,12 @@ value interprete(code_t prog, asize_t prog_size)
         Instruct(RAISE):
         raise_exception:
           if (trapsp >= trap_barrier) debugger(TRAP_BARRIER);
+          if (backtrace_active) stash_backtrace(accu, pc, sp);
           sp = trapsp;
           if ((char *) sp >= (char *) stack_high - initial_sp_offset) {
             exn_bucket = accu;
             external_raise = initial_external_raise;
+            extern_sp = sp;
             siglongjmp(external_raise->buf, 1);
           }
           pc = Trap_pc(sp);

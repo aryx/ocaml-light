@@ -163,20 +163,20 @@ value sys_getenv(value var)           /* ML */
 /*e: function sys_getenv */
 
 /*s: global main_argv */
-static char ** main_argv;
+char ** caml_main_argv;
 /*e: global main_argv */
 
 /*s: function sys_get_argv */
 value sys_get_argv(value unit)        /* ML */
 {
-  return copy_string_array(main_argv);
+  return copy_string_array(caml_main_argv);
 }
 /*e: function sys_get_argv */
 
 /*s: function sys_init */
 void sys_init(char **argv)
 {
-  main_argv = argv;
+  caml_main_argv = argv;
 }
 /*e: function sys_init */
 

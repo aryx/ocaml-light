@@ -7522,7 +7522,9 @@ let link_compunit output_fun currpos_fun inchan file_name compunit =
   Symtable.patch_object code_block compunit.cu_reloc;
   if !Clflags.debug && compunit.cu_debug > 0 then begin
     seek_in inchan compunit.cu_debug;
-    record_events (currpos_fun()) (input_value inchan : debug_event list)
+    let buffer = String.create compunit.cu_debugsize in
+    really_input inchan buffer 0 compunit.cu_debugsize;
+    debug_info := (currpos_fun(), buffer) :: !debug_info
   end;
   output_fun code_block;
   if !Clflags.link_everything then
@@ -7668,6 +7670,8 @@ module IdentSet = Set
 
 <<function Bytelink.scan_file>>
 
+(* Second pass: link in the required units *)
+
 <<constant Bytelink.debug_info>>
 
 <<constant Bytelink.crc_interfaces>>
@@ -7677,6 +7681,25 @@ module IdentSet = Set
 <<function Bytelink.record_events>>
 
 <<function Bytelink.link_compunit>>
+
+
+(* Output the debugging information *)
+(* Format is:
+      <int32>          number of event lists
+      <int32>          offset of first event list
+      <output_value>   first event list
+      ...
+      <int32>          offset of last event list
+      <output_value>   last event list *)
+
+let output_debug_info oc =
+  output_binary_int oc (List.length !debug_info);
+  !debug_info |> List.iter (fun (ofs, evl) -> 
+    output_binary_int oc ofs; 
+    output_string oc evl
+  );
+  debug_info := []
+
 
 <<function Bytelink.link_object>>
 
@@ -18521,6 +18544,9 @@ extern value global_data;
 
 /* exec.h : format of executable bytecode files */
 
+#ifndef _exec_
+#define _exec_
+
 <<exec.h toplevel comment>>
 
 <<constant TRAILER_SIZE>>
@@ -18528,6 +18554,8 @@ extern value global_data;
 <<struct exec_trailer>>
 
 <<constant EXEC_MAGIC>>
+
+#endif
 
 @
 
@@ -18569,9 +18597,11 @@ extern char * names_of_cprim[];
 
 
 #include "config.h"
+/* <private> */
 #include "gc.h"
 #include "major_gc.h"
 #include "minor_gc.h"
+/* </private> */
 #include "misc.h"
 #include "mlvalues.h"
 
@@ -18592,9 +18622,13 @@ void * stat_resize (void *, asize_t);     /* Size in bytes. */
 <<constant Garbage_collection_function>>
 #endif
 
+/* <private> */
+
 <<function Alloc_small>>
 
 <<function Modify>>
+
+/* </private> */
 
 <<struct caml__roots_block>>
 
@@ -18753,9 +18787,10 @@ extern struct caml__roots_block *local_roots;  /* defined in roots.c */
   (caml__roots_##x.tables [0] = &(x [0])), \
   NULL)
 
-#define CAMLreturn(x) \
+#define CAMLreturn(x) do{ \
   local_roots = caml__frame; \
-  return (x)
+  return (x); \
+}while(0)
 
 /* convenience macro */
 #define Store_field(block, offset, val) modify (&Field (block, offset), val)
@@ -19633,6 +19668,7 @@ int convert_flag_list(value list, int *flags)
 /* The bytecode interpreter */
 
 #include "alloc.h"
+#include "backtrace.h"
 #include "callback.h"
 #include "debugger.h"
 #include "fail.h"
@@ -23489,6 +23525,7 @@ extern unsigned char code_md5[16];
 void load_code (int fd, asize_t len);
 void fixup_endianness (code_t code, asize_t len);
 void set_instruction (code_t pos, opcode_t instr);
+int is_instruction (opcode_t instr1, opcode_t instr2);
 
 #ifdef THREADED_CODE
 extern char ** instr_table;
@@ -23673,6 +23710,15 @@ void set_instruction(code_t pos, opcode_t instr)
 #endif /* THREADED_CODE */
 
 <<function set_instruction>>
+
+int is_instruction(opcode_t instr1, opcode_t instr2)
+{
+#ifdef THREADED_CODE
+  return instr1 == (opcode_t)(instr_table[instr2] - instr_base);
+#else
+  return instr1 == instr2;
+#endif
+}
 
 @
 
@@ -27116,6 +27162,8 @@ void fatal_uncaught_exception(value exn)
   }
   *buf.ptr = 0;              /* Terminate string */
   errprintf("Fatal error: uncaught exception %s\n", buf.data);
+  if (backtrace_active && !debugger_in_use) print_exception_backtrace();
+
   exit(2);
 }
 @
@@ -27135,6 +27183,8 @@ void fatal_uncaught_exception(value exn)
 #include "fail.h"
 #include "misc.h"
 #include "mlvalues.h"
+#include "backtrace.h"
+#include "debugger.h"
 
 <<struct stringbuf>>
 
@@ -27708,10 +27758,13 @@ value bitvect_test(value bv, value n)       /* ML */
 #include "misc.h"
 
 <<constant NO_ARG>>
-void sys_error (value);
-void sys_init (char **);
-value sys_exit (value);
-char * searchpath (char * name);
+extern void sys_error (value);
+extern void sys_init (char **);
+extern value sys_exit (value);
+extern char * searchpath (char * name);
+
+// used also by backtrace.c
+extern char ** caml_main_argv;
 
 #endif /* _sys_ */
 @
@@ -27840,20 +27893,20 @@ value sys_getenv(value var)           /* ML */
 @
 
 <<global main_argv>>=
-static char ** main_argv;
+char ** caml_main_argv;
 @
 
 <<function sys_get_argv>>=
 value sys_get_argv(value unit)        /* ML */
 {
-  return copy_string_array(main_argv);
+  return copy_string_array(caml_main_argv);
 }
 @
 
 <<function sys_init>>=
 void sys_init(char **argv)
 {
-  main_argv = argv;
+  caml_main_argv = argv;
 }
 @
 
@@ -28256,6 +28309,14 @@ value weak_get (value ar, value n)        /* ML */
 <<function read_size>>=
 /* Read the trailer of a bytecode file */
 
+//static void fixup_endianness_trailer(uint32 * p)
+//{
+//#ifndef ARCH_BIG_ENDIAN
+//  Reverse_32(p, p);
+//#endif
+//}
+
+
 static unsigned long read_size(char * ptr)
 {
   unsigned char * p = (unsigned char *) ptr;
@@ -28265,15 +28326,12 @@ static unsigned long read_size(char * ptr)
 @
 
 <<constant FILE_NOT_FOUND>>=
-#define FILE_NOT_FOUND (-1)
 @
 
 <<constant TRUNCATED_FILE>>=
-#define TRUNCATED_FILE (-2)
 @
 
 <<constant BAD_MAGIC_NUM>>=
-#define BAD_MAGIC_NUM (-3)
 @
 
 <<function read_trailer>>=
@@ -28282,7 +28340,9 @@ static int read_trailer(int fd, struct exec_trailer *trail)
   char buffer[TRAILER_SIZE];
 
   lseek(fd, (long) -TRAILER_SIZE, SEEK_END);
-  if (read(fd, buffer, TRAILER_SIZE) < TRAILER_SIZE) return TRUNCATED_FILE;
+  if (read(fd, buffer, TRAILER_SIZE) < TRAILER_SIZE) 
+    return BAD_BYTECODE;
+  //fixup_endianness_trailer(&trail->num_sections);
   trail->code_size = read_size(buffer);
   trail->prim_size = read_size(buffer + 4);
   trail->data_size = read_size(buffer + 8);
@@ -28291,12 +28351,12 @@ static int read_trailer(int fd, struct exec_trailer *trail)
   if (strncmp(buffer + 20, EXEC_MAGIC, 12) == 0)
     return 0;
   else
-    return BAD_MAGIC_NUM;
+    return BAD_BYTECODE; // was BAD_MAGIC_NUM
 }
 @
 
 <<function attempt_open>>=
-static int attempt_open(char **name, struct exec_trailer *trail, int do_open_script)
+int attempt_open(char **name, struct exec_trailer *trail, int do_open_script)
 {
   char * truename;
   int fd;
@@ -28304,16 +28364,24 @@ static int attempt_open(char **name, struct exec_trailer *trail, int do_open_scr
   char buf [2];
 
   truename = searchpath(*name);
-  if (truename == 0) truename = *name; else *name = truename;
+  if (truename == 0) 
+    truename = *name; 
+  else 
+    *name = truename;
   fd = open(truename, O_RDONLY);
   if (fd == -1) return FILE_NOT_FOUND;
   if (!do_open_script){
     err = read (fd, buf, 2);
-    if (err < 2) { close(fd); return TRUNCATED_FILE; }
-    if (buf [0] == '#' && buf [1] == '!') { close(fd); return BAD_MAGIC_NUM; }
+    if ((err < 2) || (buf [0] == '#' && buf [1] == '!')) { 
+      close(fd); 
+      return BAD_BYTECODE; 
+    }
   }
   err = read_trailer(fd, trail);
-  if (err != 0) { close(fd); return err; }
+  if (err != 0) { 
+    close(fd); 
+    return err; 
+  }
   return fd;
 }
 @
@@ -28398,6 +28466,7 @@ static void parse_camlrunparam(void)
       case 'o': scanmult (opt, &percent_free_init); break;
       case 'O': scanmult (opt, &max_percent_free_init); break;
       case 'v': scanmult (opt, &verbose_init); break;
+      case 'b': init_backtrace(); break;
       }
     }
   }
@@ -28468,6 +28537,7 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
 #include <unistd.h>
 
 #include "alloc.h"
+#include "backtrace.h"
 #include "debugger.h"
 #include "exec.h"
 #include "fail.h"
@@ -28483,6 +28553,7 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
 #include "prims.h"
 #include "stacks.h"
 #include "sys.h"
+#include "startup.h"
 
 
 <<global atom_table>>
@@ -28498,6 +28569,8 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
 <<function read_trailer>>
 
 <<function attempt_open>>
+
+
 
 <<function check_primitives>>
 
