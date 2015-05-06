@@ -15,7 +15,7 @@
 % - found deadcode in ocaml itself :) with some still in ocaml 4.00
 %   (all.ml, codegen.ml, a few functions, Ident.equal)
 % - found duplicated code (debug_info)
-% 
+ 
 
 %thx to codemap/codegraph/scheck:
 % - use cg to to look at backward deps (but the linker already enforces layers)
@@ -35,6 +35,7 @@
 % - bootstrapping, so simple, make bootstrap
 % - the -custom, libs, libxxx.a, etc
 % - SEMI setitimer and SIGVTALRM and how to write a user-level scheduler
+% - TODO how a simple thread scheduler works
 
 %history LP-ization:
 % - skeleton, mostly copy paste of Template.nw skeleton
