@@ -11442,12 +11442,12 @@ void debugger(enum event_kind event)
 }
 @
 
-\section{[[ocamldebug]]}
-
 \section{Backtraces}
 
 % OCAMLRUNPARAM=b
 % very very very useful
+
+\section{[[ocamldebug]]}
 
 \chapter{Profiling Support}
 

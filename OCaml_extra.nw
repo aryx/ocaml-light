@@ -17977,6 +17977,8 @@ open Clflags
 
 \section{[[byterun/]]}
 
+% seems to sort #include alphabetically
+
 \subsection*{[[byterun/config.h]]}
 
 <<function bcopy>>=
