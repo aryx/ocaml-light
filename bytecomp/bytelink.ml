@@ -36,9 +36,9 @@ exception Error of error
 
 (*s: type Bytelink.link_action *)
 type link_action =
-    Link_object of string * compilation_unit
+    Link_object of string * Emitcode.compilation_unit
       (* Name of .cmo file and descriptor of the unit *)
-  | Link_archive of string * compilation_unit list
+  | Link_archive of string * Emitcode.compilation_unit list
       (* Name of .cma file and descriptors of the units to be linked. *)
 (*e: type Bytelink.link_action *)
 
@@ -157,9 +157,6 @@ let check_consistency file_name cu =
     cu.cu_imports
 (*e: function Bytelink.check_consistency *)
 
-(*s: function Bytelink.record_events *)
-(*e: function Bytelink.record_events *)
-
 (*s: function Bytelink.link_compunit *)
 (* Link in a compilation unit *)
 
@@ -169,6 +166,7 @@ let link_compunit output_fun currpos_fun inchan file_name compunit =
   let code_block = String.create compunit.cu_codesize in
   really_input inchan code_block 0 compunit.cu_codesize;
   Symtable.patch_object code_block compunit.cu_reloc;
+
   if !Clflags.debug && compunit.cu_debug > 0 then begin
     seek_in inchan compunit.cu_debug;
     let buffer = String.create compunit.cu_debugsize in
@@ -176,11 +174,11 @@ let link_compunit output_fun currpos_fun inchan file_name compunit =
     debug_info := (currpos_fun(), buffer) :: !debug_info
   end;
   output_fun code_block;
-  if !Clflags.link_everything then
-    List.iter Symtable.require_primitive compunit.cu_primitives
+  if !Clflags.link_everything 
+  then compunit.cu_primitives |> List.iter Symtable.require_primitive
 (*e: function Bytelink.link_compunit *)
 
-
+(*s: function Bytelink.output_debug_info *)
 (* Output the debugging information *)
 (* Format is:
       <int32>          number of event lists
@@ -197,6 +195,7 @@ let output_debug_info oc =
     output_string oc evl
   );
   debug_info := []
+(*e: function Bytelink.output_debug_info *)
 
 
 (*s: function Bytelink.link_object *)
@@ -220,14 +219,13 @@ let link_object output_fun currpos_fun file_name compunit =
 let link_archive output_fun currpos_fun file_name units_required =
   let inchan = open_in file_name in
   try
-    List.iter
-      (fun cu ->
-         let name = file_name ^ "(" ^ cu.cu_name ^ ")" in
-         try
-           link_compunit output_fun currpos_fun inchan name cu
-         with Symtable.Error msg ->
-           raise(Error(Symbol_error(name, msg))))
-      units_required;
+    units_required |> List.iter (fun cu ->
+      let name = file_name ^ "(" ^ cu.cu_name ^ ")" in
+      try
+        link_compunit output_fun currpos_fun inchan name cu
+      with Symtable.Error msg ->
+        raise(Error(Symbol_error(name, msg)))
+    );
     close_in inchan
   with x -> close_in inchan; raise x
 (*e: function Bytelink.link_archive *)
