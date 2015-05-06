@@ -4,9 +4,6 @@
 
 ** small but useful
 
-*** { x with ... } nice sugar to have
-annoying otherwise
-
 *** improve error messages
 
 File "asmcomp/selectgen.ml", line 297, characters 1-19293:
@@ -183,6 +180,11 @@ Author: Xavier Leroy <xavier.leroy@inria.fr>
 Date:   Thu Oct 15 16:10:53 1998 +0000
 
     Portage ARM
+
+
+05627e0de4a50067f36d1eca9dcc9ebd5736c3f8
+new ARM backend, backtrace, float, many stuff
+
 
 commit 0f45531954cadaa9f19a73944e8f9574f5fc08ee
 Author: Damien Doligez <damien.doligez-inria.fr>
