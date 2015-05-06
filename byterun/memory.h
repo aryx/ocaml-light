@@ -271,9 +271,10 @@ extern struct caml__roots_block *local_roots;  /* defined in roots.c */
   (caml__roots_##x.tables [0] = &(x [0])), \
   NULL)
 
-#define CAMLreturn(x) \
+#define CAMLreturn(x) do{ \
   local_roots = caml__frame; \
-  return (x)
+  return (x); \
+}while(0)
 
 /* convenience macro */
 #define Store_field(block, offset, val) modify (&Field (block, offset), val)

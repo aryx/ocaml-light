@@ -40,7 +40,7 @@ enum instructions {
 
   /* stack, env, heap, data */
   /*s: basic stack operations opcodes */
-  ACC, 
+  ACC,
   PUSH,
   POP, 
   ASSIGN,

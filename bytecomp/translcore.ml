@@ -566,9 +566,9 @@ let rec transl_exp e =
         lv.(i) <- Lprim(access, [Lvar init_id])
       done;
 
-      List.iter
-        (fun (lbl, expr) -> lv.(lbl.lbl_pos) <- transl_exp expr)
-        lbl_expr_list;
+      lbl_expr_list |> List.iter (fun (lbl, expr) -> 
+        lv.(lbl.lbl_pos) <- transl_exp expr
+      );
       let ll = Array.to_list lv in
       let mut =
         if List.exists (fun (lbl, expr) -> lbl.lbl_mut = Mutable) lbl_expr_list

@@ -13,7 +13,7 @@
 (*e: copyright header *)
 
 (*s: signature Bytelink.link *)
-(* Link .cmo files and produce a bytecode executable. *)
+(* Link .cmo/.cma files and produce a bytecode executable. *)
 
 val link: string list -> unit
 (*e: signature Bytelink.link *)

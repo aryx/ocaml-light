@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dumpobj.ml,v 1.14 1997/06/13 15:53:44 xleroy Exp $ *)
-
 (* Disassembler for executable and .cmo object files *)
 
 open Obj
@@ -266,13 +264,14 @@ let print_reloc (info, pos) =
   | Reloc_setglobal id -> printf "provide\t%s\n" (Ident.name id)
   | Reloc_primitive s -> printf "prim\t%s\n" s
 
-(* Print a .zo file *)
+(* Print a .cmo file *)
 
 let dump_obj filename ic =
   let buffer = String.create (String.length cmo_magic_number) in
   really_input ic buffer 0 (String.length cmo_magic_number);
   if buffer <> cmo_magic_number then begin
-    prerr_endline "Not an object file"; exit 2
+    prerr_endline "Not an object file"; 
+    exit 2
   end;
   let cu_pos = input_binary_int ic in
   seek_in ic cu_pos;
