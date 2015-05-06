@@ -19,9 +19,11 @@
 
 
 #include "config.h"
+/* <private> */
 #include "gc.h"
 #include "major_gc.h"
 #include "minor_gc.h"
+/* </private> */
 #include "misc.h"
 #include "mlvalues.h"
 
@@ -45,6 +47,8 @@ void * stat_resize (void *, asize_t);     /* Size in bytes. */
 #define Garbage_collection_function minor_collection
 /*e: constant Garbage_collection_function */
 #endif
+
+/* <private> */
 
 /*s: function Alloc_small */
 #define Alloc_small(result, wosize, tag) {            Assert (wosize >= 1); \
@@ -82,6 +86,8 @@ void * stat_resize (void *, asize_t);     /* Size in bytes. */
   }                                                                         \
 }                                                                           \
 /*e: function Modify */
+
+/* </private> */
 
 /*s: struct caml__roots_block */
 /*

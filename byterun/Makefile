@@ -34,9 +34,8 @@ install:
 	sed -e '/#include ".*\/m.h/r ../config/m.h' \
             -e '/#include ".*\/s.h/r ../config/s.h' \
             -e '/#include "/d' config.h > $(LIBDIR)/caml/config.h
-	sed -e '/#include ".*gc\.h"/d' \
-	    -e '/#define Alloc_small/,/^}/d' \
-	    -e '/Modify/,/^}/d' memory.h > $(LIBDIR)/caml/memory.h
+	sed -e '/\/\* <private> \*\//,/\/\* <\/private> \*\//d' \
+        memory.h > $(LIBDIR)/caml/memory.h
 
 libcamlrun.a: $(OBJS)
 	ar rc libcamlrun.a $(OBJS)
