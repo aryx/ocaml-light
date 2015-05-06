@@ -11,9 +11,13 @@ let bar x =
   else 3 + foo x
 
 let foobar x =
-  if x = 2
-  then bar x + 3
-  else bar x + 4
+  try 
+    if x = 2
+    then bar x + 3
+    else bar x + 4
+  with
+  | Not_found -> 1
+  | e -> raise e
 
 
 let main () =

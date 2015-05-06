@@ -31,10 +31,14 @@
 #include "sys.h"
 #include "backtrace.h"
 
+// bool
 int backtrace_active = 0;
+
+// value that was thrown in raise
+value backtrace_last_exn = Val_unit;
+
 int backtrace_pos = 0;
 code_t * backtrace_buffer = NULL;
-value backtrace_last_exn = Val_unit;
 #define BACKTRACE_BUFFER_SIZE 1024
 
 /* Location of fields in the Instruct.debug_event record */
@@ -60,10 +64,13 @@ void stash_backtrace(value exn, code_t pc, value * sp)
 {
   code_t end_code = (code_t) ((char *) start_code + code_size);
   if (pc != NULL) pc = pc - 1;
+  // no need Kreraise; if catch and 'raise e' we will reraise with
+  // the same exception value in which case we want the full backtrace
   if (exn != backtrace_last_exn) {
     backtrace_pos = 0;
     backtrace_last_exn = exn;
   }
+  // lazy initialization of backtrace_buffer
   if (backtrace_buffer == NULL) {
     backtrace_buffer = malloc(BACKTRACE_BUFFER_SIZE * sizeof(code_t));
     if (backtrace_buffer == NULL) return;
@@ -71,7 +78,9 @@ void stash_backtrace(value exn, code_t pc, value * sp)
   if (backtrace_pos >= BACKTRACE_BUFFER_SIZE) return;
   backtrace_buffer[backtrace_pos++] = pc;
   for (/*nothing*/; sp < trapsp; sp++) {
+    //todo: could be something other than a return address ...
     code_t p = (code_t) *sp;
+    //todo: enough to make sure it's a pc?
     if (p >= start_code && p < end_code) {
       if (backtrace_pos >= BACKTRACE_BUFFER_SIZE) break;
       backtrace_buffer[backtrace_pos++] = p;
@@ -97,13 +106,14 @@ static value read_debug_info(void)
   exec_name = caml_main_argv[0];
   fd = attempt_open(&exec_name, &trail, 1);
   if (fd < 0) CAMLreturn(Val_false);
-
   if (trail.debug_size == 0) {
     close(fd);
     CAMLreturn(Val_false);
   }
+
   lseek(fd, - (long) (TRAILER_SIZE + trail.debug_size), SEEK_END);
   chan = open_descriptor(fd);
+
   num_events = getword(chan);
   events = alloc(num_events, 0);
   for (i = 0; i < num_events; i++) {
@@ -156,6 +166,7 @@ static void print_location(value events, int index)
   if (is_instruction(*pc, RAISE)) {
     /* Ignore compiler-inserted raise */
     if (ev == Val_false) return;
+
     /* Initial raise if index == 0, re-raise otherwise */
     if (index == 0)
       info = "Raised at";

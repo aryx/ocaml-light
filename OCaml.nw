@@ -8577,17 +8577,21 @@ imported_units := (name, crc) :: !imported_units;
     objfiles := name :: !objfiles
 @
 
-<<constant Clflags.include_dirs>>=
-let include_dirs = ref ([] : string list)(* -I *)
-@
-<<[[Main.main()]] command line options>>=
-"-I", Arg.String(fun dir -> include_dirs := dir :: !include_dirs),
-      "<dir>  Add <dir> to the list of include directories";
-@
-% to find the .cma
 
 % reput section on linking in the main() chapter
 % and the call to bytelink.link()
+
+% linking principles: aggregate the bytecodes in the different .cmo
+% (load and put next to each other), link use to def and relocate
+% jmps.
+
+<<type Bytelink.link_action>>=
+type link_action =
+    Link_object of string * Emitcode.compilation_unit
+      (* Name of .cmo file and descriptor of the unit *)
+  | Link_archive of string * Emitcode.compilation_unit list
+      (* Name of .cma file and descriptors of the units to be linked. *)
+@
 
 \section{Bytecode executable format [[.byte]]}
 
@@ -8615,6 +8619,7 @@ struct exec_trailer {
   char magic[12];              /* A magic string */
 };
 @
+% will talk later about debug infos table
 
 <<constant TRAILER_SIZE>>=
 /* Structure of the trailer.
@@ -8706,17 +8711,55 @@ val exec_magic_number: string
 @
 
 
-\subsection{File optional header [[#!/usr/local/bin/ocamlrun]]}
-
-<<[[link_bytecode()]] copy header>>=
-if copy_header then begin
+<<function Bytelink.scan_file>>=
+let scan_file obj_name tolink =
+  let file_name =
+    try
+      find_in_path !load_path obj_name
+    with Not_found ->
+      raise(Error(File_not_found obj_name)) in
+  let ic = open_in file_name in
   try
-    let inchan = open_in (find_in_path !load_path "camlheader") in
-    copy_file inchan outchan;
-    close_in inchan
-  with Not_found | Sys_error _ -> ()
-end;
+    let buffer = String.create (String.length cmo_magic_number) in
+    really_input ic buffer 0 (String.length cmo_magic_number);
+    if buffer = cmo_magic_number then begin
+      (* This is a .cmo file. It must be linked in any case.
+         Read the relocation information to see which modules it
+         requires. *)
+      let compunit_pos = input_binary_int ic in  (* Go to descriptor *)
+      seek_in ic compunit_pos;
+      let compunit = (input_value ic : compilation_unit) in
+      close_in ic;
+      List.iter add_required compunit.cu_reloc;
+      Link_object(file_name, compunit) :: tolink
+    end
+    else if buffer = cma_magic_number then begin
+      (* This is an archive file. Each unit contained in it will be linked
+         in only if needed. *)
+      let pos_toc = input_binary_int ic in    (* Go to table of contents *)
+      seek_in ic pos_toc;
+      let toc = (input_value ic : compilation_unit list) in
+      close_in ic;
+      let required =
+        List.fold_right
+          (fun compunit reqd ->
+            if compunit.cu_force_link
+            or !Clflags.link_everything
+            or List.exists is_required compunit.cu_reloc
+            then begin
+              List.iter remove_required compunit.cu_reloc;
+              List.iter add_required compunit.cu_reloc;
+              compunit :: reqd
+            end else
+              reqd)
+          toc [] in
+      Link_archive(file_name, required) :: tolink
+    end
+    else raise(Error(Not_an_object_file file_name))
+  with x ->
+    close_in ic; raise x
 @
+%todo: aspectize cma
 
 \subsection{Bytecode}
 
@@ -8733,6 +8776,53 @@ output_byte outchan Opcodes.opSTOP;
 output_byte outchan 0; output_byte outchan 0; output_byte outchan 0;
 @
 
+<<function Bytelink.link_file>>=
+(* Link in a .cmo or .cma file *)
+
+let link_file output_fun currpos_fun = function
+    Link_object(file_name, unit) ->
+      link_object output_fun currpos_fun file_name unit
+  | Link_archive(file_name, units) ->
+      link_archive output_fun currpos_fun file_name units
+@
+%todo: aspectize cma
+
+<<function Bytelink.link_object>>=
+(* Link in a .cmo file *)
+
+let link_object output_fun currpos_fun file_name compunit =
+  let inchan = open_in file_name in
+  try
+    link_compunit output_fun currpos_fun inchan file_name compunit;
+    close_in inchan
+  with
+    Symtable.Error msg ->
+      close_in inchan; raise(Error(Symbol_error(file_name, msg)))
+  | x ->
+      close_in inchan; raise x
+@
+
+<<function Bytelink.link_compunit>>=
+(* Link in a compilation unit *)
+
+let link_compunit output_fun currpos_fun inchan file_name compunit =
+  check_consistency file_name compunit;
+  seek_in inchan compunit.cu_pos;
+  let code_block = String.create compunit.cu_codesize in
+  really_input inchan code_block 0 compunit.cu_codesize;
+  Symtable.patch_object code_block compunit.cu_reloc;
+
+  if !Clflags.debug && compunit.cu_debug > 0 then begin
+    seek_in inchan compunit.cu_debug;
+    let buffer = String.create compunit.cu_debugsize in
+    really_input inchan buffer 0 compunit.cu_debugsize;
+    debug_info := (currpos_fun(), buffer) :: !debug_info
+  end;
+  output_fun code_block;
+  if !Clflags.link_everything 
+  then compunit.cu_primitives |> List.iter Symtable.require_primitive
+@
+
 \subsection{Primitives table}
 
 <<[[link_bytecode()]] set pos2 and generate primitives>>=
@@ -8744,6 +8834,19 @@ Symtable.output_primitive_names outchan;
 % we only need to agree on the primitive table, and the
 % file prims.c
 
+<<signature Symtable.output_primitive_names>>=
+val output_primitive_names: out_channel -> unit
+@
+
+
+<<function Symtable.output_primitive_names>>=
+let output_primitive_names outchan =
+  let prim = all_primitives() in
+  for i = 0 to Array.length prim - 1 do
+    output_string outchan prim.(i); output_char outchan '\000'
+  done
+@
+
 \subsection{Globals table}
 
 <<[[link_bytecode()]] set pos3 and generate global data>>=
@@ -8751,12 +8854,37 @@ let pos3 = pos_out outchan in
 output_value outchan (Symtable.initial_global_table());
 @
 
+<<signature Symtable.initial_global_table>>=
+val initial_global_table: unit -> Obj.t array
+@
+
+<<function Symtable.initial_global_table>>=
+(* Build the initial table of globals *)
+
+let initial_global_table () =
+  let glob = Array.create !global_table.num_cnt (Obj.repr 0) in
+  List.iter
+    (fun (slot, cst) -> glob.(slot) <- transl_const cst)
+    !literal_table;
+  literal_table := [];
+  glob
+@
+
+
 \subsection{Symbols table}
 
 <<[[link_bytecode()]] set pos4 and generate symbol table>>=
 let pos4 = pos_out outchan in
 Symtable.output_global_map outchan;
 @
+
+<<function Symtable.output_global_map>>=
+(* Save the table of globals *)
+
+let output_global_map oc =
+  output_value oc !global_table
+@
+
 
 %\subsection{Debug infos}
 % later
@@ -8796,6 +8924,40 @@ let check_consistency file_name cu =
 
 \section{Archives}
 
+
+<<constant Clflags.include_dirs>>=
+let include_dirs = ref ([] : string list)(* -I *)
+@
+<<[[Main.main()]] command line options>>=
+"-I", Arg.String(fun dir -> include_dirs := dir :: !include_dirs),
+      "<dir>  Add <dir> to the list of include directories";
+@
+% to find the .cma
+
+
+
+
+
+
+
+
+
+\subsection{Archive format, [[.cma]]}
+
+%(* Format of a library file:
+%      magic number (Config.cma_magic_number)
+%      absolute offset of content table
+%      blocks of relocatable bytecode
+%      content table = list of compilation units
+%*)
+
+<<signature Config.cma_magic_number>>=
+val cma_magic_number: string
+        (* Magic number for archive files *)
+@
+
+\subsection{Creating an archive}
+
 <<constant Clflags.make_archive>>=
 let make_archive = ref false            (* -a *)
 @
@@ -8826,20 +8988,45 @@ val create_archive: string list -> string -> unit
 @
 
 
-
-\subsection{Archive format, [[.cma]]}
-
-%(* Format of a library file:
-%      magic number (Config.cma_magic_number)
-%      absolute offset of content table
-%      blocks of relocatable bytecode
-%      content table = list of compilation units
-%*)
-
-<<signature Config.cma_magic_number>>=
-val cma_magic_number: string
-        (* Magic number for archive files *)
+<<function Bytelibrarian.create_archive>>=
+let create_archive file_list lib_name =
+  let outchan = open_out lib_name in
+  try
+    output_string outchan cma_magic_number;
+    let ofs_pos_toc = pos_out outchan in
+    output_binary_int outchan 0;
+    let toc = List.flatten(List.map (copy_object_file outchan) file_list) in
+    let pos_toc = pos_out outchan in
+    output_value outchan toc;
+    seek_out outchan ofs_pos_toc;
+    output_binary_int outchan pos_toc;
+    close_out outchan
+  with x ->
+    close_out outchan;
+    remove_file lib_name;
+    raise x
 @
+
+
+\subsection{Linking an archive}
+
+<<function Bytelink.link_archive>>=
+(* Link in a .cma file *)
+
+let link_archive output_fun currpos_fun file_name units_required =
+  let inchan = open_in file_name in
+  try
+    units_required |> List.iter (fun cu ->
+      let name = file_name ^ "(" ^ cu.cu_name ^ ")" in
+      try
+        link_compunit output_fun currpos_fun inchan name cu
+      with Symtable.Error msg ->
+        raise(Error(Symbol_error(name, msg)))
+    );
+    close_in inchan
+  with x -> close_in inchan; raise x
+@
+%less: with_open_in
 
 \section{Linking with C}
 
@@ -10347,6 +10534,7 @@ RAISE,
     raise_exception:
       if (trapsp >= trap_barrier) debugger(TRAP_BARRIER);
       if (backtrace_active) stash_backtrace(accu, pc, sp);
+      // unwind the stack
       sp = trapsp;
       if ((char *) sp >= (char *) stack_high - initial_sp_offset) {
         exn_bucket = accu;
@@ -11082,21 +11270,48 @@ let debug = ref false                   (* -g *)
 "-g", Arg.Set debug, " Save debugging information";
 @
 
-%output: a debugging section in the executable
+%output: a debugging section in the executable (and before in the cmo's)
 
-% record that have debug table in .byte file (and also in .cmo)
+% we've seen in linking section that the executable has 
+% a debug table (and also in .cmo)
 
 <<[[link_bytecode()]] set pos5 and generate debug infos>>=
 let pos5 = pos_out outchan in
 if !Clflags.debug then output_debug_info outchan;
 @
 
+<<function Bytelink.output_debug_info>>=
+(* Output the debugging information *)
+(* Format is:
+      <int32>          number of event lists
+      <int32>          offset of first event list
+      <output_value>   first event list
+      ...
+      <int32>          offset of last event list
+      <output_value>   last event list *)
+
+let output_debug_info oc =
+  output_binary_int oc (List.length !debug_info);
+  !debug_info |> List.iter (fun (ofs, evl) -> 
+    output_binary_int oc ofs; 
+    output_string oc evl
+  );
+  debug_info := []
+@
+% note that those are event lists! not events
+% it just aggregates the debug_event lists in each .cmo
+% and add the relocation information of its bytecode.
+
 <<constant Bytelink.debug_info>>=
 (* Relocate and record compilation events *)
 
 let debug_info = ref ([] : (int * string) list)
 @
+% the string is really a marshalled debug event list
+% the int is the pos in the aggregated bytecode, for relocation
 
+
+% we need to go from charpos+Module -> event
 
 \section{Events}
 
@@ -11149,11 +11364,13 @@ type debug_event =
     ev_kind: debug_event_kind;          (* Before/after event *)
 
     ev_info: debug_event_info;          (* Extra information *)
-    ev_typenv: unit(*Env.summary*);             (* Typing environment *)
+    ev_typenv: unit(*Env.summary*);     (* Typing environment *)
     ev_compenv: compilation_env;        (* Compilation environment *)
     ev_stacksize: int;                  (* Size of stack frame *)
     ev_repr: debug_event_repr }         (* Position of the representative *)
 @
+% Module + char!! enough for backtrace. and ev_pos (need to be relocated)
+% to find which bytecode corresponds to which event
 
 <<type Instruct.debug_event_kind>>=
 and debug_event_kind =
@@ -11191,13 +11408,14 @@ let record_event ev =
   events := ev :: !events
 @
 % out_position?
-
+% this will be relocated later.
 
 \subsection{Bytecode executable events}
 
-% ?? -> <>
-<<function Bytelink.record_events>>=
-@
+%old:<<function Bytelink.record_events>>=
+% bytelink was doing the relocating, but instead we do
+% it more lazily for instance when loading the debug_infos
+% from the executable
 
 \section{Backtraces}
 % simpler than debugger, and illustrates some of the use of
@@ -11207,6 +11425,9 @@ let record_event ev =
 % very very very useful
 % see fork-efuns on plan9 and Array.get exn, so much easier if have
 % full backtrace.
+
+% reraise handled nicely by using the address of the exn
+% (instead of a special Kreraise as was the case originally)
 
 \section{Interpreter hooks}
 
@@ -11521,6 +11742,8 @@ void debugger(enum event_kind event)
 @
 
 \section{[[ocamldebug]]}
+
+% large, very large.
 
 \chapter{Profiling Support}
 
@@ -12184,6 +12407,20 @@ end
 @
 
 % useful to unit tests? to not depend on lexer/parser?
+
+
+\section{[[#!/usr/local/bin/ocamlrun]]}
+
+<<[[link_bytecode()]] copy header>>=
+if copy_header then begin
+  try
+    let inchan = open_in (find_in_path !load_path "camlheader") in
+    copy_file inchan outchan;
+    close_in inchan
+  with Not_found | Sys_error _ -> ()
+end;
+@
+
 
 \section{Toplevel interpreter}
 
