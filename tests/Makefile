@@ -1,13 +1,19 @@
 
-OCAML=../boot/ocamlrun ../boot/ocamlc -I ../stdlib
-OCAMLOPT=../boot/ocamlrun ../ocamlopt -I ../stdlib
-OCAMLRUN=../boot/ocamlrun
+OCAMLC=../byterun/ocamlrun ../ocamlc -g -I ../stdlib
+OCAMLOPT=../byterun/ocamlrun ../ocamlopt -I ../stdlib
+OCAMLRUN=../byterun/ocamlrun
+
+all: hello.byte backtrace.byte
 
 hello.byte: hello.ml
-	$(OCAML) hello.ml -o hello.byte
+	$(OCAMLC) hello.ml -o hello.byte
 
 hello.opt: hello.ml
 	$(OCAMLOPT) hello.ml -o hello.opt
+
+
+%.byte: %.ml
+	$(OCAMLC) $^ -o $@
 
 
 run:
@@ -18,3 +24,5 @@ clean:
 	rm -f *.byte *.opt 
 
 
+debug:
+	../tools/misc/dumpobj backtrace.byte
