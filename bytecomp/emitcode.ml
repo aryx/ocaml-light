@@ -171,7 +171,7 @@ and slot_for_c_prim name =
 (*s: constant Emitcode.events *)
 (* Debugging events *)
 
-let events = ref ([] : debug_event list)
+let events = ref ([] : Instruct.debug_event list)
 (*e: constant Emitcode.events *)
 
 (*s: function Emitcode.record_event *)

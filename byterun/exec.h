@@ -14,13 +14,18 @@
 
 /* exec.h : format of executable bytecode files */
 
+#ifndef _exec_
+#define _exec_
+
 /*s: exec.h toplevel comment */
 /*  offset 0 --->  initial junk
+
                    code block
                    names of primitives
                    data block
                    symbol table
                    debug infos
+
                    trailer
  end of file --->
 */
@@ -49,5 +54,7 @@ struct exec_trailer {
 
 #define EXEC_MAGIC "Caml1999X002"
 /*e: constant EXEC_MAGIC */
+
+#endif
 
 /*e: byterun/exec.h */

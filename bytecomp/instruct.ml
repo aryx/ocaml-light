@@ -29,6 +29,7 @@ type debug_event =
     ev_module: string;                  (* Name of defining module *)
     ev_char: int;                       (* Location in source file *)
     ev_kind: debug_event_kind;          (* Before/after event *)
+
     ev_info: debug_event_info;          (* Extra information *)
     ev_typenv: unit(*Env.summary*);             (* Typing environment *)
     ev_compenv: compilation_env;        (* Compilation environment *)
