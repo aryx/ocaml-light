@@ -24,7 +24,7 @@ OFILES1=interp.$O misc.$O stacks.$O fix_code.$O startup.$O main.$O \
   fail.$O signals.$O printexc.$O \
   compare.$O ints.$O floats.$O str.$O array.$O io.$O extern.$O intern.$O \
   hash.$O sys.$O meta.$O parsing.$O gc_ctrl.$O terminfo.$O md5.$O obj.$O \
-  lexing.$O callback.$O debugger.$O weak.$O compact.$O 
+  lexing.$O callback.$O debugger.$O weak.$O compact.$O backtrace.$O
 
 BIN=/$objtype/bin
 
@@ -70,6 +70,7 @@ install:V: 8.out libcamlrun.a
     mk install2
 
 # install the portable libraries
+# don't forget to modify otherlibs/threads/thread.ml and the sigvtalarm
 install2:V:
     cp ../stdlib/*.cm* $ROOT/usr/local/lib/ocaml
     cp ../otherlibs/unix/*.cm* $ROOT/usr/local/lib/ocaml
