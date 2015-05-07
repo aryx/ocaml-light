@@ -194,9 +194,72 @@ void print_exception_backtrace(void)
   events = read_debug_info();
   if (events == Val_false) {
     fprintf(stderr,
-            "(Program not linked with -g, cannot print stack backtrace\n");
+            "(Program not linked with -g, cannot print stack backtrace)\n");
     return;
   }
   for (i = 0; i < backtrace_pos; i++)
     print_location(events, i);
 }
+
+
+/* Extract location information for the given PC */
+
+struct loc_info {
+  int loc_valid;
+  int loc_is_raise;
+  char * loc_modname;
+  int loc_charpos;
+};
+
+static void extract_location_info(value events, code_t pc,
+                                  /*out*/ struct loc_info * li)
+{
+  value ev;
+
+  ev = event_for_location(events, pc);
+  li->loc_is_raise = is_instruction(*pc, RAISE);
+  if (ev == Val_false) {
+    li->loc_valid = 0;
+    return;
+  }
+  li->loc_valid = 1;
+
+  li->loc_modname = String_val(Field(ev, EV_MODULE));
+  li->loc_charpos = Int_val(Field(ev, EV_CHAR));
+}
+
+
+/* Convert the backtrace to a data structure usable from Caml */
+
+value caml_get_exception_backtrace(value unit) /* ML */
+{
+  CAMLparam0();
+  CAMLlocal5(events, res, arr, p, fname);
+  int i;
+  struct loc_info li;
+
+  events = read_debug_info();
+  if (events == Val_false) {
+    res = Val_int(0);           /* None */
+  } else {
+    arr = alloc(backtrace_pos, 0);
+    for (i = 0; i < backtrace_pos; i++) {
+      extract_location_info(events, backtrace_buffer[i], &li);
+      if (li.loc_valid) {
+        fname = copy_string(li.loc_modname);
+        p = alloc_small(3, 0);
+        Field(p, 0) = Val_bool(li.loc_is_raise);
+        Field(p, 1) = fname;
+        Field(p, 2) = Val_int(li.loc_charpos);
+      } else {
+        p = alloc_small(1, 1);
+        Field(p, 0) = Val_bool(li.loc_is_raise);
+      }
+      Modify(&Field(arr, i), p);
+    }
+    res = alloc_small(1, 0); 
+    Field(res, 0) = arr; /* Some */
+  }
+  CAMLreturn(res);
+}
+

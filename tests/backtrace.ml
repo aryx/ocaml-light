@@ -17,8 +17,11 @@ let foobar x =
     else bar x + 4
   with
   | Not_found -> 1
-  | e -> raise e
-
+  | e -> 
+    let s = Printexc.get_backtrace () in
+    print_string s;
+    (*raise e *)
+    2
 
 let main () =
   foobar 1 + 
