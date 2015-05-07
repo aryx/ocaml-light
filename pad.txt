@@ -114,11 +114,26 @@ Then I backported a few things from a more recent ocaml distribution:
  - the items listed below
 
 
+    Objective Caml 3.11.0:
+    ----------------------
+    
+    Standard library:
+    - Printexc library: new functions "print_backtrace" and "get_backtrace"
+      to obtain a stack backtrace of the most recently raised exception.
+      New function "record_backtrace" to turn the exception backtrace mechanism
+      on or off from within a program.
+      !PARTIAL!
+
     Objective Caml 3.01:
     --------------------
     Standard library:
     - Module Hashtbl: added Hashtbl.replace.
      !PARTIAL! the DS does not have the size field, so I commented out some code
+
+    Bytecode compiler and bytecode interpreter:
+    - Print stack backtrace when a program aborts due to an uncaught exception
+      (requires compilation with -g and running with ocamlrun -b or
+       OCAMLRUNPARAM="b=1").
     
     Objective Caml 3.00:
     --------------------
