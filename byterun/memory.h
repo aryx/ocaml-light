@@ -245,19 +245,19 @@ extern struct caml__roots_block *local_roots;  /* defined in roots.c */
 
 #define CAMLlocal2(x, y) \
   value x = Val_unit, y = Val_unit; \
-  CAMLxparam1 (x, y)
+  CAMLxparam2 (x, y)
 
 #define CAMLlocal3(x, y, z) \
   value x = Val_unit, y = Val_unit, z = Val_unit; \
-  CAMLxparam1 (x, y, z)
+  CAMLxparam3 (x, y, z)
 
 #define CAMLlocal4(x, y, z, t) \
   value x = Val_unit, y = Val_unit, z = Val_unit, t = Val_unit; \
-  CAMLxparam1 (x, y, z, t)
+  CAMLxparam4 (x, y, z, t)
 
 #define CAMLlocal5(x, y, z, t, u) \
   value x = Val_unit, y = Val_unit, z = Val_unit, t = Val_unit, u = Val_unit; \
-  CAMLxparam1 (x, y, z, t, u)
+  CAMLxparam5 (x, y, z, t, u)
 
 #define CAMLlocalN(x, size) \
   value x [(size)] = { NULL }; \

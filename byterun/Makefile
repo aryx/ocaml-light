@@ -15,7 +15,7 @@ DOBJS=$(OBJS:.o=.d.o) instrtrace.d.o
 
 PRIMS=array.c compare.c extern.c floats.c gc_ctrl.c hash.c \
   intern.c interp.c ints.c io.c lexing.c md5.c meta.c obj.c parsing.c \
-  signals.c str.c sys.c terminfo.c callback.c weak.c
+  signals.c str.c sys.c terminfo.c callback.c weak.c backtrace.c
 
 all: ocamlrun
 

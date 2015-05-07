@@ -16,10 +16,10 @@ OBJS=pervasives.cmo list.cmo char.cmo string.cmo array.cmo sys.cmo \
   hashtbl.cmo sort.cmo filename.cmo marshal.cmo obj.cmo \
   lexing.cmo parsing.cmo \
   set.cmo map.cmo stack.cmo queue.cmo stream.cmo \
-  printf.cmo format.cmo arg.cmo printexc.cmo gc.cmo \
+  printf.cmo format.cmo arg.cmo gc.cmo \
   digest.cmo random.cmo genlex.cmo callback.cmo weak.cmo \
   lazy.cmo \
-  buffer.cmo
+  buffer.cmo printexc.cmo 
 
 all: stdlib.cma std_exit.cmo camlheader
 
