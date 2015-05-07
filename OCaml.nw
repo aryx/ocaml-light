@@ -452,6 +452,10 @@ let nopervasives = ref false            (* -nopervasives *)
 % stdlib.cma and std_exit.cmo at the standard place (/usr/local/lib/ocaml).
 % And that's it!
 
+% take care if modify stdlib/ and for instance adds use of builtins
+% (e.g. when I added Printexc.get_backtrace using some new builtins
+% in backtrace.c). Do not make clean! instead make bootstrap.
+
 %###############################################################################
 
 \chapter{Core Data Structures}
