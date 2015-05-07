@@ -21664,13 +21664,6 @@ static void hash_aux(value obj)
 
 \subsection*{[[byterun/stacks.h]]}
 
-<<function Trap_pc>>=
-#define Trap_pc(tp) (((code_t *)(tp))[0])
-@
-
-<<function Trap_link>>=
-#define Trap_link(tp) (((value **)(tp))[1])
-@
 
 
 %-------------------------------------------------------------
