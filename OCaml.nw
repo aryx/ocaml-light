@@ -10502,6 +10502,8 @@ UPDATE,
 
 \subsection{Exceptions}
 
+% saw important trapsp "register" before.
+
 <<exception opcodes>>=
 PUSHTRAP, 
 POPTRAP, 
@@ -10513,6 +10515,7 @@ RAISE,
 
     Instruct(PUSHTRAP):
       sp -= 4;
+      // push
       Trap_pc(sp) = pc + *pc;
       Trap_link(sp) = trapsp;
       sp[2] = env;
@@ -10542,16 +10545,26 @@ RAISE,
         extern_sp = sp;
         siglongjmp(external_raise->buf, 1);
       }
+      // restore
       pc = Trap_pc(sp);
       trapsp = Trap_link(sp);
       env = sp[2];
       extra_args = Long_val(sp[3]);
+
       sp += 4;
       Next;
 @
 %TODO: poptrap is better in more recent version of ocaml,
 % there is a comment that seems to indicate it better handles
 % signals
+
+<<function Trap_pc>>=
+#define Trap_pc(tp) (((code_t *)(tp))[0])
+@
+<<function Trap_link>>=
+#define Trap_link(tp) (((value **)(tp))[1])
+@
+% useful? could instead replace by sp[0] = ... no?
 
 \subsection{Foreign C calls}
 
