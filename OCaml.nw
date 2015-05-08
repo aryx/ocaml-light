@@ -8597,6 +8597,7 @@ type link_action =
       (* Name of .cma file and descriptors of the units to be linked. *)
 @
 
+
 \section{Bytecode executable format [[.byte]]}
 
 <<exec.h toplevel comment>>=
@@ -9068,6 +9069,10 @@ val ext_lib: string
 \subsection{Foreign function interface}
 % ffi
 
+% dont forget  CAMLreturn0;!!
+% otherwise local_roots is not restored and so point to
+% a local frame that actually has been deallocated.
+
 \subsection{[[-custom]]}
 
 % I put in section about linking with C and not in advanced
@@ -9290,6 +9295,8 @@ let create_archive archive file_list =
 val ranlib: string
         (* Command to randomize a library, or "" if not needed *)
 @
+
+
 
 \section{Advanced linking issues}
 
