@@ -24,7 +24,7 @@ test_foreign.byte: foreign.o test_foreign.cmo
 	$(OCAMLC) -c $^
 
 %.o: %.c
-	gcc -I/usr/local/lib/ocaml -c $^
+	gcc -g -I/usr/local/lib/ocaml -c $^
 
 
 run:
