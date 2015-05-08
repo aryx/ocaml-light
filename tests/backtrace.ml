@@ -1,3 +1,9 @@
+
+(* Test printing the backtrace of an ocaml exception.
+ * See also test_foreign.ml which does this for exceptions
+ * thrown from C code.
+ *)
+
 let foo x =
   if x = 1
   then 
