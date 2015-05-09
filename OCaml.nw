@@ -10513,6 +10513,8 @@ UPDATE,
 
 \subsection{Exceptions}
 
+% can raise exn from .ml, but also from .c
+
 % saw important trapsp "register" before.
 
 <<exception opcodes>>=
@@ -10576,6 +10578,10 @@ RAISE,
 #define Trap_link(tp) (((value **)(tp))[1])
 @
 % useful? could instead replace by sp[0] = ... no?
+
+
+% will explain many things later
+
 
 \subsection{Foreign C calls}
 
@@ -10785,21 +10791,6 @@ initial_callback_depth = callback_depth;
 @
 
 
-<<[[interprete()]] other local variables>>=
-struct longjmp_buffer raise_buf;
-@
-% for exn
-<<[[interprete()]] exception initialisations>>=
-if (sigsetjmp(raise_buf.buf, 1)) {
-  local_roots = initial_local_roots;
-  sp = extern_sp;
-  callback_depth = initial_callback_depth;
-  accu = exn_bucket;
-  pc = NULL;
-  goto raise_exception;
-}
-external_raise = &raise_buf;
-@
 
 
 \section{Memory allocation}
@@ -11053,6 +11044,120 @@ void change_max_stack_size (long unsigned int new_max_size)
   max_stack_size = new_max_size;
 }
 @
+
+
+\section{Exceptions}
+
+\subsection{[[setlongmjp()]]}
+
+% this is the basic block to build on to support exception.
+% long jump!
+
+% maybe can do a reminder
+
+\subsection{[[raise_buf]] and [[external_raise]]}
+
+<<global external_raise>>=
+struct longjmp_buffer * external_raise;
+@
+
+
+
+<<struct longjmp_buffer>>=
+struct longjmp_buffer {
+  sigjmp_buf buf;
+};
+@
+
+<<[[interprete()]] other local variables>>=
+struct longjmp_buffer raise_buf;
+@
+% for exn
+<<[[interprete()]] exception initialisations>>=
+if (sigsetjmp(raise_buf.buf, 1)) {
+  local_roots = initial_local_roots;
+  sp = extern_sp;
+  callback_depth = initial_callback_depth;
+  accu = exn_bucket;
+  pc = NULL;
+  goto raise_exception;
+}
+external_raise = &raise_buf;
+@
+
+<<global exn_bucket>>=
+value exn_bucket;
+@
+
+
+
+\subsection{[[mlraise()]]}
+
+
+<<function mlraise>>=
+void mlraise(value v)
+{
+  Assert(! async_signal_mode);
+  Unlock_exn();
+  exn_bucket = v;
+  siglongjmp(external_raise->buf, 1);
+}
+@
+
+
+\subsection{[[failwith()]] and basic exceptions}
+
+<<function failwith>>=
+void failwith (char *msg)
+{
+  raise_with_string(Field(global_data, FAILURE_EXN), msg);
+}
+@
+
+<<function invalid_argument>>=
+void invalid_argument (char *msg)
+{
+  raise_with_string(Field(global_data, INVALID_EXN), msg);
+}
+@
+
+
+<<constant OUT_OF_MEMORY_EXN>>=
+#define OUT_OF_MEMORY_EXN 0     /* "Out_of_memory" */
+@
+
+<<constant SYS_ERROR_EXN>>=
+#define SYS_ERROR_EXN 1         /* "Sys_error" */
+@
+
+<<constant FAILURE_EXN>>=
+#define FAILURE_EXN 2           /* "Failure" */
+@
+
+<<constant INVALID_EXN>>=
+#define INVALID_EXN 3           /* "Invalid_argument" */
+@
+
+<<constant END_OF_FILE_EXN>>=
+#define END_OF_FILE_EXN 4       /* "End_of_file" */
+@
+
+<<constant ZERO_DIVIDE_EXN>>=
+#define ZERO_DIVIDE_EXN 5       /* "Division_by_zero" */
+@
+
+<<constant NOT_FOUND_EXN>>=
+#define NOT_FOUND_EXN 6         /* "Not_found" */
+@
+
+<<constant MATCH_FAILURE_EXN>>=
+#define MATCH_FAILURE_EXN 7     /* "Match_failure" */
+@
+
+<<constant STACK_OVERFLOW_EXN>>=
+#define STACK_OVERFLOW_EXN 8    /* "Stack_overflow" */
+@
+
 
 
 \section{Primitives}

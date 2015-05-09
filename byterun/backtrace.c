@@ -244,6 +244,13 @@ value caml_get_exception_backtrace(value unit) /* ML */
   } else {
     arr = alloc(backtrace_pos, 0);
     for (i = 0; i < backtrace_pos; i++) {
+
+      if (backtrace_buffer[i] == NULL) {
+        // raised from A function, do not call extract_location_info
+        // otherwise you'll get a segfault if pass NULL
+        p = alloc_small(1, 1);
+        Field(p, 0) = Val_bool(0);
+      } else {
       extract_location_info(events, backtrace_buffer[i], &li);
       if (li.loc_valid) {
         fname = copy_string(li.loc_modname);
@@ -254,6 +261,7 @@ value caml_get_exception_backtrace(value unit) /* ML */
       } else {
         p = alloc_small(1, 1);
         Field(p, 0) = Val_bool(li.loc_is_raise);
+      }
       }
       Modify(&Field(arr, i), p);
     }

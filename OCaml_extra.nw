@@ -23039,47 +23039,7 @@ static char * extern_limit;
 
 \subsection*{[[byterun/fail.h]]}
 
-<<constant OUT_OF_MEMORY_EXN>>=
-#define OUT_OF_MEMORY_EXN 0     /* "Out_of_memory" */
-@
 
-<<constant SYS_ERROR_EXN>>=
-#define SYS_ERROR_EXN 1         /* "Sys_error" */
-@
-
-<<constant FAILURE_EXN>>=
-#define FAILURE_EXN 2           /* "Failure" */
-@
-
-<<constant INVALID_EXN>>=
-#define INVALID_EXN 3           /* "Invalid_argument" */
-@
-
-<<constant END_OF_FILE_EXN>>=
-#define END_OF_FILE_EXN 4       /* "End_of_file" */
-@
-
-<<constant ZERO_DIVIDE_EXN>>=
-#define ZERO_DIVIDE_EXN 5       /* "Division_by_zero" */
-@
-
-<<constant NOT_FOUND_EXN>>=
-#define NOT_FOUND_EXN 6         /* "Not_found" */
-@
-
-<<constant MATCH_FAILURE_EXN>>=
-#define MATCH_FAILURE_EXN 7     /* "Match_failure" */
-@
-
-<<constant STACK_OVERFLOW_EXN>>=
-#define STACK_OVERFLOW_EXN 8    /* "Stack_overflow" */
-@
-
-<<struct longjmp_buffer>>=
-struct longjmp_buffer {
-  sigjmp_buf buf;
-};
-@
 
 
 %-------------------------------------------------------------
@@ -23138,23 +23098,7 @@ void fatal_uncaught_exception (value) Noreturn;
 
 \subsection*{[[byterun/fail.c]]}
 
-<<global external_raise>>=
-struct longjmp_buffer * external_raise;
-@
 
-<<global exn_bucket>>=
-value exn_bucket;
-@
-
-<<function mlraise>>=
-void mlraise(value v)
-{
-  Assert(! async_signal_mode);
-  Unlock_exn();
-  exn_bucket = v;
-  siglongjmp(external_raise->buf, 1);
-}
-@
 
 <<function raise_constant>>=
 void raise_constant(value tag)
@@ -23189,20 +23133,6 @@ void raise_with_string(value tag, char *msg)
     vmsg = copy_string(msg);
   End_roots();
   raise_with_arg(tag, vmsg);
-}
-@
-
-<<function failwith>>=
-void failwith (char *msg)
-{
-  raise_with_string(Field(global_data, FAILURE_EXN), msg);
-}
-@
-
-<<function invalid_argument>>=
-void invalid_argument (char *msg)
-{
-  raise_with_string(Field(global_data, INVALID_EXN), msg);
 }
 @
 
