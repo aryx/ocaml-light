@@ -185,6 +185,10 @@ Then I backported a few things from a more recent ocaml distribution:
         mktime, utimes.
       - Added putenv.
 
+    * ocamllex:
+      - Added "let <id> = <regexp>" to name regular expressions
+        (inspired by Christian Lindig's patch).
+
     * The str library: added Str.quote, Str.regexp_string,
       Str.regexp_string_case_fold.
 
