@@ -777,6 +777,8 @@ SRC_VIEWS= \
   ./driver/opterrors.ml\
   ./driver/optmain.ml\
 
+# lex/* is synced with plan9/generator/CompilerGenerator.nw
+
 sync::
 	$(MAKE) sync2
 	@echo do not forget also make sync_c
@@ -864,4 +866,5 @@ SRC_VIEWS_C=\
 SYNCWEB_C=~/github/syncweb/syncweb.opt -md5sum_in_auxfile -less_marks -lang C
 sync_c:
 	for i in $(SRC_VIEWS_C); do echo $$i; $(SYNCWEB_C) $(SRC_ORIG) $$i || exit 1; done 
+
 

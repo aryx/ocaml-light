@@ -29,6 +29,8 @@
 %thx to this manual, better understand OCaml?:
 % - TODO how a gc works, the root
 % - SEMI how values are represented at runtime, the Obj module
+%   for a long time I didn't have a good idea of how (Foo 1) was
+%   represented in memory exactly
 % - TODO how compiler backends work (register, liveness, etc)
 % - how type inference works in caml itself,
 %   type schema, generalization, instantiation, value restriction (partially)
@@ -11012,7 +11014,7 @@ static char *expand_heap (mlsize_t request)
 }
 @
 
-\section{Stack}
+\section{Stack managment}
 
 <<global stack_low>>=
 value * stack_low;
@@ -12518,14 +12520,16 @@ let mklazy e =
 #define Oid_val(val) Long_val(Field(val, 1))
 @
 
+\section{Functors}
 
-\chapter{Advanced Topics}
+\chapter{Standard Librairies}
 
+\section{[[Pervasives]]}
 
-<<constant Clflags.optimize_for_speed>>=
-let optimize_for_speed = ref true       (* -compact *)
-@
-
+\section{Marshalling}
+% very useful, used a lot actually in the compiler itself
+% to store marshalled values in the .cmo. Also for the debugger
+% and backtrace metadata.
 
 \section{Threads}
 
@@ -12538,10 +12542,12 @@ let thread_safe = ref false             (* -thread *)
 
 % needs lots of space to explain the scheduler
 
-\section{Marshalling}
-% very useful, used a lot actually in the compiler itself
-% to store marshalled values in the .cmo. Also for the debugger
-% and backtrace metadata.
+\chapter{Advanced Topics}
+
+
+<<constant Clflags.optimize_for_speed>>=
+let optimize_for_speed = ref true       (* -compact *)
+@
 
 \section{Printing types, [[-i]]}
 
@@ -13740,6 +13746,10 @@ case 'v': scanmult (opt, &verbose_init); break;
 @
 
 \section{Tracing interpreter, [[ocamlrun -t]]}
+
+% but available only when recompiled because
+% has a cost and didn't want to pay this cost
+% for the regular interpreter.
 
 <<[[parse_command_line()]] cases>>=
 #ifdef DEBUG
