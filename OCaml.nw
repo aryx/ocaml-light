@@ -8725,9 +8725,10 @@ let scan_file obj_name tolink =
       raise(Error(File_not_found obj_name)) in
   let ic = open_in file_name in
   try
-    let buffer = String.create (String.length cmo_magic_number) in
-    really_input ic buffer 0 (String.length cmo_magic_number);
-    if buffer = cmo_magic_number then begin
+    let buffer = String.create (String.length Config.cmo_magic_number) in
+    really_input ic buffer 0 (String.length Config.cmo_magic_number);
+    match buffer with
+    | _ when buffer = Config.cmo_magic_number ->
       (* This is a .cmo file. It must be linked in any case.
          Read the relocation information to see which modules it
          requires. *)
@@ -8737,8 +8738,8 @@ let scan_file obj_name tolink =
       close_in ic;
       List.iter add_required compunit.cu_reloc;
       Link_object(file_name, compunit) :: tolink
-    end
-    else if buffer = cma_magic_number then begin
+
+    | _ when buffer = cma_magic_number ->
       (* This is an archive file. Each unit contained in it will be linked
          in only if needed. *)
       let pos_toc = input_binary_int ic in    (* Go to table of contents *)
@@ -8749,18 +8750,18 @@ let scan_file obj_name tolink =
         List.fold_right
           (fun compunit reqd ->
             if compunit.cu_force_link
-            or !Clflags.link_everything
-            or List.exists is_required compunit.cu_reloc
+            <<[[Bytelink.scan_file()]] in archive case, linking condition>>
+            || List.exists is_required compunit.cu_reloc
             then begin
               List.iter remove_required compunit.cu_reloc;
               List.iter add_required compunit.cu_reloc;
               compunit :: reqd
             end else
               reqd)
-          toc [] in
+          toc [] 
+      in
       Link_archive(file_name, required) :: tolink
-    end
-    else raise(Error(Not_an_object_file file_name))
+    | _ -> raise(Error(Not_an_object_file file_name))
   with x ->
     close_in ic; raise x
 @
@@ -8807,6 +8808,7 @@ let link_object output_fun currpos_fun file_name compunit =
       close_in inchan; raise x
 @
 
+% link_object -> <>
 <<function Bytelink.link_compunit>>=
 (* Link in a compilation unit *)
 
@@ -8824,8 +8826,7 @@ let link_compunit output_fun currpos_fun inchan file_name compunit =
     debug_info := (currpos_fun(), buffer) :: !debug_info
   end;
   output_fun code_block;
-  if !Clflags.link_everything 
-  then compunit.cu_primitives |> List.iter Symtable.require_primitive
+  <<[[Bytelink.link_compunit()]] if link everything require primitives>>
 @
 
 \subsection{Primitives table}
@@ -9011,6 +9012,56 @@ let create_archive file_list lib_name =
     remove_file lib_name;
     raise x
 @
+
+
+% create_archive -> <>
+<<function Bytelibrarian.copy_object_file>>=
+let copy_object_file oc name =
+  let file_name =
+    try
+      find_in_path !load_path name
+    with Not_found ->
+      raise(Error(File_not_found name)) in
+  let ic = open_in file_name in
+  try
+    let buffer = String.create (String.length cmo_magic_number) in
+    really_input ic buffer 0 (String.length cmo_magic_number);
+    if buffer = cmo_magic_number then begin
+      let compunit_pos = input_binary_int ic in
+      seek_in ic compunit_pos;
+      let compunit = (input_value ic : compilation_unit) in
+      copy_compunit ic oc compunit;
+      close_in ic;
+      [compunit]
+    end else
+    if buffer = cma_magic_number then begin
+      let toc_pos = input_binary_int ic in
+      seek_in ic toc_pos;
+      let toc = (input_value ic : compilation_unit list) in
+      List.iter (copy_compunit ic oc) toc;
+      close_in ic;
+      toc
+    end else
+      raise(Error(Not_an_object_file file_name))
+  with x ->
+    close_in ic;
+    raise x
+@
+
+% copy_object_file -> <>
+<<function Bytelibrarian.copy_compunit>>=
+let copy_compunit ic oc compunit =
+  seek_in ic compunit.cu_pos;
+  compunit.cu_pos <- pos_out oc;
+  <<[[Bytelibrarian.copy_compunit()]] set cu_force_link if link everything>>
+  copy_file_chunk ic oc compunit.cu_codesize;
+  if compunit.cu_debug > 0 then begin
+    seek_in ic compunit.cu_debug;
+    compunit.cu_debug <- pos_out oc;
+    copy_file_chunk ic oc compunit.cu_debugsize
+  end
+@
+
 
 
 \subsection{Linking an archive}
@@ -9311,12 +9362,31 @@ let link_everything = ref false         (* -linkall *)
       " Link all modules, even unused ones";
 @
 
-% useful for modules that are plugins, like mmm/Viewers/plain.ml
+% useful for modules that are plugins, like mmm/Viewers/plain.ml,
+% or efuns/prog_modes/caml_mode.ml
 % that just add some of its functions to some globals.
-% the module appears unused from outside, but it has some
+% The module may appear unused from the outside, but it has some
 % important side effects!
 
-%todo: put code here using link_everything
+
+<<[[Bytelink.scan_file()]] in archive case, linking condition>>=
+|| !Clflags.link_everything
+@
+% just for archive.
+% hmm I though that that in recent ocaml it was also doing that for .cmo
+
+
+<<[[Bytelibrarian.copy_compunit()]] set cu_force_link if link everything>>
+compunit.cu_force_link <- !Clflags.link_everything;
+@
+% if compile library with -linkall itself, then it will propagate
+
+<<[[Bytelink.link_compunit()]] if link everything require primitives>>=
+if !Clflags.link_everything 
+then compunit.cu_primitives |> List.iter Symtable.require_primitive
+@
+% ?
+
 
 \subsection{[[-output-obj]]}
 
@@ -12457,6 +12527,22 @@ let optimize_for_speed = ref true       (* -compact *)
 @
 
 
+\section{Threads}
+
+<<constant Clflags.thread_safe>>=
+let thread_safe = ref false             (* -thread *)
+@
+<<[[Main.main()]] command line options>>=
+"-thread", Arg.Set thread_safe, " Use thread-safe standard library";
+@
+
+% needs lots of space to explain the scheduler
+
+\section{Marshalling}
+% very useful, used a lot actually in the compiler itself
+% to store marshalled values in the .cmo. Also for the debugger
+% and backtrace metadata.
+
 \section{Printing types, [[-i]]}
 
 <<constant Clflags.print_types>>=
@@ -12468,17 +12554,6 @@ let print_types = ref false             (* -i *)
 @
 
 
-
-\section{Threads}
-
-<<constant Clflags.thread_safe>>=
-let thread_safe = ref false             (* -thread *)
-@
-<<[[Main.main()]] command line options>>=
-"-thread", Arg.Set thread_safe, " Use thread-safe standard library";
-@
-
-% needs lots of space to explain the scheduler
 
 \section{Preprocessing}
 
