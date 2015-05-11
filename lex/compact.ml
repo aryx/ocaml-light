@@ -1,3 +1,4 @@
+(*s: lex/compact.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,12 +10,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: compact.ml,v 1.4 1997/04/15 19:18:00 doligez Exp $ *)
-
 (* Compaction of an automata *)
 
 open Lexgen
 
+(*s: function Compact.most_frequent_elt *)
 (* Determine the integer occurring most frequently in an array *)
 
 let most_frequent_elt v =
@@ -32,7 +32,9 @@ let most_frequent_elt v =
     if !r > !max_freq then begin max_freq := !r; most_freq := e end
   done;
   !most_freq
+(*e: function Compact.most_frequent_elt *)
 
+(*s: function Compact.non_default_elements *)
 (* Transform an array into a list of (position, non-default element) *)
 
 let non_default_elements def v =
@@ -42,6 +44,7 @@ let non_default_elements def v =
       if e = def then nondef(i+1) else (i, e) :: nondef(i+1)
     end in
   nondef 0
+(*e: function Compact.non_default_elements *)
 
 (* Compact the transition and check arrays *)
 
@@ -49,6 +52,7 @@ let trans = ref(Array.create 1024 0)
 and check = ref(Array.create 1024 (-1))
 and last_used = ref 0
 
+(*s: function Compact.grow_transitions *)
 let grow_transitions () =
   let old_trans = !trans
   and old_check = !check in
@@ -57,7 +61,9 @@ let grow_transitions () =
   Array.blit old_trans 0 !trans 0 !last_used;
   check := Array.create (2*n) (-1);
   Array.blit old_check 0 !check 0 !last_used
+(*e: function Compact.grow_transitions *)
 
+(*s: function Compact.pack_moves *)
 let pack_moves state_num move_t =
   let move_v = Array.create 257 0 in
   for i = 0 to 256 do
@@ -83,8 +89,10 @@ let pack_moves state_num move_t =
     nondef;
   if base + 257 > !last_used then last_used := base + 257;
   (base, default)
+(*e: function Compact.pack_moves *)
 
-(* Build the tables *)
+(*s: type Compact.lex_tables *)
+(* Compaction of an automata *)
 
 type lex_tables =
   { tbl_base: int array;                 (* Perform / Shift *)
@@ -92,7 +100,9 @@ type lex_tables =
     tbl_default: int array;              (* Default transition *)
     tbl_trans: int array;                (* Transitions (compacted) *)
     tbl_check: int array }               (* Check (compacted) *)
+(*e: type Compact.lex_tables *)
 
+(*s: function Compact.compact_tables *)
 let compact_tables state_v =
   let n = Array.length state_v in
   let base = Array.create n 0
@@ -116,5 +126,7 @@ let compact_tables state_v =
     tbl_default = default;
     tbl_trans = Array.sub !trans 0 !last_used;
     tbl_check = Array.sub !check 0 !last_used }
+(*e: function Compact.compact_tables *)
 
 
+(*e: lex/compact.ml *)

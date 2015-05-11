@@ -1,3 +1,4 @@
+(*s: lex/main.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,14 +10,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main.ml,v 1.8 1996/12/10 10:42:07 xleroy Exp $ *)
-
 (* The lexer generator. Command-line parsing. *)
 
 open Syntax
 open Lexgen
 open Output
 
+(*s: function Main.main *)
 let main () =
   if Array.length Sys.argv != 2 then begin
     prerr_endline "Usage: ocamllex <input file>";
@@ -24,10 +24,10 @@ let main () =
   end;
   let source_name = Sys.argv.(1) in
   let dest_name =
-    if Filename.check_suffix source_name ".mll" then
-      Filename.chop_suffix source_name ".mll" ^ ".ml"
-    else
-      source_name ^ ".ml" in
+    if Filename.check_suffix source_name ".mll" 
+    then Filename.chop_suffix source_name ".mll" ^ ".ml"
+    else source_name ^ ".ml" 
+  in
   let ic = open_in source_name in
   let oc = open_out dest_name in
   let lexbuf = Lexing.from_channel ic in
@@ -56,6 +56,10 @@ let main () =
   Output.output_lexdef ic oc def.header tables entries def.trailer;
   close_in ic;
   close_out oc
+(*e: function Main.main *)
 
+(*s: toplevel Main._1 *)
 let _ = Printexc.catch main (); exit 0
+(*e: toplevel Main._1 *)
 
+(*e: lex/main.ml *)
