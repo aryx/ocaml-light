@@ -6812,51 +6812,6 @@ and slot_for_c_prim name =
 
 \subsection*{[[./bytecomp/bytelibrarian.ml]]}
 
-<<function Bytelibrarian.copy_compunit>>=
-let copy_compunit ic oc compunit =
-  seek_in ic compunit.cu_pos;
-  compunit.cu_pos <- pos_out oc;
-  compunit.cu_force_link <- !Clflags.link_everything;
-  copy_file_chunk ic oc compunit.cu_codesize;
-  if compunit.cu_debug > 0 then begin
-    seek_in ic compunit.cu_debug;
-    compunit.cu_debug <- pos_out oc;
-    copy_file_chunk ic oc compunit.cu_debugsize
-  end
-@
-
-<<function Bytelibrarian.copy_object_file>>=
-let copy_object_file oc name =
-  let file_name =
-    try
-      find_in_path !load_path name
-    with Not_found ->
-      raise(Error(File_not_found name)) in
-  let ic = open_in file_name in
-  try
-    let buffer = String.create (String.length cmo_magic_number) in
-    really_input ic buffer 0 (String.length cmo_magic_number);
-    if buffer = cmo_magic_number then begin
-      let compunit_pos = input_binary_int ic in
-      seek_in ic compunit_pos;
-      let compunit = (input_value ic : compilation_unit) in
-      copy_compunit ic oc compunit;
-      close_in ic;
-      [compunit]
-    end else
-    if buffer = cma_magic_number then begin
-      let toc_pos = input_binary_int ic in
-      seek_in ic toc_pos;
-      let toc = (input_value ic : compilation_unit list) in
-      List.iter (copy_compunit ic oc) toc;
-      close_in ic;
-      toc
-    end else
-      raise(Error(Not_an_object_file file_name))
-  with x ->
-    close_in ic;
-    raise x
-@
 
 
 
@@ -17107,8 +17062,8 @@ let scan_file obj_name tolink =
     List.fold_right
       (fun (info, crc) reqd ->
         if info.ui_force_link
-        or !Clflags.link_everything
-        or is_required info.ui_name then begin
+        || !Clflags.link_everything
+        || is_required info.ui_name then begin
           check_consistency file_name info crc;
           remove_required info.ui_name;
           List.iter add_required info.ui_imports_cmx;
