@@ -2,7 +2,7 @@
 
 * History
 
-** first try: caml special light 1.16, May 1996?
+** first try: caml special light 1.16, May 1996? 19 years ago ...
 
 I originally started my fork from caml special light 1.16 just before
 the object extensions were added
@@ -12,8 +12,8 @@ than caml light because caml _special_ light had:
  - a module system (the possibility to qualify, and #open -> open)
  - a better code organization with code splitted in many directories (parsing/,
    typing/, bytecomp/, etc)
- - it was compatible with lots of my code also
-and it was far simpler than recent ocaml because it didn't have:
+ - it was compatible with lots of my code
+It was also far simpler than recent ocaml because it didn't have:
  - an object system! simpler typechecker!
  - labels
  - open variants, and other features that complexify again the typechecker
