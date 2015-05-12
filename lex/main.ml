@@ -71,7 +71,9 @@ let main () =
 (*e: function Main.main *)
 
 (*s: toplevel Main._1 *)
-let _ = Printexc.catch main (); exit 0
+let _ = 
+  Printexc.catch main (); 
+  exit 0
 (*e: toplevel Main._1 *)
 
 (*e: lex/main.ml *)
