@@ -15,13 +15,21 @@
 
 open Syntax
 
+(*s: type Lexgen.action_id *)
+type action_id = int
+(*e: type Lexgen.action_id *)
+
+(*s: type Lexgen.charset_id *)
+type charset_id = int
+(*e: type Lexgen.charset_id *)
+
 (*s: type Lexgen.regexp *)
 (* Deep abstract syntax for regular expressions *)
 
 type regexp =
     Empty
-  | Chars of int
-  | Action of int
+  | Chars of charset_id
+  | Action of action_id
   | Seq of regexp * regexp
   | Alt of regexp * regexp
   | Star of regexp
@@ -31,25 +39,26 @@ type regexp =
 type lexer_entry =
   { lex_name: string;
     lex_regexp: regexp;
-    lex_actions: (int * Syntax.location) list }
+    lex_actions: (action_id * Syntax.location) list;
+  }
 (*e: type Lexgen.lexer_entry *)
     
 (* Representation of automata *)
 
 (*s: type Lexgen.automata *)
 type automata =
-    Perform of int
+    Perform of int (* ?? *)
   | Shift of automata_trans * automata_move array
 (*e: type Lexgen.automata *)
 (*s: type Lexgen.automata_trans *)
 and automata_trans =
     No_remember
-  | Remember of int
+  | Remember of int (* ?? *)
 (*e: type Lexgen.automata_trans *)
 (*s: type Lexgen.automata_move *)
 and automata_move =
     Backtrack
-  | Goto of int
+  | Goto of int (* ?? *)
 (*e: type Lexgen.automata_move *)
 
 (*s: type Lexgen.automata_entry *)
@@ -58,22 +67,23 @@ and automata_move =
 type automata_entry =
   { auto_name: string;
     auto_initial_state: int;
-    auto_actions: (int * Syntax.location) list }
+    auto_actions: (action_id * Syntax.location) list;
+  }
 (*e: type Lexgen.automata_entry *)
     
-(*s: constant Lexgen.chars *)
 (* From shallow to deep syntax *)
 
-let chars = ref ([] : int list list)
+(*s: constant Lexgen.chars *)
+let chars = ref ([] : char_ list list)
 (*e: constant Lexgen.chars *)
 (*s: constant Lexgen.chars_count *)
-let chars_count = ref 0
+let chars_count = ref (0: charset_id)
 (*e: constant Lexgen.chars_count *)
 (*s: constant Lexgen.actions *)
-let actions = ref ([] : (int * location) list)
+let actions = ref ([] : (action_id * Syntax.location) list)
 (*e: constant Lexgen.actions *)
 (*s: constant Lexgen.actions_count *)
-let actions_count = ref 0
+let actions_count = ref (0: action_id)
 (*e: constant Lexgen.actions_count *)
 
 (*s: function Lexgen.encode_regexp *)
@@ -81,8 +91,8 @@ let rec encode_regexp = function
     Epsilon -> Empty
   | Characters cl ->
       let n = !chars_count in
-      chars := cl :: !chars;
       incr chars_count;
+      chars := cl :: !chars;
       Chars(n)
   | Sequence(r1,r2) ->
       Seq(encode_regexp r1, encode_regexp r2)
@@ -94,34 +104,31 @@ let rec encode_regexp = function
 
 (*s: function Lexgen.encode_casedef *)
 let encode_casedef casedef =
-  List.fold_left
-   (fun reg (expr, act) ->
+  casedef |> List.fold_left (fun reg (re, action) ->
      let act_num = !actions_count in
      incr actions_count;
-     actions := (act_num, act) :: !actions;
-     Alt(reg, Seq(encode_regexp expr, Action act_num)))
-   Empty
-   casedef
+     actions := (act_num, action) :: !actions;
+     Alt(reg, Seq(encode_regexp re, Action act_num))
+  ) Empty
 (*e: function Lexgen.encode_casedef *)
 
 (*s: function Lexgen.encode_lexdef *)
 let encode_lexdef def =
   chars := [];
   chars_count := 0;
-  let entry_list =
-    List.map
-      (fun (entry_name, casedef) ->
+  let entries =
+    def.entrypoints |> List.map (fun (entry_name, casedef) ->
         actions := [];
         actions_count := 0;
         let re = encode_casedef casedef in
         { lex_name = entry_name;
           lex_regexp = re;
-          lex_actions = List.rev !actions })
-      def.entrypoints in
-  let chr = Array.of_list (List.rev !chars) in
-  chars := [];
-  actions := [];
-  (chr, entry_list)
+          lex_actions = List.rev !actions }
+     )
+  in
+  (* map a charset_id to a charset *)
+  let charsets = Array.of_list (List.rev !chars) in
+  (charsets, entries)
 (*e: function Lexgen.encode_lexdef *)
 
 (*s: type Lexgen.transition *)
@@ -129,61 +136,59 @@ let encode_lexdef def =
    Confer Aho-Sethi-Ullman, dragon book, chap. 3 *)
 
 type transition =
-    OnChars of int
-  | ToAction of int
+    OnChars of charset_id
+  | ToAction of action_id
 (*e: type Lexgen.transition *)
-
-module TransSet = Set
 
 (*s: function Lexgen.nullable *)
 let rec nullable = function
     Empty      -> true
   | Chars _    -> false
   | Action _   -> false
-  | Seq(r1,r2) -> nullable r1 & nullable r2
-  | Alt(r1,r2) -> nullable r1 or nullable r2
+  | Seq(r1,r2) -> nullable r1 && nullable r2
+  | Alt(r1,r2) -> nullable r1 || nullable r2
   | Star r     -> true
 (*e: function Lexgen.nullable *)
 
 (*s: function Lexgen.firstpos *)
 let rec firstpos = function
-    Empty      -> TransSet.empty
-  | Chars pos  -> TransSet.add (OnChars pos) TransSet.empty
-  | Action act -> TransSet.add (ToAction act) TransSet.empty
+    Empty      -> Set.empty
+  | Chars pos  -> Set.add (OnChars pos) Set.empty
+  | Action act -> Set.add (ToAction act) Set.empty
   | Seq(r1,r2) -> if nullable r1
-                  then TransSet.union (firstpos r1) (firstpos r2)
+                  then Set.union (firstpos r1) (firstpos r2)
                   else firstpos r1
-  | Alt(r1,r2) -> TransSet.union (firstpos r1) (firstpos r2)
+  | Alt(r1,r2) -> Set.union (firstpos r1) (firstpos r2)
   | Star r     -> firstpos r
 (*e: function Lexgen.firstpos *)
 
 (*s: function Lexgen.lastpos *)
 let rec lastpos = function
-    Empty      -> TransSet.empty
-  | Chars pos  -> TransSet.add (OnChars pos) TransSet.empty
-  | Action act -> TransSet.add (ToAction act) TransSet.empty
+    Empty      -> Set.empty
+  | Chars pos  -> Set.add (OnChars pos) Set.empty
+  | Action act -> Set.add (ToAction act) Set.empty
   | Seq(r1,r2) -> if nullable r2
-                  then TransSet.union (lastpos r1) (lastpos r2)
+                  then Set.union (lastpos r1) (lastpos r2)
                   else lastpos r2
-  | Alt(r1,r2) -> TransSet.union (lastpos r1) (lastpos r2)
+  | Alt(r1,r2) -> Set.union (lastpos r1) (lastpos r2)
   | Star r     -> lastpos r
 (*e: function Lexgen.lastpos *)
 
 (*s: function Lexgen.followpos *)
 let followpos size entry_list =
-  let v = Array.create size TransSet.empty in
+  let v = Array.create size Set.empty in
   let fill_pos first = function
-      OnChars pos -> v.(pos) <- TransSet.union first v.(pos)
+      OnChars pos -> v.(pos) <- Set.union first v.(pos)
     | ToAction _  -> () in
   let rec fill = function
       Seq(r1,r2) ->
         fill r1; fill r2;
-        TransSet.iter (fill_pos (firstpos r2)) (lastpos r1)
+        Set.iter (fill_pos (firstpos r2)) (lastpos r1)
     | Alt(r1,r2) ->
         fill r1; fill r2
     | Star r ->
         fill r;
-        TransSet.iter (fill_pos (firstpos r)) (lastpos r)
+        Set.iter (fill_pos (firstpos r)) (lastpos r)
     | _ -> () in
   List.iter (fun entry -> fill entry.lex_regexp) entry_list;
   v
@@ -195,7 +200,7 @@ let no_action = max_int
 
 (*s: function Lexgen.split_trans_set *)
 let split_trans_set trans_set =
-  TransSet.fold
+  Set.fold
     (fun trans (act, pos_set as act_pos_set) ->
       match trans with
         OnChars pos -> (act, pos :: pos_set)
@@ -204,10 +209,8 @@ let split_trans_set trans_set =
     (no_action, [])
 (*e: function Lexgen.split_trans_set *)
 
-module StateMap = Map
-
 (*s: constant Lexgen.state_map *)
-let state_map = ref (StateMap.empty: (transition Set.t, int) StateMap.t)
+let state_map = ref (Map.empty: (transition Set.t, int) Map.t)
 (*e: constant Lexgen.state_map *)
 (*s: constant Lexgen.todo *)
 let todo = (Stack.create() : (transition Set.t * int) Stack.t)
@@ -218,7 +221,7 @@ let next_state_num = ref 0
 
 (*s: function Lexgen.reset_state_mem *)
 let reset_state_mem () =
-  state_map := StateMap.empty;
+  state_map := Map.empty;
   Stack.clear todo;
   next_state_num := 0
 (*e: function Lexgen.reset_state_mem *)
@@ -226,11 +229,11 @@ let reset_state_mem () =
 (*s: function Lexgen.get_state *)
 let get_state st = 
   try
-    StateMap.find st !state_map
+    Map.find st !state_map
   with Not_found ->
     let num = !next_state_num in
     incr next_state_num;
-    state_map := StateMap.add st num !state_map;
+    state_map := Map.add st num !state_map;
     Stack.push (st, num) todo;
     num
 (*e: function Lexgen.get_state *)
@@ -251,18 +254,18 @@ let map_on_all_states f =
 
 (*s: function Lexgen.goto_state *)
 let goto_state st =
-  if TransSet.is_empty st then Backtrack else Goto (get_state st)
+  if Set.is_empty st then Backtrack else Goto (get_state st)
 (*e: function Lexgen.goto_state *)
 
 (*s: function Lexgen.transition_from *)
 let transition_from chars follow pos_set = 
-  let tr = Array.create 257 TransSet.empty in
+  let tr = Array.create 257 Set.empty in
   let shift = Array.create 257 Backtrack in
     List.iter
       (fun pos ->
         List.iter
           (fun c ->
-             tr.(c) <- TransSet.union tr.(c) follow.(pos))
+             tr.(c) <- Set.union tr.(c) follow.(pos))
           chars.(pos))
       pos_set;
     for i = 0 to 256 do
@@ -279,22 +282,30 @@ let translate_state chars follow state =
                      transition_from chars follow ps)
 (*e: function Lexgen.translate_state *)
 
-(*s: function Lexgen.make_dfa *)
-let make_dfa lexdef =
-  let (chars, entry_list) = encode_lexdef lexdef in
-  let follow = followpos (Array.length chars) entry_list in
+(*s: function Lexgen.encode_lexentries *)
+let encode_lexentries charsets entries =
+  let follow = followpos (Array.length charsets) entries in
+
   reset_state_mem();
   let initial_states =
-    List.map
-      (fun le ->
-        { auto_name = le.lex_name;
-          auto_initial_state = get_state(firstpos le.lex_regexp);
-          auto_actions = le.lex_actions })
-      entry_list in
-  let states = map_on_all_states (translate_state chars follow) in
+    entries |> List.map (fun entry ->
+        { auto_name    = entry.lex_name;
+          auto_actions = entry.lex_actions;
+          auto_initial_state = get_state (firstpos entry.lex_regexp);
+        }
+     )
+  in
+  let states = map_on_all_states (translate_state charsets follow) in
   let actions = Array.create !next_state_num (Perform 0) in
-  List.iter (fun (act, i) -> actions.(i) <- act) states;
-  reset_state_mem();
+  states |> List.iter (fun (act, i) -> actions.(i) <- act);
   (initial_states, actions)
+(*e: function Lexgen.encode_lexentries *)
+
+(*s: function Lexgen.make_dfa *)
+let make_dfa lexdef =
+
+  let (charsets, lexer_entries) = encode_lexdef lexdef in
+  let (automata_entries, actions) = encode_lexentries charsets lexer_entries in
+  automata_entries, actions
 (*e: function Lexgen.make_dfa *)
 (*e: lex/lexgen.ml *)

@@ -13,24 +13,36 @@
 (*e: copyright ocamllex *)
 (* The shallow abstract syntax *)
 
+(*s: type Syntax.charpos *)
+type charpos = int
+(*e: type Syntax.charpos *)
+
 (*s: type Syntax.location *)
 type location =
-    Location of int * int
+    Location of charpos * charpos
 (*e: type Syntax.location *)
+
+(*s: type Syntax.char_ *)
+type char_ = int
+(*e: type Syntax.char_ *)
 
 (*s: type Syntax.regular_expression *)
 type regular_expression =
     Epsilon
-  | Characters of int list
+  | Characters of char_ list
   | Sequence of regular_expression * regular_expression
   | Alternative of regular_expression * regular_expression
   | Repetition of regular_expression
 (*e: type Syntax.regular_expression *)
 
+(*s: type Syntax.rule *)
+type rule = string * (regular_expression * location) list
+(*e: type Syntax.rule *)
+
 (*s: type Syntax.lexer_definition *)
 type lexer_definition =
     { header: location;
-      entrypoints: (string * (regular_expression * location) list) list;
+      entrypoints: rule list;
       trailer: location 
     }
 (*e: type Syntax.lexer_definition *)
