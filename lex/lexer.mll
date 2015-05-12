@@ -52,8 +52,8 @@ let char_for_backslash = function
 (*x: Lexer helper functions and globals *)
 let char_for_decimal_code lexbuf i =
   Char.chr(100 * (Char.code(Lexing.lexeme_char lexbuf i) - 48) +
-               10 * (Char.code(Lexing.lexeme_char lexbuf (i+1)) - 48) +
-                    (Char.code(Lexing.lexeme_char lexbuf (i+2)) - 48))
+            10 * (Char.code(Lexing.lexeme_char lexbuf (i+1)) - 48) +
+                 (Char.code(Lexing.lexeme_char lexbuf (i+2)) - 48))
 (*x: Lexer helper functions and globals *)
 let brace_depth = ref 0
 (*e: Lexer helper functions and globals *)
@@ -136,6 +136,10 @@ and action = parse
   | '}' 
     { decr brace_depth;
       if !brace_depth == 0 then Lexing.lexeme_start lexbuf else action lexbuf }
+  | "(*" 
+    { comment_depth := 1;
+      comment lexbuf;
+      action lexbuf }
   | eof 
     { raise (Lexical_error "unterminated action") }
   | _ 
