@@ -1,4 +1,5 @@
 (*s: lex/lexgen.ml *)
+(*s: copyright ocamllex *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,7 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright ocamllex *)
 (* Compiling a lexer definition *)
 
 open Syntax
@@ -30,7 +31,7 @@ type regexp =
 type lexer_entry =
   { lex_name: string;
     lex_regexp: regexp;
-    lex_actions: (int * location) list }
+    lex_actions: (int * Syntax.location) list }
 (*e: type Lexgen.lexer_entry *)
     
 (* Representation of automata *)

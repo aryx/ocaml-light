@@ -1,4 +1,5 @@
 (*s: lex/syntax.mli *)
+(*s: copyright ocamllex *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,10 +10,10 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
-(*s: type Syntax.location *)
+(*e: copyright ocamllex *)
 (* The shallow abstract syntax *)
 
+(*s: type Syntax.location *)
 type location =
     Location of int * int
 (*e: type Syntax.location *)
@@ -30,6 +31,7 @@ type regular_expression =
 type lexer_definition =
     { header: location;
       entrypoints: (string * (regular_expression * location) list) list;
-      trailer: location }
+      trailer: location 
+    }
 (*e: type Syntax.lexer_definition *)
 (*e: lex/syntax.mli *)

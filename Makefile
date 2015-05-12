@@ -778,6 +778,7 @@ SRC_VIEWS= \
   ./driver/optmain.ml\
 
 # lex/* is synced with plan9/generator/CompilerGenerator.nw
+# as well as stdlib/lexing.ml
 
 sync::
 	$(MAKE) sync2

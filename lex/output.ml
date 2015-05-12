@@ -1,4 +1,5 @@
 (*s: lex/output.ml *)
+(*s: copyright ocamllex *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,7 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright ocamllex *)
 (* Output the DFA tables and its entry points *)
 
 open Printf
