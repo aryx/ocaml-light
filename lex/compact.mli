@@ -1,4 +1,5 @@
 (*s: lex/compact.mli *)
+(*s: copyright ocamllex *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,7 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright ocamllex *)
 (*s: type Compact.lex_tables *)
 (* Compaction of an automata *)
 

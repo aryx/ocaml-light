@@ -1,4 +1,5 @@
 (*s: lex/output.mli *)
+(*s: copyright ocamllex *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,16 +10,16 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright ocamllex *)
 (*s: signature Output.output_lexdef *)
 (* Output the DFA tables and its entry points *)
 
 val output_lexdef:
       in_channel -> out_channel ->
-      Syntax.location ->
+      Syntax.location (* header *) ->
       Compact.lex_tables ->
       Lexgen.automata_entry list ->
-      Syntax.location ->
+      Syntax.location (* trailer *) ->
       unit
 (*e: signature Output.output_lexdef *)
 (*e: lex/output.mli *)

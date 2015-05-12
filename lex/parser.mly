@@ -1,3 +1,4 @@
+/*(*s: lex/parser.mly *)*/
 /***********************************************************************/
 /*                                                                     */
 /*                           Objective Caml                            */
@@ -8,8 +9,6 @@
 /*  Automatique.  Distributed only by permission.                      */
 /*                                                                     */
 /***********************************************************************/
-
-/* $Id: parser.mly,v 1.8 1997/05/19 15:41:54 doligez Exp $ */
 
 /* The grammar for lexer definitions */
 
@@ -154,3 +153,4 @@ char_class1:
 
 %%
 
+/*(*e: lex/parser.mly *)*/

@@ -1,4 +1,5 @@
 (*s: lex/lexgen.mli *)
+(*s: copyright ocamllex *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -9,7 +10,7 @@
 (*  Automatique.  Distributed only by permission.                      *)
 (*                                                                     *)
 (***********************************************************************)
-
+(*e: copyright ocamllex *)
 (* Representation of automata *)
 
 (*s: type Lexgen.automata *)

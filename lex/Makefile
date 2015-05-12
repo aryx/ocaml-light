@@ -22,6 +22,9 @@ clean::
 
 parser.ml parser.mli: parser.mly
 	$(CAMLYACC) $(YACCFLAGS) parser.mly
+	perl -p -i -e 's#/\*\(\*[sex]: .* \*\)\*/##' parser.ml
+#pad: this  perl thing is just because ocamlyacc does not handle well
+# syncweb special comment at the very end
 
 clean::
 	rm -f parser.ml parser.mli
