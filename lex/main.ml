@@ -34,6 +34,7 @@ let main () =
   let ic = open_in source_name in
   let oc = open_out dest_name in
   let lexbuf = Lexing.from_channel ic in
+
   (* parsing *)
   let def =
     try
@@ -56,7 +57,8 @@ let main () =
        | _ -> raise exn
        );
        (*e: [[Main.main()]] report error exn *)
-      exit 2 in
+      exit 2 
+  in
   (* compiling *)
   let (entries, transitions) = Lexgen.make_dfa def in
   (* optimizing *)
