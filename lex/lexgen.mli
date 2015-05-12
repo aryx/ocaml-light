@@ -13,20 +13,24 @@
 (*e: copyright ocamllex *)
 (* Representation of automata *)
 
+(*s: type Lexgen.action_id *)
+type action_id = int
+(*e: type Lexgen.action_id *)
+
 (*s: type Lexgen.automata *)
 type automata =
-    Perform of int
+    Perform of int (* ?? *)
   | Shift of automata_trans * automata_move array
 (*e: type Lexgen.automata *)
 (*s: type Lexgen.automata_trans *)
 and automata_trans =
     No_remember
-  | Remember of int
+  | Remember of int (* ?? *)
 (*e: type Lexgen.automata_trans *)
 (*s: type Lexgen.automata_move *)
 and automata_move =
     Backtrack
-  | Goto of int
+  | Goto of int (* ?? *)
 (*e: type Lexgen.automata_move *)
 
 (*s: type Lexgen.automata_entry *)
@@ -35,7 +39,8 @@ and automata_move =
 type automata_entry =
   { auto_name: string;
     auto_initial_state: int;
-    auto_actions: (int * Syntax.location) list }
+    auto_actions: (action_id * Syntax.location) list;
+  }
 (*e: type Lexgen.automata_entry *)
 
 (*s: signature Lexgen.make_dfa *)
