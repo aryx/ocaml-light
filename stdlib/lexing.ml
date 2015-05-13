@@ -34,14 +34,17 @@ type lexbuf =
   }
 (*e: type Lexing.lexbuf *)
 
-(*s: type Lexing.lex_tables (stdlib/lexing.ml) *)
+(*s: type Lexing.lex_tables *)
+(* The following definitions are used by the generated scanners only.
+   They are not intended to be used by user programs. *)
+
 type lex_tables =
   { lex_base: string;
     lex_backtrk: string;
     lex_default: string;
     lex_trans: string;
     lex_check: string }
-(*e: type Lexing.lex_tables (stdlib/lexing.ml) *)
+(*e: type Lexing.lex_tables *)
 
 external engine: lex_tables -> int -> lexbuf -> int = "lex_engine"
 
