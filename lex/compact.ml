@@ -99,6 +99,7 @@ type lex_tables =
   { tbl_base: int array;                 (* Perform / Shift *)
     tbl_backtrk: int array;              (* No_remember / Remember *)
     tbl_default: int array;              (* Default transition *)
+
     tbl_trans: int array;                (* Transitions (compacted) *)
     tbl_check: int array }               (* Check (compacted) *)
 (*e: type Compact.lex_tables *)
@@ -106,18 +107,18 @@ type lex_tables =
 (*s: function Compact.compact_tables *)
 let compact_tables state_v =
   let n = Array.length state_v in
-  let base = Array.create n 0
-  and backtrk = Array.create n (-1)
-  and default = Array.create n 0 in
+  let base = Array.create n 0 in
+  let backtrk = Array.create n (-1) in
+  let default = Array.create n 0 in
   for i = 0 to n - 1 do
     match state_v.(i) with
       Perform n ->
         base.(i) <- -(n+1)
     | Shift(trans, move) ->
-        begin match trans with
+        (match trans with
           No_remember -> ()
         | Remember n -> backtrk.(i) <- n
-        end;
+        );
         let (b, d) = pack_moves i move in
         base.(i) <- b;
         default.(i) <- d

@@ -39,7 +39,7 @@ type regexp =
 type lexer_entry =
   { lex_name: string;
     lex_regexp: regexp;
-    lex_actions: (action_id * Syntax.location) list;
+    lex_actions: (action_id * Syntax.action) list;
   }
 (*e: type Lexgen.lexer_entry *)
     
@@ -47,18 +47,19 @@ type lexer_entry =
 
 (*s: type Lexgen.automata *)
 type automata =
-    Perform of int (* ?? *)
-  | Shift of automata_trans * automata_move array
+    Perform of action_id
+  (* idx of the array is an integer between 0 and 256, a char_ *)
+  | Shift of automata_trans * automata_move array 
 (*e: type Lexgen.automata *)
 (*s: type Lexgen.automata_trans *)
 and automata_trans =
     No_remember
-  | Remember of int (* ?? *)
+  | Remember of action_id
 (*e: type Lexgen.automata_trans *)
 (*s: type Lexgen.automata_move *)
 and automata_move =
     Backtrack
-  | Goto of int (* ?? *)
+  | Goto of int
 (*e: type Lexgen.automata_move *)
 
 (*s: type Lexgen.automata_entry *)
@@ -67,7 +68,7 @@ and automata_move =
 type automata_entry =
   { auto_name: string;
     auto_initial_state: int;
-    auto_actions: (action_id * Syntax.location) list;
+    auto_actions: (action_id * Syntax.action) list;
   }
 (*e: type Lexgen.automata_entry *)
     
@@ -131,14 +132,19 @@ let encode_lexdef def =
   (charsets, entries)
 (*e: function Lexgen.encode_lexdef *)
 
-(*s: type Lexgen.transition *)
+
 (* To generate directly a NFA from a regular expression.
    Confer Aho-Sethi-Ullman, dragon book, chap. 3 *)
 
+(*s: type Lexgen.transition *)
 type transition =
     OnChars of charset_id
   | ToAction of action_id
 (*e: type Lexgen.transition *)
+
+(*s: type Lexgen.state *)
+type state = transition Set.t
+(*e: type Lexgen.state *)
 
 (*s: function Lexgen.nullable *)
 let rec nullable = function
@@ -175,11 +181,12 @@ let rec lastpos = function
 (*e: function Lexgen.lastpos *)
 
 (*s: function Lexgen.followpos *)
-let followpos size entry_list =
-  let v = Array.create size Set.empty in
+let followpos size_charsets entries =
+  let v = Array.create size_charsets Set.empty in
   let fill_pos first = function
       OnChars pos -> v.(pos) <- Set.union first v.(pos)
-    | ToAction _  -> () in
+    | ToAction _  -> () 
+  in
   let rec fill = function
       Seq(r1,r2) ->
         fill r1; fill r2;
@@ -190,30 +197,28 @@ let followpos size entry_list =
         fill r;
         Set.iter (fill_pos (firstpos r)) (lastpos r)
     | _ -> () in
-  List.iter (fun entry -> fill entry.lex_regexp) entry_list;
+  entries |> List.iter (fun entry -> fill entry.lex_regexp);
   v
 (*e: function Lexgen.followpos *)
 
 (*s: constant Lexgen.no_action *)
-let no_action = max_int
+let no_action = (max_int: action_id)
 (*e: constant Lexgen.no_action *)
 
 (*s: function Lexgen.split_trans_set *)
 let split_trans_set trans_set =
-  Set.fold
-    (fun trans (act, pos_set as act_pos_set) ->
+  Set.fold (fun trans (act, pos_set as act_pos_set) ->
       match trans with
         OnChars pos -> (act, pos :: pos_set)
-      | ToAction act1 -> if act1 < act then (act1, pos_set) else act_pos_set)
-    trans_set
-    (no_action, [])
+      | ToAction act1 -> if act1 < act then (act1, pos_set) else act_pos_set
+   ) trans_set (no_action, [])
 (*e: function Lexgen.split_trans_set *)
 
 (*s: constant Lexgen.state_map *)
-let state_map = ref (Map.empty: (transition Set.t, int) Map.t)
+let state_map = ref (Map.empty: (state, int) Map.t)
 (*e: constant Lexgen.state_map *)
 (*s: constant Lexgen.todo *)
-let todo = (Stack.create() : (transition Set.t * int) Stack.t)
+let todo = (Stack.create() : (state * int) Stack.t)
 (*e: constant Lexgen.todo *)
 (*s: constant Lexgen.next_state_num *)
 let next_state_num = ref 0
@@ -254,58 +259,68 @@ let map_on_all_states f =
 
 (*s: function Lexgen.goto_state *)
 let goto_state st =
-  if Set.is_empty st then Backtrack else Goto (get_state st)
+  if Set.is_empty st 
+  then Backtrack 
+  (* can create a new state in todo *)
+  else Goto (get_state st)
 (*e: function Lexgen.goto_state *)
 
 (*s: function Lexgen.transition_from *)
-let transition_from chars follow pos_set = 
-  let tr = Array.create 257 Set.empty in
+let transition_from charsets follow pos_set = 
+  let tr    = Array.create 257 Set.empty in
+  pos_set |> List.iter (fun pos ->
+     charsets.(pos) |> List.iter (fun c ->
+           tr.(c) <- Set.union tr.(c) follow.(pos)
+      )
+  );
+
   let shift = Array.create 257 Backtrack in
-    List.iter
-      (fun pos ->
-        List.iter
-          (fun c ->
-             tr.(c) <- Set.union tr.(c) follow.(pos))
-          chars.(pos))
-      pos_set;
-    for i = 0 to 256 do
-      shift.(i) <- goto_state tr.(i)
-    done;
-    shift
+  for i = 0 to 256 do
+    shift.(i) <- goto_state tr.(i)
+  done;
+  shift
 (*e: function Lexgen.transition_from *)
 
 (*s: function Lexgen.translate_state *)
-let translate_state chars follow state =
+let translate_state charsets follow = 
+ fun state ->
   match split_trans_set state with
     (n, []) -> Perform n
   | (n, ps) -> Shift((if n = no_action then No_remember else Remember n),
-                     transition_from chars follow ps)
+                     transition_from charsets follow ps)
 (*e: function Lexgen.translate_state *)
 
 (*s: function Lexgen.encode_lexentries *)
-let encode_lexentries charsets entries =
-  let follow = followpos (Array.length charsets) entries in
-
+let encode_lexentries charsets lexentries =
   reset_state_mem();
-  let initial_states =
-    entries |> List.map (fun entry ->
+
+  (* pass 1 on lexentries, get the initial states *)
+  let automata_entries =
+    lexentries |> List.map (fun entry ->
         { auto_name    = entry.lex_name;
           auto_actions = entry.lex_actions;
+          (* get_state() will populate todo and state_map globals *)
           auto_initial_state = get_state (firstpos entry.lex_regexp);
         }
      )
   in
-  let states = map_on_all_states (translate_state charsets follow) in
-  let actions = Array.create !next_state_num (Perform 0) in
-  states |> List.iter (fun (act, i) -> actions.(i) <- act);
-  (initial_states, actions)
+  (* pass 2 on lexentries, get the transitions *)
+
+  let follow = followpos (Array.length charsets) lexentries in
+  let states = 
+    map_on_all_states (fun st -> translate_state charsets follow st) 
+  in
+  let transitions = Array.create !next_state_num (Perform 0) in
+  states |> List.iter (fun (act, i) -> transitions.(i) <- act);
+  (automata_entries, transitions)
 (*e: function Lexgen.encode_lexentries *)
 
 (*s: function Lexgen.make_dfa *)
 let make_dfa lexdef =
-
-  let (charsets, lexer_entries) = encode_lexdef lexdef in
-  let (automata_entries, actions) = encode_lexentries charsets lexer_entries in
-  automata_entries, actions
+  let (charsets, lex_entries) = 
+    encode_lexdef lexdef in
+  let (automata_entries, automata_transitions) = 
+    encode_lexentries charsets lex_entries in
+  automata_entries, automata_transitions
 (*e: function Lexgen.make_dfa *)
 (*e: lex/lexgen.ml *)
