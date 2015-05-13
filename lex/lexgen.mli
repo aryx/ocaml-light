@@ -19,18 +19,19 @@ type action_id = int
 
 (*s: type Lexgen.automata *)
 type automata =
-    Perform of int (* ?? *)
-  | Shift of automata_trans * automata_move array
+    Perform of action_id
+  (* idx of the array is an integer between 0 and 256, a char_ *)
+  | Shift of automata_trans * automata_move array 
 (*e: type Lexgen.automata *)
 (*s: type Lexgen.automata_trans *)
 and automata_trans =
     No_remember
-  | Remember of int (* ?? *)
+  | Remember of action_id
 (*e: type Lexgen.automata_trans *)
 (*s: type Lexgen.automata_move *)
 and automata_move =
     Backtrack
-  | Goto of int (* ?? *)
+  | Goto of int
 (*e: type Lexgen.automata_move *)
 
 (*s: type Lexgen.automata_entry *)
@@ -39,7 +40,7 @@ and automata_move =
 type automata_entry =
   { auto_name: string;
     auto_initial_state: int;
-    auto_actions: (action_id * Syntax.location) list;
+    auto_actions: (action_id * Syntax.action) list;
   }
 (*e: type Lexgen.automata_entry *)
 

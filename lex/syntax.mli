@@ -35,8 +35,12 @@ type regular_expression =
   | Repetition of regular_expression
 (*e: type Syntax.regular_expression *)
 
+(*s: type Syntax.action *)
+type action = location
+(*e: type Syntax.action *)
+
 (*s: type Syntax.rule *)
-type rule = string * (regular_expression * location) list
+type rule = string * (regular_expression * action) list
 (*e: type Syntax.rule *)
 
 (*s: type Syntax.lexer_definition *)

@@ -108,5 +108,8 @@ type lex_tables =
     lex_check: string }
 (*e: type Lexing.lex_tables *)
 
+(* take an integer representing a state and return an integer representing
+ * an action_id
+ *)
 external engine: lex_tables -> int -> lexbuf -> int = "lex_engine"
 (*e: stdlib/lexing.mli *)
