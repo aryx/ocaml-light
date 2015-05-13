@@ -24,8 +24,8 @@ open Compact
 let copy_buffer = String.create 1024
 (*e: constant Output.copy_buffer *)
 
-(*s: function Output.copy_chunk_unix *)
-let copy_chunk_unix ic oc (Location(start,stop)) =
+(*s: function Output.copy_chunk *)
+let copy_chunk ic oc (Location(start,stop)) =
   seek_in ic start;
   let n = ref (stop - start) in
   while !n > 0 do
@@ -33,13 +33,7 @@ let copy_chunk_unix ic oc (Location(start,stop)) =
     output oc copy_buffer 0 m;
     n := !n - m
   done
-(*e: function Output.copy_chunk_unix *)
-
-(*s: constant Output.copy_chunk *)
-let copy_chunk =
-  match Sys.os_type with
-  | _       -> copy_chunk_unix
-(*e: constant Output.copy_chunk *)
+(*e: function Output.copy_chunk *)
 
 (*s: function Output.output_byte *)
 (* To output an array of short ints, encoded as a string *)
@@ -84,13 +78,14 @@ let output_entry ic oc e =
   fprintf oc "and %s_rec lexbuf state =\n" e.auto_name;
   fprintf oc "  match Lexing.engine lex_tables state lexbuf with\n    ";
   let first = ref true in
-  List.iter
-    (fun (num, loc) ->
-      if !first then first := false else fprintf oc "  | ";
+  e.auto_actions |> List.iter (fun (num, loc_action) ->
+      if !first 
+      then first := false 
+      else fprintf oc "  | ";
       fprintf oc "%d -> (" num;
-      copy_chunk ic oc loc;
-      fprintf oc ")\n")
-    e.auto_actions;
+      copy_chunk ic oc loc_action;
+      fprintf oc ")\n"
+  );
   fprintf oc "  | n -> lexbuf.Lexing.refill_buff lexbuf; %s_rec lexbuf n\n\n"
           e.auto_name
 (*e: function Output.output_entry *)
@@ -99,6 +94,7 @@ let output_entry ic oc e =
 (* Main output function *)
 
 let output_lexdef ic oc header tables entry_points trailer =
+  (*s: [[Output.output_lexdef()]] print statistics *)
   Printf.printf "%d states, %d transitions, table size %d bytes\n"
     (Array.length tables.tbl_base)
     (Array.length tables.tbl_trans)
@@ -106,16 +102,21 @@ let output_lexdef ic oc header tables entry_points trailer =
           Array.length tables.tbl_default + Array.length tables.tbl_trans +
           Array.length tables.tbl_check));
   flush stdout;
+  (*e: [[Output.output_lexdef()]] print statistics *)
   copy_chunk ic oc header;
   output_tables oc tables;
-  begin match entry_points with
+  (*s: [[Output.output_lexdef()]] generate entry points *)
+  (match entry_points with
     [] -> ()
   | entry1 :: entries ->
-      output_string oc "let rec "; output_entry ic oc entry1;
-      List.iter
-        (fun e -> output_string oc "and "; output_entry ic oc e)
-        entries
-  end;
+      output_string oc "let rec "; 
+      output_entry ic oc entry1;
+      entries |> List.iter (fun e -> 
+        output_string oc "and "; 
+        output_entry ic oc e
+      )
+  );
+  (*e: [[Output.output_lexdef()]] generate entry points *)
   copy_chunk ic oc trailer
 (*e: function Output.output_lexdef *)
 (*e: lex/output.ml *)

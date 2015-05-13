@@ -130,5 +130,4 @@ let compact_tables state_v =
     tbl_check = Array.sub !check 0 !last_used }
 (*e: function Compact.compact_tables *)
 
-
 (*e: lex/compact.ml *)
