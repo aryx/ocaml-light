@@ -24,6 +24,6 @@ type lex_tables =
 (*e: type Compact.lex_tables *)
 
 (*s: signature Compact.compact_tables *)
-val compact_tables: Lexgen.automata array -> lex_tables
+val compact_tables: Lexgen.automata_matrix -> lex_tables
 (*e: signature Compact.compact_tables *)
 (*e: lex/compact.mli *)
