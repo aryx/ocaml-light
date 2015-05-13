@@ -46,9 +46,9 @@ type lexer_entry =
 (* Representation of automata *)
 
 (*s: type Lexgen.automata *)
-type automata =
+type automata_row =
     Perform of action_id
-  (* idx of the array is an integer between 0 and 256, a char_ *)
+  (* indexed by an integer between 0 and 256(eof), that is a char_ *)
   | Shift of automata_trans * automata_move array 
 (*e: type Lexgen.automata *)
 (*s: type Lexgen.automata_trans *)
@@ -71,6 +71,11 @@ type automata_entry =
     auto_actions: (action_id * Syntax.action) list;
   }
 (*e: type Lexgen.automata_entry *)
+
+(*s: type Lexgen.automata_matrix *)
+(* indexed by state number *)
+type automata_matrix = automata_row array
+(*e: type Lexgen.automata_matrix *)
     
 (* From shallow to deep syntax *)
 
