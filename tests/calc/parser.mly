@@ -5,12 +5,10 @@ open Ast
 %token <int> INT
 %token PLUS MINUS MULT DIV
 %token OPAR CPAR
-
 %token EOF
 
 %start expr
 %type <Ast.expr> expr
-
 
 %%
 

@@ -1,4 +1,3 @@
-
 let main () =
   let file = Sys.argv.(1) in
   let chan = open_in file in
@@ -8,8 +7,7 @@ let main () =
     let i = Eval.eval ast in
     Printf.printf "result = %d\n" i
   with Parsing.Parse_error ->
-    Printf.printf "parse error at %d on %s\n" 
+    Printf.printf "parse error at character position %d on %s\n" 
       (Lexing.lexeme_start lexbuf) (Lexing.lexeme lexbuf)
-    
 
 let _ = main ()
