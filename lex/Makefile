@@ -11,6 +11,12 @@ DEPFLAGS=
 
 OBJS=parser.cmo lexer.cmo lexgen.cmo compact.cmo output.cmo main.cmo
 
+#pad: if want to compile with a more recent ocaml and use a recent ocamldebug
+#CAMLLEX=ocamllex
+#CAMLYACC=ocamlyacc
+#CAMLC=ocamlc -g -I /home/pad/pfff/commons/ocamlextra
+#OBJS=/home/pad/pfff/commons/ocamlextra/set_poly.cmo /home/pad/pfff/commons/ocamlextra/map_poly.cmo parser.cmo lexer.cmo lexgen.cmo compact.cmo output.cmo main.cmo
+
 all: ocamllex
 
 ocamllex: $(OBJS)
