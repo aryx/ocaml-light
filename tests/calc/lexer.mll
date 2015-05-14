@@ -5,7 +5,7 @@ open Parser
 let integer = ['0'-'9']+
 
 rule token = parse
-    "#" { comment lexbuf }
+  | "#" { comment lexbuf }
   | [' ''\t''\n']+ { token lexbuf }
   | "+" { PLUS }
   | "-" { MINUS }
@@ -19,7 +19,8 @@ rule token = parse
   | _ { failwith ("unknown token: " ^ Lexing.lexeme lexbuf) }
 
 and comment = parse
-    [^'\n']* { comment lexbuf }
+    [^'\n']+ { comment lexbuf }
   | '\n'     { token lexbuf }
+
   | eof { EOF }
   | _ { failwith ("unknown token in comment: " ^ Lexing.lexeme lexbuf) }
