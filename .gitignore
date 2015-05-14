@@ -81,3 +81,6 @@ boot/Saved
 /OCaml.tex
 /OCaml.toc
 /tests/hello.byte
+/tests/calc/lexer.ml
+/tests/calc/parser.ml
+/tests/calc/parser.mli
