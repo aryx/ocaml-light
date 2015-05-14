@@ -207,6 +207,9 @@ Here are other candidates that were considered but ultimately discarded:
 %https://rwmj.wordpress.com/2009/08/04/ocaml-internals/
 %https://github.com/ocamllabs/ocaml-internals/wiki
 
+%why ocaml vs smlnj, moscowml, etc:
+%http://thebreakfastpost.com/2015/05/10/sml-and-ocaml-so-why-was-the-ocaml-faster/
+
 
 \section{Getting started}
 
