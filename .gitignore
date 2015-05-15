@@ -84,3 +84,8 @@ boot/Saved
 /tests/calc/lexer.ml
 /tests/calc/parser.ml
 /tests/calc/parser.mli
+/yacc2/.depend
+/yacc2/lexer.ml
+/yacc2/ocamlyacc
+/yacc2/parser.ml
+/yacc2/parser.mli
