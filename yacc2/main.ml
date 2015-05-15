@@ -42,5 +42,6 @@ let main () =
   ()
 
 let _ = 
+  Tests.test_lr0 ();
   Printexc.catch main (); 
   exit 0
