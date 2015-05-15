@@ -30,9 +30,10 @@
  (join-string 
   (list 
    ""
-   (case 0
+   (case 1
      
      (0 "/home/pad/github/fork-ocaml/tests/calc/parser.mly")
+     (1 "/home/pad/github/fork-ocaml/tests/yacc/arith.mly")
      
      )
    ))

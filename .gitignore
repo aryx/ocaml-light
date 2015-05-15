@@ -87,3 +87,4 @@ boot/Saved
 /yacc2/lexer.ml
 /yacc2/ocamlyacc
 /yacc2/parser.ml
+/yacc2/parser.mli
