@@ -39,6 +39,10 @@ let dump_item env item =
     dump_symbol s;
     print_space ();
   );
+  if idx > List.length r.rhs then begin
+      print_string ".";
+  end;
+
   close_box ();
 (*  print_space (); print_string "(R"; print_int idx; print_string ")" *)
   ()
