@@ -11,8 +11,18 @@ type item = ruleidx * dotidx
 type items = item Set_poly.t
 
 type env = {
+  (* augmented grammar where r0 is e' -> start_original_grammar *)
   g: Ast.rule_ array;
 }
 
+type transitions = (items * Ast.symbol, items) Map_poly.t
+
 
 val closure: env -> items -> items
+
+val goto: env -> items -> Ast.symbol -> items
+
+
+val canonical_lr0_automaton: env -> items Set_poly.t * transitions
+
+

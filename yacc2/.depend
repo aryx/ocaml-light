@@ -1,16 +1,19 @@
+dump.cmi: lr0.cmi 
 lexer.cmi: parser.cmi 
 lr0.cmi: ast.cmo 
 parser.cmi: ast.cmo 
 check.cmo: check.cmi 
 check.cmx: check.cmi 
+dump.cmo: ast.cmo lr0.cmi dump.cmi 
+dump.cmx: ast.cmx lr0.cmx dump.cmi 
 lalr.cmo: lalr.cmi 
 lalr.cmx: lalr.cmi 
 lexer.cmo: ast.cmo parser.cmi lexer.cmi 
 lexer.cmx: ast.cmx parser.cmx lexer.cmi 
 lr0.cmo: ast.cmo lr0.cmi 
 lr0.cmx: ast.cmx lr0.cmi 
-main.cmo: lexer.cmi parser.cmi tests.cmo 
-main.cmx: lexer.cmx parser.cmx tests.cmx 
+main.cmo: ast.cmo dump.cmi lexer.cmi lr0.cmi parser.cmi tests.cmo 
+main.cmx: ast.cmx dump.cmx lexer.cmx lr0.cmx parser.cmx tests.cmx 
 output.cmo: output.cmi 
 output.cmx: output.cmi 
 parser.cmo: ast.cmo parser.cmi 

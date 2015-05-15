@@ -11,13 +11,13 @@ DEPFLAGS=
 
 OBJS1=ast.cmo parser.cmo lexer.cmo check.cmo \
   lr0.cmo slr.cmo lalr.cmo \
-  output.cmo \
+  output.cmo dump.cmo \
   tests.cmo main.cmo
 
 #pad: if want to compile with a more recent ocaml and use a recent ocamldebug
 CAMLLEX=ocamllex
 CAMLYACC=ocamlyacc
-CAMLC=ocamlc -g -I /home/pad/pfff/commons/ocamlextra
+CAMLC=ocamlc -annot -g -I /home/pad/pfff/commons/ocamlextra
 OBJS=/home/pad/pfff/commons/ocamlextra/set_poly.cmo /home/pad/pfff/commons/ocamlextra/map_poly.cmo $(OBJS1)
 
 all: ocamlyacc
