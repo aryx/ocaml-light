@@ -218,6 +218,10 @@ let sort = stable_sort
 
 
 
+let rec find p = function
+  | [] -> raise Not_found
+  | x :: l -> if p x then x else find p l
+
 let find_all p =
   let rec find accu = function
   | [] -> rev accu

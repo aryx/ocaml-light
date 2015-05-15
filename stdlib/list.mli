@@ -154,3 +154,9 @@ val partition : ('a -> bool) -> 'a list -> 'a list * 'a list
    satisfy the predicate [p], and [l2] is the list of all the
    elements of [l] that do not satisfy [p].
    The order of the elements in the input list is preserved. *)
+
+val find : ('a -> bool) -> 'a list -> 'a
+(** [find p l] returns the first element of the list [l]
+   that satisfies the predicate [p].
+   Raise [Not_found] if there is no value that satisfies [p] in the
+   list [l]. *)
