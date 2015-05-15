@@ -1,3 +1,32 @@
+(* Yoann Padioleau
+ *
+ * Copyright (C) 2015 Yoann Padioleau
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 2.1 as published by the Free Software Foundation, with the
+ * special exception on linking described in file license.txt.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
+ * license.txt for more details.
+ *)
+open Ast
+
+(*****************************************************************************)
+(* Prelude *)
+(*****************************************************************************)
+(*
+ *
+ * todo:
+ *  - handle priorities
+ *  - EBNF support!
+ *)
+
+(*****************************************************************************)
+(* Main entry point *)
+(*****************************************************************************)
 
 let main () =
 
@@ -14,7 +43,7 @@ let main () =
     else source_name ^ ".ml" 
   in
   let ic = open_in source_name in
-  let oc = open_out dest_name in
+(*  let oc = open_out dest_name in *)
   let lexbuf = Lexing.from_channel ic in
 
   (* parsing *)
@@ -22,7 +51,7 @@ let main () =
     try
       Parser.parser_definition Lexer.main lexbuf
     with exn ->
-      close_out oc;
+(*      close_out oc; *)
       Sys.remove dest_name;
        (match exn with
          Parsing.Parse_error ->
@@ -39,6 +68,15 @@ let main () =
        );
       exit 2 
   in
+  let augmented =
+    ({lhs_ = NT "$s"; rhs = [Nonterm (Ast.start_symbol def)]; 
+     act = Location(0,0)}
+    :: def.grm) |> Array.of_list
+  in
+  let env = { Lr0.g = augmented } in
+  let lr0 = Lr0.canonical_lr0_automaton env in
+  Dump.dump_lr0_automaton env lr0;
+
   ()
 
 let _ = 

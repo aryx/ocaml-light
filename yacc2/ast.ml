@@ -1,15 +1,31 @@
+(* Yoann Padioleau
+ *
+ * Copyright (C) 2015 Yoann Padioleau
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 2.1 as published by the Free Software Foundation, with the
+ * special exception on linking described in file license.txt.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
+ * license.txt for more details.
+ *)
+
+(*****************************************************************************)
+(* Types *)
+(*****************************************************************************)
+
+type term = T of string
+type nonterm = NT of string
+type symbol = Term of term | Nonterm of nonterm
 
 type charpos = int
 type location =
     Location of charpos * charpos
-
 (* todo: at some point need to parse to extract the $xxx *)
 type action = location
-
-(* todo: in lrtables.ml at some point *)
-type term = T of string
-type nonterm = NT of string
-type symbol = Term of term | Nonterm of nonterm
 
 type grammar = rule_ list
 
@@ -28,9 +44,28 @@ type directive =
 
   and type_ = string
 
+(* main data structure *)
 type parser_definition = {
   header: location;
   directives: directive list;
   grm: grammar;
   trailer: location;
 }
+
+(*****************************************************************************)
+(* Helpers *)
+(*****************************************************************************)
+
+let start_symbol def =
+  try 
+    (match
+      def.directives |> List.find (function
+        | Start x -> true
+        | _ -> false
+      )
+     with
+     | Start x -> x
+     | _ -> failwith "impossible"
+    )
+  with Not_found -> failwith "no start symbol found"
+

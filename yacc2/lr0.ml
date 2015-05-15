@@ -1,4 +1,29 @@
+(* Yoann Padioleau
+ *
+ * Copyright (C) 2015 Yoann Padioleau
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 2.1 as published by the Free Software Foundation, with the
+ * special exception on linking described in file license.txt.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
+ * license.txt for more details.
+ *)
 open Ast
+
+(*****************************************************************************)
+(* Prelude *)
+(*****************************************************************************)
+(* Computing the LR(0) automaton for a context free grammar, using
+ * the algorithm described in the dragon book in chapter 4.
+ *)
+
+(*****************************************************************************)
+(* Types *)
+(*****************************************************************************)
 
 (* the index of the rule in env.g *)
 type ruleidx = R of int
@@ -9,13 +34,17 @@ type dotidx = D of int
 type item = ruleidx * dotidx
 
 module Set = Set_poly
+module Map = Map_poly
 
 (* a.k.a an LR0 state *)
 type items = item Set.t
 
 type env = {
+  (* augmented grammar where r0 is e' -> start_original_grammar *)
   g: Ast.rule_ array;
 }
+
+type transitions = (items * Ast.symbol, items) Map.t
 
 let rule_at (R idx) env =
   env.g.(idx)
@@ -29,14 +58,22 @@ let rules_of nt env =
   List.rev !res
 
 let after_dot r (D idx) =
-  let rhs = r.rhs in
-  try
-    Some (List.nth r.rhs idx)
+  try Some (List.nth r.rhs idx)
   with Failure _ -> None
 
+let move_dot_right (D idx) = 
+  (D (idx + 1))
+
+let all_symbols env =
+  env.g |> Array.fold_left (fun acc r ->
+    ((Nonterm r.lhs_)::r.rhs) |> List.fold_left (fun acc symbol ->
+      Set.add symbol acc
+      ) acc
+  ) Set.empty
 
 
 
+(* opti: use kernel items *)
 let closure env items =
   let result = ref items in
 
@@ -46,8 +83,8 @@ let closure env items =
 
     !result |> Set.iter (fun item ->
       let ridx, didx = item in
-      
       let r = rule_at ridx env in
+
       match after_dot r didx with
       | Some (Nonterm b) ->
           let rules_idx = rules_of b env in
@@ -62,4 +99,44 @@ let closure env items =
     )
   done;
   !result
+
+
+let goto env items symbol =
+  let start =
+    Set.fold (fun item acc ->
+      let ridx, didx = item in
+      let r = rule_at ridx env in
+      match after_dot r didx with
+      | Some symbol2 when symbol = symbol2 ->
+          Set.add (ridx, move_dot_right didx) acc
+      | _ -> acc
+    ) items Set.empty
+  in
+  closure env start
+
+let canonical_lr0_automaton env =
+  let start_item = (R 0, D 0) in
+  let result = ref (Set.singleton (closure env (Set.singleton start_item))) in
+  let transitions = ref Map.empty in
+  let symbols = all_symbols env in
+  
+  let added = ref true in
+  while !added do
+    added := false;
+
+    !result |> Set.iter (fun items ->
+      symbols |> Set.iter (fun symb ->
+        let itemset = goto env items symb in
+        if not (Set.is_empty itemset) && not (Map.mem (items, symb)!transitions)
+        then transitions := Map.add (items, symb) itemset !transitions;
+
+        if not (Set.is_empty itemset) && not (Set.mem itemset !result) 
+        then begin
+          added := true;
+          result := Set.add itemset !result;
+        end
+      )
+    )
+  done;
+  !result, !transitions
 

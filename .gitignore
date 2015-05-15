@@ -1,6 +1,7 @@
 *.cm*
 *.byte
 *.opt
+*.annot
 
 *.o
 *.a
@@ -88,3 +89,4 @@ boot/Saved
 /yacc2/ocamlyacc
 /yacc2/parser.ml
 /yacc2/parser.mli
+/tests/yacc/arith.ml
