@@ -6,16 +6,19 @@ LINKFLAGS=
 CAMLYACC=../boot/ocamlyacc
 YACCFLAGS=
 CAMLLEX=../boot/ocamlrun ../boot/ocamllex
-CAMLDEP=../boot/ocamlrun ../tools/ocamldep
+CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
 DEPFLAGS=
 
-OBJS=ast.cmo parser.cmo lexer.cmo output.cmo main.cmo
+OBJS1=ast.cmo parser.cmo lexer.cmo check.cmo \
+  lr0.cmo slr.cmo lalr.cmo \
+  output.cmo \
+  tests.cmo main.cmo
 
 #pad: if want to compile with a more recent ocaml and use a recent ocamldebug
 CAMLLEX=ocamllex
 CAMLYACC=ocamlyacc
 CAMLC=ocamlc -g -I /home/pad/pfff/commons/ocamlextra
-OBJS=/home/pad/pfff/commons/ocamlextra/set_poly.cmo /home/pad/pfff/commons/ocamlextra/map_poly.cmo ast.cmo parser.cmo lexer.cmo output.cmo main.cmo
+OBJS=/home/pad/pfff/commons/ocamlextra/set_poly.cmo /home/pad/pfff/commons/ocamlextra/map_poly.cmo $(OBJS1)
 
 all: ocamlyacc
 

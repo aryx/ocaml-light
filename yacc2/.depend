@@ -1,0 +1,17 @@
+parser.cmi: ast.cmo 
+check.cmo: check.cmi 
+check.cmx: check.cmi 
+lalr.cmo: lalr.cmi 
+lalr.cmx: lalr.cmi 
+lexer.cmo: ast.cmo parser.cmi lexer.cmi 
+lexer.cmx: ast.cmx parser.cmx lexer.cmi 
+lr0.cmo: lr0.cmi 
+lr0.cmx: lr0.cmi 
+main.cmo: lexer.cmi parser.cmi 
+main.cmx: lexer.cmx parser.cmx 
+output.cmo: output.cmi 
+output.cmx: output.cmi 
+parser.cmo: ast.cmo parser.cmi 
+parser.cmx: ast.cmx parser.cmi 
+slr.cmo: slr.cmi 
+slr.cmx: slr.cmi 

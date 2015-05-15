@@ -6,7 +6,7 @@ LINKFLAGS=
 CAMLYACC=../boot/ocamlyacc
 YACCFLAGS=
 CAMLLEX=../boot/ocamlrun ../boot/ocamllex
-CAMLDEP=../boot/ocamlrun ../tools/ocamldep
+CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
 DEPFLAGS=
 
 OBJS=parser.cmo lexer.cmo lexgen.cmo compact.cmo output.cmo main.cmo
