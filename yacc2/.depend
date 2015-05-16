@@ -2,6 +2,7 @@ dump.cmi: lr0.cmi
 lexer.cmi: parser.cmi 
 lr0.cmi: ast.cmo 
 parser.cmi: ast.cmo 
+slr.cmi: lr0.cmi lrtables.cmo 
 check.cmo: check.cmi 
 check.cmx: check.cmi 
 dump.cmo: ast.cmo lr0.cmi dump.cmi 
@@ -12,13 +13,15 @@ lexer.cmo: ast.cmo parser.cmi lexer.cmi
 lexer.cmx: ast.cmx parser.cmx lexer.cmi 
 lr0.cmo: ast.cmo lr0.cmi 
 lr0.cmx: ast.cmx lr0.cmi 
-main.cmo: ast.cmo dump.cmi lexer.cmi lr0.cmi parser.cmi tests.cmo 
-main.cmx: ast.cmx dump.cmx lexer.cmx lr0.cmx parser.cmx tests.cmx 
+lrtables.cmo: ast.cmo lr0.cmi 
+lrtables.cmx: ast.cmx lr0.cmx 
+main.cmo: ast.cmo dump.cmi lexer.cmi lr0.cmi parser.cmi slr.cmi tests.cmo 
+main.cmx: ast.cmx dump.cmx lexer.cmx lr0.cmx parser.cmx slr.cmx tests.cmx 
 output.cmo: output.cmi 
 output.cmx: output.cmi 
 parser.cmo: ast.cmo parser.cmi 
 parser.cmx: ast.cmx parser.cmi 
-slr.cmo: slr.cmi 
-slr.cmx: slr.cmi 
+slr.cmo: ast.cmo lr0.cmi lrtables.cmo slr.cmi 
+slr.cmx: ast.cmx lr0.cmx lrtables.cmx slr.cmi 
 tests.cmo: ast.cmo lr0.cmi 
 tests.cmx: ast.cmx lr0.cmx 
