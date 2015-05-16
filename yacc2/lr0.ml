@@ -46,13 +46,13 @@ type env = {
   g: Ast.rule_ array;
 }
 
-type transitions = (items * Ast.symbol, items) Map.t
-
 type automaton = {
   states: items Set_poly.t;
+  (* state 0 is the starting state *)
   int_to_state: items array;
   state_to_int: (items, stateid) Map_poly.t;
-  trans: transitions;
+  (* goto mapping *)
+  trans: (items * Ast.symbol, items) Map.t;
 }
 
 (*****************************************************************************)

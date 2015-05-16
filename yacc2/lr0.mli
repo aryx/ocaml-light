@@ -13,24 +13,27 @@ type item = ruleidx * dotidx
 type items = item Set_poly.t
 
 type env = {
-  (* augmented grammar where r0 is e' -> start_original_grammar *)
+  (* augmented grammar where r0 is $s -> start_original_grammar *)
   g: Ast.rule_ array;
 }
 
-type transitions = (items * Ast.symbol, items) Map_poly.t
-
 type automaton = {
   states: items Set_poly.t;
+  (* state 0 is the starting state *)
   int_to_state: items array;
   state_to_int: (items, stateid) Map_poly.t;
-  trans: transitions;
+  (* goto mapping *)
+  trans: (items * Ast.symbol, items) Map_poly.t;
 }
 
 val closure: env -> items -> items
 
 val goto: env -> items -> Ast.symbol -> items
 
+(* assumes augmented grammar *)
 val canonical_lr0_automaton: env -> automaton
 
 
+(* helper functions used also by slr.ml *)
+val after_dot: Ast.rule_ -> dotidx -> Ast.symbol option
 

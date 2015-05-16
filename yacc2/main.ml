@@ -76,6 +76,7 @@ let main () =
   let env = { Lr0.g = augmented } in
   let automaton = Lr0.canonical_lr0_automaton env in
   Dump.dump_lr0_automaton env automaton;
+  let tables = Slr.lr_tables env automaton in
 
   ()
 
