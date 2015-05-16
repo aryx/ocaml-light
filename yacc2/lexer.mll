@@ -50,6 +50,7 @@ rule main = parse
       brace_depth := 1;
       let n2 = action2 lexbuf in
       TAction(Location(n1, n2)) }
+| "/*" { comment2 lexbuf; main lexbuf }
 
 
 | '{' 
@@ -128,3 +129,10 @@ and action2 = parse
 
 | eof { raise (Lexical_error "unterminated action") }
 | _   { action2 lexbuf }
+
+(* to be backward compatible with ocamlyacc *)
+and comment2 = parse
+| "*/" { () }
+| ['*''/']+ { comment2 lexbuf }
+| eof { raise (Lexical_error "unterminated C comment") }
+| _   { comment2 lexbuf }

@@ -28,7 +28,6 @@ type location =
 type action = location
 
 type grammar = rule_ list
-
   and rule_ = {
     lhs_: nonterm; (* lhs conflict with ocamlyacc yytable record *)
     rhs: symbol list;
@@ -68,4 +67,3 @@ let start_symbol def =
      | _ -> failwith "impossible"
     )
   with Not_found -> failwith "no start symbol found"
-
