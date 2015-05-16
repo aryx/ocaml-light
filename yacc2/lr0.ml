@@ -30,6 +30,8 @@ type ruleidx = R of int
 (* the dot position in the rhs of a rule *)
 type dotidx = D of int
 
+type stateid = S of int
+
 (* as mentionned in the dragon book *)
 type item = ruleidx * dotidx
 
@@ -45,6 +47,17 @@ type env = {
 }
 
 type transitions = (items * Ast.symbol, items) Map.t
+
+type automaton = {
+  states: items Set_poly.t;
+  int_to_state: items array;
+  state_to_int: (items, stateid) Map_poly.t;
+  trans: transitions;
+}
+
+(*****************************************************************************)
+(* Helpers *)
+(*****************************************************************************)
 
 let rule_at (R idx) env =
   env.g.(idx)
@@ -72,6 +85,9 @@ let all_symbols env =
   ) Set.empty
 
 
+(*****************************************************************************)
+(* Algorithms *)
+(*****************************************************************************)
 
 (* opti: use kernel items *)
 let closure env items =
@@ -114,9 +130,14 @@ let goto env items symbol =
   in
   closure env start
 
+(*****************************************************************************)
+(* Main entry point *)
+(*****************************************************************************)
+
 let canonical_lr0_automaton env =
   let start_item = (R 0, D 0) in
-  let result = ref (Set.singleton (closure env (Set.singleton start_item))) in
+  let start_items = closure env (Set.singleton start_item) in
+  let result = ref (Set.singleton start_items) in
   let transitions = ref Map.empty in
   let symbols = all_symbols env in
   
@@ -138,5 +159,23 @@ let canonical_lr0_automaton env =
       )
     )
   done;
-  !result, !transitions
+  let states = !result in
+  let trans = !transitions in
 
+  (* put start state first in the list of states *)
+  let states_no_start = Set.remove start_items states |> Set.elements  in
+  let states_list = start_items::states_no_start in
+
+  let int_to_items = states_list |> Array.of_list in
+  let items_to_int = 
+    let x = ref Map.empty in
+    int_to_items |> Array.iteri (fun i items ->
+      x := Map.add items (S i) !x
+    );
+    !x
+  in
+  { states = states;
+    int_to_state = int_to_items;
+    state_to_int = items_to_int;
+    trans = trans
+  }

@@ -39,7 +39,7 @@ let dump_item env item =
     dump_symbol s;
     print_space ();
   );
-  if idx > List.length r.rhs then begin
+  if didx = List.length r.rhs then begin
       print_string ".";
   end;
 
@@ -57,21 +57,12 @@ let dump_items env items =
     print_newline ();
   )
 
-let dump_lr0_automaton env (xxs, transitions) =
-
-  let int_to_items = xxs |> Set.elements |> Array.of_list in
-  let items_to_int = 
-    let x = ref Map.empty in
-    int_to_items |> Array.iteri (fun i items ->
-      x := Map.add items i !x
-    );
-    !x
-  in
+let dump_lr0_automaton env auto =
 
   open_box 0;
 
   (* the states *)
-  int_to_items |> Array.iteri (fun i items ->
+  auto.int_to_state |> Array.iteri (fun i items ->
     print_string "I"; print_int i; print_newline ();
     open_box 2;
     dump_items env items;
@@ -80,9 +71,9 @@ let dump_lr0_automaton env (xxs, transitions) =
   );
 
   (* the transitions *)
-  transitions |> Map.iter (fun (items1, symb) items2 ->
-    let src = Map.find items1 items_to_int in
-    let dst = Map.find items2 items_to_int in
+  auto.trans |> Map.iter (fun (items1, symb) items2 ->
+    let (S src) = Map.find items1 auto.state_to_int in
+    let (S dst) = Map.find items2 auto.state_to_int in
     print_string "I"; print_int src;
     print_string " --"; dump_symbol symb; print_string "-->";
     print_string " I"; print_int dst;
