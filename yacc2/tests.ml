@@ -1,9 +1,6 @@
 open Ast
 open Lr0
 
-module Set = Set_poly
-module Map = Map_poly
-
 (* from tests/yacc/arith.mly which is a copy of the representative grammar in
  * the dragon book in 4.1
  * $S -> E         (R0)
@@ -117,3 +114,8 @@ let test_first_follow () =
     t, Set.elements set)
   in
   ()
+
+
+(* what we should generate *)
+let test_lr_engine () =
+  failwith "TODO"

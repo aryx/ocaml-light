@@ -17,8 +17,8 @@ OBJS1=ast.cmo parser.cmo lexer.cmo check.cmo \
 #pad: if want to compile with a more recent ocaml and use a recent ocamldebug
 CAMLLEX=ocamllex
 CAMLYACC=ocamlyacc
-CAMLC=ocamlc -annot -g -I /home/pad/pfff/commons/ocamlextra
-OBJS=/home/pad/pfff/commons/ocamlextra/set_poly.cmo /home/pad/pfff/commons/ocamlextra/map_poly.cmo $(OBJS1)
+CAMLC=ocamlc -annot -g -I compat
+OBJS=compat/set.cmo compat/map.cmo $(OBJS1)
 
 all: ocamlyacc
 
