@@ -3,7 +3,7 @@
  pad-ocaml-project-path "/home/pad/github/fork-ocaml"
  pad-ocaml-project-subdirs 
  (split-string 
-  "lex yacc yacc2
+  "lex yacc yacc2 yacc2/compat
   "
   )
  pad-ocaml-project-toplevel "pfff.top"

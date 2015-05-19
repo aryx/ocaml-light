@@ -103,19 +103,52 @@ let arith_ll =
 
 let test_first_follow () =
   let (first, eps) = First_follow.compute_first arith_ll in
-  let first' = first |> Map.to_list |> List.map (fun (t, set) -> 
+  let _first' = first |> Map.to_list |> List.map (fun (t, set) -> 
     t, Set.elements set)
   in
-  let eps' = Set.elements eps in
+  let _eps' = Set.elements eps in
 
   let env = Lr0.mk_env_augmented_grammar (NT "e") arith_ll in
   let follow = First_follow.compute_follow env (first, eps) in
-  let follow' = follow |> Map.to_list |> List.map (fun (t, set) ->
+  let _follow' = follow |> Map.to_list |> List.map (fun (t, set) ->
     t, Set.elements set)
   in
   ()
 
 
+open Parsing2
+module Parsing = Parsing2
+
+type token =
+  | T0
+  | TEOF
+
 (* what we should generate *)
 let test_lr_engine () =
-  failwith "TODO"
+  let tokens = ref [T0; TEOF] in
+  let lexbuf = Lexing.from_string "fake" in
+  
+  let lexfun _lexbuf =
+    match !tokens with
+    | [] -> failwith "no more tokens"
+    | x::xs ->
+      tokens := xs;
+      x
+  in
+  let lrtables = {
+    Parsing.action = (function 
+      | (S 0, T0) -> Shift (S 1)
+      | (S 1, TEOF) -> Reduce (1, NT "S", RA "S")
+      | (S 2, TEOF) -> Accept
+      | _ -> raise Parsing.Parse_error
+    );
+    Parsing.goto = (function
+      | S 0, NT "S" -> S 2
+      | _ -> raise Parsing.Parse_error
+    );
+  }
+  in
+  
+  Parsing.yyparse_simple lrtables lexfun lexbuf
+
+
