@@ -39,3 +39,4 @@ val canonical_lr0_automaton: env -> automaton
 (* helper functions used also by slr.ml *)
 val after_dot: Ast.rule_ -> dotidx -> Ast.symbol option
 
+val all_symbols: env -> Ast.symbol Set_poly.t
