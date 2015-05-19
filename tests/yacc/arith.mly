@@ -1,6 +1,9 @@
 %{
 %}
 
+%token PLUS MULT TOPAR TCPAR
+%token <string> ID
+
 %start e
 
 %%
