@@ -20,7 +20,7 @@ open Ast
 %token <Ast.term> TTerm
 %token <Ast.nonterm> TNonterm
 %token Ttoken Tprec Tstart Ttype
-%token TOr TColon TSemicolon
+%token TColon TOr TSemicolon
 %token <string> TAngle
 %token <Ast.location> TAction
 %token TEOF
@@ -55,7 +55,7 @@ rules_opt:
 
 rule_: TNonterm TColon cases TSemicolon 
   { $3 |> List.map (fun (case, action) -> 
-    { lhs_ = $1; rhs = case; act = action }) 
+    { lhs = $1; rhs = case; act = action }) 
   }
 ;
 

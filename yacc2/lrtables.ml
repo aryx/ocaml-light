@@ -17,4 +17,3 @@ type goto_table =
     
 type lr_tables = action_table * goto_table
 
-let dollar_terminal = Ast.T "$"

@@ -20,7 +20,7 @@ open Ast
 (*
  *
  * todo:
- *  - handle priorities
+ *  - handle priorities, precedences
  *  - EBNF support!
  *)
 
@@ -68,12 +68,7 @@ let main () =
        );
       exit 2 
   in
-  let augmented =
-    ({lhs_ = NT "$s"; rhs = [Nonterm (Ast.start_symbol def)]; 
-     act = Location(0,0)}
-    :: def.grm) |> Array.of_list
-  in
-  let env = { Lr0.g = augmented } in
+  let env = Lr0.mk_env_augmented_grammar (Ast.start_symbol def) def.grm  in
   let automaton = Lr0.canonical_lr0_automaton env in
   Dump.dump_lr0_automaton env automaton;
   let tables = Slr.lr_tables env automaton in

@@ -14,6 +14,9 @@
  *)
 open Ast
 
+module Set = Set_poly
+module Map = Map_poly
+
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
@@ -35,9 +38,6 @@ type stateid = S of int
 (* as mentionned in the dragon book *)
 type item = ruleidx * dotidx
 
-module Set = Set_poly
-module Map = Map_poly
-
 (* a.k.a an LR0 state *)
 type items = item Set.t
 
@@ -47,10 +47,10 @@ type env = {
 }
 
 type automaton = {
-  states: items Set_poly.t;
+  states: items Set.t;
   (* state 0 is the starting state *)
   int_to_state: items array;
-  state_to_int: (items, stateid) Map_poly.t;
+  state_to_int: (items, stateid) Map.t;
   (* goto mapping *)
   trans: (items * Ast.symbol, items) Map.t;
 }
@@ -59,13 +59,19 @@ type automaton = {
 (* Helpers *)
 (*****************************************************************************)
 
+let mk_env_augmented_grammar start xs =
+  let noloc = Location (0, 0) in
+  let start = {lhs = Ast.start_nonterminal; rhs =[Nonterm start]; act=noloc} in
+  { g = Array.of_list (start::xs) }
+
+
 let rule_at (R idx) env =
   env.g.(idx)
 
 let rules_of nt env =
   let res = ref [] in
   env.g |> Array.iteri (fun idx r ->
-    if r.lhs_ = nt
+    if r.lhs = nt
     then res := (R idx) :: !res
   );
   List.rev !res
@@ -79,7 +85,7 @@ let move_dot_right (D idx) =
 
 let all_symbols env =
   env.g |> Array.fold_left (fun acc r ->
-    ((Nonterm r.lhs_)::r.rhs) |> List.fold_left (fun acc symbol ->
+    ((Nonterm r.lhs)::r.rhs) |> List.fold_left (fun acc symbol ->
       Set.add symbol acc
       ) acc
   ) Set.empty
@@ -89,7 +95,7 @@ let all_symbols env =
 (* Algorithms *)
 (*****************************************************************************)
 
-(* opti: use kernel items *)
+(* todo: opti: use kernel items *)
 let closure env items =
   let result = ref items in
 
@@ -163,8 +169,8 @@ let canonical_lr0_automaton env =
   let trans = !transitions in
 
   (* put start state first in the list of states *)
-  let states_no_start = Set.remove start_items states |> Set.elements  in
-  let states_list = start_items::states_no_start in
+  let states_without_start = Set.remove start_items states |> Set.elements  in
+  let states_list = start_items::states_without_start in
 
   let int_to_items = states_list |> Array.of_list in
   let items_to_int = 
