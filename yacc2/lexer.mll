@@ -31,10 +31,13 @@ rule main = parse
       comment lexbuf;
       main lexbuf }
 
+(* terminals, uppercase *)
 | ['A'-'Z' ] ['A'-'Z' 'a'-'z' '\'' '_' '0'-'9'] *
     { TTerm (T (Lexing.lexeme lexbuf)) }
+(* nonterminals, lowercase *)
 | ['a'-'z' ] ['A'-'Z' 'a'-'z' '\'' '_' '0'-'9'] *
     { TNonterm (NT (Lexing.lexeme lexbuf)) }
+(* directives, % prefixed *)
 | '%' ['A'-'Z' 'a'-'z'] ['A'-'Z' 'a'-'z' '\'' '_' '0'-'9'] *
     { match Lexing.lexeme lexbuf with
       | "%token" -> Ttoken
@@ -43,6 +46,20 @@ rule main = parse
       | "%type" -> Ttype
       | s -> failwith ("Unknown directive: " ^ s)
     }
+(* actions and header/trailer *)
+| '{' 
+    { let n1 = Lexing.lexeme_end lexbuf in
+      brace_depth := 1;
+      let n2 = action lexbuf in
+      TAction(Location(n1, n2)) }
+
+| ':'  { TColon }
+| '|'  { TOr }
+| ';'  { TSemicolon }
+
+(* for types *)
+| '<'  { TAngle (angle lexbuf) }
+
 (* to be backward compatible with ocamlyacc *)
 | "%%" { main lexbuf }
 | "%{" 
@@ -52,18 +69,6 @@ rule main = parse
       TAction(Location(n1, n2)) }
 | "/*" { comment2 lexbuf; main lexbuf }
 
-
-| '{' 
-    { let n1 = Lexing.lexeme_end lexbuf in
-      brace_depth := 1;
-      let n2 = action lexbuf in
-      TAction(Location(n1, n2)) }
-
-| '|'  { TOr }
-| ':'  { TColon }
-| ';'  { TSemicolon }
-
-| '<'  { TAngle (angle lexbuf) }
 
 | eof  { TEOF }
 | _
@@ -106,6 +111,9 @@ and angle = parse
 | eof { raise(Lexical_error "unterminated type") }
 | [^'>']+ { let s = Lexing.lexeme lexbuf in s ^ angle lexbuf }
 | _ { let s = Lexing.lexeme lexbuf in s ^ angle lexbuf }
+
+
+
 
 (* to be backward compatible with ocamlyacc *)
 and action2 = parse

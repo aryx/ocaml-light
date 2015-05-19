@@ -2,40 +2,42 @@ open Ast
 open Lr0
 
 module Set = Set_poly
+module Map = Map_poly
 
 (* from tests/yacc/arith.mly which is a copy of the representative grammar in
  * the dragon book in 4.1
- * E' -> E         (R0)
+ * $S -> E         (R0)
  * E -> E + T | T  (R1, R2)
  * T -> T * F | F  (R3, R4)
  * F -> ( E ) | id (R5, R6)
  *)
 let noloc = Location (0, 0)
 let arith =
-    [{lhs_ = NT "e";
+    [{lhs = NT "e";
       rhs = [Nonterm (NT "e"); Term (T "PLUS");  Nonterm (NT "t")];
       act = noloc};
-     {lhs_ = NT "e"; 
+     {lhs = NT "e"; 
       rhs = [Nonterm (NT "t")];
       act = noloc};
-     {lhs_ = NT "t";
+     {lhs = NT "t";
       rhs = [Nonterm (NT "t"); Term (T "MULT"); Nonterm (NT "f")];
       act = noloc};
-     {lhs_ = NT "t"; rhs = [Nonterm (NT "f")];
+     {lhs = NT "t"; rhs = [Nonterm (NT "f")];
       act = noloc};
-     {lhs_ = NT "f";
+     {lhs = NT "f";
       rhs = [Term (T "TOPAR"); Nonterm (NT "e"); Term (T "TCPAR")];
       act = noloc};
-     {lhs_ = NT "f"; 
+     {lhs = NT "f"; 
       rhs = [Term (T "ID")];
       act = noloc}]
+(*
 let augmented_arith =
-  {lhs_ = NT "e'"; rhs = [Nonterm (NT "e")]; act = noloc} :: arith
-
+  {lhs = NT "$S"; rhs = [Nonterm (NT "e")]; act = noloc} :: arith
+*)
 
 
 let test_lr0 () =
-  let env = { g = Array.of_list augmented_arith } in
+  let env = Lr0.mk_env_augmented_grammar (NT "e") arith in
 
   (* closure *)
   let items = Set.singleton (R 0, D 0) in

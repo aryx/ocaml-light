@@ -17,8 +17,11 @@
 (* Types *)
 (*****************************************************************************)
 
+(* uppercase string *)
 type term = T of string
+(* lowercase string *)
 type nonterm = NT of string
+
 type symbol = Term of term | Nonterm of nonterm
 
 type charpos = int
@@ -29,7 +32,7 @@ type action = location
 
 type grammar = rule_ list
   and rule_ = {
-    lhs_: nonterm; (* lhs conflict with ocamlyacc yytable record *)
+    lhs: nonterm;
     rhs: symbol list;
     act: action;
   }
@@ -50,6 +53,16 @@ type parser_definition = {
   grm: grammar;
   trailer: location;
 }
+
+(* for the augmented grammar *)
+
+(* should not conflict with user-defined terminals or non terminals
+ * as no nonterminal can contain '$' according to lexer.mll and 
+ * every terminal start with an uppercase letter according again
+ * to lexer.mll
+ *)
+let start_nonterminal = NT "S$"
+let dollar_terminal = T "$"
 
 (*****************************************************************************)
 (* Helpers *)

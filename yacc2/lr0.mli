@@ -13,7 +13,7 @@ type item = ruleidx * dotidx
 type items = item Set_poly.t
 
 type env = {
-  (* augmented grammar where r0 is $s -> start_original_grammar *)
+  (* augmented grammar where r0 is $S -> start_original_grammar *)
   g: Ast.rule_ array;
 }
 
@@ -25,6 +25,8 @@ type automaton = {
   (* goto mapping *)
   trans: (items * Ast.symbol, items) Map_poly.t;
 }
+
+val mk_env_augmented_grammar: Ast.nonterm (* start *) -> Ast.grammar -> env
 
 val closure: env -> items -> items
 

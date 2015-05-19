@@ -30,6 +30,7 @@ module Set = Set_poly
 (* Helpers *)
 (*****************************************************************************)
 
+(* from my common.ml *)
 let rec filter_some = function
   | [] -> []
   | None :: l -> filter_some l
@@ -51,6 +52,7 @@ let lr_tables env auto =
         let (R ridx, didx) = item in
         let r = env.g.(ridx) in
         match Lr0.after_dot r didx with
+        (* a shift *)
         | Some (Term t) -> 
             let items2 = Map.find (items, (Term t)) auto.trans in
             let dst = Map.find items2 auto.state_to_int in
@@ -58,8 +60,8 @@ let lr_tables env auto =
         | Some (Nonterm _) -> acc
         (* a reduction *)
         | None -> 
-            if r.lhs_ = NT "$s"
-            then ((stateid, Lrtables.dollar_terminal), Accept)::acc
+            if r.lhs = Ast.start_nonterminal
+            then ((stateid, Ast.dollar_terminal), Accept)::acc
             else
               (* TODO: should be only for follow of lhs *)
               acc
