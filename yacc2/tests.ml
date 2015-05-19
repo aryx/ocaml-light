@@ -52,3 +52,52 @@ let test_lr0 () =
   let _xs = Set.elements i6 in
   (* [(R 1, D 2); (R 3, D 0); (R 4, D 0); (R 5, D 0); (R 6, D 0)] *)
   ()
+
+
+(*
+ * E -> E E'
+ * E' -> + T E' | epsilon
+ * T -> F T'
+ * T' -> * F T' | epsilon
+ * F -> ( E ) | id
+ *)
+let arith_ll = 
+    [
+     {lhs = NT "e";
+      rhs = [Nonterm (NT "t"); Nonterm (NT "e'")];
+      act = noloc};
+     {lhs = NT "e'"; 
+      rhs = [Term (T "PLUS"); Nonterm (NT "t"); Nonterm (NT "e'")];
+      act = noloc};
+     {lhs = NT "e'"; 
+      rhs = [];
+      act = noloc};
+     {lhs = NT "t";
+      rhs = [Nonterm (NT "f"); Nonterm (NT "t'")];
+      act = noloc};
+     {lhs = NT "t'"; 
+      rhs = [Term (T "MULT"); Nonterm (NT "f"); Nonterm (NT "t'")];
+      act = noloc};
+     {lhs = NT "t'"; 
+      rhs = [];
+      act = noloc};
+     {lhs = NT "f";
+      rhs = [Term (T "TOPAR"); Nonterm (NT "e"); Term (T "TCPAR")];
+      act = noloc};
+     {lhs = NT "f"; 
+      rhs = [Term (T "ID")];
+      act = noloc}]
+
+let test_first_follow () =
+  let (first, eps) = First_follow.compute_first arith_ll in
+  let first' = first |> Map.to_list |> List.map (fun (t, set) -> 
+    t, Set.elements set)
+  in
+  let eps' = Set.elements eps in
+
+  let env = Lr0.mk_env_augmented_grammar (NT "e") arith_ll in
+  let follow = First_follow.compute_follow env (first, eps) in
+  let follow' = follow |> Map.to_list |> List.map (fun (t, set) ->
+    t, Set.elements set)
+  in
+  ()
