@@ -52,6 +52,20 @@ let test_lr0 () =
   let _xs = Set.elements i6 in
   (* [(R 1, D 2); (R 3, D 0); (R 4, D 0); (R 5, D 0); (R 6, D 0)] *)
   ()
+  
+let test_slr () =
+  let env = Lr0.mk_env_augmented_grammar (NT "e") arith in
+
+  (* automaton *)
+  let auto = Lr0.canonical_lr0_automaton env in
+  
+  (* first, follow *)
+  let (first, eps) = First_follow.compute_first arith in
+  let follow = First_follow.compute_follow env (first, eps) in
+  
+  (* slr tables *)
+  let tables = Slr.lr_tables env auto follow in
+  ()
 
 
 (*

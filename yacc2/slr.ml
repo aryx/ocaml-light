@@ -22,7 +22,7 @@ module Set = Set_poly
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
-(* Computing the SLR(1) tables for a context free grammar, using
+(* Computing the SLR(1) tables for a context free grammar using
  * the algorithm described in the dragon book in chapter 4.
  *)
 
@@ -43,7 +43,7 @@ let map_filter f xs = xs |> List.map f |> filter_some
 (* Main entry point *)
 (*****************************************************************************)
 
-let lr_tables env auto =
+let lr_tables env auto follow =
   let trans = auto.trans |> Map.to_list in
 
   let action_tables =
@@ -63,8 +63,9 @@ let lr_tables env auto =
             if r.lhs = Ast.start_nonterminal
             then ((stateid, Ast.dollar_terminal), Accept)::acc
             else
-              (* TODO: should be only for follow of lhs *)
-              acc
+              let terms = Map.find r.lhs follow in
+              let xs = Set.elements terms in
+              (xs |> List.map (fun t -> (stateid, t), Reduce (R ridx))) @ acc
       ) items acc
     ) auto.state_to_int []
   in
