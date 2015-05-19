@@ -110,3 +110,14 @@ let rec fold f m accu =
       fold f l (f v d (fold f r accu))
 
 
+
+let rec mem x = function
+        Empty ->
+          false
+      | Node(l, v, d, r, _) ->
+          let c = compare x v in
+          c = 0 || mem x (if c < 0 then l else r)
+
+(* addons pad *)
+let to_list t =
+  fold (fun k v acc -> (k,v)::acc) t []
