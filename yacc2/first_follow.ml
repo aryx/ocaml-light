@@ -13,10 +13,6 @@
  * license.txt for more details.
  *)
 open Ast
-
-module Set = Set_poly
-module Map = Map_poly
-
 open Lr0 (* for the augmented grammar *)
 
 (*****************************************************************************)

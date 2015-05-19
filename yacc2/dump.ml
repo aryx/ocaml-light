@@ -18,9 +18,6 @@ open Format
 open Ast
 open Lr0
 
-module Set = Set_poly
-module Map = Map_poly
-
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
@@ -214,7 +211,7 @@ let dump_lrtables env lrtables =
     pf "\n";
   done;
   pf "\n";
-  pf "%d conflicts\n" (List.length !conflicts)
+  pf "%d conflicts\n" (List.length !conflicts);
   pf "\n";
   ()
 
