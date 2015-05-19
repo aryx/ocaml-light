@@ -1,4 +1,5 @@
 dump.cmi: lr0.cmi 
+first_follow.cmi: ast.cmo lr0.cmi 
 lexer.cmi: parser.cmi 
 lr0.cmi: ast.cmo 
 parser.cmi: ast.cmo 
@@ -7,6 +8,8 @@ check.cmo: check.cmi
 check.cmx: check.cmi 
 dump.cmo: ast.cmo lr0.cmi dump.cmi 
 dump.cmx: ast.cmx lr0.cmx dump.cmi 
+first_follow.cmo: ast.cmo lr0.cmi first_follow.cmi 
+first_follow.cmx: ast.cmx lr0.cmx first_follow.cmi 
 lalr.cmo: lalr.cmi 
 lalr.cmx: lalr.cmi 
 lexer.cmo: ast.cmo parser.cmi lexer.cmi 
@@ -23,5 +26,5 @@ parser.cmo: ast.cmo parser.cmi
 parser.cmx: ast.cmx parser.cmi 
 slr.cmo: ast.cmo lr0.cmi lrtables.cmo slr.cmi 
 slr.cmx: ast.cmx lr0.cmx lrtables.cmx slr.cmi 
-tests.cmo: ast.cmo lr0.cmi 
-tests.cmx: ast.cmx lr0.cmx 
+tests.cmo: ast.cmo first_follow.cmi lr0.cmi 
+tests.cmx: ast.cmx first_follow.cmx lr0.cmx 

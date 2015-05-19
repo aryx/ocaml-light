@@ -10,7 +10,7 @@ CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
 DEPFLAGS=
 
 OBJS1=ast.cmo parser.cmo lexer.cmo check.cmo \
-  lr0.cmo lrtables.cmo slr.cmo lalr.cmo \
+  lr0.cmo first_follow.cmo lrtables.cmo slr.cmo lalr.cmo \
   output.cmo dump.cmo \
   tests.cmo main.cmo
 
