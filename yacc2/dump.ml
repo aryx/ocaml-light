@@ -1,3 +1,18 @@
+(* Yoann Padioleau
+ *
+ * Copyright (C) 2015 Yoann Padioleau
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 2.1 as published by the Free Software Foundation, with the
+ * special exception on linking described in file license.txt.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
+ * license.txt for more details.
+ *)
+
 open Format
 
 open Ast
@@ -6,9 +21,39 @@ open Lr0
 module Set = Set_poly
 module Map = Map_poly
 
+(*****************************************************************************)
+(* Prelude *)
+(*****************************************************************************)
+
 (* TODO: does not indent things correctly, even after an
  * open_box 2; I don't understand
  *)
+
+(*****************************************************************************)
+(* Helpers *)
+(*****************************************************************************)
+
+(* common.ml *)
+
+type ('a,'b) either = Left of 'a | Right of 'b
+
+let partition_either f l =
+  let rec part_either left right = function
+  | [] -> (List.rev left, List.rev right)
+  | x :: l ->
+      (match f x with
+      | Left  e -> part_either (e :: left) right l
+      | Right e -> part_either left (e :: right) l) in
+  part_either [] [] l
+
+let hash_of_list xs =
+  let h = Hashtbl.create 101 in
+  xs |> List.iter (fun (k, v) -> Hashtbl.replace h k v);
+  h
+
+
+
+
 
 let string_of_symbol s =
   match s with
@@ -29,6 +74,22 @@ let string_of_symbol s =
 
     | _ -> String.lowercase s
     )
+
+let pf = Printf.printf
+let spf = Printf.sprintf
+
+let string_of_action x =
+  match x with
+  | Lrtables.Shift (S d) -> spf "s%d" d
+  | Lrtables.Reduce (R d) -> spf "r%d" d
+  | Lrtables.Accept -> spf "acc"
+  | Lrtables.Error -> ""
+
+
+(*****************************************************************************)
+(* Dumpers *)
+(*****************************************************************************)
+
 let dump_symbol s =
   print_string (string_of_symbol s)
 
@@ -95,4 +156,58 @@ let dump_lr0_automaton env auto =
 
 
 let dump_lrtables env lrtables =
-  failwith "TODO"
+  let symbols = Lr0.all_symbols env in
+  let (action_table, goto_table) = lrtables in
+  let haction = hash_of_list action_table in
+  let hgoto = hash_of_list goto_table in
+
+  let (terms, nonterms) = 
+    symbols |> Set.elements |> partition_either (function
+      | Term t -> Left t
+      | Nonterm nt -> Right nt
+    )
+  in
+  let terms = terms @ [Ast.dollar_terminal] in
+  let max_state = 
+    action_table |> List.fold_left (fun acc (((S stateid), _), _) ->
+      max acc stateid
+    ) 0
+  in
+  
+  (* print headers *)
+  pf "   ";
+  terms |> List.iter (fun t ->
+    let s = string_of_symbol (Term t) in
+    pf "%3s " s;
+  );
+  pf "  ";
+  nonterms |> List.iter (fun nt ->
+    let s = string_of_symbol (Nonterm nt) in
+    pf "%3s " s;
+  );
+  pf "\n";
+  
+  for i = 0 to max_state do
+    pf "%2d " i;
+    terms |> List.iter (fun t ->
+      let xs = Hashtbl.find_all haction (S i, t) in
+      (match xs with
+      | [] -> pf "%3s " " "
+      | [x] -> pf "%3s " (string_of_action x)
+      | x::xs -> pf "%3s " "E"
+      );
+    );
+    pf "  ";
+    nonterms |> List.iter (fun nt ->
+      let xs = Hashtbl.find_all hgoto (S i, nt) in
+      (match xs with
+      | [] -> pf "%3s " " "
+      | [S d] -> pf "%3d " d
+      | x::xs -> pf "%3s " "E"
+      );
+    );
+
+    pf "\n";
+  done;
+  pf "\n"
+
