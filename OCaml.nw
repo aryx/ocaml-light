@@ -776,6 +776,8 @@ and module_type_desc =
 @
 % recursive back to signature!
 %less: remove PPmty_ident? no aliases for sig? because no module type
+% hmm can be useful actually for module Set = Set_poly in .mli?
+% to be backward compatible with ocaml
 
 
 
