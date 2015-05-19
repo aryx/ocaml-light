@@ -56,9 +56,9 @@ type parser_definition = {
 
 (* for the augmented grammar *)
 
-(* should not conflict with user-defined terminals or non terminals
- * as no nonterminal can contain '$' according to lexer.mll and 
- * every terminal start with an uppercase letter according again
+(* They should not conflict with user-defined terminals or non terminals
+ * because nonterminals cannot contain '$' according to lexer.mll and 
+ * terminals must start with an uppercase letter according again
  * to lexer.mll
  *)
 let start_nonterminal = NT "S$"

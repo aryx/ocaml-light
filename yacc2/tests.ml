@@ -65,6 +65,8 @@ let test_slr () =
   
   (* slr tables *)
   let tables = Slr.lr_tables env auto follow in
+
+  Dump.dump_lrtables env tables;
   ()
 
 

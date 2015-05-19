@@ -94,4 +94,5 @@ let dump_lr0_automaton env auto =
   close_box ()
 
 
-(* let dump_lr_tables env lrtables *)
+let dump_lrtables env lrtables =
+  failwith "TODO"
