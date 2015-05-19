@@ -43,7 +43,6 @@ let main () =
     else source_name ^ ".ml" 
   in
   let ic = open_in source_name in
-(*  let oc = open_out dest_name in *)
   let lexbuf = Lexing.from_channel ic in
 
   (* parsing *)
@@ -51,7 +50,6 @@ let main () =
     try
       Parser.parser_definition Lexer.main lexbuf
     with exn ->
-(*      close_out oc; *)
       Sys.remove dest_name;
        (match exn with
          Parsing.Parse_error ->
@@ -71,8 +69,15 @@ let main () =
   let env = Lr0.mk_env_augmented_grammar (Ast.start_symbol def) def.grm  in
   let automaton = Lr0.canonical_lr0_automaton env in
   Dump.dump_lr0_automaton env automaton;
-  let tables = Slr.lr_tables env automaton in
+  
+  let (first, eps) = First_follow.compute_first def.grm in
+  let follow = First_follow.compute_follow env (first, eps) in
+  let tables = Slr.lr_tables env automaton follow in
+  Dump.dump_lrtables env tables;
 
+  let oc = open_out dest_name in
+  Output.output_parser def env tables oc;
+  close_out oc;
   ()
 
 let _ = 
