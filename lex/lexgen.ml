@@ -147,11 +147,6 @@ type transition =
   | ToAction of action_id
 (*e: type Lexgen.transition *)
 
-(*
-module Set = Set_poly
-module Map = Map_poly
-*)
-
 (*s: type Lexgen.state *)
 type state = transition Set.t
 (*e: type Lexgen.state *)
