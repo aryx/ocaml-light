@@ -18,7 +18,7 @@ OBJS1=ast.cmo parser.cmo lexer.cmo check.cmo \
 CAMLLEX=ocamllex
 CAMLYACC=ocamlyacc
 CAMLC=ocamlc -annot -g -I compat
-OBJS=compat/set.cmo compat/map.cmo $(OBJS1)
+OBJS=compat/set.cmo compat/map.cmo compat/parsing2.cmo $(OBJS1)
 
 all: ocamlyacc
 
