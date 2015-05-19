@@ -186,6 +186,8 @@ let dump_lrtables env lrtables =
     pf "%3s " s;
   );
   pf "\n";
+
+  let conflicts = ref [] in
   
   for i = 0 to max_state do
     pf "%2d " i;
@@ -194,7 +196,9 @@ let dump_lrtables env lrtables =
       (match xs with
       | [] -> pf "%3s " " "
       | [x] -> pf "%3s " (string_of_action x)
-      | x::xs -> pf "%3s " "E"
+      | x::xs -> 
+        pf "%3s " "!?!";
+        conflicts := (S i, t, x::xs)::!conflicts
       );
     );
     pf "  ";
@@ -203,11 +207,14 @@ let dump_lrtables env lrtables =
       (match xs with
       | [] -> pf "%3s " " "
       | [S d] -> pf "%3d " d
-      | x::xs -> pf "%3s " "E"
+      | x::xs -> pf "%3s " "!?!"
       );
     );
 
     pf "\n";
   done;
-  pf "\n"
+  pf "\n";
+  pf "%d conflicts\n" (List.length !conflicts)
+  pf "\n";
+  ()
 
