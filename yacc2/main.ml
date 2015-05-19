@@ -78,5 +78,6 @@ let main () =
 let _ = 
   Tests.test_lr0 ();
   Tests.test_first_follow ();
+  Tests.test_slr ();
   Printexc.catch main (); 
   exit 0
