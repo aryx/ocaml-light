@@ -45,7 +45,7 @@ val compare:'elt t ->'elt t -> int
 val equal:'elt t ->'elt t -> bool
     (* [equal s1 s2] tests whether the sets [s1] and [s2] are
        equal, that is, contain the same elements. *)
-val subset:'elt t t ->'elt t t -> bool
+val subset:'elt t ->'elt t -> bool
     (* [subset s1 s2] tests whether the set [s1] is a subset of
        the set [s2]. *)
 val iter: ('elt -> unit) ->'elt t -> unit
@@ -66,3 +66,9 @@ val choose:'elt t -> 'elt
     (* Return one element of the given set, or raise [Not_found] if
        the set is empty. Which element is chosen is unspecified,
        but equal elements will be chosen for equal sets. *)
+
+val singleton: 'elt -> 'elt t
+(** [singleton x] returns the one-element set containing only [x]. *)
+
+(* addons pad *)
+val of_list: 'elt list -> 'elt t
