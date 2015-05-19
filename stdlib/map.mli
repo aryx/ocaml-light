@@ -52,3 +52,10 @@ val fold: ('key -> 'a -> 'b -> 'b) -> ('key, 'a) t -> 'b -> 'b
        and [d1 ... dN] are the associated data.
        The order in which the bindings are presented to [f] is
        unspecified. *)
+
+val mem: 'key -> ('key, 'a) t -> bool
+    (** [mem x m] returns [true] if [m] contains a binding for [x],
+       and [false] otherwise. *)
+
+(* addons pad *)
+val to_list: ('key, 'a) t -> ('key * 'a) list
