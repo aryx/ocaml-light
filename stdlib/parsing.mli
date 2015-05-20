@@ -75,10 +75,11 @@ val parse_error : string -> unit
 
 type stateid = S of int
 type nonterm = NT of string
-type rule_action = RA of string
+(* index in the rule actions table passed to yyparse *)
+type rule_action = RA of int
 type action = 
   | Shift of stateid
-  | Reduce of int (* size of rhs of the rule *) * nonterm * rule_action
+  | Reduce of nonterm * int (* size of rhs of the rule *) * rule_action
   | Accept
 
 type 'tok lr_tables = {
@@ -87,9 +88,12 @@ type 'tok lr_tables = {
 }
 
 type parser_env_simple
+type rules_actions = (parser_env_simple -> Obj.t) array
+
 val peek_val_simple: parser_env_simple -> int -> 'a
 
+
 val yyparse_simple:
-  'tok lr_tables -> 
-  (Lexing.lexbuf -> 'tok) -> ('tok -> string) -> Lexing.lexbuf -> 
-  unit
+  'tok lr_tables -> rules_actions ->
+  (Lexing.lexbuf -> 'tok) -> ('tok -> string) -> Lexing.lexbuf -> 'a
+
