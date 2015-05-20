@@ -76,7 +76,7 @@ let main () =
   Dump.dump_lrtables env tables;
 
   let oc = open_out dest_name in
-  Output.output_parser def env tables oc;
+  Output.output_parser def env tables ic oc;
   close_out oc;
   ()
 

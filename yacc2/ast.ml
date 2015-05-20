@@ -27,7 +27,7 @@ type symbol = Term of term | Nonterm of nonterm
 type charpos = int
 type location =
     Location of charpos * charpos
-(* todo: at some point need to parse to extract the $xxx *)
+(* the slice may contain the special $<digit> markers *)
 type action = location
 
 type grammar = rule_ list
@@ -53,6 +53,8 @@ type parser_definition = {
   grm: grammar;
   trailer: location;
 }
+
+let noloc = Location(0, 0)
 
 (* for the augmented grammar *)
 

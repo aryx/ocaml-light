@@ -98,6 +98,6 @@ type_opt:
 ;
 
 header_opt:
-          { Location(0,0) }
+          { Ast.noloc }
  | header { $1 }  
 ;
