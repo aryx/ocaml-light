@@ -54,11 +54,27 @@ let output_parser def env lrtables chan =
   pf "\n";
   pf "open Parsing\n";
 
+  pf "let string_of_token = function\n";
+  def.directives |> List.iter (function
+    | Token (sopt, (T s)) ->
+      pf " | %s%s -> \"%s\"\n" s
+        (match sopt with
+        | None -> ""
+        | Some s -> " _"
+        )
+        s
+    | _ -> ()
+  );
+  pf "\n";
+
   pf "let lrtables = {\n";
   pf "  action = (function\n";
   action_table |> List.iter (fun ((S id, T t), action) ->
+    (* if reached a state where there is dollar involved, means
+     * we're ok!
+     *)
     if t = "$"
-    then ()
+    then pf "   | S %d, _ -> Accept\n" id
     else begin
       pf "   | S %d, %s%s -> " id t
         (match Hashtbl.find harity t with
@@ -96,6 +112,6 @@ let output_parser def env lrtables chan =
   let (NT start) = nt in
 
   pf "let %s lexfun lexbuf =\n" start;
-  pf "  Parsing.yyparse_simple lrtables lexfun lexbuf\n";
+  pf "  Parsing.yyparse_simple lrtables lexfun string_of_token lexbuf\n";
   ()
 
