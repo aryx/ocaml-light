@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: string.mli,v 1.14 1997/10/28 13:17:11 xleroy Exp $ *)
-
 (* Module [String]: string operations *)
 
 external length : string -> int = "%string_length"
