@@ -206,7 +206,15 @@ type 'tok lr_tables = {
   goto: stateid * nonterm -> stateid;
 }
 
-let yyparse_simple lrtables lexfun lexbuf =
+let debug = ref true
+let log x = 
+  if !debug
+  then begin
+    print_endline ("YACC: " ^ x); flush stdout
+  end
+let spf = Printf.sprintf
+
+let yyparse_simple lrtables lexfun string_of_tok lexbuf =
   
   let stack = Stack.create () in
   stack |> Stack.push (S 0);
@@ -214,10 +222,13 @@ let yyparse_simple lrtables lexfun lexbuf =
 
   let finished = ref false in
   while not !finished do
-
+    
     let s = Stack.top stack in
+    log (spf "state %d, tok = %s" (let (S x) = s in x) (string_of_tok !a));
+
     match lrtables.action (s, !a) with
     | Shift t ->
+        log (spf "shift to %d" (let (S x) = t in x));
         stack |> Stack.push t;
         a := lexfun lexbuf;
     | Reduce (n, nt, ra) ->
@@ -228,8 +239,8 @@ let yyparse_simple lrtables lexfun lexbuf =
         stack |> Stack.push (lrtables.goto (s, nt));
         let (NT ntstr) = nt in
         let (RA rastr) = ra in
-        print_string (Printf.sprintf "REDUCE %s, ra = %s\n" ntstr rastr);
+        log (spf "reduce %s, ra = %s" ntstr rastr);
     | Accept ->
-        print_string "DONE\n";
+        log "done!";
         finished := true
   done  

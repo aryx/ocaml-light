@@ -87,4 +87,5 @@ type 'tok lr_tables = {
 }
 
 val yyparse_simple:
-  'tok lr_tables -> (Lexing.lexbuf -> 'tok) -> Lexing.lexbuf -> unit
+  'tok lr_tables -> (Lexing.lexbuf -> 'tok) -> ('tok -> string) -> 
+  Lexing.lexbuf -> unit
