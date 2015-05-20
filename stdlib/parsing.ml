@@ -206,6 +206,11 @@ type 'tok lr_tables = {
   goto: stateid * nonterm -> stateid;
 }
 
+type parser_env_simple = unit
+
+let peek_val_simple env i =
+  Obj.magic 1
+
 let debug = ref true
 let log x = 
   if !debug

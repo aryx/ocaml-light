@@ -47,6 +47,43 @@ let copy_chunk ic oc (Location(start,stop)) =
     n := !n - m
   done
 
+(* actually does the replacment in place 
+ * less: we could use Str instead, but this adds a dependency.
+ *  Str.global_replace (Str.regexp_string "$") "_" s
+ *)
+let replace_dollar_underscore s =
+  let rec aux startpos =
+    try
+      let idx = String.index_from s startpos '$' in
+      String.set s idx '_';
+      aux (idx+1)
+    with Not_found -> ()
+  in
+  aux 0;
+  s
+
+let spf = Printf.sprintf
+
+(* todo: what about $22? what error message give if type and $x ? *)
+let int_of_char c =
+  let i = Char.code c in
+  if i <= Char.code '9' && i >= Char.code '1'
+  then i - Char.code '0'
+  else failwith (spf "the characted %c is not a char" c)
+
+let extract_dollars_set s =
+  let set = ref Set.empty in
+  let rec aux startpos =
+    try
+      let idx = String.index_from s startpos '$' in
+      let c = String.get s (idx + 1) in
+      set := Set.add (int_of_char c) !set;
+      aux (idx + 2)
+    with Not_found | Invalid_argument _ | Failure _ -> ()
+  in
+  aux 0;
+  !set
+
 
 (*****************************************************************************)
 (* Main entry point *)
@@ -58,8 +95,8 @@ let output_parser def env lrtables ic oc =
 
   let htype = Hashtbl.create 13 in
   def.directives |> List.iter (function
-    | Token (sopt, T t) ->
-        Hashtbl.add htype t sopt
+    | Token (Some s, t) -> Hashtbl.add htype (Term t) s
+    | Type (s, nt) -> Hashtbl.add htype (Nonterm nt) s
     | _ -> ()
   );
 
@@ -69,7 +106,7 @@ let output_parser def env lrtables ic oc =
       pf " | %s%s\n" s
         (match sopt with
         | None -> ""
-        | Some s -> Printf.sprintf " of %s" s
+        | Some s -> spf " of %s" s
         )
     | _ -> ()
   );
@@ -77,18 +114,40 @@ let output_parser def env lrtables ic oc =
   copy_chunk ic oc def.header;
   pf "\n";
   pf "let user_actions = [|\n";
-  env.g |> Array.iteri (fun i e ->
+  env.g |> Array.iteri (fun i r ->
     if i = 0
     then pf "  (fun __parser_env -> failwith \"parser\");\n"
     else begin
-      let s = get_chunk ic e.act in
-      (* replace $ *)
+      let s = get_chunk ic r.act in
+      (* ugly: right now have to be before replace_dollar_underscore
+       * because replace_dollar_underscore does side effect on s
+       *)
+      let dollars = extract_dollars_set s in
+      let s' = replace_dollar_underscore s in
+      let symbs = Array.of_list (Nonterm (NT "_fake_"):: r.rhs) in
       pf "  (fun __parser_env -> \n";
+      dollars |> Set.iter (fun i ->
+        pf "     let _%d = (Parsing.peek_val_simple __parser_env %d : %s) in\n"
+          i i
+          (* type info on terminal or on non terminal *)
+          (let symb = symbs.(i) in
+           if not (Hashtbl.mem htype symb)
+           then
+             (match symb with
+             | Nonterm (NT s) -> "'" ^ s
+             | Term _ -> failwith "you try to access a token with no value"
+             )
+           else Hashtbl.find htype symb
+          )
+      );
+
       pf "    Obj.repr((\n";
       pf "      "; 
-      pf "%s" s;
+      pf "%s" s';
       pf "   )";
-    (* todo: if type info *)
+      if Hashtbl.mem htype (Nonterm r.lhs)
+      then pf ": %s" (Hashtbl.find htype (Nonterm r.lhs))
+      else ();
       pf ")\n";
       pf "   );\n";
     end
@@ -127,9 +186,9 @@ let output_parser def env lrtables ic oc =
     then pf "   | S %d, _ -> Accept\n" id
     else begin
       pf "   | S %d, %s%s -> " id t
-        (match Hashtbl.find htype t with
-        | None -> ""
-        | Some _ -> " _"
+        (if Hashtbl.mem htype (Term (T t)) 
+         then " _"
+         else ""
         );
       (match action with
       | Shift (S id) -> pf "Shift (S %d)" id

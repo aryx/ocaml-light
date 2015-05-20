@@ -86,6 +86,10 @@ type 'tok lr_tables = {
   goto: stateid * nonterm -> stateid;
 }
 
+type parser_env_simple
+val peek_val_simple: parser_env_simple -> int -> 'a
+
 val yyparse_simple:
-  'tok lr_tables -> (Lexing.lexbuf -> 'tok) -> ('tok -> string) -> 
-  Lexing.lexbuf -> unit
+  'tok lr_tables -> 
+  (Lexing.lexbuf -> 'tok) -> ('tok -> string) -> Lexing.lexbuf -> 
+  unit
