@@ -24,19 +24,42 @@ open Lrtables
 (* Helpers *)
 (*****************************************************************************)
 
+let copy_buffer = String.create 1024
+
+let get_chunk ic (Location(start,stop)) =
+  seek_in ic start;
+  let buf = Buffer.create 1024 in
+
+  let n = ref (stop - start) in
+  while !n > 0 do
+    let m = input ic copy_buffer 0 (min !n 1024) in
+    Buffer.add_string buf (String.sub copy_buffer 0 m);
+    n := !n - m
+  done;
+  Buffer.contents buf
+
+let copy_chunk ic oc (Location(start,stop)) =
+  seek_in ic start;
+  let n = ref (stop - start) in
+  while !n > 0 do
+    let m = input ic copy_buffer 0 (min !n 1024) in
+    output oc copy_buffer 0 m;
+    n := !n - m
+  done
+
 
 (*****************************************************************************)
 (* Main entry point *)
 (*****************************************************************************)
 
-let output_parser def env lrtables chan =
-  let pf x = Printf.fprintf chan x in
+let output_parser def env lrtables ic oc =
+  let pf x = Printf.fprintf oc x in
   let (action_table, goto_table) = lrtables in
 
-  let harity = Hashtbl.create 13 in
+  let htype = Hashtbl.create 13 in
   def.directives |> List.iter (function
     | Token (sopt, T t) ->
-        Hashtbl.add harity t (match sopt with None -> 0 | Some _ -> 1)
+        Hashtbl.add htype t sopt
     | _ -> ()
   );
 
@@ -51,9 +74,33 @@ let output_parser def env lrtables chan =
     | _ -> ()
   );
 
+  copy_chunk ic oc def.header;
+  pf "\n";
+  pf "let user_actions = [|\n";
+  env.g |> Array.iteri (fun i e ->
+    if i = 0
+    then pf "  (fun __parser_env -> failwith \"parser\");\n"
+    else begin
+      let s = get_chunk ic e.act in
+      (* replace $ *)
+      pf "  (fun __parser_env -> \n";
+      pf "    Obj.repr((\n";
+      pf "      "; 
+      pf "%s" s;
+      pf "   )";
+    (* todo: if type info *)
+      pf ")\n";
+      pf "   );\n";
+    end
+  );
+  pf "|]\n";
+  copy_chunk ic oc def.trailer;
+
+
   pf "\n";
   pf "open Parsing\n";
 
+  (* for debugging support *)
   pf "let string_of_token = function\n";
   def.directives |> List.iter (function
     | Token (sopt, (T s)) ->
@@ -67,7 +114,10 @@ let output_parser def env lrtables chan =
   );
   pf "\n";
 
+  (* the main tables *)
   pf "let lrtables = {\n";
+
+  (* the action table *)
   pf "  action = (function\n";
   action_table |> List.iter (fun ((S id, T t), action) ->
     (* if reached a state where there is dollar involved, means
@@ -77,9 +127,9 @@ let output_parser def env lrtables chan =
     then pf "   | S %d, _ -> Accept\n" id
     else begin
       pf "   | S %d, %s%s -> " id t
-        (match Hashtbl.find harity t with
-        | 0 -> ""
-        | _ -> " _"
+        (match Hashtbl.find htype t with
+        | None -> ""
+        | Some _ -> " _"
         );
       (match action with
       | Shift (S id) -> pf "Shift (S %d)" id
@@ -97,17 +147,19 @@ let output_parser def env lrtables chan =
 
   pf "    | _ -> raise Parse_error\n";
   pf "  );\n";
+
+
+  (* the goto table *)
   pf "  goto = (function\n";
   goto_table |> List.iter (fun ((S id1, NT nt), S id2) ->
     pf "  | S %d, NT \"%s\" -> S %d\n" id1 nt id2
   );
-
-
   pf "    | _ -> raise Parse_error\n";
   pf "  );\n";
   pf "}\n";
 
 
+  (* the main entry point *)
   let nt = Ast.start_symbol def in
   let (NT start) = nt in
 
