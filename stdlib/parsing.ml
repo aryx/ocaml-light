@@ -194,11 +194,14 @@ let parse_error (msg: string) = ()
 (*****************************************************************************)
 
 type stateid = S of int
+(* less: could be an index, but easier for debug to use the original name *)
 type nonterm = NT of string
-type rule_action = RA of string
+(* index in the rule actions table passed to yyparse *)
+type rule_action = RA of int
+
 type action = 
   | Shift of stateid
-  | Reduce of int (* size of rhs of the rule *) * nonterm * rule_action
+  | Reduce of nonterm * int (* size of rhs of the rule *) * rule_action
   | Accept
 
 type 'tok lr_tables = {
@@ -206,10 +209,17 @@ type 'tok lr_tables = {
   goto: stateid * nonterm -> stateid;
 }
 
+
+
 type parser_env_simple = unit
+
+type rules_actions = (parser_env_simple -> Obj.t) array
 
 let peek_val_simple env i =
   Obj.magic 1
+
+
+
 
 let debug = ref true
 let log x = 
@@ -219,7 +229,7 @@ let log x =
   end
 let spf = Printf.sprintf
 
-let yyparse_simple lrtables lexfun string_of_tok lexbuf =
+let yyparse_simple lrtables rules_actions lexfun string_of_tok lexbuf =
   
   let stack = Stack.create () in
   stack |> Stack.push (S 0);
@@ -236,16 +246,18 @@ let yyparse_simple lrtables lexfun string_of_tok lexbuf =
         log (spf "shift to %d" (let (S x) = t in x));
         stack |> Stack.push t;
         a := lexfun lexbuf;
-    | Reduce (n, nt, ra) ->
+    | Reduce (nt, n, ra) ->
         for i = 1 to n do
           Stack.pop stack |> ignore
         done;
         let s = Stack.top stack in
         stack |> Stack.push (lrtables.goto (s, nt));
         let (NT ntstr) = nt in
-        let (RA rastr) = ra in
-        log (spf "reduce %s, ra = %s" ntstr rastr);
+        let (RA raidx) = ra in
+        log (spf "reduce %s, ra = %d" ntstr raidx);
     | Accept ->
         log "done!";
         finished := true
-  done  
+  done;
+  Obj.magic 1
+  

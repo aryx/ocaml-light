@@ -197,7 +197,7 @@ let output_parser def env lrtables ic oc =
           let r = env.g.(ridx) in
           let n = List.length r.rhs in
           let (NT l) = r.lhs in
-          pf "Reduce (%d, NT \"%s\", RA \"%s\")" n l l
+          pf "Reduce (NT \"%s\", %d, RA %d)" l n ridx
       | Error -> failwith "Error should not be in action tables"
       );
       pf "\n";
@@ -223,6 +223,6 @@ let output_parser def env lrtables ic oc =
   let (NT start) = nt in
 
   pf "let %s lexfun lexbuf =\n" start;
-  pf "  Parsing.yyparse_simple lrtables lexfun string_of_token lexbuf\n";
+  pf "  Parsing.yyparse_simple lrtables user_actions lexfun string_of_token lexbuf\n";
   ()
 
