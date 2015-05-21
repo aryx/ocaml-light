@@ -1,4 +1,5 @@
 (*s: yacc2/slr.ml *)
+(*s: copyright ocamlyacc *)
 (* Yoann Padioleau
  *
  * Copyright (C) 2015 Yoann Padioleau
@@ -13,6 +14,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
  * license.txt for more details.
  *)
+(*e: copyright ocamlyacc *)
 open Ast
 open Lr0
 open Lrtables

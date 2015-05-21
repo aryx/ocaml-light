@@ -1,8 +1,8 @@
 (*s: yacc2/check.mli *)
 
-(*s: enum Check.error (yacc) *)
+(*s: type Check.error (yacc) *)
 type error = unit
-(*e: enum Check.error (yacc) *)
+(*e: type Check.error (yacc) *)
 
 (*s: exception Check.Error (yacc) *)
 exception Error of error

@@ -1,4 +1,5 @@
 (*s: yacc2/lr0.ml *)
+(*s: copyright ocamlyacc *)
 (* Yoann Padioleau
  *
  * Copyright (C) 2015 Yoann Padioleau
@@ -13,6 +14,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
  * license.txt for more details.
  *)
+(*e: copyright ocamlyacc *)
 open Ast
 
 (*****************************************************************************)
@@ -26,38 +28,38 @@ open Ast
 (* Types *)
 (*****************************************************************************)
 
-(*s: enum Lr0.ruleidx (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.ruleidx (yacc2/lr0.ml) (yacc) *)
 (* the index of the rule in env.g *)
 type ruleidx = R of int
 (* the dot position in the rhs of a rule *)
-(*e: enum Lr0.ruleidx (yacc2/lr0.ml) (yacc) *)
-(*s: enum Lr0.dotidx (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.ruleidx (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.dotidx (yacc2/lr0.ml) (yacc) *)
 (* the dot position in the rhs of a rule *)
 type dotidx = D of int
-(*e: enum Lr0.dotidx (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.dotidx (yacc2/lr0.ml) (yacc) *)
 
-(*s: enum Lr0.stateid (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.stateid (yacc2/lr0.ml) (yacc) *)
 type stateid = S of int
-(*e: enum Lr0.stateid (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.stateid (yacc2/lr0.ml) (yacc) *)
 
-(*s: enum Lr0.item (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.item (yacc2/lr0.ml) (yacc) *)
 (* as mentionned in the dragon book *)
 type item = ruleidx * dotidx
-(*e: enum Lr0.item (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.item (yacc2/lr0.ml) (yacc) *)
 
-(*s: enum Lr0.items (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.items (yacc2/lr0.ml) (yacc) *)
 (* a.k.a an LR0 state *)
 type items = item Set.t
-(*e: enum Lr0.items (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.items (yacc2/lr0.ml) (yacc) *)
 
-(*s: enum Lr0.env (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.env (yacc2/lr0.ml) (yacc) *)
 type env = {
   (* augmented grammar where r0 is e' -> start_original_grammar *)
   g: Ast.rule_ array;
 }
-(*e: enum Lr0.env (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.env (yacc2/lr0.ml) (yacc) *)
 
-(*s: enum Lr0.automaton (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.automaton (yacc2/lr0.ml) (yacc) *)
 type automaton = {
   states: items Set.t;
   (* state 0 is the starting state *)
@@ -66,7 +68,7 @@ type automaton = {
   (* goto mapping *)
   trans: (items * Ast.symbol, items) Map.t;
 }
-(*e: enum Lr0.automaton (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.automaton (yacc2/lr0.ml) (yacc) *)
 
 (*****************************************************************************)
 (* Helpers *)

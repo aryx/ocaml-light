@@ -136,11 +136,11 @@ let test_first_follow () =
 open Parsing2
 module Parsing = Parsing2
 
-(*s: enum Tests.token (yacc) *)
+(*s: type Tests.token (yacc) *)
 type token =
   | T0
   | TEOF
-(*e: enum Tests.token (yacc) *)
+(*e: type Tests.token (yacc) *)
 
 (*s: function Tests.test_lr_engine (yacc) *)
 (* what we should generate *)

@@ -1,4 +1,5 @@
 (*s: yacc2/first_follow.ml *)
+(*s: copyright ocamlyacc *)
 (* Yoann Padioleau
  *
  * Copyright (C) 2015 Yoann Padioleau
@@ -13,6 +14,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
  * license.txt for more details.
  *)
+(*e: copyright ocamlyacc *)
 open Ast
 open Lr0 (* for the augmented grammar *)
 
@@ -29,19 +31,19 @@ open Lr0 (* for the augmented grammar *)
 
 (*****************************************************************************)
 (* Types *)
-(*s: enum First_follow.first (yacc2/first_follow.ml) (yacc) *)
+(*s: type First_follow.first (yacc2/first_follow.ml) (yacc) *)
 (*****************************************************************************)
 
 type first = (Ast.symbol, Ast.term Set.t) Map.t
-(*e: enum First_follow.first (yacc2/first_follow.ml) (yacc) *)
+(*e: type First_follow.first (yacc2/first_follow.ml) (yacc) *)
 
-(*s: enum First_follow.epsilon (yacc2/first_follow.ml) (yacc) *)
+(*s: type First_follow.epsilon (yacc2/first_follow.ml) (yacc) *)
 type epsilon = Ast.nonterm Set.t
-(*e: enum First_follow.epsilon (yacc2/first_follow.ml) (yacc) *)
+(*e: type First_follow.epsilon (yacc2/first_follow.ml) (yacc) *)
 
-(*s: enum First_follow.follow (yacc2/first_follow.ml) (yacc) *)
+(*s: type First_follow.follow (yacc2/first_follow.ml) (yacc) *)
 type follow = (Ast.nonterm, Ast.term Set.t) Map.t
-(*e: enum First_follow.follow (yacc2/first_follow.ml) (yacc) *)
+(*e: type First_follow.follow (yacc2/first_follow.ml) (yacc) *)
 
 (*****************************************************************************)
 (* Helpers *)

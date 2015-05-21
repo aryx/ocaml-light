@@ -57,7 +57,7 @@ exception Parse_error
 
 type parser_env
 
-(*s: enum Parsing.parse_tables (yacc) *)
+(*s: type Parsing.parse_tables (yacc) *)
 type parse_tables =
   { actions : (parser_env -> Obj.t) array;
     transl_const : int array;
@@ -73,7 +73,7 @@ type parse_tables =
     table : string;
     check : string;
     error_function : string -> unit }
-(*e: enum Parsing.parse_tables (yacc) *)
+(*e: type Parsing.parse_tables (yacc) *)
 
 (*s: exception Parsing.YYexit (yacc) *)
 exception YYexit of Obj.t
@@ -95,38 +95,38 @@ val parse_error : string -> unit
 
 
 
-(*s: enum Parsing.stateid (yacc) *)
+(*s: type Parsing.stateid (yacc) *)
 (* functions and types used by the generated parsers using the simple code
  * generation method *)
 
 type stateid = S of int
-(*e: enum Parsing.stateid (yacc) *)
-(*s: enum Parsing.nonterm (yacc) *)
+(*e: type Parsing.stateid (yacc) *)
+(*s: type Parsing.nonterm (yacc) *)
 type nonterm = NT of string
 (* index in the rule actions table passed to yyparse *)
-(*e: enum Parsing.nonterm (yacc) *)
-(*s: enum Parsing.rule_action (yacc) *)
+(*e: type Parsing.nonterm (yacc) *)
+(*s: type Parsing.rule_action (yacc) *)
 (* index in the rule actions table passed to yyparse *)
 type rule_action = RA of int
-(*e: enum Parsing.rule_action (yacc) *)
-(*s: enum Parsing.action (yacc) *)
+(*e: type Parsing.rule_action (yacc) *)
+(*s: type Parsing.action (yacc) *)
 type action = 
   | Shift of stateid
   | Reduce of nonterm * int (* size of rhs of the rule *) * rule_action
   | Accept
-(*e: enum Parsing.action (yacc) *)
+(*e: type Parsing.action (yacc) *)
 
-(*s: enum Parsing.lr_tables (yacc) *)
+(*s: type Parsing.lr_tables (yacc) *)
 type 'tok lr_tables = {
   action: stateid * 'tok -> action;
   goto: stateid * nonterm -> stateid;
 }
-(*e: enum Parsing.lr_tables (yacc) *)
+(*e: type Parsing.lr_tables (yacc) *)
 
 type parser_env_simple
-(*s: enum Parsing.rules_actions (yacc) *)
+(*s: type Parsing.rules_actions (yacc) *)
 type rules_actions = (parser_env_simple -> Obj.t) array
-(*e: enum Parsing.rules_actions (yacc) *)
+(*e: type Parsing.rules_actions (yacc) *)
 
 (*s: signature Parsing.peek_val_simple (yacc) *)
 val peek_val_simple: parser_env_simple -> int -> 'a
