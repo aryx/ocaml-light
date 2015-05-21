@@ -216,11 +216,11 @@ type 'tok lr_tables = {
 }
 
 
-
 type parser_env_simple = {
   states: stateid Stack.t;
   (* todo: opti: could use a growing array as one oftens needs to index it
    * with the peek_val
+   * The semantic attributes (token value or non terminal value).
    *)
   values: Obj.t Stack.t;
   mutable current_rule_len: int;
@@ -230,6 +230,16 @@ type rules_actions = (parser_env_simple -> Obj.t) array
 
 let spf = Printf.sprintf
 
+let debug = ref true
+let log x = 
+  if !debug
+  then begin
+    print_endline ("YACC: " ^ x); flush stdout
+  end
+
+
+
+
 
 
 let peek_val_simple env i =
@@ -238,13 +248,6 @@ let peek_val_simple env i =
   else Obj.magic (Stack.nth (env.current_rule_len - i) env.values)
 
 
-let debug = ref true
-let log x = 
-  if !debug
-  then begin
-    print_endline ("YACC: " ^ x); flush stdout
-  end
-
 (* hmm, imitate what is done in parsing.c. A big ugly but tricky
  * to do otherwise and have a generic LR parsing engine.
  *)
@@ -252,6 +255,8 @@ let value_of_tok t =
   if Obj.is_block t
   then Obj.field t 0
   else Obj.repr ()
+
+
 
 let yyparse_simple lrtables rules_actions lexfun string_of_tok lexbuf =
 
