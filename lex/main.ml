@@ -13,7 +13,7 @@
 (*e: copyright ocamllex *)
 (* The lexer generator. Command-line parsing. *)
 
-open Syntax
+open Ast
 open Lexgen
 open Output
 
@@ -61,11 +61,15 @@ let main () =
   in
   (* compiling *)
   let (entries, transitions) = Lexgen.make_dfa def in
+
+(* CONFIG
+  Output.output_lexdef_simple ic oc 
+    def.header (entries, transitions) def.trailer;
+*)
   (* optimizing *)
   let tables = Compact.compact_tables transitions in
   (* generating *)
   Output.output_lexdef ic oc def.header tables entries def.trailer;
-
   close_in ic;
   close_out oc
 (*e: function Main.main *)

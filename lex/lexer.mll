@@ -14,7 +14,7 @@
 (* The lexical analyzer for lexer definitions. Bootstrapped! *)
 
 {
-open Syntax
+open Ast
 open Parser
 
 exception Lexical_error of string

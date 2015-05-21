@@ -16,18 +16,18 @@
 
 val output_lexdef:
       in_channel -> out_channel ->
-      Syntax.location (* header *) ->
+      Ast.location (* header *) ->
       Compact.lex_tables ->
       Lexgen.automata_entry list ->
-      Syntax.location (* trailer *) ->
+      Ast.location (* trailer *) ->
       unit
 (*e: signature Output.output_lexdef *)
 
 val output_lexdef_simple:
       in_channel -> out_channel ->
-      Syntax.location (* header *) ->
+      Ast.location (* header *) ->
       Lexgen.automata_entry list * Lexgen.automata_matrix ->
-      Syntax.location (* trailer *) ->
+      Ast.location (* trailer *) ->
       unit
 
 

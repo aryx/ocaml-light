@@ -9,7 +9,7 @@ CAMLLEX=../boot/ocamlrun ../boot/ocamllex
 DEPFLAGS=
 CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
 
-OBJS=parser.cmo lexer.cmo lexgen.cmo compact.cmo output.cmo main.cmo
+OBJS=ast.cmo parser.cmo lexer.cmo lexgen.cmo compact.cmo output.cmo main.cmo
 
 #pad: if want to compile with a more recent ocaml and use a recent ocamldebug
 #CAMLLEX=ocamllex

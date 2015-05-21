@@ -15,16 +15,11 @@
 /* The grammar for lexer definitions */
 
 %{
-open Syntax
+open Ast
 
 (* Auxiliaries for the parser. *)
 /*(*s: parser helper functions and globals *)*/
-let char_class c1 c2 =
-  let rec cl n =
-    if n > c2 then [] else n :: cl(succ n)
-  in cl c1
 /*(*x: parser helper functions and globals *)*/
-let all_chars = char_class 0 255
 /*(*x: parser helper functions and globals *)*/
 let rec subtract l1 l2 =
   match l1 with
@@ -53,7 +48,7 @@ let regexp_for_string s =
 %token Tstar Tmaybe Tplus Tor Tlparen Trparen 
 %token Tlbracket Trbracket Tcaret Tdash 
 %token Tunderscore Teof
-%token <Syntax.location> Taction
+%token <Ast.location> Taction
 %token Tlet Tequal 
 %token <string> Tident
 %token Tend  
@@ -73,7 +68,7 @@ let regexp_for_string s =
 
 /*(*s: Parser entry points types *)*/
 %start lexer_definition
-%type <Syntax.lexer_definition> lexer_definition
+%type <Ast.lexer_definition> lexer_definition
 /*(*e: Parser entry points types *)*/
 
 %%
@@ -175,7 +170,7 @@ regexp:
     | Tunderscore
           { Characters all_chars }
     | Teof
-          { Characters [256] }
+          { Characters [Ast.char_eof] }
   /*(*e: rule regexp cases *)*/
 ;
 /*(*x: lex regexp rule *)*/

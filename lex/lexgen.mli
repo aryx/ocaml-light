@@ -40,7 +40,7 @@ and automata_move =
 type automata_entry =
   { auto_name: string;
     auto_initial_state: int;
-    auto_actions: (action_id * Syntax.action) list;
+    auto_actions: (action_id * Ast.action) list;
   }
 (*e: type Lexgen.automata_entry *)
 
@@ -52,6 +52,6 @@ type automata_matrix = automata_row array
 (*s: signature Lexgen.make_dfa *)
 (* The entry point *)
 
-val make_dfa: Syntax.lexer_definition -> automata_entry list * automata_matrix
+val make_dfa: Ast.lexer_definition -> automata_entry list * automata_matrix
 (*e: signature Lexgen.make_dfa *)
 (*e: lex/lexgen.mli *)
