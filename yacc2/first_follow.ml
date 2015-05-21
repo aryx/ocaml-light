@@ -1,3 +1,4 @@
+(*s: yacc2/first_follow.ml *)
 (* Yoann Padioleau
  *
  * Copyright (C) 2015 Yoann Padioleau
@@ -28,16 +29,23 @@ open Lr0 (* for the augmented grammar *)
 
 (*****************************************************************************)
 (* Types *)
+(*s: enum First_follow.first (yacc2/first_follow.ml) (yacc) *)
 (*****************************************************************************)
 
 type first = (Ast.symbol, Ast.term Set.t) Map.t
+(*e: enum First_follow.first (yacc2/first_follow.ml) (yacc) *)
 
+(*s: enum First_follow.epsilon (yacc2/first_follow.ml) (yacc) *)
 type epsilon = Ast.nonterm Set.t
+(*e: enum First_follow.epsilon (yacc2/first_follow.ml) (yacc) *)
 
+(*s: enum First_follow.follow (yacc2/first_follow.ml) (yacc) *)
 type follow = (Ast.nonterm, Ast.term Set.t) Map.t
+(*e: enum First_follow.follow (yacc2/first_follow.ml) (yacc) *)
 
 (*****************************************************************************)
 (* Helpers *)
+(*s: function First_follow.first_of_sequence (yacc) *)
 (*****************************************************************************)
 
 let rec first_of_sequence (first, epsilon) xs =
@@ -52,8 +60,10 @@ let rec first_of_sequence (first, epsilon) xs =
           then Set.union set (first_of_sequence (first, epsilon) xs)
           else set
       )
+(*e: function First_follow.first_of_sequence (yacc) *)
 
 
+(*s: function First_follow.epsilon_of_sequence (yacc) *)
 let rec epsilon_of_sequence epsilon xs =
   match xs with
   | [] -> true
@@ -64,7 +74,9 @@ let rec epsilon_of_sequence epsilon xs =
           Set.mem nt epsilon && epsilon_of_sequence epsilon xs
       )
 (*****************************************************************************)
+(*e: function First_follow.epsilon_of_sequence (yacc) *)
 (* Algorithms *)
+(*s: function First_follow.compute_first (yacc) *)
 (*****************************************************************************)
 
 let compute_first grm =
@@ -131,9 +143,11 @@ let compute_first grm =
     )
   done;
   !first, !epsilon
+(*e: function First_follow.compute_first (yacc) *)
 
 
 
+(*s: function First_follow.compute_follow (yacc) *)
 (* assumes augmented grammar *)
 let compute_follow env (first, epsilon) =
   let follow = ref Map.empty in
@@ -185,3 +199,5 @@ let compute_follow env (first, epsilon) =
     )
   done;
   !follow
+(*e: function First_follow.compute_follow (yacc) *)
+(*e: yacc2/first_follow.ml *)

@@ -1,3 +1,4 @@
+(*s: stdlib/parsing.ml *)
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -13,6 +14,7 @@
 
 open Lexing
 
+(*s: enum Parsing.parser_env (yacc) *)
 (* Internal interface to the parsing engine *)
 
 type parser_env =
@@ -38,7 +40,9 @@ type parser_env =
     mutable sp : int;                   (* Saved sp for parse_engine *)
     mutable state : int;                (* Saved state for parse_engine *)
     mutable errflag : int }             (* Saved error flag for parse_engine *)
+(*e: enum Parsing.parser_env (yacc) *)
 
+(*s: enum Parsing.parse_tables (stdlib/parsing.ml) (yacc) *)
 (* coupling: parse_tables and parsing.c parse_tables must match! *)
 
 type parse_tables =
@@ -56,10 +60,16 @@ type parse_tables =
     table : string;
     check : string;
     error_function : string -> unit }
+(*e: enum Parsing.parse_tables (stdlib/parsing.ml) (yacc) *)
 
+(*s: exception Parsing.YYexit (stdlib/parsing.ml) (yacc) *)
 exception YYexit of Obj.t
+(*e: exception Parsing.YYexit (stdlib/parsing.ml) (yacc) *)
+(*s: exception Parsing.Parse_error (stdlib/parsing.ml) (yacc) *)
 exception Parse_error
+(*e: exception Parsing.Parse_error (stdlib/parsing.ml) (yacc) *)
 
+(*s: enum Parsing.parser_input (yacc) *)
 type parser_input =
     Start
   | Token_read
@@ -67,7 +77,9 @@ type parser_input =
   | Stacks_grown_2
   | Semantic_action_computed
   | Error_detected
+(*e: enum Parsing.parser_input (yacc) *)
 
+(*s: enum Parsing.parser_output (yacc) *)
 type parser_output =
     Read_token
   | Raise_parse_error
@@ -75,11 +87,13 @@ type parser_output =
   | Grow_stacks_2
   | Compute_semantic_action
   | Call_error_function
+(*e: enum Parsing.parser_output (yacc) *)
 
 external parse_engine :
     parse_tables -> parser_env -> parser_input -> Obj.t -> parser_output
     = "parse_engine"
 
+(*s: constant Parsing.env (yacc) *)
 let env =
   { s_stack = Array.create 100 0;
     v_stack = Array.create 100 (Obj.repr ());
@@ -97,7 +111,9 @@ let env =
     sp = 0;
     state = 0;
     errflag = 0 }
+(*e: constant Parsing.env (yacc) *)
 
+(*s: function Parsing.grow_stacks (yacc) *)
 let grow_stacks() =
   let oldsize = env.stacksize in
   let newsize = oldsize * 2 in
@@ -114,13 +130,19 @@ let grow_stacks() =
     Array.blit env.symb_end_stack 0 new_end 0 oldsize;
     env.symb_end_stack <- new_end;
     env.stacksize <- newsize
+(*e: function Parsing.grow_stacks (yacc) *)
 
+(*s: function Parsing.clear_parser (yacc) *)
 let clear_parser() =
   Array.fill env.v_stack 0 env.stacksize (Obj.repr ());
   env.lval <- Obj.repr ()
+(*e: function Parsing.clear_parser (yacc) *)
 
+(*s: constant Parsing.current_lookahead_fun (yacc) *)
 let current_lookahead_fun = ref (fun (x: Obj.t) -> false)
+(*e: constant Parsing.current_lookahead_fun (yacc) *)
 
+(*s: function Parsing.yyparse (yacc) *)
 let yyparse tables start lexer lexbuf =
   let rec loop cmd arg =
     match parse_engine tables env cmd arg with
@@ -173,49 +195,77 @@ let yyparse tables start lexer lexbuf =
             then tables.transl_block.(Obj.tag tok) = curr_char
             else tables.transl_const.(Obj.magic tok) = curr_char);
         raise exn
+(*e: function Parsing.yyparse (yacc) *)
 
+(*s: function Parsing.peek_val (yacc) *)
 let peek_val env n =
   Obj.magic env.v_stack.(env.asp - n)
+(*e: function Parsing.peek_val (yacc) *)
 
+(*s: function Parsing.symbol_start (yacc) *)
 let symbol_start () =
   if env.rule_len > 0
   then env.symb_start_stack.(env.asp - env.rule_len + 1)
   else env.symb_end_stack.(env.asp)
+(*e: function Parsing.symbol_start (yacc) *)
+(*s: function Parsing.symbol_end (yacc) *)
 let symbol_end () =
+(*e: function Parsing.symbol_end (yacc) *)
   env.symb_end_stack.(env.asp)
 
+(*s: function Parsing.rhs_start (yacc) *)
 let rhs_start n =
+(*e: function Parsing.rhs_start (yacc) *)
   env.symb_start_stack.(env.asp - (env.rule_len - n))
+(*s: function Parsing.rhs_end (yacc) *)
 let rhs_end n =
+(*e: function Parsing.rhs_end (yacc) *)
   env.symb_end_stack.(env.asp - (env.rule_len - n))
 
+(*s: function Parsing.is_current_lookahead (yacc) *)
 let is_current_lookahead tok =
   (!current_lookahead_fun)(Obj.repr tok)
+(*e: function Parsing.is_current_lookahead (yacc) *)
 
+(*s: function Parsing.parse_error (yacc) *)
 let parse_error (msg: string) = ()
+(*e: function Parsing.parse_error (yacc) *)
 
 
 (*****************************************************************************)
 (* Helpers for parsers using the simple code generation method *)
+(*s: enum Parsing.stateid (stdlib/parsing.ml) (yacc) *)
 (*****************************************************************************)
 
 type stateid = S of int
 (* less: could be an index, but easier for debug to use the original name *)
+(*e: enum Parsing.stateid (stdlib/parsing.ml) (yacc) *)
+(*s: enum Parsing.nonterm (stdlib/parsing.ml) (yacc) *)
+(* less: could be an index, but easier for debug to use the original name *)
 type nonterm = NT of string
 (* index in the rule actions table passed to yyparse *)
+(*e: enum Parsing.nonterm (stdlib/parsing.ml) (yacc) *)
+(*s: enum Parsing.rule_action (stdlib/parsing.ml) (yacc) *)
+(* index in the rule actions table passed to yyparse *)
 type rule_action = RA of int
+(*e: enum Parsing.rule_action (stdlib/parsing.ml) (yacc) *)
 
+(*s: enum Parsing.action (stdlib/parsing.ml) (yacc) *)
 type action = 
   | Shift of stateid
   | Reduce of nonterm * int (* size of rhs of the rule *) * rule_action
   | Accept
+(*e: enum Parsing.action (stdlib/parsing.ml) (yacc) *)
 
+(*s: enum Parsing.lr_tables (stdlib/parsing.ml) (yacc) *)
 type 'tok lr_tables = {
   action: stateid * 'tok -> action;
   goto: stateid * nonterm -> stateid;
 }
+(*e: enum Parsing.lr_tables (stdlib/parsing.ml) (yacc) *)
 
 
+(*s: enum Parsing.parser_env_simple (yacc) *)
 type parser_env_simple = {
   states: stateid Stack.t;
   (* todo: opti: could use a growing array as one oftens needs to index it
@@ -225,29 +275,41 @@ type parser_env_simple = {
   values: Obj.t Stack.t;
   mutable current_rule_len: int;
 }
+(*e: enum Parsing.parser_env_simple (yacc) *)
 
+(*s: enum Parsing.rules_actions (stdlib/parsing.ml) (yacc) *)
 type rules_actions = (parser_env_simple -> Obj.t) array
+(*e: enum Parsing.rules_actions (stdlib/parsing.ml) (yacc) *)
 
+(*s: constant Parsing.spf (yacc) *)
 let spf = Printf.sprintf
+(*e: constant Parsing.spf (yacc) *)
 
+(*s: constant Parsing.debug (yacc) *)
 let debug = ref true
+(*e: constant Parsing.debug (yacc) *)
+(*s: function Parsing.log (yacc) *)
 let log x = 
   if !debug
   then begin
     print_endline ("YACC: " ^ x); flush stdout
   end
+(*e: function Parsing.log (yacc) *)
 
 
 
 
 
 
+(*s: function Parsing.peek_val_simple (yacc) *)
 let peek_val_simple env i =
   if i < 1 && i >= env.current_rule_len
   then failwith (spf "peek_val_simple invalid argument %d" i)
   else Obj.magic (Stack.nth (env.current_rule_len - i) env.values)
+(*e: function Parsing.peek_val_simple (yacc) *)
 
 
+(*s: function Parsing.value_of_tok (yacc) *)
 (* hmm, imitate what is done in parsing.c. A big ugly but tricky
  * to do otherwise and have a generic LR parsing engine.
  *)
@@ -255,9 +317,11 @@ let value_of_tok t =
   if Obj.is_block t
   then Obj.field t 0
   else Obj.repr ()
+(*e: function Parsing.value_of_tok (yacc) *)
 
 
 
+(*s: function Parsing.yyparse_simple (yacc) *)
 let yyparse_simple lrtables rules_actions lexfun string_of_tok lexbuf =
 
   let env = {
@@ -304,4 +368,6 @@ let yyparse_simple lrtables rules_actions lexfun string_of_tok lexbuf =
         res := Stack.top env.values;
   done;
   Obj.magic !res
+(*e: function Parsing.yyparse_simple (yacc) *)
   
+(*e: stdlib/parsing.ml *)

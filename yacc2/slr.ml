@@ -1,3 +1,4 @@
+(*s: yacc2/slr.ml *)
 (* Yoann Padioleau
  *
  * Copyright (C) 2015 Yoann Padioleau
@@ -27,17 +28,22 @@ open Lrtables
 (* Helpers *)
 (*****************************************************************************)
 
+(*s: function Slr.filter_some (yacc) *)
 (* from my common.ml *)
 let rec filter_some = function
   | [] -> []
   | None :: l -> filter_some l
   | Some e :: l -> e :: filter_some l
+(*e: function Slr.filter_some (yacc) *)
 
+(*s: function Slr.map_filter (yacc) *)
 let map_filter f xs = xs |> List.map f |> filter_some
+(*e: function Slr.map_filter (yacc) *)
 
 
 (*****************************************************************************)
 (* Main entry point *)
+(*s: function Slr.lr_tables (yacc) *)
 (*****************************************************************************)
 
 let lr_tables env auto follow =
@@ -80,3 +86,5 @@ let lr_tables env auto follow =
   in
 
   action_tables, goto_tables
+(*e: function Slr.lr_tables (yacc) *)
+(*e: yacc2/slr.ml *)

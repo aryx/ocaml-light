@@ -1,3 +1,4 @@
+(*s: yacc2/check.ml *)
 (* Yoann Padioleau
  *
  * Copyright (C) 2015 Yoann Padioleau
@@ -28,23 +29,32 @@ open Ast
 
 (*****************************************************************************)
 (* Types *)
+(*s: enum Check.error (yacc2/check.ml) (yacc) *)
 (*****************************************************************************)
 
 type error = unit
+(*e: enum Check.error (yacc2/check.ml) (yacc) *)
 
+(*s: exception Check.Error (yacc2/check.ml) (yacc) *)
 exception Error of error
+(*e: exception Check.Error (yacc2/check.ml) (yacc) *)
 
 (*****************************************************************************)
 (* Helpers *)
+(*s: function Check.report_error (yacc) *)
 (*****************************************************************************)
 
 let report_error err =
   failwith "TODO"
+(*e: function Check.report_error (yacc) *)
 
 (*****************************************************************************)
 (* Main entry point *)
+(*s: function Check.check (yacc) *)
 (*****************************************************************************)
 
 let check def =
   failwith "TODO"
+(*e: function Check.check (yacc) *)
 
+(*e: yacc2/check.ml *)
