@@ -12,13 +12,15 @@ OPTCOMPFLAGS=
 CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
 
 #coupling: modify also otherlibs/threads/Makefile
+#pad: now there is an order, parsing depends on stack, printexc depends
+# on buffer, etc.
 OBJS=pervasives.cmo list.cmo char.cmo string.cmo array.cmo sys.cmo \
   hashtbl.cmo sort.cmo filename.cmo marshal.cmo obj.cmo \
-  lexing.cmo parsing.cmo \
   set.cmo map.cmo stack.cmo queue.cmo stream.cmo \
   printf.cmo format.cmo arg.cmo gc.cmo \
   digest.cmo random.cmo genlex.cmo callback.cmo weak.cmo \
   lazy.cmo \
+  lexing.cmo parsing.cmo \
   buffer.cmo printexc.cmo 
 
 all: stdlib.cma std_exit.cmo camlheader
