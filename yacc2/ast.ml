@@ -23,7 +23,6 @@
 (*s: type Ast.term (yacc) *)
 (* uppercase string *)
 type term = T of string
-(* lowercase string *)
 (*e: type Ast.term (yacc) *)
 (*s: type Ast.nonterm (yacc) *)
 (* lowercase string *)
@@ -40,7 +39,6 @@ type charpos = int
 (*s: type Ast.location (yacc) *)
 type location =
     Location of charpos * charpos
-(* the slice may contain the special $<digit> markers *)
 (*e: type Ast.location (yacc) *)
 (*s: type Ast.action (yacc) *)
 (* the slice may contain the special $<digit> markers *)
@@ -63,7 +61,6 @@ type directive =
   | Token of type_ option * term
   | Start of nonterm
   | Type of type_ * nonterm
-
   | Prec of unit (* TODO *)
 (*e: type Ast.directive (yacc) *)
 
@@ -101,9 +98,9 @@ let dollar_terminal = T "$"
 
 (*****************************************************************************)
 (* Helpers *)
-(*s: function Ast.start_symbol (yacc) *)
 (*****************************************************************************)
 
+(*s: function Ast.start_symbol (yacc) *)
 let start_symbol def =
   try 
     (match

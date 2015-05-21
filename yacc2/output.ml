@@ -25,9 +25,9 @@ open Lrtables
 
 (*****************************************************************************)
 (* Helpers *)
-(*s: constant Output.copy_buffer (yacc) *)
 (*****************************************************************************)
 
+(*s: constant Output.copy_buffer (yacc) *)
 let copy_buffer = String.create 1024
 (*e: constant Output.copy_buffer (yacc) *)
 
@@ -104,9 +104,9 @@ let extract_dollars_set s =
 
 (*****************************************************************************)
 (* Main entry point *)
-(*s: function Output.output_parser (yacc) *)
 (*****************************************************************************)
 
+(*s: function Output.output_parser (yacc) *)
 let output_parser def env lrtables ic oc =
   let pf x = Printf.fprintf oc x in
   let (action_table, goto_table) = lrtables in

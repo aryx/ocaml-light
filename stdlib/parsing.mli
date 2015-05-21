@@ -95,15 +95,15 @@ val parse_error : string -> unit
 
 
 
-(*s: type Parsing.stateid (yacc) *)
 (* functions and types used by the generated parsers using the simple code
  * generation method *)
 
+(*s: type Parsing.stateid (yacc) *)
 type stateid = S of int
 (*e: type Parsing.stateid (yacc) *)
 (*s: type Parsing.nonterm (yacc) *)
+(* less: could be an index, but easier for debug to use the original name *)
 type nonterm = NT of string
-(* index in the rule actions table passed to yyparse *)
 (*e: type Parsing.nonterm (yacc) *)
 (*s: type Parsing.rule_action (yacc) *)
 (* index in the rule actions table passed to yyparse *)

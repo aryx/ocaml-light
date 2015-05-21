@@ -25,36 +25,35 @@ open Ast
  * - exist 'start', and 'type' directives
  * - classic use/def: remember set of terms and non terms and look
  *   for use of undefined symbols, or unused symbols.
- * - wrong $ number, too big
+ * - wrong $ number, too big, $22 not handled for instance
  * - typechecking (but this is done for free by ocaml in the generated code)
  *)
 
 (*****************************************************************************)
 (* Types *)
-(*s: type Check.error (yacc2/check.ml) (yacc) *)
 (*****************************************************************************)
 
+(*s: type Check.error (yacc) *)
 type error = unit
-(*e: type Check.error (yacc2/check.ml) (yacc) *)
+(*e: type Check.error (yacc) *)
 
-(*s: exception Check.Error (yacc2/check.ml) (yacc) *)
+(*s: exception Check.Error (yacc) *)
 exception Error of error
-(*e: exception Check.Error (yacc2/check.ml) (yacc) *)
+(*e: exception Check.Error (yacc) *)
 
 (*****************************************************************************)
 (* Helpers *)
-(*s: function Check.report_error (yacc) *)
 (*****************************************************************************)
 
+(*s: function Check.report_error (yacc) *)
 let report_error err =
   failwith "TODO"
 (*e: function Check.report_error (yacc) *)
 
 (*****************************************************************************)
 (* Main entry point *)
-(*s: function Check.check (yacc) *)
 (*****************************************************************************)
-
+(*s: function Check.check (yacc) *)
 let check def =
   failwith "TODO"
 (*e: function Check.check (yacc) *)

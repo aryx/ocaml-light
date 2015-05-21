@@ -9,16 +9,16 @@ CAMLLEX=../boot/ocamlrun ../boot/ocamllex
 DEPFLAGS=
 CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
 
-OBJS1=ast.cmo parser.cmo lexer.cmo check.cmo \
+OBJS=ast.cmo parser.cmo lexer.cmo check.cmo \
   lr0.cmo first_follow.cmo lrtables.cmo slr.cmo lalr.cmo \
   output.cmo dump.cmo \
   tests.cmo main.cmo
 
 #pad: if want to compile with a more recent ocaml and use a recent ocamldebug
-CAMLLEX=ocamllex
-CAMLYACC=ocamlyacc
-CAMLC=ocamlc -annot -g -I compat
-OBJS=compat/set.cmo compat/map.cmo compat/parsing2.cmo $(OBJS1)
+#CAMLLEX=ocamllex
+#CAMLYACC=ocamlyacc
+#CAMLC=ocamlc -annot -g -I compat
+#OBJS=compat/set.cmo compat/map.cmo compat/parsing2.cmo $(OBJS1)
 
 all: ocamlyacc
 
