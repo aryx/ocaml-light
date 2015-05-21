@@ -1,37 +1,37 @@
 (*s: yacc2/lr0.mli *)
 
-(*s: enum Lr0.ruleidx (yacc) *)
+(*s: type Lr0.ruleidx (yacc) *)
 (* the index of the rule in env.g *)
 type ruleidx = R of int
 (* the dot position in the rhs of a rule *)
-(*e: enum Lr0.ruleidx (yacc) *)
-(*s: enum Lr0.dotidx (yacc) *)
+(*e: type Lr0.ruleidx (yacc) *)
+(*s: type Lr0.dotidx (yacc) *)
 (* the dot position in the rhs of a rule *)
 type dotidx = D of int
-(*e: enum Lr0.dotidx (yacc) *)
+(*e: type Lr0.dotidx (yacc) *)
 
-(*s: enum Lr0.stateid (yacc) *)
+(*s: type Lr0.stateid (yacc) *)
 type stateid = S of int
-(*e: enum Lr0.stateid (yacc) *)
+(*e: type Lr0.stateid (yacc) *)
 
-(*s: enum Lr0.item (yacc) *)
+(*s: type Lr0.item (yacc) *)
 (* as mentionned in the dragon book *)
 type item = ruleidx * dotidx
-(*e: enum Lr0.item (yacc) *)
+(*e: type Lr0.item (yacc) *)
 
-(*s: enum Lr0.items (yacc) *)
+(*s: type Lr0.items (yacc) *)
 (* a.k.a an LR0 state *)
 type items = item Set.t
-(*e: enum Lr0.items (yacc) *)
+(*e: type Lr0.items (yacc) *)
 
-(*s: enum Lr0.env (yacc) *)
+(*s: type Lr0.env (yacc) *)
 type env = {
   (* augmented grammar where r0 is $S -> start_original_grammar *)
   g: Ast.rule_ array;
 }
-(*e: enum Lr0.env (yacc) *)
+(*e: type Lr0.env (yacc) *)
 
-(*s: enum Lr0.automaton (yacc) *)
+(*s: type Lr0.automaton (yacc) *)
 type automaton = {
   states: items Set.t;
   (* state 0 is the starting state *)
@@ -40,7 +40,7 @@ type automaton = {
   (* goto mapping *)
   trans: (items * Ast.symbol, items) Map.t;
 }
-(*e: enum Lr0.automaton (yacc) *)
+(*e: type Lr0.automaton (yacc) *)
 
 (*s: signature Lr0.mk_env_augmented_grammar (yacc) *)
 val mk_env_augmented_grammar: Ast.nonterm (* start *) -> Ast.grammar -> env

@@ -1,4 +1,5 @@
 (*s: yacc2/ast.ml *)
+(*s: copyright ocamlyacc *)
 (* Yoann Padioleau
  *
  * Copyright (C) 2015 Yoann Padioleau
@@ -13,63 +14,64 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
  * license.txt for more details.
  *)
+(*e: copyright ocamlyacc *)
 
 (*****************************************************************************)
 (* Types *)
 (*****************************************************************************)
 
-(*s: enum Ast.term (yacc) *)
+(*s: type Ast.term (yacc) *)
 (* uppercase string *)
 type term = T of string
 (* lowercase string *)
-(*e: enum Ast.term (yacc) *)
-(*s: enum Ast.nonterm (yacc) *)
+(*e: type Ast.term (yacc) *)
+(*s: type Ast.nonterm (yacc) *)
 (* lowercase string *)
 type nonterm = NT of string
-(*e: enum Ast.nonterm (yacc) *)
+(*e: type Ast.nonterm (yacc) *)
 
-(*s: enum Ast.symbol (yacc) *)
+(*s: type Ast.symbol (yacc) *)
 type symbol = Term of term | Nonterm of nonterm
-(*e: enum Ast.symbol (yacc) *)
+(*e: type Ast.symbol (yacc) *)
 
-(*s: enum Ast.charpos (yacc) *)
+(*s: type Ast.charpos (yacc) *)
 type charpos = int
-(*e: enum Ast.charpos (yacc) *)
-(*s: enum Ast.location (yacc) *)
+(*e: type Ast.charpos (yacc) *)
+(*s: type Ast.location (yacc) *)
 type location =
     Location of charpos * charpos
 (* the slice may contain the special $<digit> markers *)
-(*e: enum Ast.location (yacc) *)
-(*s: enum Ast.action (yacc) *)
+(*e: type Ast.location (yacc) *)
+(*s: type Ast.action (yacc) *)
 (* the slice may contain the special $<digit> markers *)
 type action = location
-(*e: enum Ast.action (yacc) *)
+(*e: type Ast.action (yacc) *)
 
-(*s: enum Ast.grammar (yacc) *)
+(*s: type Ast.grammar (yacc) *)
 type grammar = rule_ list
-(*e: enum Ast.grammar (yacc) *)
-(*s: enum Ast.rule_ (yacc) *)
+(*e: type Ast.grammar (yacc) *)
+(*s: type Ast.rule_ (yacc) *)
   and rule_ = {
     lhs: nonterm;
     rhs: symbol list;
     act: action;
   }
-(*e: enum Ast.rule_ (yacc) *)
+(*e: type Ast.rule_ (yacc) *)
 
-(*s: enum Ast.directive (yacc) *)
+(*s: type Ast.directive (yacc) *)
 type directive =
   | Token of type_ option * term
   | Start of nonterm
   | Type of type_ * nonterm
 
   | Prec of unit (* TODO *)
-(*e: enum Ast.directive (yacc) *)
+(*e: type Ast.directive (yacc) *)
 
-(*s: enum Ast.type_ (yacc) *)
+(*s: type Ast.type_ (yacc) *)
   and type_ = string
-(*e: enum Ast.type_ (yacc) *)
+(*e: type Ast.type_ (yacc) *)
 
-(*s: enum Ast.parser_definition (yacc) *)
+(*s: type Ast.parser_definition (yacc) *)
 (* main data structure *)
 type parser_definition = {
   header: location;
@@ -77,7 +79,7 @@ type parser_definition = {
   grm: grammar;
   trailer: location;
 }
-(*e: enum Ast.parser_definition (yacc) *)
+(*e: type Ast.parser_definition (yacc) *)
 
 (*s: constant Ast.noloc (yacc) *)
 let noloc = Location(0, 0)

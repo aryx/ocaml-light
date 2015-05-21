@@ -14,7 +14,7 @@
 
 open Lexing
 
-(*s: enum Parsing.parser_env (yacc) *)
+(*s: type Parsing.parser_env (yacc) *)
 (* Internal interface to the parsing engine *)
 
 type parser_env =
@@ -40,9 +40,9 @@ type parser_env =
     mutable sp : int;                   (* Saved sp for parse_engine *)
     mutable state : int;                (* Saved state for parse_engine *)
     mutable errflag : int }             (* Saved error flag for parse_engine *)
-(*e: enum Parsing.parser_env (yacc) *)
+(*e: type Parsing.parser_env (yacc) *)
 
-(*s: enum Parsing.parse_tables (stdlib/parsing.ml) (yacc) *)
+(*s: type Parsing.parse_tables (stdlib/parsing.ml) (yacc) *)
 (* coupling: parse_tables and parsing.c parse_tables must match! *)
 
 type parse_tables =
@@ -60,7 +60,7 @@ type parse_tables =
     table : string;
     check : string;
     error_function : string -> unit }
-(*e: enum Parsing.parse_tables (stdlib/parsing.ml) (yacc) *)
+(*e: type Parsing.parse_tables (stdlib/parsing.ml) (yacc) *)
 
 (*s: exception Parsing.YYexit (stdlib/parsing.ml) (yacc) *)
 exception YYexit of Obj.t
@@ -69,7 +69,7 @@ exception YYexit of Obj.t
 exception Parse_error
 (*e: exception Parsing.Parse_error (stdlib/parsing.ml) (yacc) *)
 
-(*s: enum Parsing.parser_input (yacc) *)
+(*s: type Parsing.parser_input (yacc) *)
 type parser_input =
     Start
   | Token_read
@@ -77,9 +77,9 @@ type parser_input =
   | Stacks_grown_2
   | Semantic_action_computed
   | Error_detected
-(*e: enum Parsing.parser_input (yacc) *)
+(*e: type Parsing.parser_input (yacc) *)
 
-(*s: enum Parsing.parser_output (yacc) *)
+(*s: type Parsing.parser_output (yacc) *)
 type parser_output =
     Read_token
   | Raise_parse_error
@@ -87,7 +87,7 @@ type parser_output =
   | Grow_stacks_2
   | Compute_semantic_action
   | Call_error_function
-(*e: enum Parsing.parser_output (yacc) *)
+(*e: type Parsing.parser_output (yacc) *)
 
 external parse_engine :
     parse_tables -> parser_env -> parser_input -> Obj.t -> parser_output
@@ -234,38 +234,38 @@ let parse_error (msg: string) = ()
 
 (*****************************************************************************)
 (* Helpers for parsers using the simple code generation method *)
-(*s: enum Parsing.stateid (stdlib/parsing.ml) (yacc) *)
+(*s: type Parsing.stateid (stdlib/parsing.ml) (yacc) *)
 (*****************************************************************************)
 
 type stateid = S of int
 (* less: could be an index, but easier for debug to use the original name *)
-(*e: enum Parsing.stateid (stdlib/parsing.ml) (yacc) *)
-(*s: enum Parsing.nonterm (stdlib/parsing.ml) (yacc) *)
+(*e: type Parsing.stateid (stdlib/parsing.ml) (yacc) *)
+(*s: type Parsing.nonterm (stdlib/parsing.ml) (yacc) *)
 (* less: could be an index, but easier for debug to use the original name *)
 type nonterm = NT of string
 (* index in the rule actions table passed to yyparse *)
-(*e: enum Parsing.nonterm (stdlib/parsing.ml) (yacc) *)
-(*s: enum Parsing.rule_action (stdlib/parsing.ml) (yacc) *)
+(*e: type Parsing.nonterm (stdlib/parsing.ml) (yacc) *)
+(*s: type Parsing.rule_action (stdlib/parsing.ml) (yacc) *)
 (* index in the rule actions table passed to yyparse *)
 type rule_action = RA of int
-(*e: enum Parsing.rule_action (stdlib/parsing.ml) (yacc) *)
+(*e: type Parsing.rule_action (stdlib/parsing.ml) (yacc) *)
 
-(*s: enum Parsing.action (stdlib/parsing.ml) (yacc) *)
+(*s: type Parsing.action (stdlib/parsing.ml) (yacc) *)
 type action = 
   | Shift of stateid
   | Reduce of nonterm * int (* size of rhs of the rule *) * rule_action
   | Accept
-(*e: enum Parsing.action (stdlib/parsing.ml) (yacc) *)
+(*e: type Parsing.action (stdlib/parsing.ml) (yacc) *)
 
-(*s: enum Parsing.lr_tables (stdlib/parsing.ml) (yacc) *)
+(*s: type Parsing.lr_tables (stdlib/parsing.ml) (yacc) *)
 type 'tok lr_tables = {
   action: stateid * 'tok -> action;
   goto: stateid * nonterm -> stateid;
 }
-(*e: enum Parsing.lr_tables (stdlib/parsing.ml) (yacc) *)
+(*e: type Parsing.lr_tables (stdlib/parsing.ml) (yacc) *)
 
 
-(*s: enum Parsing.parser_env_simple (yacc) *)
+(*s: type Parsing.parser_env_simple (yacc) *)
 type parser_env_simple = {
   states: stateid Stack.t;
   (* todo: opti: could use a growing array as one oftens needs to index it
@@ -275,11 +275,11 @@ type parser_env_simple = {
   values: Obj.t Stack.t;
   mutable current_rule_len: int;
 }
-(*e: enum Parsing.parser_env_simple (yacc) *)
+(*e: type Parsing.parser_env_simple (yacc) *)
 
-(*s: enum Parsing.rules_actions (stdlib/parsing.ml) (yacc) *)
+(*s: type Parsing.rules_actions (stdlib/parsing.ml) (yacc) *)
 type rules_actions = (parser_env_simple -> Obj.t) array
-(*e: enum Parsing.rules_actions (stdlib/parsing.ml) (yacc) *)
+(*e: type Parsing.rules_actions (stdlib/parsing.ml) (yacc) *)
 
 (*s: constant Parsing.spf (yacc) *)
 let spf = Printf.sprintf

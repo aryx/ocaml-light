@@ -1,4 +1,5 @@
 (*s: yacc2/check.ml *)
+(*s: copyright ocamlyacc *)
 (* Yoann Padioleau
  *
  * Copyright (C) 2015 Yoann Padioleau
@@ -13,6 +14,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
  * license.txt for more details.
  *)
+(*e: copyright ocamlyacc *)
 open Ast
 
 (*****************************************************************************)
@@ -29,11 +31,11 @@ open Ast
 
 (*****************************************************************************)
 (* Types *)
-(*s: enum Check.error (yacc2/check.ml) (yacc) *)
+(*s: type Check.error (yacc2/check.ml) (yacc) *)
 (*****************************************************************************)
 
 type error = unit
-(*e: enum Check.error (yacc2/check.ml) (yacc) *)
+(*e: type Check.error (yacc2/check.ml) (yacc) *)
 
 (*s: exception Check.Error (yacc2/check.ml) (yacc) *)
 exception Error of error

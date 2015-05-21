@@ -1,4 +1,5 @@
 (*s: yacc2/dump.ml *)
+(*s: copyright ocamlyacc *)
 (* Yoann Padioleau
  *
  * Copyright (C) 2015 Yoann Padioleau
@@ -13,7 +14,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file
  * license.txt for more details.
  *)
-
+(*e: copyright ocamlyacc *)
 open Format
 
 open Ast
@@ -31,11 +32,11 @@ open Lr0
 (* Helpers *)
 (*****************************************************************************)
 
-(*s: enum Dump.either (yacc) *)
+(*s: type Dump.either (yacc) *)
 (* common.ml *)
 
 type ('a,'b) either = Left of 'a | Right of 'b
-(*e: enum Dump.either (yacc) *)
+(*e: type Dump.either (yacc) *)
 
 (*s: function Dump.partition_either (yacc) *)
 let partition_either f l =
