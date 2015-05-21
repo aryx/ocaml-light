@@ -73,7 +73,7 @@ let regexp_for_string s =
 
 %%
 
-/*(*s: grammar *)*/
+/*(*s: grammar (lex) *)*/
 /*(*s: lex top rule *)*/
 lexer_definition:
     header named_regexps Trule definition other_definitions header Tend
@@ -191,7 +191,7 @@ char_class1:
 
 /*(*e: lex regexp rule *)*/
 
-/*(*e: grammar *)*/
+/*(*e: grammar (lex) *)*/
 
 %%
 /*(*e: lex/parser.mly *)*/
