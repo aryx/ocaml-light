@@ -18,17 +18,23 @@ open Lexing
 type parser_env =
   { mutable s_stack : int array;        (* States *)
     mutable v_stack : Obj.t array;      (* Semantic attributes *)
+
     mutable symb_start_stack : int array; (* Start positions *)
     mutable symb_end_stack : int array;   (* End positions *)
+
     mutable stacksize : int;            (* Size of the stacks *)
     mutable stackbase : int;            (* Base sp for current parse *)
+
     mutable curr_char : int;            (* Last token read *)
     mutable lval : Obj.t;               (* Its semantic attribute *)
+
     mutable symb_start : int;           (* Start pos. of the current symbol*)
     mutable symb_end : int;             (* End pos. of the current symbol *)
+
     mutable asp : int;                  (* The stack pointer for attributes *)
     mutable rule_len : int;             (* Number of rhs items in the rule *)
     mutable rule_number : int;          (* Rule number to reduce by *)
+
     mutable sp : int;                   (* Saved sp for parse_engine *)
     mutable state : int;                (* Saved state for parse_engine *)
     mutable errflag : int }             (* Saved error flag for parse_engine *)
@@ -211,14 +217,25 @@ type 'tok lr_tables = {
 
 
 
-type parser_env_simple = unit
+type parser_env_simple = {
+  states: stateid Stack.t;
+  (* todo: opti: could use a growing array as one oftens needs to index it
+   * with the peek_val
+   *)
+  values: Obj.t Stack.t;
+  mutable current_rule_len: int;
+}
 
 type rules_actions = (parser_env_simple -> Obj.t) array
 
+let spf = Printf.sprintf
+
+
+
 let peek_val_simple env i =
-  Obj.magic 1
-
-
+  if i < 1 && i >= env.current_rule_len
+  then failwith (spf "peek_val_simple invalid argument %d" i)
+  else Obj.magic (Stack.nth (env.current_rule_len - i) env.values)
 
 
 let debug = ref true
@@ -227,37 +244,59 @@ let log x =
   then begin
     print_endline ("YACC: " ^ x); flush stdout
   end
-let spf = Printf.sprintf
+
+(* hmm, imitate what is done in parsing.c. A big ugly but tricky
+ * to do otherwise and have a generic LR parsing engine.
+ *)
+let value_of_tok t =
+  if Obj.is_block t
+  then Obj.field t 0
+  else Obj.repr ()
 
 let yyparse_simple lrtables rules_actions lexfun string_of_tok lexbuf =
+
+  let env = {
+    states = Stack.create ();
+    values = Stack.create ();
+    current_rule_len = 0;
+  }
+  in
   
-  let stack = Stack.create () in
-  stack |> Stack.push (S 0);
+  env.states |> Stack.push (S 0);
   let a = ref (lexfun lexbuf) in
 
   let finished = ref false in
+  let res = ref (Obj.repr ()) in
   while not !finished do
     
-    let s = Stack.top stack in
+    let s = Stack.top env.states in
     log (spf "state %d, tok = %s" (let (S x) = s in x) (string_of_tok !a));
 
     match lrtables.action (s, !a) with
     | Shift t ->
         log (spf "shift to %d" (let (S x) = t in x));
-        stack |> Stack.push t;
+        env.states |> Stack.push t;
+        env.values |> Stack.push (value_of_tok (Obj.repr !a));
         a := lexfun lexbuf;
     | Reduce (nt, n, ra) ->
         for i = 1 to n do
-          Stack.pop stack |> ignore
+          Stack.pop env.states |> ignore
         done;
-        let s = Stack.top stack in
-        stack |> Stack.push (lrtables.goto (s, nt));
+        let s = Stack.top env.states in
+        env.states |> Stack.push (lrtables.goto (s, nt));
         let (NT ntstr) = nt in
         let (RA raidx) = ra in
+        env.current_rule_len <- n;
+        let v = rules_actions.(raidx) env in
+        for i = 1 to n do
+          Stack.pop env.values |> ignore
+        done;
+        env.values |> Stack.push v;
         log (spf "reduce %s, ra = %d" ntstr raidx);
     | Accept ->
         log "done!";
-        finished := true
+        finished := true;
+        res := Stack.top env.values;
   done;
-  Obj.magic 1
+  Obj.magic !res
   
