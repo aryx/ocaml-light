@@ -1,13 +1,13 @@
 # The lexer generator
 
-CAMLC=../boot/ocamlrun ../boot/ocamlc -I ../boot
 COMPFLAGS=
 LINKFLAGS=
-CAMLYACC=../boot/ocamlyacc
+CAMLC=../boot/ocamlrun ../boot/ocamlc -I ../boot
 YACCFLAGS=
+CAMLYACC=../boot/ocamlyacc
 CAMLLEX=../boot/ocamlrun ../boot/ocamllex
-CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
 DEPFLAGS=
+CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
 
 OBJS=parser.cmo lexer.cmo lexgen.cmo compact.cmo output.cmo main.cmo
 
