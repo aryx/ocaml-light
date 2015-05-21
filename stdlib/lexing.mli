@@ -33,7 +33,9 @@ type lexbuf =
     mutable lex_last_pos : int;
 
     mutable lex_last_action : int;
-    mutable lex_eof_reached : bool 
+    mutable lex_eof_reached : bool;
+
+    mutable lex_last_action_simple : lexbuf -> Obj.t;
   }
 (*e: type Lexing.lexbuf *)
 
@@ -112,4 +114,13 @@ type lex_tables =
  * an action_id
  *)
 external engine: lex_tables -> int -> lexbuf -> int = "lex_engine"
+
+
+(* functions used by the generated scanners using the simple code generation
+ *  method *)
+val get_next_char : lexbuf -> char
+val backtrack : lexbuf -> 'a
+
+val start_lexing : lexbuf -> unit
+
 (*e: stdlib/lexing.mli *)
