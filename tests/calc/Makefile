@@ -11,8 +11,8 @@ calc.byte: ast.cmo eval.cmo parser.cmo lexer.cmo main.cmo
 
 lexer.ml: lexer.mll
 	$(OCAMLLEX) $^
-parser.ml: parser.mly
-	$(TOP)/yacc2/ocamlyacc $^
+parser.ml parser.mli: parser.mly
+	$(TOP)/yacc/ocamlyacc $^
 
 # parser.mli
 
@@ -27,4 +27,4 @@ clean:
 	rm -f *.cm* lexer.ml parser.mli parser.ml *.byte
 
 # manual dependencies
-#parser.cmo: parser.cmi
+parser.cmo: parser.cmi

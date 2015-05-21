@@ -1,4 +1,4 @@
-(*s: lex/syntax.mli *)
+(*s: lex/ast.ml *)
 (*s: copyright ocamllex *)
 (***********************************************************************)
 (*                                                                     *)
@@ -26,6 +26,21 @@ type location =
 type char_ = int
 (*e: type Syntax.char_ *)
 
+let char_class c1 c2 =
+  let rec cl n =
+    if n > c2 then [] else n :: cl(succ n)
+  in cl c1
+
+(* CONFIG *)
+let charset_size = 256
+let char_eof = 256
+let all_chars = char_class 0 255
+(* alt:
+let charset_size = 255
+let char_eof = 0
+let all_chars = char_class 1 255
+*)
+
 (*s: type Syntax.regular_expression *)
 type regular_expression =
     Epsilon
@@ -50,4 +65,4 @@ type lexer_definition =
       trailer: location 
     }
 (*e: type Syntax.lexer_definition *)
-(*e: lex/syntax.mli *)
+(*e: lex/ast.ml *)

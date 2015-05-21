@@ -13,7 +13,7 @@
 (*e: copyright ocamllex *)
 (* Compiling a lexer definition *)
 
-open Syntax
+open Ast
 
 (*s: type Lexgen.action_id *)
 type action_id = int
@@ -39,7 +39,7 @@ type regexp =
 type lexer_entry =
   { lex_name: string;
     lex_regexp: regexp;
-    lex_actions: (action_id * Syntax.action) list;
+    lex_actions: (action_id * Ast.action) list;
   }
 (*e: type Lexgen.lexer_entry *)
     
@@ -68,7 +68,7 @@ and automata_move =
 type automata_entry =
   { auto_name: string;
     auto_initial_state: int;
-    auto_actions: (action_id * Syntax.action) list;
+    auto_actions: (action_id * Ast.action) list;
   }
 (*e: type Lexgen.automata_entry *)
 
@@ -86,7 +86,7 @@ let chars = ref ([] : char_ list list)
 let chars_count = ref (0: charset_id)
 (*e: constant Lexgen.chars_count *)
 (*s: constant Lexgen.actions *)
-let actions = ref ([] : (action_id * Syntax.location) list)
+let actions = ref ([] : (action_id * Ast.location) list)
 (*e: constant Lexgen.actions *)
 (*s: constant Lexgen.actions_count *)
 let actions_count = ref (0: action_id)
@@ -122,9 +122,11 @@ let encode_casedef casedef =
 let encode_lexdef def =
   chars := [];
   chars_count := 0;
+(* CONFIG   actions_count := 0; *)
   let entries =
     def.entrypoints |> List.map (fun (entry_name, casedef) ->
         actions := [];
+        (* CONFIG !! for simpler output can't do that *)
         actions_count := 0;
         let re = encode_casedef casedef in
         { lex_name = entry_name;
@@ -272,15 +274,15 @@ let goto_state st =
 
 (*s: function Lexgen.transition_from *)
 let transition_from charsets follow pos_set = 
-  let tr    = Array.create 257 Set.empty in
+  let tr    = Array.create (Ast.charset_size + 1) Set.empty in
   pos_set |> List.iter (fun pos ->
      charsets.(pos) |> List.iter (fun c ->
            tr.(c) <- Set.union tr.(c) follow.(pos)
       )
   );
 
-  let shift = Array.create 257 Backtrack in
-  for i = 0 to 256 do
+  let shift = Array.create (Ast.charset_size + 1) Backtrack in
+  for i = 0 to Ast.charset_size do
     shift.(i) <- goto_state tr.(i)
   done;
   shift
