@@ -28,38 +28,37 @@ open Ast
 (* Types *)
 (*****************************************************************************)
 
-(*s: type Lr0.ruleidx (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.ruleidx (yacc) *)
 (* the index of the rule in env.g *)
 type ruleidx = R of int
-(* the dot position in the rhs of a rule *)
-(*e: type Lr0.ruleidx (yacc2/lr0.ml) (yacc) *)
-(*s: type Lr0.dotidx (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.ruleidx (yacc) *)
+(*s: type Lr0.dotidx (yacc) *)
 (* the dot position in the rhs of a rule *)
 type dotidx = D of int
-(*e: type Lr0.dotidx (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.dotidx (yacc) *)
 
-(*s: type Lr0.stateid (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.stateid (yacc) *)
 type stateid = S of int
-(*e: type Lr0.stateid (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.stateid (yacc) *)
 
-(*s: type Lr0.item (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.item (yacc) *)
 (* as mentionned in the dragon book *)
 type item = ruleidx * dotidx
-(*e: type Lr0.item (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.item (yacc) *)
 
-(*s: type Lr0.items (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.items (yacc) *)
 (* a.k.a an LR0 state *)
 type items = item Set.t
-(*e: type Lr0.items (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.items (yacc) *)
 
-(*s: type Lr0.env (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.env (yacc) *)
 type env = {
-  (* augmented grammar where r0 is e' -> start_original_grammar *)
+  (* augmented grammar where r0 is $S -> start_original_grammar *)
   g: Ast.rule_ array;
 }
-(*e: type Lr0.env (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.env (yacc) *)
 
-(*s: type Lr0.automaton (yacc2/lr0.ml) (yacc) *)
+(*s: type Lr0.automaton (yacc) *)
 type automaton = {
   states: items Set.t;
   (* state 0 is the starting state *)
@@ -68,24 +67,18 @@ type automaton = {
   (* goto mapping *)
   trans: (items * Ast.symbol, items) Map.t;
 }
-(*e: type Lr0.automaton (yacc2/lr0.ml) (yacc) *)
+(*e: type Lr0.automaton (yacc) *)
 
 (*****************************************************************************)
 (* Helpers *)
-(*s: function Lr0.mk_env_augmented_grammar (yacc) *)
 (*****************************************************************************)
 
+(*s: function Lr0.mk_env_augmented_grammar (yacc) *)
 let mk_env_augmented_grammar start xs =
   let noloc = Location (0, 0) in
   let start = {lhs = Ast.start_nonterminal; rhs =[Nonterm start]; act=noloc} in
   { g = Array.of_list (start::xs) }
 (*e: function Lr0.mk_env_augmented_grammar (yacc) *)
-
-
-(*s: function Lr0.rule_at (yacc) *)
-let rule_at (R idx) env =
-(*e: function Lr0.rule_at (yacc) *)
-  env.g.(idx)
 
 (*s: function Lr0.rules_of (yacc) *)
 let rules_of nt env =
@@ -132,8 +125,8 @@ let closure env items =
     added := false;
 
     !result |> Set.iter (fun item ->
-      let ridx, didx = item in
-      let r = rule_at ridx env in
+      let (R ridx), didx = item in
+      let r = env.g.(ridx) in
 
       match after_dot r didx with
       | Some (Nonterm b) ->
@@ -151,16 +144,15 @@ let closure env items =
   !result
 (*e: function Lr0.closure (yacc) *)
 
-
 (*s: function Lr0.goto (yacc) *)
 let goto env items symbol =
   let start =
     Set.fold (fun item acc ->
-      let ridx, didx = item in
-      let r = rule_at ridx env in
+      let (R ridx), didx = item in
+      let r = env.g.(ridx) in
       match after_dot r didx with
       | Some symbol2 when symbol = symbol2 ->
-          Set.add (ridx, move_dot_right didx) acc
+          Set.add (R ridx, move_dot_right didx) acc
       | _ -> acc
     ) items Set.empty
   in
@@ -169,9 +161,9 @@ let goto env items symbol =
 
 (*****************************************************************************)
 (* Main entry point *)
-(*s: function Lr0.canonical_lr0_automaton (yacc) *)
 (*****************************************************************************)
 
+(*s: function Lr0.canonical_lr0_automaton (yacc) *)
 let canonical_lr0_automaton env =
   let start_item = (R 0, D 0) in
   let start_items = closure env (Set.singleton start_item) in

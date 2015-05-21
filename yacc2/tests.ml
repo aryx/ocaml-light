@@ -2,7 +2,7 @@
 open Ast
 open Lr0
 
-(*s: constant Tests.noloc (yacc) *)
+(*s: constant Tests.arith (yacc) *)
 (* from tests/yacc/arith.mly which is a copy of the representative grammar in
  * the dragon book in 4.1
  * $S -> E         (R0)
@@ -10,9 +10,6 @@ open Lr0
  * T -> T * F | F  (R3, R4)
  * F -> ( E ) | id (R5, R6)
  *)
-let noloc = Location (0, 0)
-(*e: constant Tests.noloc (yacc) *)
-(*s: constant Tests.arith (yacc) *)
 let arith =
     [{lhs = NT "e";
       rhs = [Nonterm (NT "e"); Term (T "PLUS");  Nonterm (NT "t")];
@@ -37,12 +34,6 @@ let augmented_arith =
 *)
 (*e: constant Tests.arith (yacc) *)
 (*s: function Tests.test_lr0 (yacc) *)
-(*
-let augmented_arith =
-  {lhs = NT "$S"; rhs = [Nonterm (NT "e")]; act = noloc} :: arith
-*)
-
-
 let test_lr0 () =
   let env = Lr0.mk_env_augmented_grammar (NT "e") arith in
 
@@ -132,9 +123,11 @@ let test_first_follow () =
   ()
 (*e: function Tests.test_first_follow (yacc) *)
 
-
+(* if want to prototype with compat/parsing2.ml
 open Parsing2
 module Parsing = Parsing2
+*)
+open Parsing
 
 (*s: type Tests.token (yacc) *)
 type token =
@@ -158,7 +151,7 @@ let test_lr_engine () =
   let lrtables = {
     Parsing.action = (function 
       | (S 0, T0) -> Shift (S 1)
-      | (S 1, TEOF) -> Reduce (1, NT "S", RA "S")
+      | (S 1, TEOF) -> Reduce (NT "S", 1, RA 1)
       | (S 2, TEOF) -> Accept
       | _ -> raise Parsing.Parse_error
     );
@@ -168,8 +161,11 @@ let test_lr_engine () =
     );
   }
   in
+  (* todo *)
+  let rules_action = [||] in
+  let string_of_tok = function | T0 -> "T0" | TEOF -> "TEOF" in
   
-  Parsing.yyparse_simple lrtables lexfun lexbuf
+  Parsing.yyparse_simple lrtables rules_action lexfun string_of_tok lexbuf
 (*e: function Tests.test_lr_engine (yacc) *)
 
 

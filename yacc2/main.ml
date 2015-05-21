@@ -29,9 +29,9 @@ open Ast
 
 (*****************************************************************************)
 (* Main entry point *)
-(*s: function Main.main (yacc) *)
 (*****************************************************************************)
 
+(*s: function Main.main (yacc) *)
 let main () =
 
   if Array.length Sys.argv != 2 then begin

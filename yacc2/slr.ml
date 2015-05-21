@@ -45,9 +45,9 @@ let map_filter f xs = xs |> List.map f |> filter_some
 
 (*****************************************************************************)
 (* Main entry point *)
-(*s: function Slr.lr_tables (yacc) *)
 (*****************************************************************************)
 
+(*s: function Slr.lr_tables (yacc) *)
 let lr_tables env auto follow =
   let trans = auto.trans |> Map.to_list in
 

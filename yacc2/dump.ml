@@ -32,9 +32,8 @@ open Lr0
 (* Helpers *)
 (*****************************************************************************)
 
-(*s: type Dump.either (yacc) *)
 (* common.ml *)
-
+(*s: type Dump.either (yacc) *)
 type ('a,'b) either = Left of 'a | Right of 'b
 (*e: type Dump.either (yacc) *)
 
@@ -55,8 +54,6 @@ let hash_of_list xs =
   xs |> List.iter (fun (k, v) -> Hashtbl.replace h k v);
   h
 (*e: function Dump.hash_of_list (yacc) *)
-
-
 
 
 
@@ -101,9 +98,9 @@ let string_of_action x =
 
 (*****************************************************************************)
 (* Dumpers *)
-(*s: function Dump.dump_symbol (yacc) *)
 (*****************************************************************************)
 
+(*s: function Dump.dump_symbol (yacc) *)
 let dump_symbol s =
   print_string (string_of_symbol s)
 (*e: function Dump.dump_symbol (yacc) *)

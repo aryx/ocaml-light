@@ -31,25 +31,25 @@ open Lr0 (* for the augmented grammar *)
 
 (*****************************************************************************)
 (* Types *)
-(*s: type First_follow.first (yacc2/first_follow.ml) (yacc) *)
 (*****************************************************************************)
 
+(*s: type First_follow.first (yacc) *)
 type first = (Ast.symbol, Ast.term Set.t) Map.t
-(*e: type First_follow.first (yacc2/first_follow.ml) (yacc) *)
+(*e: type First_follow.first (yacc) *)
 
-(*s: type First_follow.epsilon (yacc2/first_follow.ml) (yacc) *)
+(*s: type First_follow.epsilon (yacc) *)
 type epsilon = Ast.nonterm Set.t
-(*e: type First_follow.epsilon (yacc2/first_follow.ml) (yacc) *)
+(*e: type First_follow.epsilon (yacc) *)
 
-(*s: type First_follow.follow (yacc2/first_follow.ml) (yacc) *)
+(*s: type First_follow.follow (yacc) *)
 type follow = (Ast.nonterm, Ast.term Set.t) Map.t
-(*e: type First_follow.follow (yacc2/first_follow.ml) (yacc) *)
+(*e: type First_follow.follow (yacc) *)
 
 (*****************************************************************************)
 (* Helpers *)
-(*s: function First_follow.first_of_sequence (yacc) *)
 (*****************************************************************************)
 
+(*s: function First_follow.first_of_sequence (yacc) *)
 let rec first_of_sequence (first, epsilon) xs =
   match xs with
   | [] -> Set.empty
@@ -64,7 +64,6 @@ let rec first_of_sequence (first, epsilon) xs =
       )
 (*e: function First_follow.first_of_sequence (yacc) *)
 
-
 (*s: function First_follow.epsilon_of_sequence (yacc) *)
 let rec epsilon_of_sequence epsilon xs =
   match xs with
@@ -75,12 +74,13 @@ let rec epsilon_of_sequence epsilon xs =
       | Nonterm nt ->
           Set.mem nt epsilon && epsilon_of_sequence epsilon xs
       )
-(*****************************************************************************)
 (*e: function First_follow.epsilon_of_sequence (yacc) *)
+
+(*****************************************************************************)
 (* Algorithms *)
-(*s: function First_follow.compute_first (yacc) *)
 (*****************************************************************************)
 
+(*s: function First_follow.compute_first (yacc) *)
 let compute_first grm =
   (* faster to use an hashtbl? could use Hashtbl.replace which would
    * be faster?
@@ -146,8 +146,6 @@ let compute_first grm =
   done;
   !first, !epsilon
 (*e: function First_follow.compute_first (yacc) *)
-
-
 
 (*s: function First_follow.compute_follow (yacc) *)
 (* assumes augmented grammar *)

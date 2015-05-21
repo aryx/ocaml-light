@@ -3,7 +3,6 @@
 (*s: type Lr0.ruleidx (yacc) *)
 (* the index of the rule in env.g *)
 type ruleidx = R of int
-(* the dot position in the rhs of a rule *)
 (*e: type Lr0.ruleidx (yacc) *)
 (*s: type Lr0.dotidx (yacc) *)
 (* the dot position in the rhs of a rule *)
@@ -59,9 +58,9 @@ val goto: env -> items -> Ast.symbol -> items
 val canonical_lr0_automaton: env -> automaton
 (*e: signature Lr0.canonical_lr0_automaton (yacc) *)
 
+(* helper functions used also by slr.ml *)
 
 (*s: signature Lr0.after_dot (yacc) *)
-(* helper functions used also by slr.ml *)
 val after_dot: Ast.rule_ -> dotidx -> Ast.symbol option
 (*e: signature Lr0.after_dot (yacc) *)
 
