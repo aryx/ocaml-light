@@ -1,8 +1,6 @@
 ./utils/config.mlp
 #./utils/config.ml
 
-./parsing/lexer.mll
-./parsing/parser.mly
 ./parsing/linenum.mll
 #./parsing/parser.mli
 #./parsing/parser.ml
@@ -24,7 +22,6 @@ asmcomp/i386/proc.ml
 asmcomp/i386/reload.ml
 asmcomp/i386/scheduling.ml
 asmcomp/i386/selection.ml
-
 
 ./tools/toplevel/expunge.ml
 ./tools/toplevel/genprintval.mli
@@ -158,21 +155,6 @@ asmcomp/i386/selection.ml
 ./otherlibs/unix/unix.mli
 
 ./tests/hello.ml
-
-./lex/compact.ml
-./lex/compact.mli
-./lex/lexer.ml
-./lex/lexer.mli
-./lex/lexer.mll
-./lex/lexgen.ml
-./lex/lexgen.mli
-./lex/main.ml
-./lex/output.ml
-./lex/output.mli
-./lex/parser.ml
-./lex/parser.mli
-./lex/parser.mly
-./lex/syntax.mli
 
 ./tools/debugger/breakpoints.ml
 ./tools/debugger/breakpoints.mli
