@@ -1,13 +1,13 @@
 # The parser generator
 
-CAMLC=../boot/ocamlrun ../boot/ocamlc -I ../boot
 COMPFLAGS=
 LINKFLAGS=
-CAMLYACC=../boot/ocamlyacc
+CAMLC=../boot/ocamlrun ../boot/ocamlc -I ../boot
 YACCFLAGS=
+CAMLYACC=../boot/ocamlyacc
 CAMLLEX=../boot/ocamlrun ../boot/ocamllex
-CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
 DEPFLAGS=
+CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
 
 OBJS1=ast.cmo parser.cmo lexer.cmo check.cmo \
   lr0.cmo first_follow.cmo lrtables.cmo slr.cmo lalr.cmo \
