@@ -22,4 +22,13 @@ val output_lexdef:
       Syntax.location (* trailer *) ->
       unit
 (*e: signature Output.output_lexdef *)
+
+val output_lexdef_simple:
+      in_channel -> out_channel ->
+      Syntax.location (* header *) ->
+      Lexgen.automata_entry list * Lexgen.automata_matrix ->
+      Syntax.location (* trailer *) ->
+      unit
+
+
 (*e: lex/output.mli *)
