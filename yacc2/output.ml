@@ -1,3 +1,4 @@
+(*s: yacc2/output.ml *)
 (* Yoann Padioleau
  *
  * Copyright (C) 2015 Yoann Padioleau
@@ -22,10 +23,13 @@ open Lrtables
 
 (*****************************************************************************)
 (* Helpers *)
+(*s: constant Output.copy_buffer (yacc) *)
 (*****************************************************************************)
 
 let copy_buffer = String.create 1024
+(*e: constant Output.copy_buffer (yacc) *)
 
+(*s: function Output.get_chunk (yacc) *)
 let get_chunk ic (Location(start,stop)) =
   seek_in ic start;
   let buf = Buffer.create 1024 in
@@ -37,7 +41,9 @@ let get_chunk ic (Location(start,stop)) =
     n := !n - m
   done;
   Buffer.contents buf
+(*e: function Output.get_chunk (yacc) *)
 
+(*s: function Output.copy_chunk (yacc) *)
 let copy_chunk ic oc (Location(start,stop)) =
   seek_in ic start;
   let n = ref (stop - start) in
@@ -46,7 +52,9 @@ let copy_chunk ic oc (Location(start,stop)) =
     output oc copy_buffer 0 m;
     n := !n - m
   done
+(*e: function Output.copy_chunk (yacc) *)
 
+(*s: function Output.replace_dollar_underscore (yacc) *)
 (* actually does the replacment in place 
  * less: we could use Str instead, but this adds a dependency.
  *  Str.global_replace (Str.regexp_string "$") "_" s
@@ -61,16 +69,22 @@ let replace_dollar_underscore s =
   in
   aux 0;
   s
+(*e: function Output.replace_dollar_underscore (yacc) *)
 
+(*s: constant Output.spf (yacc) *)
 let spf = Printf.sprintf
+(*e: constant Output.spf (yacc) *)
 
+(*s: function Output.int_of_char (yacc) *)
 (* todo: what about $22? what error message give if type and $x ? *)
 let int_of_char c =
   let i = Char.code c in
   if i <= Char.code '9' && i >= Char.code '1'
   then i - Char.code '0'
   else failwith (spf "the characted %c is not a char" c)
+(*e: function Output.int_of_char (yacc) *)
 
+(*s: function Output.extract_dollars_set (yacc) *)
 let extract_dollars_set s =
   let set = ref Set.empty in
   let rec aux startpos =
@@ -83,10 +97,12 @@ let extract_dollars_set s =
   in
   aux 0;
   !set
+(*e: function Output.extract_dollars_set (yacc) *)
 
 
 (*****************************************************************************)
 (* Main entry point *)
+(*s: function Output.output_parser (yacc) *)
 (*****************************************************************************)
 
 let output_parser def env lrtables ic oc =
@@ -240,4 +256,6 @@ let output_parser def env lrtables ic oc =
   pf "let %s lexfun lexbuf =\n" start;
   pf "  Parsing.yyparse_simple lrtables user_actions lexfun string_of_token lexbuf\n";
   ()
+(*e: function Output.output_parser (yacc) *)
 
+(*e: yacc2/output.ml *)

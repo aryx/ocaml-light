@@ -1,3 +1,4 @@
+(*s: yacc2/ast.ml *)
 (* Yoann Padioleau
  *
  * Copyright (C) 2015 Yoann Padioleau
@@ -17,35 +18,58 @@
 (* Types *)
 (*****************************************************************************)
 
+(*s: enum Ast.term (yacc) *)
 (* uppercase string *)
 type term = T of string
 (* lowercase string *)
+(*e: enum Ast.term (yacc) *)
+(*s: enum Ast.nonterm (yacc) *)
+(* lowercase string *)
 type nonterm = NT of string
+(*e: enum Ast.nonterm (yacc) *)
 
+(*s: enum Ast.symbol (yacc) *)
 type symbol = Term of term | Nonterm of nonterm
+(*e: enum Ast.symbol (yacc) *)
 
+(*s: enum Ast.charpos (yacc) *)
 type charpos = int
+(*e: enum Ast.charpos (yacc) *)
+(*s: enum Ast.location (yacc) *)
 type location =
     Location of charpos * charpos
 (* the slice may contain the special $<digit> markers *)
+(*e: enum Ast.location (yacc) *)
+(*s: enum Ast.action (yacc) *)
+(* the slice may contain the special $<digit> markers *)
 type action = location
+(*e: enum Ast.action (yacc) *)
 
+(*s: enum Ast.grammar (yacc) *)
 type grammar = rule_ list
+(*e: enum Ast.grammar (yacc) *)
+(*s: enum Ast.rule_ (yacc) *)
   and rule_ = {
     lhs: nonterm;
     rhs: symbol list;
     act: action;
   }
+(*e: enum Ast.rule_ (yacc) *)
 
+(*s: enum Ast.directive (yacc) *)
 type directive =
   | Token of type_ option * term
   | Start of nonterm
   | Type of type_ * nonterm
 
   | Prec of unit (* TODO *)
+(*e: enum Ast.directive (yacc) *)
 
+(*s: enum Ast.type_ (yacc) *)
   and type_ = string
+(*e: enum Ast.type_ (yacc) *)
 
+(*s: enum Ast.parser_definition (yacc) *)
 (* main data structure *)
 type parser_definition = {
   header: location;
@@ -53,21 +77,29 @@ type parser_definition = {
   grm: grammar;
   trailer: location;
 }
+(*e: enum Ast.parser_definition (yacc) *)
 
+(*s: constant Ast.noloc (yacc) *)
 let noloc = Location(0, 0)
+(*e: constant Ast.noloc (yacc) *)
 
 (* for the augmented grammar *)
 
+(*s: constant Ast.start_nonterminal (yacc) *)
 (* They should not conflict with user-defined terminals or non terminals
  * because nonterminals cannot contain '$' according to lexer.mll and 
  * terminals must start with an uppercase letter according again
  * to lexer.mll
  *)
 let start_nonterminal = NT "S$"
+(*e: constant Ast.start_nonterminal (yacc) *)
+(*s: constant Ast.dollar_terminal (yacc) *)
 let dollar_terminal = T "$"
+(*e: constant Ast.dollar_terminal (yacc) *)
 
 (*****************************************************************************)
 (* Helpers *)
+(*s: function Ast.start_symbol (yacc) *)
 (*****************************************************************************)
 
 let start_symbol def =
@@ -82,3 +114,5 @@ let start_symbol def =
      | _ -> failwith "impossible"
     )
   with Not_found -> failwith "no start symbol found"
+(*e: function Ast.start_symbol (yacc) *)
+(*e: yacc2/ast.ml *)

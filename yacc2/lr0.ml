@@ -1,3 +1,4 @@
+(*s: yacc2/lr0.ml *)
 (* Yoann Padioleau
  *
  * Copyright (C) 2015 Yoann Padioleau
@@ -25,24 +26,38 @@ open Ast
 (* Types *)
 (*****************************************************************************)
 
+(*s: enum Lr0.ruleidx (yacc2/lr0.ml) (yacc) *)
 (* the index of the rule in env.g *)
 type ruleidx = R of int
 (* the dot position in the rhs of a rule *)
+(*e: enum Lr0.ruleidx (yacc2/lr0.ml) (yacc) *)
+(*s: enum Lr0.dotidx (yacc2/lr0.ml) (yacc) *)
+(* the dot position in the rhs of a rule *)
 type dotidx = D of int
+(*e: enum Lr0.dotidx (yacc2/lr0.ml) (yacc) *)
 
+(*s: enum Lr0.stateid (yacc2/lr0.ml) (yacc) *)
 type stateid = S of int
+(*e: enum Lr0.stateid (yacc2/lr0.ml) (yacc) *)
 
+(*s: enum Lr0.item (yacc2/lr0.ml) (yacc) *)
 (* as mentionned in the dragon book *)
 type item = ruleidx * dotidx
+(*e: enum Lr0.item (yacc2/lr0.ml) (yacc) *)
 
+(*s: enum Lr0.items (yacc2/lr0.ml) (yacc) *)
 (* a.k.a an LR0 state *)
 type items = item Set.t
+(*e: enum Lr0.items (yacc2/lr0.ml) (yacc) *)
 
+(*s: enum Lr0.env (yacc2/lr0.ml) (yacc) *)
 type env = {
   (* augmented grammar where r0 is e' -> start_original_grammar *)
   g: Ast.rule_ array;
 }
+(*e: enum Lr0.env (yacc2/lr0.ml) (yacc) *)
 
+(*s: enum Lr0.automaton (yacc2/lr0.ml) (yacc) *)
 type automaton = {
   states: items Set.t;
   (* state 0 is the starting state *)
@@ -51,20 +66,26 @@ type automaton = {
   (* goto mapping *)
   trans: (items * Ast.symbol, items) Map.t;
 }
+(*e: enum Lr0.automaton (yacc2/lr0.ml) (yacc) *)
 
 (*****************************************************************************)
 (* Helpers *)
+(*s: function Lr0.mk_env_augmented_grammar (yacc) *)
 (*****************************************************************************)
 
 let mk_env_augmented_grammar start xs =
   let noloc = Location (0, 0) in
   let start = {lhs = Ast.start_nonterminal; rhs =[Nonterm start]; act=noloc} in
   { g = Array.of_list (start::xs) }
+(*e: function Lr0.mk_env_augmented_grammar (yacc) *)
 
 
+(*s: function Lr0.rule_at (yacc) *)
 let rule_at (R idx) env =
+(*e: function Lr0.rule_at (yacc) *)
   env.g.(idx)
 
+(*s: function Lr0.rules_of (yacc) *)
 let rules_of nt env =
   let res = ref [] in
   env.g |> Array.iteri (fun idx r ->
@@ -72,26 +93,34 @@ let rules_of nt env =
     then res := (R idx) :: !res
   );
   List.rev !res
+(*e: function Lr0.rules_of (yacc) *)
 
+(*s: function Lr0.after_dot (yacc) *)
 let after_dot r (D idx) =
   try Some (List.nth r.rhs idx)
   with Failure _ -> None
+(*e: function Lr0.after_dot (yacc) *)
 
+(*s: function Lr0.move_dot_right (yacc) *)
 let move_dot_right (D idx) = 
   (D (idx + 1))
+(*e: function Lr0.move_dot_right (yacc) *)
 
+(*s: function Lr0.all_symbols (yacc) *)
 let all_symbols env =
   env.g |> Array.fold_left (fun acc r ->
     ((Nonterm r.lhs)::r.rhs) |> List.fold_left (fun acc symbol ->
       Set.add symbol acc
       ) acc
   ) Set.empty
+(*e: function Lr0.all_symbols (yacc) *)
 
 
 (*****************************************************************************)
 (* Algorithms *)
 (*****************************************************************************)
 
+(*s: function Lr0.closure (yacc) *)
 (* todo: opti: use kernel items *)
 let closure env items =
   let result = ref items in
@@ -118,8 +147,10 @@ let closure env items =
     )
   done;
   !result
+(*e: function Lr0.closure (yacc) *)
 
 
+(*s: function Lr0.goto (yacc) *)
 let goto env items symbol =
   let start =
     Set.fold (fun item acc ->
@@ -132,9 +163,11 @@ let goto env items symbol =
     ) items Set.empty
   in
   closure env start
+(*e: function Lr0.goto (yacc) *)
 
 (*****************************************************************************)
 (* Main entry point *)
+(*s: function Lr0.canonical_lr0_automaton (yacc) *)
 (*****************************************************************************)
 
 let canonical_lr0_automaton env =
@@ -182,3 +215,5 @@ let canonical_lr0_automaton env =
     state_to_int = items_to_int;
     trans = trans
   }
+(*e: function Lr0.canonical_lr0_automaton (yacc) *)
+(*e: yacc2/lr0.ml *)
