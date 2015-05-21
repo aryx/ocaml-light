@@ -183,7 +183,22 @@ let output_parser def env lrtables ic oc =
      * we're ok!
      *)
     if t = "$"
-    then pf "   | S %d, _ -> Accept\n" id
+    then begin 
+      (* in practice the '_' will be the TEOF token returned another time
+       * by the lexer.
+       *)
+      pf "   | S %d, _ -> " id;
+      (match action with
+      | Reduce (R ridx) ->
+          let r = env.g.(ridx) in
+          let n = List.length r.rhs in
+          let (NT l) = r.lhs in
+          pf "Reduce (NT \"%s\", %d, RA %d)" l n ridx
+      | Accept -> pf "Accept"
+      | _ -> failwith "impossible to have a non reduce or accept action on $"
+      );
+      pf "\n";
+    end
     else begin
       pf "   | S %d, %s%s -> " id t
         (if Hashtbl.mem htype (Term (T t)) 
