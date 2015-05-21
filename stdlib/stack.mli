@@ -40,3 +40,5 @@ val iter: ('a -> unit) -> 'a t -> unit
 (* addons pad *)
 val top: 'a t -> 'a
 val top_opt: 'a t -> 'a option
+
+val nth: int -> 'a t -> 'a

@@ -41,3 +41,5 @@ let top s =
   | x::xs -> x
   | [] -> raise Empty
 
+let nth i s =
+  List.nth s.c i
