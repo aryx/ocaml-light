@@ -90,3 +90,9 @@ boot/Saved
 /yacc2/parser.ml
 /yacc2/parser.mli
 /tests/yacc/arith.ml
+/tools/dependencies/ocamldep
+/tools/dependencies/ocamldep.ml
+/tools/dumper/dumpobj
+/tools/dumper/objinfo
+/tools/dumper/opnames.ml
+/tools/profiler/ocamlprof
