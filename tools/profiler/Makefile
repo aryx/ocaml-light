@@ -9,30 +9,25 @@ INCLUDES=-I $(TOP)/utils -I $(TOP)/parsing -I $(TOP)/typing -I $(TOP)/bytecomp -
 COMPFLAGS=$(INCLUDES)
 LINKFLAGS=$(INCLUDES)
 
-all: 
+all: ocamlprof
 
-# To make custom toplevels
+# The profiler
+
+CSLPROF=ocamlprof.cmo
+CSLPROF_IMPORTS=misc.cmo config.cmo clflags.cmo terminfo.cmo \
+  linenum.cmo location.cmo longident.cmo \
+  syntaxerr.cmo parser.cmo lexer.cmo parse.cmo
+
+ocamlprof: $(CSLPROF) profiling.cmo
+	$(CAMLC) $(LINKFLAGS) -o ocamlprof $(CSLPROF_IMPORTS) $(CSLPROF)
 
 install::
-#	cp ocamlmktop $(BINDIR)/ocamlmktop
-
-# The preprocessor for asm generators
-
-CVT_EMIT=cvt_emit.cmo
-
-cvt_emit: $(CVT_EMIT)
-	$(CAMLC) $(LINKFLAGS) -o cvt_emit $(CVT_EMIT)
+	cp ocamlprof $(BINDIR)/ocamlprof
+	cp ocamlcp $(BINDIR)/ocamlcp
+	cp profiling.cmi profiling.cmo $(LIBDIR)
 
 clean::
-	rm -f cvt_emit
-
-cvt_emit.ml: cvt_emit.mll
-	$(CAMLLEX) cvt_emit.mll
-
-clean::
-	rm -f cvt_emit.ml
-
-beforedepend:: cvt_emit.ml
+	rm -f ocamlprof
 
 
 # Common stuff

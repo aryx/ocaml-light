@@ -6,7 +6,6 @@
 include config/Makefile
 
 CAMLC=boot/ocamlrun boot/ocamlc -I boot
-#CAMLC=/home/pad/.opam/4.01.0/bin/ocamlc -bin-annot -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -I stdlib
 COMPFLAGS=$(INCLUDES)
 LINKFLAGS=
@@ -18,6 +17,9 @@ DEPFLAGS=$(INCLUDES)
 CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
+
+#pad: if you want to test things
+#CAMLC=/home/pad/.opam/4.01.0/bin/ocamlc -bin-annot -I boot
 
 ##############################################################################
 # The files and directories
@@ -524,23 +526,17 @@ ocamlyacc:
 clean::
 	cd yacc; $(MAKE) clean
 
-# Tools
+TOOLS=tools/debugger tools/profiler tools/dependencies tools/dumper tools/misc
 
-ocamltools:
-	cd tools/misc; $(MAKE) all
+# Other tools
+
+ocamltools::
+	for i in $(TOOLS); do (cd $$i; $(MAKE) all); done
 partialclean::
-	cd tools/misc; $(MAKE) clean
+	for i in $(TOOLS); do (cd $$i; $(MAKE) clean); done
 alldepend::
-	cd tools/misc; $(MAKE) depend
+	for i in $(TOOLS); do (cd $$i; $(MAKE) depend); done
 
-# The replay debugger
-
-ocamldebugger:
-	cd tools/debugger; $(MAKE) all
-partialclean::
-	cd tools/debugger; $(MAKE) clean
-alldepend::
-	cd tools/debugger; $(MAKE) depend
 
 
 # The "expunge" utility
@@ -574,7 +570,6 @@ partialclean::
 	rm -f asmcomp/*.cm[iox] asmcomp/*.[so] asmcomp/*~
 	rm -f driver/*.cm[iox] driver/*.[so] driver/*~
 	rm -f tools/toplevel/*.cm[iox] tools/toplevel/*.[so] tools/toplevel/*~
-	rm -f tools/misc/*.cm[iox] tools/misc/*.[so] tools/misc/*~
 	rm -f *~
 
 depend: beforedepend
@@ -867,5 +862,3 @@ SRC_VIEWS_C=\
 SYNCWEB_C=~/github/syncweb/syncweb.opt -md5sum_in_auxfile -less_marks -lang C
 sync_c:
 	for i in $(SRC_VIEWS_C); do echo $$i; $(SYNCWEB_C) $(SRC_ORIG) $$i || exit 1; done 
-
-

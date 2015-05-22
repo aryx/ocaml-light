@@ -42,7 +42,7 @@ let print_info cu =
 
 let dump_obj filename =
   print_string "File "; print_string filename; print_newline();
-  let ic = open_in_bin filename in
+  let ic = open_in filename in
   let buffer = String.create (String.length cmo_magic_number) in
   really_input ic buffer 0 (String.length cmo_magic_number);
   if buffer = cmo_magic_number then begin

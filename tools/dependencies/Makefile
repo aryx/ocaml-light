@@ -9,31 +9,29 @@ INCLUDES=-I $(TOP)/utils -I $(TOP)/parsing -I $(TOP)/typing -I $(TOP)/bytecomp -
 COMPFLAGS=$(INCLUDES)
 LINKFLAGS=$(INCLUDES)
 
-all: 
+all: ocamldep
 
-# To make custom toplevels
+# The dependency generator
+
+CAMLDEP=ocamldep.cmo
+
+ocamldep: $(CAMLDEP)
+	$(CAMLC) $(LINKFLAGS) -o ocamldep misc.cmo $(CAMLDEP)
+
+#pad: better not deleting it
+#clean::
+#	rm -f ocamldep
+
+ocamldep.ml: ocamldep.mll
+	$(CAMLLEX) ocamldep.mll
+
+clean::
+	rm -f ocamldep.ml
 
 install::
-#	cp ocamlmktop $(BINDIR)/ocamlmktop
+	cp ocamldep $(BINDIR)/ocamldep
 
-# The preprocessor for asm generators
-
-CVT_EMIT=cvt_emit.cmo
-
-cvt_emit: $(CVT_EMIT)
-	$(CAMLC) $(LINKFLAGS) -o cvt_emit $(CVT_EMIT)
-
-clean::
-	rm -f cvt_emit
-
-cvt_emit.ml: cvt_emit.mll
-	$(CAMLLEX) cvt_emit.mll
-
-clean::
-	rm -f cvt_emit.ml
-
-beforedepend:: cvt_emit.ml
-
+beforedepend:: ocamldep.ml
 
 # Common stuff
 
