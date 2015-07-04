@@ -96,3 +96,5 @@ boot/Saved
 /tools/dumper/objinfo
 /tools/dumper/opnames.ml
 /tools/profiler/ocamlprof
+/boot/ocamllex2
+/boot/ocamlyacc2
