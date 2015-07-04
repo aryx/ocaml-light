@@ -25,6 +25,10 @@ open Ast
  * todo:
  *  - handle priorities, precedences
  *  - EBNF support!
+ *  - simple grammar checker (use/def, wrong $)
+ *  - handle error position
+ *  - generate #line?
+ *  - lalr?
  *)
 
 (*****************************************************************************)

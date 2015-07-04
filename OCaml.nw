@@ -202,7 +202,7 @@ Here are other candidates that were considered but ultimately discarded:
 \end{itemize}
 
 % so many candidates to list here actually.
-% - min-caml
+% - mincaml
 
 %todo?
 %https://rwmj.wordpress.com/2009/08/04/ocaml-internals/
@@ -210,6 +210,9 @@ Here are other candidates that were considered but ultimately discarded:
 
 %why ocaml vs smlnj, moscowml, etc:
 %http://thebreakfastpost.com/2015/05/10/sml-and-ocaml-so-why-was-the-ocaml-faster/
+
+%mini-ML:
+%https://hal.inria.fr/inria-00076025/file/RR-0529.pdf
 
 
 \section{Getting started}
@@ -401,6 +404,17 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 \section{[[calc.ml]]}
 
 \section{Input OCaml Light language}
+
+% vs SML:
+%  - good implicit mli is sig and ml is struct, in SML you have to
+%    repeat yourself in the .sig and .sml and so
+
+% vs Haskell:
+%  - no package, flat module, can reference without import.
+%    In the end it's far better. See darcs code with hundreds of
+%    line of boilerplate import and then unqualified call to external
+%    functions.
+
 
 \section{Code organization}
 
@@ -706,6 +720,7 @@ and pattern_desc =
   | Ppat_constraint of pattern * core_type
   | Ppat_or of pattern * pattern
 @
+%less: aspectize more advanced patterns? like alias, constraint, or?
 
 \subsection{Statements}
 
@@ -11465,6 +11480,9 @@ static void scanmult (char *opt, long unsigned int *var)
 
 
 \chapter{Native Code Generation}
+
+%use ARM? or riscv recent backend?
+% https://github.com/nojb/riscv-ocamlopt
 
 <<constant Clflags.native_code>>=
 let native_code = ref false             (* set to true under ocamlopt *)
