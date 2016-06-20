@@ -168,3 +168,8 @@ val ends_with :
 (** [ends_with ][~suffix s] is [true] if and only if [s] ends with [suffix].
 
     @since 4.13.0 *)
+
+val split_on_char : char -> string -> string list
+(** [split_on_char sep s] returns the list of all (possibly empty)
+    substrings of [s] that are delimited by the [sep] character.
+    @since 4.04.0 *)
