@@ -24,6 +24,11 @@ external file_exists: string -> bool = "sys_file_exists"
 external remove: string -> unit = "sys_remove"
 external rename : string -> string -> unit = "sys_rename"
 external getenv: string -> string = "sys_getenv"
+
+let getenv_opt s =
+  try Some (getenv s)
+  with Not_found -> None
+
 external command: string -> int = "sys_system_command"
 external time: unit -> float = "sys_time"
 external chdir: string -> unit = "sys_chdir"
