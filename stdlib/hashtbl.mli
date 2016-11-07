@@ -102,3 +102,8 @@ val replace : ('a, 'b) t -> 'a -> 'b -> unit
    a binding of [x] to [y] is added to [tbl].
    This is functionally equivalent to {!Hashtbl.remove}[ tbl x]
    followed by {!Hashtbl.add}[ tbl x y]. *)
+
+val find_opt : ('a, 'b) t -> 'a -> 'b option
+(** [Hashtbl.find_opt tbl x] returns the current binding of [x] in [tbl],
+   or [None] if no such binding exists.
+   @since 4.05 *)

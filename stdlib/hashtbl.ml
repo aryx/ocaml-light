@@ -157,3 +157,10 @@ let replace h key info =
     ;h.size <- succ h.size;
     if h.size > Array.length h.data lsl 1 then resize hash h
 *)
+
+let find_opt h key =
+  let rec find_in_bucket = function
+      Empty -> None
+    | Cons(k, d, rest) ->
+        if compare k key = 0 then Some d else find_in_bucket rest in
+  find_in_bucket h.data.((hash key) mod (Array.length h.data))
