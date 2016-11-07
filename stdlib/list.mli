@@ -193,3 +193,22 @@ val concat_map : ('a -> 'b list) -> 'a list -> 'b list
    {!concat}[ (]{!map}[ f l)].
    @since 4.10.0
  *)
+
+val find_opt : ('a -> bool) -> 'a list -> 'a option
+(** [find_opt p l] returns the first element of the list [l] that
+   satisfies the predicate [p], or [None] if there is no value that
+   satisfies [p] in the list [l].
+   @since 4.05 *)
+
+val assoc_opt : 'a -> ('a * 'b) list -> 'b option
+(** [assoc_opt a l] returns the value associated with key [a] in the
+   list of pairs [l], or [None] if there is no value associated with
+   [a] in the list [l].
+   @since 4.05 *)
+
+val nth_opt : 'a list -> int -> 'a option
+(** Return the [n]-th element of the given list.
+   The first element (head of the list) is at position 0.
+   Return [None] if the list is too short.
+   Raise [Invalid_argument "List.nth"] if [n] is negative.
+   @since 4.05 *)

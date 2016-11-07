@@ -278,3 +278,17 @@ let iteri f l = iteri 0 f l
 let rec concat_map f = function
     [] -> []
   | a::l -> f a @ concat_map f l
+
+let rec find_opt p = function
+    [] -> None
+  | x :: l -> if p x then Some x else find_opt p l
+
+let rec assoc_opt x = function
+    [] -> None
+  | (a,b)::l -> if a = x then Some b else assoc_opt x l
+
+let rec nth_opt l n =
+  if n < 0 then invalid_arg "List.nth" else
+  match l with
+    [] -> None
+  | a::l -> if n = 0 then Some a else nth_opt l (n-1)
