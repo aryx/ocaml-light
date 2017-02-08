@@ -230,3 +230,9 @@ val mapi : (int -> 'a -> 'b) -> 'a list -> 'b list
    itself as second argument.
    @since 3.13.0
  *)
+
+val init : int -> (int -> 'a) -> 'a list
+(** [init len f] is [[f 0; f 1; ...; f (len-1)]], evaluated left to right.
+   Raise [Invalid_argument] if [len < 0].
+   @since 4.06.0
+ *)

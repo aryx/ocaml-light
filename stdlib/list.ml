@@ -306,3 +306,10 @@ let rec mapi i f = function
   | a::l -> let r = f i a in r :: mapi (i + 1) f l
 
 let mapi f l = mapi 0 f l
+
+let rec init_aux i n f =
+  if i >= n then []
+  else f i :: init_aux (i + 1) n f
+
+let init n f =
+  if n < 0 then invalid_arg "List.init" else init_aux 0 n f
