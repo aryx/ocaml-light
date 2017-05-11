@@ -134,6 +134,10 @@ let main () =
        (*x: [[Main.main()]] command line options *)
        "-dinstr", Arg.Set dump_instr, " (undocumented)";
        (*e: [[Main.main()]] command line options *)
+
+       "-output-c", Arg.Unit(fun () -> output_c := true;
+                                       custom_runtime := true),
+             "Output a C file instead of an executable";
       ] 
       process_file 
       usage;
