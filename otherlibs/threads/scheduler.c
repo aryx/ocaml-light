@@ -67,6 +67,7 @@ struct thread_struct {
   value waitpid;                /* PID of process we're waiting for */
   value retval;                 /* Value to return when thread resumes */
 };
+//pad: saved backtrace in recent ocaml
 
 typedef struct thread_struct * thread_t;
 
@@ -154,6 +155,10 @@ value thread_initialize(value unit)       /* ML */
   //setitimer(ITIMER_VIRTUAL, &timer, NULL);
   return Val_unit;
 }
+//pad: timer initialization done in separate function
+// so first set vtalarm callback from ocaml and then set timer
+// for this callback
+
 
 /* Create a thread */
 
