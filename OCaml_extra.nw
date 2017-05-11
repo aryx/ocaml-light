@@ -3951,8 +3951,6 @@ external available_primitives : unit -> string array = "available_primitives"
 \subsection*{[[./bytecomp/runtimedef.mli]]}
 
 <<signature Runtimedef.builtin_exceptions>>=
-(* Values and functions known and/or provided by the runtime system *)
-
 val builtin_exceptions: string array
 @
 
@@ -3965,6 +3963,8 @@ val builtin_primitives: string array
 
 <<./bytecomp/runtimedef.mli>>=
 <<copyright header>>
+
+(* Values and functions known and/or provided by the runtime system *)
 
 <<signature Runtimedef.builtin_exceptions>>
 <<signature Runtimedef.builtin_primitives>>
@@ -7011,8 +7011,6 @@ let slot_for_literal cst =
 @
 
 <<constant Symtable.c_prim_table>>=
-(* The C primitives *)
-
 let c_prim_table = ref(empty_numtable : string numtable)
 @
 
@@ -7254,6 +7252,8 @@ and literal_table = ref([] : (int * structured_constant) list)
 <<function Symtable.slot_for_setglobal>>
 
 <<function Symtable.slot_for_literal>>
+
+(* The C primitives *)
 
 <<constant Symtable.c_prim_table>>
 
@@ -7695,7 +7695,7 @@ open Clflags
 @
 
 
-\section{NATIVE CODE START}
+\part{NATIVE CODE START}
 
 \section{[[asmcomp/arm/]]}
 
@@ -17771,7 +17771,7 @@ open Clflags
 
 
 
-\section{C CODE START}
+\part{C CODE START}
 
 \section{[[byterun/]]}
 
@@ -18699,6 +18699,7 @@ void shrink_heap (char *chunk)
 }
 @
 
+%shr for shared block
 <<function alloc_shr>>=
 value alloc_shr (mlsize_t wosize, tag_t tag)
 {
@@ -18787,6 +18788,7 @@ void * stat_alloc (asize_t sz)
   return result;
 }
 @
+% static alloc?
 
 <<function stat_free>>=
 void stat_free (void * blk)
