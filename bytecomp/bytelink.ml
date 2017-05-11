@@ -390,6 +390,40 @@ void caml_startup(argv)
     raise x
 (*e: function Bytelink.link_bytecode_as_c *)
 
+let link_bytecode_as_c_bis objfiles outfile =
+  let tolink = List.fold_right scan_file objfiles [] in
+  let outchan = open_out outfile in
+  try
+    (* The bytecode *)
+    output_string outchan "static int caml_code[] = {\n";
+    Symtable.init();
+    Hashtbl.clear crc_interfaces;
+    let output_fun = output_code_string outchan
+    and currpos_fun () = fatal_error "Bytelink.link_bytecode_as_c_bis" in
+    List.iter (link_file output_fun currpos_fun) tolink;
+    (* The final STOP instruction *)
+    Printf.fprintf outchan "\n0x%x};\n\n" Opcodes.opSTOP;
+    (* The table of global data *)
+    output_string outchan "static char * caml_data =\n";
+    output_data_string outchan
+      (Marshal.to_string (Symtable.initial_global_table()) []);
+    (* The table of primitives *)
+    Symtable.output_primitive_table outchan;
+    (* The entry point *)
+    output_string outchan "\n
+void caml_startup_code(int* code, int code_size, char *data, char **argv);
+
+void caml_startup(char **argv)
+{
+  caml_startup_code(caml_code, sizeof(caml_code), caml_data, argv);
+}\n";
+    close_out outchan
+  with x ->
+    close_out outchan;
+    raise x
+
+
+
 (*s: function Bytelink.extract *)
 (* Build a custom runtime *)
 
@@ -454,6 +488,16 @@ let fix_exec_name name =
 let link objfiles =
   let objfiles = "stdlib.cma" :: (objfiles @ ["std_exit.cmo"]) in
   (match () with
+  | _ when !Clflags.output_c -> 
+      let c_file =
+        Filename.chop_suffix !Clflags.object_name Config.ext_obj ^ ".c" in
+      (try
+        link_bytecode_as_c_bis objfiles c_file;
+      with x ->
+        remove_file c_file;
+        raise x
+      )
+
   | _ when not !Clflags.custom_runtime && not !Clflags.output_c_object  ->
       link_bytecode objfiles !Clflags.exec_name (*copy_header*)true
   | _ when not !Clflags.output_c_object ->

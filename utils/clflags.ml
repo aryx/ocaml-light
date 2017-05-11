@@ -75,6 +75,8 @@ let noassert = ref false                (* -noassert *)
 let verbose = ref false                 (* -verbose *)
 (*e: constant Clflags.verbose *)
 
+let output_c = ref false         (* -output-c *)
+
 (*s: constant Clflags.dump_rawlambda *)
 let dump_rawlambda = ref false          (* -drawlambda *)
 (*e: constant Clflags.dump_rawlambda *)
