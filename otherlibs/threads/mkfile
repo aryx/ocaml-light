@@ -10,13 +10,13 @@ INCLUDES=-I../../byterun
 
 CC=pcc
 LD=pcc
-CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION $INCLUDES
+CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION $INCLUDES -DOS_PLAN9_APE
 LDFLAGS=
 
 ROOT=/home/pad/plan9/ROOT
 
 install:V: libthreads.a
-	cp libthreads.a $ROOT/usr/local/lib/ocaml/
+	cp libthreads.a $ROOT/$objtype/lib/ocaml/
 
 clean:
 	rm -f *.[58] y.tab.? y.output y.error $CLEANFILES
