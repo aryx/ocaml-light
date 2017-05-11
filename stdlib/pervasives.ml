@@ -157,7 +157,7 @@ type out_channel
 external open_descriptor_out: int -> out_channel = "caml_open_descriptor"
 external open_descriptor_in: int -> in_channel = "caml_open_descriptor"
 
-let stdin = open_descriptor_in 0
+let stdin  = open_descriptor_in 0
 let stdout = open_descriptor_out 1
 let stderr = open_descriptor_out 2
 
