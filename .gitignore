@@ -10,6 +10,8 @@ asmrun/*.c
 # when compile for plan9
 *.8
 8.out
+*.5
+5.out
 
 .md5sum_*
 
