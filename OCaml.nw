@@ -1,4 +1,4 @@
-\documentclass[twocolumn]{report}
+\documentclass[twocolumn, landscape]{report}
 
 %******************************************************************************
 % Prelude
@@ -11,7 +11,7 @@
 %history: 
 %------------------------------------------------------------------------------
 
-%thx to LP, changed for the better a few things:
+%thx to LP, I changed for the better a few things:
 % - found deadcode in ocaml itself :) with some still in ocaml 4.00
 %   (all.ml, codegen.ml, a few functions, Ident.equal)
 % - found duplicated code (debug_info)
@@ -26,18 +26,27 @@
 %   relevant file (or even function), better cluster the code
 %   (harder to understand non functional code using lots of globals)
 
-%thx to this manual, better understand OCaml?:
-% - TODO how a gc works, the root
+%thx to this manual, better understand OCaml:
+% - TODO how a GC works, the root
 % - SEMI how values are represented at runtime, the Obj module
 %   for a long time I didn't have a good idea of how (Foo 1) was
 %   represented in memory exactly
 % - TODO how compiler backends work (register, liveness, etc)
-% - how type inference works in caml itself,
+% - how type inference works in ocaml itself,
 %   type schema, generalization, instantiation, value restriction (partially)
 % - bootstrapping, so simple, make bootstrap
-% - the -custom, libs, libxxx.a, etc
-% - SEMI setitimer and SIGVTALRM and how to write a user-level scheduler
-% - TODO how a simple thread scheduler works
+% - SEMI the -custom, libs, libxxx.a, etc
+% - setitimer and SIGVTALRM and how to write a user-level scheduler
+% - how a simple thread scheduler works
+% - TODO fast compilation of match on string? transformed in hashtbl?
+%   similar to compilation of switch in C?
+% - TODO when have let f x = let bigarray = Array.create ... in 
+%   do we get a new bigarray allocated each time we call f?
+% - how ocamlc and ocamlrun agree with each other to get
+%   a primitive binding
+% - how ocamlc and ocamlrun manage external C libs (e.g. libunix.a)
+% - TODO how is compiled toplevel globals with complex expression value
+%   like let x = Array.create 10 (complex_function())? when executed?
 
 %history LP-ization:
 % - skeleton, mostly copy paste of Template.nw skeleton
@@ -71,10 +80,8 @@
 %note: required by noweblatexpad for the \t \l \n in this file
 \usepackage{fancyvrb}
 \usepackage{url}
-\iffinal
 \usepackage{hyperref}
  \hypersetup{colorlinks=true}
-\fi
 \usepackage[pageref]{backref}
  \def\backref{{\footnotesize cited page(s)}~}
 %\usepackage{cleveref} %\cref
@@ -82,15 +89,6 @@
 \usepackage{booktabs} 
  \newcommand{\otoprule}{\midrule[\heavyrulewidth]}
 \usepackage{graphicx}
- %\usepackage[margin=0.5in]{geometry}
- %  but eat the bottom when very low
- %\usepackage{fullpage} is deprecated 
- % => do the more manual below:
- \addtolength{\oddsidemargin}{-.850in}
- \addtolength{\evensidemargin}{-.850in}
- \addtolength{\textwidth}{1.70in}
- \addtolength{\topmargin}{-.850in}
- \addtolength{\textheight}{1.70in}
 %\usepackage{minitoc}
 
 %------------------------------------------------------------------------------
@@ -102,12 +100,22 @@
 % Config
 %------------------------------------------------------------------------------
 \allcodefalse
-% used for 
+% ifallcode is used for:
 % - extra copyright, 
 % - composite operations optimisations in interprete()
 % - other stuff??
 
 %\setcounter{tocdepth}{1}
+
+%\usepackage[margin=0.5in]{geometry}
+%  but eat the bottom when very low
+%\usepackage{fullpage} is deprecated 
+% => do the more manual below:
+\addtolength{\oddsidemargin}{-.850in}
+\addtolength{\evensidemargin}{-.850in}
+\addtolength{\textwidth}{1.70in}
+\addtolength{\topmargin}{-.850in}
+\addtolength{\textheight}{1.70in}
 
 %******************************************************************************
 % Title
@@ -117,7 +125,7 @@
 
 \title{
 {\Huge 
-Principia Softwarica: The OCaml Light Compilers
+Principia Softwarica: The OCaml (Light) Compilers
 }\\
 {version 0.1}
 }
@@ -138,25 +146,19 @@ Xavier Leroy and Damien Doligez
 \onecolumn
 \hrule
 \begin{quote}
-    Copyright \copyright{} 2015 Yoann Padioleau \\
-    Permission is granted to copy, distribute and/or modify this document,
-    except all the source code it contains, under the terms of the GNU Free
-    Documentation License, Version 1.3.
+Copyright \copyright{} 2015 Yoann Padioleau \\
+Permission is granted to copy, distribute and/or modify this document,
+except all the source code it contains, under the terms of the GNU Free
+Documentation License, Version 1.3.
 \end{quote}
 \hrule
+\twocolumn
 
-%CONFIG: \dominitoc
-
-\iffinal
 \begingroup
 \hypersetup{linkcolor=blue}
 % need to s/onecolumn/twocolumn in report.cls :) for \tableofcontents
-\twocolumn
 \tableofcontents
 \endgroup
-\else
-\tableofcontents
-\fi
 
 %******************************************************************************
 % Body
@@ -164,25 +166,55 @@ Xavier Leroy and Damien Doligez
 
 \chapter{Introduction}
 
+The goal of this book is to present with full details the source code of
+a {compiler} for the functional language ML.
+\l \cite (higher than C), 
+
 \section{Motivations}
 
-The goal of this book is to present in full details the source code of
-a compiler for a high level language (higher than C).
-Why? Because I think it makes you a better programmer if
-you fully understand how things work under the hood.
+Why? Because I think you are better programmer if
+you fully understand how things work under the hood,
+and given that more and more programs are written in
+dialects of this language (Haskell, OCaml, Scala, F\#, Swift, etc),
+and that many of its features are now incorporated in 
+mainstream languages (closures, type inference, etc),
+I think it is important to understand how this language is implemented.
+
+% Good increments over C (see section below in first chapter).
+
+Here are a few questions I hope this book will answer:
+\begin{itemize}
+\item How are implemented closures?
+
+\item How does garbage collection work?
+
+\item How does ML compare to the lambda calculus?
+
+\item How records, variants, lists, and more are represented internally
+in memory?
+
+\end{itemize}
+
+\section{OCaml light}
 
 % I chose Ocaml because good compromise! functional, and imperative.
 % I removed parts that were more complicated:
 %  - objects
 %  - functors
 % (indeed they were not that used in the code of ocaml itself ... hmm)
-% Good increments over C (see section below in first chapter).
 % And the compiler code is quite elegant.
 
 %%good to vary a bit, not always C code written by the same people :)
 %%and also different language! help also to explore concepts for Compiler.nw
 
-Here are other candidates that were considered but ultimately discarded:
+%20 years anniversary! (of caml special light actually)
+% https://sympa.inria.fr/sympa/arc/caml-list/2015-09/msg00079.html
+% actually I show mostly this code :) the old version code in this book
+
+\section{Other high-level languages}
+
+Here are other high-level programming languages that I considered
+for this book but which I ultimately discarded:
 \begin{itemize}
 \item Scheme
 % not typed, no ADT, but some nice things: macros, call/cc, eval
@@ -202,7 +234,14 @@ Here are other candidates that were considered but ultimately discarded:
 \end{itemize}
 
 % so many candidates to list here actually.
+%mini:
 % - mincaml
+% - mini-MLhttps://hal.inria.fr/inria-00076025/file/RR-0529.pdf
+% - make a lisp in many different languages https://github.com/kanaka/mal
+% - write you a haskell compiler:
+%   http://dev.stephendiehl.com/fun/
+%proved:
+% - verified-ML: https://cakeml.org/
 
 %todo?
 %https://rwmj.wordpress.com/2009/08/04/ocaml-internals/
@@ -211,9 +250,8 @@ Here are other candidates that were considered but ultimately discarded:
 %why ocaml vs smlnj, moscowml, etc:
 %http://thebreakfastpost.com/2015/05/10/sml-and-ocaml-so-why-was-the-ocaml-faster/
 
-%mini-ML:
-%https://hal.inria.fr/inria-00076025/file/RR-0529.pdf
-
+%tags used in this file
+%thih: how ocaml implem differs from 'typing haskell in haskell' paper
 
 \section{Getting started}
 
@@ -356,6 +394,10 @@ the main author of OCaml.
 
 
 
+
+
+
+
 \chapter{Overview}
 
 \section{High-level language principles}
@@ -368,16 +410,19 @@ the main author of OCaml.
 %   and pointers? needed for complex structures (e.g. lists, hashtbl, etc)
 
 %ocaml has many advanced features not in C, so it is good increment too:
+% (stuff other functional languages have, e.g. Lisp)
 % - gc (no more malloc/free and bugs), which imply special bit
 %   for each values (and some tricks around integer operations)
 % - parametric polymorphism (no more code duplication and void* loophole)
 %   which imply boxing values for certain implementation strategy
 % - closures (can factorize more code, no more loop for everything)
+% (now stuff really specific to ML)
 % - ADT and pattern matching (no more enum/switch loophole)
 %   had type "and", now have really a type "or"!
 % - type inference (less boilerplate, especially needed when have
 %   polymorphism and closures and quite complicated types)
 % - references: disciplined safe pointers!
+% - exceptions: disciplined setjmp/longjmp
 
 % missing: 
 %  - call/cc, too advanced? too complex for mere mortal?
@@ -395,15 +440,18 @@ the main author of OCaml.
 %  - compile time metaprogramming? (no more boilerplate, show, map, visit, etc)
 %    staging?
 
-\section{[[ocamlc]] services}
+\section{[[ocamlc]] command-line interface}
 
 <<constant Main.usage>>=
 let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 @
 
+\section{[[ocamlrun]] command-line interface}
+
+
 \section{[[calc.ml]]}
 
-\section{Input OCaml Light language}
+\section{Input OCaml-Light language}
 
 % vs SML:
 %  - good implicit mli is sig and ml is struct, in SML you have to
@@ -415,6 +463,8 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 %    line of boilerplate import and then unqualified call to external
 %    functions.
 
+%history of ML:
+%https://www.youtube.com/watch?v=NVEgyJCTee4&feature=youtu.be
 
 \section{Code organization}
 
@@ -435,6 +485,8 @@ let usage = "Usage: ocamlc <options> <files>\nOptions are:"
 %  "Generation of bytecode for .cmo files"
 
 %https://github.com/ocamllabs/ocaml-internals/wiki/Source-layout
+
+% byterun/primitives (and prims.c) and bytecomp/runtimedef.ml
 
 \section{Software architecture}
 
@@ -476,6 +528,8 @@ let nopervasives = ref false            (* -nopervasives *)
 % (e.g. when I added Printexc.get_backtrace using some new builtins
 % in backtrace.c). Do not make clean! instead make bootstrap.
 
+
+
 %###############################################################################
 
 \chapter{Core Data Structures}
@@ -504,7 +558,7 @@ let nopervasives = ref false            (* -nopervasives *)
 type t =
   { loc_start: int; loc_end: int }
 @
-% charpos
+%the int is a charpos
 
 <<signature Location.none>>=
 val none: t
@@ -549,11 +603,10 @@ type t =
 %note: like a list, but enforce have at least one element
 % Foo.Bar.x -> Ldot (Ldot (Lident "Foo", "Bar"), "x")
 
+%dead:
 %<<signature Longident.flatten>>=
 %val flatten: t -> string list
 %@
-%% dead, maybe dead because removed functors, module type, etc
-%
 %<<function Longident.flat>>=
 %let rec flat accu = function
 %    Lident s -> s :: accu
@@ -562,6 +615,8 @@ type t =
 %<<function Longident.flatten>>=
 %let flatten lid = flat [] lid
 %@
+%% dead, maybe dead because removed functors, module type, etc
+
 
 \subsection{Types}
 
@@ -634,7 +689,8 @@ and type_kind =
 <<type Asttypes.mutable_flag>>=
 type mutable_flag = Immutable | Mutable
 @
-% remove? just use ref? I get confused anyway
+% remove? just use ref? I get confused, but it's true the sugar 
+% with mutable is nice.
 
 %  | Psig_type of (string * type_declaration) list
 % list when mutually recursive!
@@ -780,6 +836,9 @@ type value_description =
 @
 %    Psig_value of string * value_description
 
+%pval_prim for external primitives. [] for non-primitives.
+\l aspectize?
+
 <<type Parsetree.module_type>>=
 type module_type =
   { pmty_desc: module_type_desc;
@@ -827,6 +886,7 @@ and structure_item_desc =
 % Pstr_value is a special case of Pstr_eval where the expr
 % is a let! it's treated specially
 % expression list  for mutually recursive functions
+% value_description for Pstr_primitive must always have non-empty prim_val?
 
 <<type Parsetree.module_expr>>=
 type module_expr =
@@ -859,7 +919,7 @@ type type_expr =
 % - no more Any
 % - no more type aliases (but I removed them in the previous basic chunk)
 % - no manifest (type abbreviations) (but I aspectized it)
-% diff with THIH
+%thih: diff with THIH
 % - arrow is seens as a form of type constructor but with a higher kind
 %   (not sure it simplifies things)
 
@@ -919,6 +979,7 @@ enum instructions {
   <<function application opcodes>>
   <<recursive definition opcodes>>
   <<exception opcodes>>
+
   <<signal opcodes>>
   <<foreign C calls opcodes>>
 
@@ -956,6 +1017,10 @@ enum instructions {
 % different: all the rest ... exn, env, function call, debugger, etc.
 % note that there is no label here because the bytecode is really
 % closer to Machine.nw than Assembler.nw. Instruction has labels though.
+
+
+% notion of abstract machine, virtual machine
+%history: p-code of wirth, secd of landin?
 
 \section{Runtime [[value]]s}
 
@@ -1052,7 +1117,8 @@ typedef long value;
 % so first bit set for ints, so to get value you need to shift,
 % to add you need to do stuff, etc. It complicates things.
 % Why not opposite? why not use bit 31 as the marker instead of bit0?
-% look at zinc report?
+% look at zinc report? because they every dereference will need a
+% a conversion. Here just integer access need some special care.
 % but that way it's convenient for pointer which anyway need to be
 % word aligned and so for blocks can dereference the value directly;
 % no need any conversion.
@@ -1328,7 +1394,12 @@ static void init_atoms(void)
 %\section{Native CMM, lambda, etc?}
 
 
-\chapter{[[Main.main()]]}
+
+
+
+
+
+\chapter{[[Main.main()]] ([[ocamlc]])}
 % main of ocamlc (there is also the main of ocamlrun!)
 
 <<toplevel Main._1>>=
@@ -1601,6 +1672,8 @@ let process_interface_file name =
 @
 
 % will see Bytelink.link later
+
+
 
 
 
@@ -3405,6 +3478,10 @@ let unclosed opening_name opening_num closing_name closing_num =
 % You can't do typing if you don't know precisely to which
 % entity an identifier refers to.
 
+%different type systems in ocaml:
+% - https://github.com/tomprimozic/type-systems
+% - https://www.cis.upenn.edu/~bcpierce/tapl/checkers/ from pierce's book TAPL
+
 \section{Resolving names}
 %Naming? A special section? nast
 
@@ -3922,6 +3999,10 @@ type description =
 
     prim_native_float: bool }  (* Does the above operate on unboxed floats? *)
 @
+
+% Note that there are 2 kinds of primitives (both declared with external):
+%  - primitives recognized by ocamlc (e.g. %raise, %eq)
+%  - external calls to C functions
 
 <<signature Primitive.parse_declaration>>=
 val parse_declaration: int -> string list -> description option
@@ -7333,8 +7414,8 @@ val check_partial:
 
 \section{Dead code}
 
-% surprisingly effective at finding bugs! if it's dead, it's
-% probably not what you meant!
+% Surprisingly effective at finding bugs! 
+% If it's dead, it's probably not what you meant!
 
 \subsection{Dead variables}
 
@@ -7360,6 +7441,13 @@ val check_unused:
 
 
 % other? dead???
+
+
+
+
+
+
+
 
 \chapter{Compiling}
 % Generating
@@ -8796,14 +8884,17 @@ let scan_file obj_name tolink =
 let pos1 = pos_out outchan in
 Symtable.init();
 Hashtbl.clear crc_interfaces;
+
 let output_fun = output_string outchan
 and currpos_fun () = pos_out outchan - pos1 in
+
 tolink |> List.iter (link_file output_fun currpos_fun);
 
 (* The final STOP instruction *)
 output_byte outchan Opcodes.opSTOP;
 output_byte outchan 0; output_byte outchan 0; output_byte outchan 0;
 @
+% Symtable.init() will also initialize c_prim_table using Runtimedef
 
 <<function Bytelink.link_file>>=
 (* Link in a .cmo or .cma file *)
@@ -8852,7 +8943,12 @@ let link_compunit output_fun currpos_fun inchan file_name compunit =
   <<[[Bytelink.link_compunit()]] if link everything require primitives>>
 @
 
+% Patch object! relocation
+
 \subsection{Primitives table}
+
+% Set first in Symtable.init above.
+% Augmented when reading object files???
 
 <<[[link_bytecode()]] set pos2 and generate primitives>>=
 let pos2 = pos_out outchan in
@@ -8875,6 +8971,9 @@ let output_primitive_names outchan =
     output_string outchan prim.(i); output_char outchan '\000'
   done
 @
+% This is just for debugging? 
+
+
 
 \subsection{Globals table}
 
@@ -9413,6 +9512,8 @@ then compunit.cu_primitives |> List.iter Symtable.require_primitive
 
 \subsection{[[-output-obj]]}
 
+% convenient if want to load ocaml code from a kernel :)
+
 <<constant Clflags.object_name>>=
 let object_name = ref ("camlprog" ^ Config.ext_obj) (* -o *)
 @
@@ -9493,6 +9594,11 @@ void caml_startup(argv)
 
 \chapter{Interpreting}
 % Running
+
+% emacs lisp bytecode:
+%http://nullprogram.com/blog/2014/01/04/
+% survey on efficient interpreters
+%https://www.jilp.org/vol5/v5paper12.pdf
 
 <<signature function interprete>>=
 value interprete (code_t prog, asize_t prog_size);
@@ -9662,6 +9768,7 @@ static int parse_command_line(char **argv)
 value interprete(code_t prog, asize_t prog_size)
 {
   <<[[interprete()]] local variables>>
+
   <<[[interprete()]] initialisations>>
 
   <<[[interpreter()]] ifdef THREADED_CODE, loop start>>
@@ -10423,6 +10530,11 @@ RETURN,
 <<function Code_val>>=
 #define Code_val(val) (((code_t *) (val)) [0])     /* Also an l-value. */
 @
+\t how does it work? what is the value??
+% see code for closure:
+%      Alloc_small(accu, 1 + nvars, Closure_tag);
+%      Code_val(accu) = pc + *pc;
+% so code is a block and pc is in first field
 
 % pc + *pc! so jumps are relative.
 <<[[interpreter()]] function application cases>>=
@@ -10755,6 +10867,12 @@ C_CALLN,
 \subsection{Signals}
 
 %less: this is subtle, maybe put in advanced topics?
+
+% have implication for threads. see thread.ml comment:
+%(* In sleep() below, we rely on the fact that signals are detected
+%   only at function applications and beginning of loops,
+%   making all other operations atomic. *)
+
 
 <<signal opcodes>>=
 CHECK_SIGNALS,
@@ -11267,7 +11385,20 @@ void invalid_argument (char *msg)
 \subsection{Calling OCaml from C}
 % callback.c
 
+
+
+
+
+
+
+
+
+
 \chapter{Garbage Collection}
+
+%http://journal.stuffwithstuff.com/2013/12/08/babys-first-garbage-collector/
+
+%https://medium.com/@octskyward/modern-garbage-collection-911ef4f8bd8e#.7iyq9f6l5
 
 \section{Colors}
 
@@ -11440,6 +11571,9 @@ void minor_collection (void)
 
 \section{Compaction}
 
+\t How can move around things? how code currently running can handle that?
+\t  pointers are moved then? 
+
 \section{Tunning, [[CAMLRUNPARAM=xxx]]}
 
 <<function parse_camlrunparam>>=
@@ -11477,6 +11611,12 @@ static void scanmult (char *opt, long unsigned int *var)
   if (mult == 'G') *var = *var * (1024 * 1024 * 1024);
 }
 @
+
+
+
+
+
+
 
 
 \chapter{Native Code Generation}
@@ -11521,6 +11661,9 @@ val cmxa_magic_number: string
 <<constant Garbage_collection_function ifdef NATIVE_CODE>>=
 #define Garbage_collection_function garbage_collection
 @
+
+
+
 
 
 \chapter{Debugging Support}
@@ -12015,6 +12158,16 @@ void debugger(enum event_kind event)
 \chapter{Profiling Support}
 
 % actually there is no flag for profiling in ocamlc?
+% need more recent ocaml?
+
+%in recent ocaml
+% need to use ocamlcp and then ocamlprof, or ocamlopt -p and gprof
+
+
+
+
+
+
 
 
 \chapter{Extra Features}
@@ -12509,6 +12662,14 @@ let mklazy e =
   mkexp (Pexp_apply (r, [df]))
 @
 
+\section{Compile-time reflection, [[deriving]]}
+% aka extension points in ocaml, aka attributes in other languages
+
+%http://whitequark.org/blog/2014/04/16/a-guide-to-extension-points-in-ocaml/
+
+% can use it on ocaml compiler source itself! save a whole appendix.
+% LOC saved? (vs LOC to implement :) )
+
 \section{Objects}
 
 % deleted. But then compatibility pb? no, just use make boostrap.
@@ -12547,6 +12708,7 @@ let mklazy e =
 \section{Functors}
 
 \chapter{Standard Librairies}
+% vs one in appendix???
 
 \section{[[Pervasives]]}
 
@@ -12565,6 +12727,27 @@ let thread_safe = ref false             (* -thread *)
 @
 
 % needs lots of space to explain the scheduler
+
+% play with extern_sp and fact that
+% thread primitives are called first from ML function
+% that just call the thread C primitive (see thread.ml)
+
+%look at code of:
+% #define Restore_after_c_call { sp = extern_sp; env = *sp++; }
+%then look at code of RETURN interpreting.
+%If put in sp the right thing, you can return to right stack at right pc.
+
+%in thread.ml
+% (* It is mucho important that the primitives that reschedule are called 
+%    through an ML function call, not directly. That's because when such a
+%    primitive returns, the bytecode interpreter is only semi-obedient:
+%    it takes sp from the new thread, but keeps pc from the old thread.
+%    But that's OK if all calls to rescheduling primitives are immediately
+%    followed by a RETURN operation, which will restore the correct pc
+%    from the stack. Furthermore, the RETURNs must all have the same
+%    frame size, which means that both the primitives and their ML wrappers
+%    must take exactly one argument. *)
+
 
 \chapter{Advanced Topics}
 
@@ -12586,6 +12769,7 @@ let print_types = ref false             (* -i *)
 
 
 \section{Preprocessing}
+% but extension points better now
 
 <<constant Clflags.preprocessor>>=
 let preprocessor = ref(None : string option) (* -pp *)
@@ -12621,6 +12805,8 @@ let remove_preprocessed inputfile =
 
 
 \subsection{[[#line]]}
+
+% see 5a, lineno is important!
 
 <<[[Lexer.token()]] directive case>>=
 | "#" [' ' '\t']* ['0'-'9']+ [' ' '\t']* "\"" [^ '\n' '\r'] *
@@ -12912,6 +13098,10 @@ if (prog == NULL) {           /* Interpreter is initializing */
 
 \chapter{Debugging}
 
+% tricky when have a bug in ocamlc or ocamlrun itself.
+% remember trouble with porting to plan9 and efuns.
+% Needed to add backtrace but hard to debug backtrace failing.
+
 
 \section{Verbose mode, [[-verbose]]}
 % different of -v which just print ocaml version and where the libs
@@ -12945,6 +13135,7 @@ let command cmdline =
 \section{Dumpers, [[-dxxx]]}
 
 %later: could be autogenerated! and save lots of boilerplate code?
+% use extension points!! deriving!! can even specialize!
 
 
 
@@ -13863,7 +14054,7 @@ void gc_message (char *msg, long unsigned int arg)
 
 \chapter{Profiling}
 
-\chapter{Error Managment}
+\chapter{Error Management}
 
 <<signature Errors.report_error>>=
 (* Error report *)
@@ -14768,7 +14959,7 @@ value obj_is_block(value arg)             /* ML */
 \section{Operating system interaction}
 %sys.c
 
-\chapter{Utilities Library}
+\chapter{Containers Library}
 
 \section{Lists}
 
@@ -14854,6 +15045,8 @@ let create_hashtable size init =
   List.iter (fun (key, data) -> Hashtbl.add tbl key data) init;
   tbl
 @
+
+\chapter{Utilities Library}
 
 \section{Files}
 
@@ -15000,21 +15193,8 @@ let no_overflow_sub a b = (a lxor (lnot b)) lor (b lxor (a-b)) < 0
 %\chapter{References} 
 \addcontentsline{toc}{section}{References}
 
-\begin{thebibliography}{99}
-
-\bibitem[1]{wp-literate-programming} Donald Knuth,,
-{\em Literate Programming}, 
-\url{http://en.wikipedia.org/wiki/Literate\_Program}
-
-\bibitem[2]{noweb} Norman Ramsey,
-{\em Noweb}, 
-\url{http://www.cs.tufts.edu/~nr/noweb/}
-
-\bibitem[3]{syncweb} Yoann Padioleau,
-{\em Syncweb, literate programming meets unison}, 
-\url{http://padator.org/software/project-syncweb/readme.txt}
-
-\end{thebibliography}
+\bibliography{../docs/latex/Principia}
+\bibliographystyle{alpha}
 
 %******************************************************************************
 % Postlude
