@@ -12,6 +12,8 @@
 /***********************************************************************/
 /*e: copyright header C xavier */
 
+#include "config.h"
+
 #include "fail.h"
 #include "memory.h"
 #include "misc.h"

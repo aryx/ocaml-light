@@ -17,7 +17,12 @@
    2. Convenience functions related to allocation.
 */
 
+#include "config.h"
+#ifndef OS_PLAN9
 #include <string.h>
+#else
+#endif
+
 #include "alloc.h"
 #include "major_gc.h"
 #include "memory.h"

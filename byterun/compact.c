@@ -12,9 +12,12 @@
 /***********************************************************************/
 /*e: copyright header C damien */
 
-#include <string.h>
-
 #include "config.h"
+#ifndef OS_PLAN9
+#include <string.h>
+#else
+#endif
+
 #include "freelist.h"
 #include "gc.h"
 #include "gc_ctrl.h"

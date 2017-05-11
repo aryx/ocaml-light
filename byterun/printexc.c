@@ -14,9 +14,14 @@
 
 /* Print an uncaught exception and abort */
 
+#include "config.h"
+
+#ifndef OS_PLAN9
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#else
+#endif
 
 #include "fail.h"
 #include "misc.h"

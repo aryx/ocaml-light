@@ -14,7 +14,12 @@
 
 /* Callbacks from C to Caml */
 
+#include "config.h"
+
+#ifndef OS_PLAN9
 #include <string.h>
+#else
+#endif
 
 #include "callback.h"
 #include "memory.h"

@@ -12,9 +12,14 @@
 /***********************************************************************/
 /*e: copyright header C xavier */
 
+#include "config.h"
+
+#ifndef OS_PLAN9
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#else
+#endif
 
 #include "alloc.h"
 #include "fail.h"

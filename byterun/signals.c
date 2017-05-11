@@ -12,7 +12,12 @@
 /***********************************************************************/
 /*e: copyright header C xavier and damien */
 
+#include "config.h"
+
+#ifndef OS_PLAN9
 #include <signal.h>
+#else
+#endif
 
 #include "alloc.h"
 #include "callback.h"

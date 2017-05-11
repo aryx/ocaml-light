@@ -14,17 +14,19 @@
 
 /* Buffered input/output. */
 
+#include "config.h"
+
+#ifndef OS_PLAN9
 // EINTR, EAGAIN, EWOULDBLOCK
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
-
-#include "config.h"
-
 // SEEK_xxx
 #include <unistd.h>
 // INT_MAX
 #include <limits.h>
+#else
+#endif
 
 #include "alloc.h"
 #include "fail.h"
