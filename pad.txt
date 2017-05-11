@@ -209,6 +209,10 @@ make install
 and run /usr/.../bin/ocaml ?
 but make bootstrap should already be a good test
 
+* Doc
+
+http://moscova.inria.fr/oldjocaml/ocaml-1.07-refman/htmlman/index.html
+
 * Debugging ocamlc and ocamlrun themselves
 
 ** make ocamlrund
