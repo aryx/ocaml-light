@@ -14,9 +14,12 @@
 
 /* To initialize and resize the stacks */
 
-#include <string.h>
-
 #include "config.h"
+
+#ifndef OS_PLAN9
+#include <string.h>
+#endif
+
 #include "fail.h"
 #include "misc.h"
 #include "mlvalues.h"

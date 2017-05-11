@@ -15,7 +15,10 @@
 #ifndef _fail_
 #define _fail_
 
+#ifndef OS_PLAN9
 #include <setjmp.h>
+#else
+#endif
 
 #include "misc.h"
 #include "mlvalues.h"

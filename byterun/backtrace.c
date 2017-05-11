@@ -12,12 +12,15 @@
 
 /* Stack backtrace for uncaught exceptions */
 
+#include "config.h"
+
+#ifndef OS_PLAN9
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
-
-#include "config.h"
 #include <unistd.h>
+#else
+#endif
 
 #include "mlvalues.h"
 #include "alloc.h"
@@ -88,6 +91,7 @@ void stash_backtrace(value exn, code_t pc, value * sp)
   }
 }
 
+#ifndef OS_PLAN9
 /* Read the debugging info contained in the current bytecode executable.
    Return a Caml array of Caml lists of debug_event records in "events",
    or Val_false on failure. */
@@ -129,7 +133,9 @@ static value read_debug_info(void)
   }
   close_channel(chan);
   CAMLreturn(events);
+  return 0; // PAD
 }
+#endif
 
 /* Search the event for the given PC.  Return Val_false if not found. */
 
@@ -191,7 +197,11 @@ void print_exception_backtrace(void)
   value events;
   int i;
 
+#ifndef OS_PLAN9
   events = read_debug_info();
+#else
+  events = Val_false;
+#endif
   if (events == Val_false) {
     fprintf(stderr,
             "(Program not linked with -g, cannot print stack backtrace)\n");
@@ -200,7 +210,6 @@ void print_exception_backtrace(void)
   for (i = 0; i < backtrace_pos; i++)
     print_location(events, i);
 }
-
 
 /* Extract location information for the given PC */
 
@@ -233,6 +242,7 @@ static void extract_location_info(value events, code_t pc,
 
 value caml_get_exception_backtrace(value unit) /* ML */
 {
+#ifndef OS_PLAN9
   CAMLparam0();
   CAMLlocal5(events, res, arr, p, fname);
   int i;
@@ -269,5 +279,9 @@ value caml_get_exception_backtrace(value unit) /* ML */
     Field(res, 0) = arr; /* Some */
   }
   CAMLreturn(res);
-}
+  return 0;
+#else
+  return 0;
+#endif
 
+}

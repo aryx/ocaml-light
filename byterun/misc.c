@@ -12,8 +12,13 @@
 /***********************************************************************/
 /*e: copyright header C xavier and damien */
 
-#include <stdio.h>
 #include "config.h"
+
+#ifndef OS_PLAN9
+#include <stdio.h>
+#else
+#endif
+
 #include "misc.h"
 
 #ifdef DEBUG

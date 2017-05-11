@@ -14,13 +14,16 @@
 
 /* Start-up code */
 
+#include "config.h"
+
+#ifndef OS_PLAN9
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-
-#include "config.h"
 #include <unistd.h>
+#else
+#endif
 
 #include "alloc.h"
 #include "backtrace.h"

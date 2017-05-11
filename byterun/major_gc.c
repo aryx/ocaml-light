@@ -12,8 +12,15 @@
 /***********************************************************************/
 /*e: copyright header C damien */
 
-#include "compact.h"
 #include "config.h"
+
+#ifndef OS_PLAN9
+// LONG_MAX
+#include <limits.h>
+#else
+#endif
+
+#include "compact.h"
 #include "fail.h"
 #include "freelist.h"
 #include "gc.h"
@@ -23,9 +30,6 @@
 #include "mlvalues.h"
 #include "roots.h"
 #include "weak.h"
-
-// LONG_MAX
-#include <limits.h>
 
 /*s: global percent_free */
 unsigned long percent_free;

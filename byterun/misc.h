@@ -22,8 +22,11 @@
 
 /* Standard definitions */
 
+#ifndef OS_PLAN9
 #include <stddef.h>
 #include <stdlib.h>
+#else
+#endif
 
 /* Basic types and constants */
 

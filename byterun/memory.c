@@ -12,8 +12,12 @@
 /***********************************************************************/
 /*e: copyright header C damien */
 
+#include "config.h"
+
+#ifndef OS_PLAN9
 #include <stdlib.h>
 #include <string.h>
+#endif
 
 #include "fail.h"
 #include "freelist.h"

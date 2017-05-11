@@ -15,6 +15,11 @@
 /* Handling of blocks of bytecode (endianness switch, threading). */
 
 #include "config.h"
+
+#ifndef OS_PLAN9
+#include <unistd.h>
+#endif
+
 #include "debugger.h"
 #include "fix_code.h"
 #include "instruct.h"
@@ -23,8 +28,6 @@
 #include "misc.h"
 #include "mlvalues.h"
 #include "reverse.h"
-
-#include <unistd.h>
 
 /*s: global start_code */
 code_t start_code;

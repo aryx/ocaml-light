@@ -14,9 +14,13 @@
 
 /* Interface with the debugger */
 
-#include <string.h>
-
 #include "config.h"
+
+#ifndef OS_PLAN9
+#include <string.h>
+#else
+#endif
+
 #include "debugger.h"
 #include "fail.h"
 #include "fix_code.h"
@@ -35,7 +39,7 @@ int debugger_in_use = 0;
 unsigned long event_count;
 /*e: global event_count */
 
-#if !defined(HAS_SOCKETS)
+#ifndef HAS_SOCKETS
 /*s: function debugger_init ifndef HAS_SOCKETS */
 void debugger_init(void)
 {
