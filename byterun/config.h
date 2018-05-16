@@ -22,7 +22,7 @@
 /* Library dependencies */
 
 /*s: function bcopy */
-#define bcopy(src,dst,len) memmove((dst), (src), (len))
+//TODO PB on LINUX #define bcopy(src,dst,len) memmove((dst), (src), (len))
 /*e: function bcopy */
 
 /* We use threaded code interpretation if the compiler provides labels
