@@ -15,7 +15,7 @@ OFILES=accept.$O access.$O addrofstr.$O alarm.$O bind.$O chdir.$O chmod.$O \
   geteuid.$O getgid.$O  gethost.$O  \
   getlogin.$O getpeername.$O getpid.$O getppid.$O getproto.$O  \
   gettimeofday.$O getserv.$O getsockname.$O getuid.$O \
-  gmtime.$O itimer.$O  kill.$O link.$O listen.$O  lseek.$O mkdir.$O \
+  gmtime.$O   kill.$O link.$O listen.$O  lseek.$O mkdir.$O \
   mkfifo.$O  open.$O opendir.$O pause.$O pipe.$O putenv.$O read.$O \
   readdir.$O readlink.$O rename.$O rewinddir.$O rmdir.$O select.$O sendrecv.$O \
   setgid.$O setsid.$O setuid.$O shutdown.$O sleep.$O socket.$O socketaddr.$O \
@@ -23,19 +23,21 @@ OFILES=accept.$O access.$O addrofstr.$O alarm.$O bind.$O chdir.$O chmod.$O \
   time.$O times.$O umask.$O unixsupport.$O unlink.$O \
   utimes.$O wait.$O write.$O
 
+#itimer.$O
+
 INCLUDES=-I../../byterun
 
 </sys/src/cmd/mklib
 
 CC=pcc
 LD=pcc
-CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION $INCLUDES
+CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE $INCLUDES
 LDFLAGS=
 
 ROOT=/home/pad/plan9/ROOT
 
 install:V: libunix.a
-	cp libunix.a $ROOT/usr/local/lib/ocaml
+	cp libunix.a $ROOT/$objtype/lib/ocaml
 
 clean:V:
 	rm -f *.[58] y.tab.? y.output y.error $CLEANFILES
