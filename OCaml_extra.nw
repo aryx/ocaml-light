@@ -5170,6 +5170,8 @@ let check_recursive_lambda idlist lam =
         List.for_all (fun id -> not(IdentSet.mem id fv)) idlist
   in check_top lam
 @
+% see references/progs/ocaml/mutually_recursive_record.ml 
+% for example of restrictions and constructs forbidden by ocaml
 
 <<exception Translcore.Not_constant>>=
 (* To propagate structured constants *)
@@ -7549,6 +7551,8 @@ let init_path () =
   load_path := "" :: List.rev (Config.standard_library :: dirs);
   Env.reset_cache()
 @
+% so will look for a different stdlib.cma! from the threads/ library
+% and will also look for a different pervasives.cmi
 
 <<signature Env.reset_cache>>=
 (* Reset the cache of in-core module interfaces.
