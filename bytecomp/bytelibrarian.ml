@@ -32,7 +32,9 @@ exception Error of error
 let copy_compunit ic oc compunit =
   seek_in ic compunit.cu_pos;
   compunit.cu_pos <- pos_out oc;
+  (*s: [[Bytelibrarian.copy_compunit()]] set cu_force_link if link everything *)
   compunit.cu_force_link <- !Clflags.link_everything;
+  (*e: [[Bytelibrarian.copy_compunit()]] set cu_force_link if link everything *)
   copy_file_chunk ic oc compunit.cu_codesize;
   if compunit.cu_debug > 0 then begin
     seek_in ic compunit.cu_debug;

@@ -83,9 +83,10 @@ let scan_file obj_name tolink =
       raise(Error(File_not_found obj_name)) in
   let ic = open_in file_name in
   try
-    let buffer = String.create (String.length cmo_magic_number) in
-    really_input ic buffer 0 (String.length cmo_magic_number);
-    if buffer = cmo_magic_number then begin
+    let buffer = String.create (String.length Config.cmo_magic_number) in
+    really_input ic buffer 0 (String.length Config.cmo_magic_number);
+    match buffer with
+    | _ when buffer = Config.cmo_magic_number ->
       (* This is a .cmo file. It must be linked in any case.
          Read the relocation information to see which modules it
          requires. *)
@@ -95,8 +96,8 @@ let scan_file obj_name tolink =
       close_in ic;
       List.iter add_required compunit.cu_reloc;
       Link_object(file_name, compunit) :: tolink
-    end
-    else if buffer = cma_magic_number then begin
+
+    | _ when buffer = cma_magic_number ->
       (* This is an archive file. Each unit contained in it will be linked
          in only if needed. *)
       let pos_toc = input_binary_int ic in    (* Go to table of contents *)
@@ -107,18 +108,20 @@ let scan_file obj_name tolink =
         List.fold_right
           (fun compunit reqd ->
             if compunit.cu_force_link
-            or !Clflags.link_everything
-            or List.exists is_required compunit.cu_reloc
+            (*s: [[Bytelink.scan_file()]] in archive case, linking condition *)
+            || !Clflags.link_everything
+            (*e: [[Bytelink.scan_file()]] in archive case, linking condition *)
+            || List.exists is_required compunit.cu_reloc
             then begin
               List.iter remove_required compunit.cu_reloc;
               List.iter add_required compunit.cu_reloc;
               compunit :: reqd
             end else
               reqd)
-          toc [] in
+          toc [] 
+      in
       Link_archive(file_name, required) :: tolink
-    end
-    else raise(Error(Not_an_object_file file_name))
+    | _ -> raise(Error(Not_an_object_file file_name))
   with x ->
     close_in ic; raise x
 (*e: function Bytelink.scan_file *)
@@ -174,8 +177,10 @@ let link_compunit output_fun currpos_fun inchan file_name compunit =
     debug_info := (currpos_fun(), buffer) :: !debug_info
   end;
   output_fun code_block;
+  (*s: [[Bytelink.link_compunit()]] if link everything require primitives *)
   if !Clflags.link_everything 
   then compunit.cu_primitives |> List.iter Symtable.require_primitive
+  (*e: [[Bytelink.link_compunit()]] if link everything require primitives *)
 (*e: function Bytelink.link_compunit *)
 
 (*s: function Bytelink.output_debug_info *)
@@ -264,8 +269,10 @@ let link_bytecode objfiles exec_name copy_header =
     let pos1 = pos_out outchan in
     Symtable.init();
     Hashtbl.clear crc_interfaces;
+
     let output_fun = output_string outchan
     and currpos_fun () = pos_out outchan - pos1 in
+
     tolink |> List.iter (link_file output_fun currpos_fun);
 
     (* The final STOP instruction *)
