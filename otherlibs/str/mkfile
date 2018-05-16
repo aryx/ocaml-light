@@ -1,20 +1,22 @@
 </$objtype/mkfile
 
 LIB=libstr.a
+
 OFILES=strstubs.$O
+
+INCLUDES=-I../../byterun
 
 </sys/src/cmd/mklib
 
 CC=pcc
 LD=pcc
-INCLUDES=-I../../byterun
-CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION $INCLUDES
+CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE $INCLUDES
 LDFLAGS=
 
 ROOT=/home/pad/plan9/ROOT
 
 install:V: libstr.a
-	cp libstr.a $ROOT/usr/local/lib/ocaml
+	cp libstr.a $ROOT/$objtype/lib/ocaml
 
 clean:V:
 	rm -f *.[58] y.tab.? y.output y.error $CLEANFILES
