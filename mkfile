@@ -19,6 +19,7 @@ TOP=.
 
 include $(TOP)/docs/latex/Makefile.common
 
+VERSION=2
 TEXMAIN=OCaml.nw
 TEX=OCaml.tex
 
