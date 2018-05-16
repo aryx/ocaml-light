@@ -9600,6 +9600,12 @@ void caml_startup(argv)
 % survey on efficient interpreters
 %https://www.jilp.org/vol5/v5paper12.pdf
 
+% MoarVM?
+
+% Ocaml interpreter step by step:
+%https://github.com/johnwhitington/ocamli
+
+
 <<signature function interprete>>=
 value interprete (code_t prog, asize_t prog_size);
 @
@@ -9992,12 +9998,12 @@ ANDINT, ORINT, XORINT,
 @
 
 <<[[interpreter()]] arithmetics cases>>=
-    Instruct(ANDINT):
-      accu = (value)((long) accu & (long) *sp++); Next;
-    Instruct(ORINT):
-      accu = (value)((long) accu | (long) *sp++); Next;
-    Instruct(XORINT):
-      accu = (value)(((long) accu ^ (long) *sp++) | 1); Next;
+Instruct(ANDINT):
+  accu = (value)((long) accu & (long) *sp++); Next;
+Instruct(ORINT):
+  accu = (value)((long) accu | (long) *sp++); Next;
+Instruct(XORINT):
+  accu = (value)(((long) accu ^ (long) *sp++) | 1); Next;
 @
 
 
@@ -10006,13 +10012,13 @@ LSLINT, LSRINT, ASRINT,
 @
 
 <<[[interpreter()]] arithmetics cases>>=
-    Instruct(LSLINT):
-      accu = (value)((((long) accu - 1) << Long_val(*sp++)) + 1); Next;
-    Instruct(LSRINT):
-      accu = (value)((((unsigned long) accu - 1) >> Long_val(*sp++)) | 1);
-      Next;
-    Instruct(ASRINT):
-      accu = (value)((((long) accu - 1) >> Long_val(*sp++)) | 1); Next;
+Instruct(LSLINT):
+  accu = (value)((((long) accu - 1) << Long_val(*sp++)) + 1); Next;
+Instruct(LSRINT):
+  accu = (value)((((unsigned long) accu - 1) >> Long_val(*sp++)) | 1);
+  Next;
+Instruct(ASRINT):
+  accu = (value)((((long) accu - 1) >> Long_val(*sp++)) | 1); Next;
 @
 
 <<integer arithmetics opcodes>>=
@@ -10328,6 +10334,7 @@ value * modify_dest, modify_newval;
       Next;
 @
 
+%http://web.archive.org/web/20111114164033/http://eigenclass.org/R2/writings/optimizing-caml_modify
 
 <<function Modify>>=
 /* You must use [Modify] to change a field of an existing shared block,
@@ -11595,6 +11602,7 @@ static void parse_camlrunparam(void)
   }
 }
 @
+\t use OCAMLRUNPARAM instead
 
 <<function scanmult>>=
 /* The option letter for each runtime option is the first letter of the
@@ -11623,6 +11631,9 @@ static void scanmult (char *opt, long unsigned int *var)
 
 %use ARM? or riscv recent backend?
 % https://github.com/nojb/riscv-ocamlopt
+
+%understand generated assembly to optimize perf of your program:
+% https://janestreet.github.io/ocaml-perf-notes.html
 
 <<constant Clflags.native_code>>=
 let native_code = ref false             (* set to true under ocamlopt *)
