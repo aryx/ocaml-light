@@ -128,8 +128,8 @@ let scan_file obj_name tolink =
     List.fold_right
       (fun (info, crc) reqd ->
         if info.ui_force_link
-        or !Clflags.link_everything
-        or is_required info.ui_name then begin
+        || !Clflags.link_everything
+        || is_required info.ui_name then begin
           check_consistency file_name info crc;
           remove_required info.ui_name;
           List.iter add_required info.ui_imports_cmx;
