@@ -28,4 +28,8 @@ external new_block : int -> int -> t = "obj_block"
 
 (* todo:
 external is_int : t -> bool = "%obj_is_int"
+ (opposite of is_block)
+lazy_tag
+closure_tag
+...
 *)
