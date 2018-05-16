@@ -64,7 +64,7 @@ try on syncweb? faster?
 
 ** stuff not in ocaml 
 
-*** add typeclasses!
+*** FUN add typeclasses!
 or go directly to implicits?
 
 http://okmij.org/ftp/Computation/typeclass.html
@@ -82,7 +82,7 @@ Subst.type_declaration, can have just Subst.subst
 with different instances of Subst! overload!
 all those repeated names are useless.
 
-*** add deriving! or better, template haskell?
+*** FUN add deriving! or better, template haskell?
 at least deriving!
 
 and at least my xxx_of_v (or if have overloading
