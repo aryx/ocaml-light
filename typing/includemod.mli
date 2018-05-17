@@ -1,4 +1,4 @@
-(*s: ./typing/includemod.mli *)
+(*s: typing/includemod.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -47,4 +47,4 @@ exception Error of error list
 (*s: signature [[Includemod.report_error]] *)
 val report_error: error list -> unit
 (*e: signature [[Includemod.report_error]] *)
-(*e: ./typing/includemod.mli *)
+(*e: typing/includemod.mli *)

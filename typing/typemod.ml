@@ -1,4 +1,4 @@
-(*s: ./typing/typemod.ml *)
+(*s: typing/typemod.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -284,4 +284,4 @@ let report_error = function
       type_scheme typ; print_string ","; print_space();
       print_string "contains type variables that cannot be generalized"
 (*e: function [[Typemod.report_error]] *)
-(*e: ./typing/typemod.ml *)
+(*e: typing/typemod.ml *)

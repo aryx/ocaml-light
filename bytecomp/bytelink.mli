@@ -1,4 +1,4 @@
-(*s: ./bytecomp/bytelink.mli *)
+(*s: bytecomp/bytelink.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -39,4 +39,4 @@ exception Error of error
 (*s: signature [[Bytelink.report_error]] *)
 val report_error: error -> unit
 (*e: signature [[Bytelink.report_error]] *)
-(*e: ./bytecomp/bytelink.mli *)
+(*e: bytecomp/bytelink.mli *)

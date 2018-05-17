@@ -1,4 +1,4 @@
-(*s: ./typing/predef.mli *)
+(*s: typing/predef.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -68,4 +68,4 @@ val build_initial_env:
 
 val builtin_values: (string * Ident.t) list
 (*e: signature [[Predef.builtin_values]] *)
-(*e: ./typing/predef.mli *)
+(*e: typing/predef.mli *)

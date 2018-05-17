@@ -1,4 +1,4 @@
-(*s: ./typing/mtype.mli *)
+(*s: typing/mtype.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -33,4 +33,4 @@ val nondep_supertype: Env.t -> Ident.t -> module_type -> module_type
            in which the given ident does not appear.
            Raise [Not_found] if no such type List.exists. *)
 (*e: signature [[Mtype.nondep_supertype]] *)
-(*e: ./typing/mtype.mli *)
+(*e: typing/mtype.mli *)

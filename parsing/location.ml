@@ -1,4 +1,4 @@
-(*s: ./parsing/location.ml *)
+(*s: parsing/location.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -184,4 +184,4 @@ let echo_eof () =
   incr num_loc_lines
 (*e: function [[Location.echo_eof]] *)
 
-(*e: ./parsing/location.ml *)
+(*e: parsing/location.ml *)

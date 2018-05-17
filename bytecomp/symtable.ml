@@ -1,4 +1,4 @@
-(*s: ./bytecomp/symtable.ml *)
+(*s: bytecomp/symtable.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -330,4 +330,4 @@ let report_error = function
       print_string "The external function `"; print_string s;
       print_string "' is not available"
 (*e: constant [[Symtable.report_error]] *)
-(*e: ./bytecomp/symtable.ml *)
+(*e: bytecomp/symtable.ml *)

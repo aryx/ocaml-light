@@ -1,4 +1,4 @@
-(*s: ./utils/tbl.ml *)
+(*s: utils/tbl.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -125,4 +125,4 @@ let print print_key print_data tbl =
   print_string "]]";
   close_box()
 (*e: function [[Tbl.print]] *)
-(*e: ./utils/tbl.ml *)
+(*e: utils/tbl.ml *)

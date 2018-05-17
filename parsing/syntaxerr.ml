@@ -1,4 +1,4 @@
-(*s: ./parsing/syntaxerr.ml *)
+(*s: parsing/syntaxerr.ml *)
 (*s: copyright header 1997 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -57,4 +57,4 @@ let report_error = function
       print_string "Syntax error"
 (*e: function [[Syntaxerr.report_error]] *)
 
-(*e: ./parsing/syntaxerr.ml *)
+(*e: parsing/syntaxerr.ml *)

@@ -1,4 +1,4 @@
-(*s: ./bytecomp/translmod.ml *)
+(*s: bytecomp/translmod.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -298,4 +298,4 @@ let transl_toplevel_definition str =
   reset_labels ();
   transl_label_init (make_sequence transl_toplevel_item str)
 (*e: function [[Translmod.transl_toplevel_definition]] *)
-(*e: ./bytecomp/translmod.ml *)
+(*e: bytecomp/translmod.ml *)

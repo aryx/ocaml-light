@@ -1,4 +1,4 @@
-(*s: ./utils/ccomp.mli *)
+(*s: utils/ccomp.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -26,4 +26,4 @@ val compile_file_native: string -> int
 (*s: signature [[Ccomp.create_archive]] *)
 val create_archive: string -> string list -> int
 (*e: signature [[Ccomp.create_archive]] *)
-(*e: ./utils/ccomp.mli *)
+(*e: utils/ccomp.mli *)

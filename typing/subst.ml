@@ -1,4 +1,4 @@
-(*s: ./typing/subst.ml *)
+(*s: typing/subst.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -137,4 +137,4 @@ and signature_item s = function
   | Tsig_module(id, mty) -> Tsig_module(id, modtype s mty)
 (*e: function [[Subst.modtype]] *)
 
-(*e: ./typing/subst.ml *)
+(*e: typing/subst.ml *)

@@ -1,4 +1,4 @@
-(*s: ./typing/primitive.mli *)
+(*s: typing/primitive.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -31,4 +31,4 @@ val parse_declaration: int -> string list -> description option
 (*s: signature [[Primitive.print_description]] *)
 val print_description: description -> unit
 (*e: signature [[Primitive.print_description]] *)
-(*e: ./typing/primitive.mli *)
+(*e: typing/primitive.mli *)

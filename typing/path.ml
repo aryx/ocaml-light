@@ -1,4 +1,4 @@
-(*s: ./typing/path.ml *)
+(*s: typing/path.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -37,4 +37,4 @@ let rec isfree id = function
     Pident id' -> Ident.same id id'
   | Pdot(p, s, pos) -> isfree id p
 (*e: function [[Path.isfree]] *)
-(*e: ./typing/path.ml *)
+(*e: typing/path.ml *)

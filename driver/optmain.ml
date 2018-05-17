@@ -1,4 +1,4 @@
-(*s: ./driver/optmain.ml *)
+(*s: driver/optmain.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -141,4 +141,4 @@ let main () =
 (*s: toplevel [[Optmain._1]] *)
 let _ = Printexc.catch main ()
 (*e: toplevel [[Optmain._1]] *)
-(*e: ./driver/optmain.ml *)
+(*e: driver/optmain.ml *)

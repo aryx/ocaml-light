@@ -1,4 +1,4 @@
-(*s: ./bytecomp/bytegen.ml *)
+(*s: bytecomp/bytegen.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -627,4 +627,4 @@ let compile_phrase expr =
   (init_code, fun_code)
 (*e: function [[Bytegen.compile_phrase]] *)
 
-(*e: ./bytecomp/bytegen.ml *)
+(*e: bytecomp/bytegen.ml *)

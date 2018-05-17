@@ -1,4 +1,4 @@
-(*s: ./typing/printtyp.mli *)
+(*s: typing/printtyp.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -52,4 +52,4 @@ val signature: signature -> unit
 (*s: signature [[Printtyp.signature_item]] *)
 val signature_item: signature_item -> unit
 (*e: signature [[Printtyp.signature_item]] *)
-(*e: ./typing/printtyp.mli *)
+(*e: typing/printtyp.mli *)

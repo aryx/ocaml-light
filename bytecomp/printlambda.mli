@@ -1,4 +1,4 @@
-(*s: ./bytecomp/printlambda.mli *)
+(*s: bytecomp/printlambda.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -20,4 +20,4 @@ val structured_constant: structured_constant -> unit
 (*s: signature [[Printlambda.lambda]] *)
 val lambda: lambda -> unit
 (*e: signature [[Printlambda.lambda]] *)
-(*e: ./bytecomp/printlambda.mli *)
+(*e: bytecomp/printlambda.mli *)

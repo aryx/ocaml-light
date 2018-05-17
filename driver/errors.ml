@@ -1,4 +1,4 @@
-(*s: ./driver/errors.ml *)
+(*s: driver/errors.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -59,4 +59,4 @@ let report_error exn =
   end;
   close_box(); print_newline()
 (*e: function [[Errors.report_error]] *)
-(*e: ./driver/errors.ml *)
+(*e: driver/errors.ml *)

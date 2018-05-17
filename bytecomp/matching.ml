@@ -1,4 +1,4 @@
-(*s: ./bytecomp/matching.ml *)
+(*s: bytecomp/matching.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -557,4 +557,4 @@ let for_multiple_match loc paraml pat_act_list =
   let (lambda, total) = compile_match None pm3 in
   if total then lambda else Lcatch(lambda, partial_function loc ())
 (*e: function [[Matching.for_multiple_match]] *)
-(*e: ./bytecomp/matching.ml *)
+(*e: bytecomp/matching.ml *)

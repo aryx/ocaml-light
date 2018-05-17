@@ -1,4 +1,4 @@
-(*s: ./bytecomp/instruct.ml *)
+(*s: bytecomp/instruct.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -133,4 +133,4 @@ and immed_max = 0x3FFFFFFF
 (* Actually the abstract machine accomodates -0x80000000 to 0x7FFFFFFF,
    but these numbers overflow the Caml type int if the compiler runs on
    a 32-bit processor. *)
-(*e: ./bytecomp/instruct.ml *)
+(*e: bytecomp/instruct.ml *)

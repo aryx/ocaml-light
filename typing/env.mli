@@ -1,4 +1,4 @@
-(*s: ./typing/env.mli *)
+(*s: typing/env.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -144,4 +144,4 @@ val report_error: error -> unit
 val check_modtype_inclusion: (t -> module_type -> module_type -> unit) ref
 (*e: signature [[Env.check_modtype_inclusion]] *)
 
-(*e: ./typing/env.mli *)
+(*e: typing/env.mli *)

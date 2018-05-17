@@ -1,4 +1,4 @@
-(*s: ./typing/typetexp.ml *)
+(*s: typing/typetexp.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -126,4 +126,4 @@ let report_error = function
       print_string " argument(s)";
       close_box()
 (*e: function [[Typetexp.report_error]] *)
-(*e: ./typing/typetexp.ml *)
+(*e: typing/typetexp.ml *)

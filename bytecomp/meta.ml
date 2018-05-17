@@ -1,4 +1,4 @@
-(*s: ./bytecomp/meta.ml *)
+(*s: bytecomp/meta.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -21,4 +21,4 @@ type closure = unit -> Obj.t
 (*e: type Meta.closure (./bytecomp/meta.ml) *)
 external reify_bytecode : string -> int -> closure = "reify_bytecode"
 external available_primitives : unit -> string array = "available_primitives"
-(*e: ./bytecomp/meta.ml *)
+(*e: bytecomp/meta.ml *)

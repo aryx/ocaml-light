@@ -1,4 +1,4 @@
-(*s: ./bytecomp/bytelink.ml *)
+(*s: bytecomp/bytelink.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -572,4 +572,4 @@ let report_error = function
   | File_exists file ->
       print_string "Cannot overwrite existing file "; print_string file
 (*e: constant [[Bytelink.report_error]] *)
-(*e: ./bytecomp/bytelink.ml *)
+(*e: bytecomp/bytelink.ml *)

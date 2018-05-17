@@ -1,4 +1,4 @@
-(*s: ./bytecomp/printlambda.ml *)
+(*s: bytecomp/printlambda.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -294,4 +294,4 @@ and letbody = function
       print_space();
       lambda l
 (*e: function [[Printlambda.lambda]] *)
-(*e: ./bytecomp/printlambda.ml *)
+(*e: bytecomp/printlambda.ml *)

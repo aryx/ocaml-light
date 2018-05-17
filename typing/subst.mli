@@ -1,4 +1,4 @@
-(*s: ./typing/subst.mli *)
+(*s: typing/subst.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -51,4 +51,4 @@ val modtype: t -> module_type -> module_type
 val signature: t -> signature -> signature
 (*e: signature [[Subst.signature]] *)
 
-(*e: ./typing/subst.mli *)
+(*e: typing/subst.mli *)

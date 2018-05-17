@@ -1,4 +1,4 @@
-(*s: ./typing/env.ml *)
+(*s: typing/env.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -618,4 +618,4 @@ let report_error = function
       print_string "contains the compiled interface for"; print_space();
       print_string modname
 (*e: function [[Env.report_error]] *)
-(*e: ./typing/env.ml *)
+(*e: typing/env.ml *)

@@ -1,4 +1,4 @@
-(*s: ./bytecomp/matching.mli *)
+(*s: bytecomp/matching.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -46,4 +46,4 @@ exception Cannot_flatten
 (*s: signature [[Matching.flatten_pattern]] *)
 val flatten_pattern: int -> pattern -> pattern list
 (*e: signature [[Matching.flatten_pattern]] *)
-(*e: ./bytecomp/matching.mli *)
+(*e: bytecomp/matching.mli *)

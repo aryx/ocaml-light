@@ -1,4 +1,4 @@
-(*s: ./bytecomp/translmod.mli *)
+(*s: bytecomp/translmod.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -34,4 +34,4 @@ val transl_toplevel_definition:
 (*s: signature [[Translmod.primitive_declarations]] *)
 val primitive_declarations: string list ref
 (*e: signature [[Translmod.primitive_declarations]] *)
-(*e: ./bytecomp/translmod.mli *)
+(*e: bytecomp/translmod.mli *)

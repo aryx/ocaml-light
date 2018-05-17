@@ -1,4 +1,4 @@
-(*s: ./typing/typetexp.mli *)
+(*s: typing/typetexp.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -47,4 +47,4 @@ exception Error of Location.t * error
 (*s: signature [[Typetexp.report_error]] *)
 val report_error: error -> unit
 (*e: signature [[Typetexp.report_error]] *)
-(*e: ./typing/typetexp.mli *)
+(*e: typing/typetexp.mli *)

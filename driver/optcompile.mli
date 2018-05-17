@@ -1,4 +1,4 @@
-(*s: ./driver/optcompile.mli *)
+(*s: driver/optcompile.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -30,4 +30,4 @@ val initial_env: unit -> Env.t
 (*s: signature [[Optcompile.init_path]] *)
 val init_path: unit -> unit
 (*e: signature [[Optcompile.init_path]] *)
-(*e: ./driver/optcompile.mli *)
+(*e: driver/optcompile.mli *)

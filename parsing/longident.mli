@@ -1,4 +1,4 @@
-(*s: ./parsing/longident.mli *)
+(*s: parsing/longident.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -19,4 +19,4 @@ type t =
     Lident of string
   | Ldot of t * string
 (*e: type [[Longident.t]] *)
-(*e: ./parsing/longident.mli *)
+(*e: parsing/longident.mli *)

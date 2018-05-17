@@ -1,4 +1,4 @@
-(*s: ./typing/datarepr.ml *)
+(*s: typing/datarepr.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -95,4 +95,4 @@ let label_descrs ty_res lbls =
         (name, lbl) :: describe_labels (num+1) rest in
   describe_labels 0 lbls
 (*e: function [[Datarepr.label_descrs]] *)
-(*e: ./typing/datarepr.ml *)
+(*e: typing/datarepr.ml *)

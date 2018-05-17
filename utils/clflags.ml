@@ -1,4 +1,4 @@
-(*s: ./utils/clflags.ml *)
+(*s: utils/clflags.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -138,4 +138,4 @@ let native_code = ref false             (* set to true under ocamlopt *)
 (*s: constant [[Clflags.inline_threshold]] *)
 let inline_threshold = ref 10
 (*e: constant [[Clflags.inline_threshold]] *)
-(*e: ./utils/clflags.ml *)
+(*e: utils/clflags.ml *)

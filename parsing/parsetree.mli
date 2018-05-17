@@ -1,4 +1,4 @@
-(*s: ./parsing/parsetree.mli *)
+(*s: parsing/parsetree.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -221,4 +221,4 @@ and directive_argument =
   | Pdir_int of int
   | Pdir_ident of Longident.t
 (*e: type [[Parsetree.directive_argument]] *)
-(*e: ./parsing/parsetree.mli *)
+(*e: parsing/parsetree.mli *)

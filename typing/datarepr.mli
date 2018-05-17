@@ -1,4 +1,4 @@
-(*s: ./typing/datarepr.mli *)
+(*s: typing/datarepr.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -32,4 +32,4 @@ val label_descrs:
   type_expr -> (string * mutable_flag * type_expr) list ->
     (string * label_description) list
 (*e: signature [[Datarepr.label_descrs]] *)
-(*e: ./typing/datarepr.mli *)
+(*e: typing/datarepr.mli *)

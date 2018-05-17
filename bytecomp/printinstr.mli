@@ -1,4 +1,4 @@
-(*s: ./bytecomp/printinstr.mli *)
+(*s: bytecomp/printinstr.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -22,4 +22,4 @@ val instruction: instruction -> unit
 (*s: signature [[Printinstr.instrlist]] *)
 val instrlist: instruction list -> unit
 (*e: signature [[Printinstr.instrlist]] *)
-(*e: ./bytecomp/printinstr.mli *)
+(*e: bytecomp/printinstr.mli *)

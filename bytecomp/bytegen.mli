@@ -1,4 +1,4 @@
-(*s: ./bytecomp/bytegen.mli *)
+(*s: bytecomp/bytegen.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -23,4 +23,4 @@ val compile_implementation: string -> lambda -> instruction list
 (*s: signature [[Bytegen.compile_phrase]] *)
 val compile_phrase: lambda -> instruction list * instruction list
 (*e: signature [[Bytegen.compile_phrase]] *)
-(*e: ./bytecomp/bytegen.mli *)
+(*e: bytecomp/bytegen.mli *)

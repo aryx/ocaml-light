@@ -1,4 +1,4 @@
-(*s: ./typing/typedtree.mli *)
+(*s: typing/typedtree.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -132,4 +132,4 @@ val let_bound_idents: (pattern * expression) list -> Ident.t list
 (*s: signature [[Typedtree.rev_let_bound_idents]] *)
 val rev_let_bound_idents: (pattern * expression) list -> Ident.t list
 (*e: signature [[Typedtree.rev_let_bound_idents]] *)
-(*e: ./typing/typedtree.mli *)
+(*e: typing/typedtree.mli *)

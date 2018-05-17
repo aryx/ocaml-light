@@ -1,4 +1,4 @@
-(*s: ./parsing/lexer.mli *)
+(*s: parsing/lexer.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -33,4 +33,4 @@ exception Error of error * int * int
 val report_error: error -> unit
 (*e: signature [[Lexer.report_error]] *)
 
-(*e: ./parsing/lexer.mli *)
+(*e: parsing/lexer.mli *)

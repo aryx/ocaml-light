@@ -1,4 +1,4 @@
-(*s: ./parsing/asttypes.mli *)
+(*s: parsing/asttypes.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -33,4 +33,4 @@ type direction_flag = Upto | Downto
 (*s: type [[Asttypes.mutable_flag]] *)
 type mutable_flag = Immutable | Mutable
 (*e: type [[Asttypes.mutable_flag]] *)
-(*e: ./parsing/asttypes.mli *)
+(*e: parsing/asttypes.mli *)

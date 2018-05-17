@@ -1,4 +1,4 @@
-(*s: ./parsing/parse.mli *)
+(*s: parsing/parse.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -27,4 +27,4 @@ val toplevel_phrase : Lexing.lexbuf -> Parsetree.toplevel_phrase
 val use_file : Lexing.lexbuf -> Parsetree.toplevel_phrase list
 (*e: signature [[Parse.use_file]] *)
 
-(*e: ./parsing/parse.mli *)
+(*e: parsing/parse.mli *)

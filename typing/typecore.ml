@@ -1,4 +1,4 @@
-(*s: ./typing/typecore.ml *)
+(*s: typing/typecore.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -782,4 +782,4 @@ let report_error = function
   | Bad_format s ->
       print_string "Bad format `"; print_string s; print_string "'"
 (*e: function [[Typecore.report_error]] *)
-(*e: ./typing/typecore.ml *)
+(*e: typing/typecore.ml *)

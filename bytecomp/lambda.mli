@@ -1,4 +1,4 @@
-(*s: ./bytecomp/lambda.mli *)
+(*s: bytecomp/lambda.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -188,4 +188,4 @@ val free_variables: lambda -> Ident.t Set.t
 (*s: signature [[Lambda.transl_path]] *)
 val transl_path: Path.t -> lambda
 (*e: signature [[Lambda.transl_path]] *)
-(*e: ./bytecomp/lambda.mli *)
+(*e: bytecomp/lambda.mli *)

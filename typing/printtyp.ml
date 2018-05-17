@@ -1,4 +1,4 @@
-(*s: ./typing/printtyp.ml *)
+(*s: typing/printtyp.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -249,4 +249,4 @@ let signature sg =
   List.iter (fun item -> signature_item item; print_space()) sg;
   close_box()
 (*e: function [[Printtyp.signature]] *)
-(*e: ./typing/printtyp.ml *)
+(*e: typing/printtyp.ml *)

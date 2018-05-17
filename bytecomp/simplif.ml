@@ -1,4 +1,4 @@
-(*s: ./bytecomp/simplif.ml *)
+(*s: bytecomp/simplif.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -199,4 +199,4 @@ let simplify_lambda lam =
   in
   simplif lam
 (*e: function [[Simplif.simplify_lambda]] *)
-(*e: ./bytecomp/simplif.ml *)
+(*e: bytecomp/simplif.ml *)

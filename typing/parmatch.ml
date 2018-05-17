@@ -1,4 +1,4 @@
-(*s: ./typing/parmatch.ml *)
+(*s: typing/parmatch.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -320,4 +320,4 @@ let check_unused casel =
                                 "this match case is unused.")
     prefs
 (*e: function [[Parmatch.check_unused]] *)
-(*e: ./typing/parmatch.ml *)
+(*e: typing/parmatch.ml *)

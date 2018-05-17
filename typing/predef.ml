@@ -1,4 +1,4 @@
-(*s: ./typing/predef.ml *)
+(*s: typing/predef.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -184,4 +184,4 @@ let builtin_values =
        ident_failure; ident_not_found; ident_sys_error; ident_end_of_file;
        ident_division_by_zero]
 (*e: constant [[Predef.builtin_values]] *)
-(*e: ./typing/predef.ml *)
+(*e: typing/predef.ml *)
