@@ -1,4 +1,4 @@
-(*s: ./utils/ccomp.ml *)
+(*s: utils/ccomp.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -71,4 +71,4 @@ let create_archive archive file_list =
       then r1
       else command(Config.ranlib ^ " " ^ archive)
 (*e: function [[Ccomp.create_archive]] *)
-(*e: ./utils/ccomp.ml *)
+(*e: utils/ccomp.ml *)

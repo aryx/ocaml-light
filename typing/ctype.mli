@@ -1,4 +1,4 @@
-(*s: ./typing/ctype.mli *)
+(*s: typing/ctype.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -120,4 +120,4 @@ val substitute:
 exception Unify
 (*e: exception [[Ctype.Unify]] *)
 
-(*e: ./typing/ctype.mli *)
+(*e: typing/ctype.mli *)

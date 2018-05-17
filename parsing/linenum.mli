@@ -1,4 +1,4 @@
-(*s: ./parsing/linenum.mli *)
+(*s: parsing/linenum.mli *)
 (*s: copyright header 1997 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -23,4 +23,4 @@ val for_position: string -> int -> string * int * int
            Second result is line number in that source file.
            Third result is position of beginning of that line in [file]. *)
 (*e: signature [[Linenum.for_position]] *)
-(*e: ./parsing/linenum.mli *)
+(*e: parsing/linenum.mli *)

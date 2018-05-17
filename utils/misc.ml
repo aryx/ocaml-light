@@ -1,4 +1,4 @@
-(*s: ./utils/misc.ml *)
+(*s: utils/misc.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -137,4 +137,4 @@ let no_overflow_add a b = (a lxor b) lor (a lxor (lnot (a+b))) < 0
 let no_overflow_sub a b = (a lxor (lnot b)) lor (b lxor (a-b)) < 0
 (*e: function [[Misc.no_overflow_sub]] *)
 
-(*e: ./utils/misc.ml *)
+(*e: utils/misc.ml *)

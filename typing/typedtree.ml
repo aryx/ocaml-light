@@ -1,4 +1,4 @@
-(*s: ./typing/typedtree.ml *)
+(*s: typing/typedtree.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -162,4 +162,4 @@ let let_bound_idents pat_expr_list =
   List.rev(rev_let_bound_idents pat_expr_list)
 (*e: function [[Typedtree.let_bound_idents]] *)
       
-(*e: ./typing/typedtree.ml *)
+(*e: typing/typedtree.ml *)

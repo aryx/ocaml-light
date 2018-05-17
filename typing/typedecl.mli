@@ -1,4 +1,4 @@
-(*s: ./typing/typedecl.mli *)
+(*s: typing/typedecl.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -49,4 +49,4 @@ exception Error of Location.t * error
 (*s: signature [[Typedecl.report_error]] *)
 val report_error: error -> unit
 (*e: signature [[Typedecl.report_error]] *)
-(*e: ./typing/typedecl.mli *)
+(*e: typing/typedecl.mli *)

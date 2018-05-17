@@ -1,4 +1,4 @@
-(*s: ./bytecomp/emitcode.mli *)
+(*s: bytecomp/emitcode.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -70,4 +70,4 @@ val to_memory: instruction list -> instruction list ->
              relocation information *)
 (*e: signature [[Emitcode.to_memory]] *)
 
-(*e: ./bytecomp/emitcode.mli *)
+(*e: bytecomp/emitcode.mli *)

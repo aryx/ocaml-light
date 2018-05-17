@@ -1,4 +1,4 @@
-(*s: ./bytecomp/emitcode.ml *)
+(*s: bytecomp/emitcode.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -388,4 +388,4 @@ let to_memory init_code fun_code =
   init();
   (code, code_size, reloc)
 (*e: function [[Emitcode.to_memory]] *)
-(*e: ./bytecomp/emitcode.ml *)
+(*e: bytecomp/emitcode.ml *)

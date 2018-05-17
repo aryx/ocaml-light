@@ -1,4 +1,4 @@
-(*s: ./driver/errors.mli *)
+(*s: driver/errors.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -17,4 +17,4 @@
 
 val report_error: exn -> unit
 (*e: signature [[Errors.report_error]] *)
-(*e: ./driver/errors.mli *)
+(*e: driver/errors.mli *)

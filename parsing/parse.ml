@@ -1,4 +1,4 @@
-(*s: ./parsing/parse.ml *)
+(*s: parsing/parse.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -74,4 +74,4 @@ let interface = wrap Parser.interface
 let toplevel_phrase = wrap Parser.toplevel_phrase
 let use_file = wrap Parser.use_file
 (*e: function [[Parse.xxx]] *)
-(*e: ./parsing/parse.ml *)
+(*e: parsing/parse.ml *)

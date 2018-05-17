@@ -1,4 +1,4 @@
-(*s: ./typing/mtype.ml *)
+(*s: typing/mtype.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -136,4 +136,4 @@ let nondep_supertype env mid mty =
   in
     nondep_mty Co mty
 (*e: function [[Mtype.nondep_supertype]] *)
-(*e: ./typing/mtype.ml *)
+(*e: typing/mtype.ml *)

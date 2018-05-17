@@ -1,4 +1,4 @@
-(*s: ./typing/includecore.ml *)
+(*s: typing/includecore.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -81,4 +81,4 @@ let exception_declarations env ed1 ed2 =
   for_all2 (fun ty1 ty2 -> Ctype.equal env [] ty1 [] ty2) ed1 ed2
 (*e: function [[Includecore.exception_declarations]] *)
 
-(*e: ./typing/includecore.ml *)
+(*e: typing/includecore.ml *)

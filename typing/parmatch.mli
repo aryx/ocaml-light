@@ -1,4 +1,4 @@
-(*s: ./typing/parmatch.mli *)
+(*s: typing/parmatch.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -24,4 +24,4 @@ val check_partial:
 val check_unused: 
   (Typedtree.pattern * Typedtree.expression) list -> unit
 (*e: signature [[Parmatch.check_unused]] *)
-(*e: ./typing/parmatch.mli *)
+(*e: typing/parmatch.mli *)

@@ -1,4 +1,4 @@
-(*s: ./typing/path.mli *)
+(*s: typing/path.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -30,4 +30,4 @@ val isfree: Ident.t -> t -> bool
 (*s: signature [[Path.nopos]] *)
 val nopos: int
 (*e: signature [[Path.nopos]] *)
-(*e: ./typing/path.mli *)
+(*e: typing/path.mli *)

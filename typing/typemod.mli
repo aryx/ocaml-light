@@ -1,4 +1,4 @@
-(*s: ./typing/typemod.mli *)
+(*s: typing/typemod.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -49,4 +49,4 @@ exception Error of Location.t * error
 (*s: signature [[Typemod.report_error]] *)
 val report_error: error -> unit
 (*e: signature [[Typemod.report_error]] *)
-(*e: ./typing/typemod.mli *)
+(*e: typing/typemod.mli *)

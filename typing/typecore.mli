@@ -1,4 +1,4 @@
-(*s: ./typing/typecore.mli *)
+(*s: typing/typecore.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -58,4 +58,4 @@ exception Error of Location.t * error
 (*s: signature [[Typecore.report_error]] *)
 val report_error: error -> unit
 (*e: signature [[Typecore.report_error]] *)
-(*e: ./typing/typecore.mli *)
+(*e: typing/typecore.mli *)

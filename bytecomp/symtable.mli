@@ -1,4 +1,4 @@
-(*s: ./bytecomp/symtable.mli *)
+(*s: bytecomp/symtable.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -85,4 +85,4 @@ exception Error of error
 (*s: signature [[Symtable.report_error]] *)
 val report_error: error -> unit
 (*e: signature [[Symtable.report_error]] *)
-(*e: ./bytecomp/symtable.mli *)
+(*e: bytecomp/symtable.mli *)

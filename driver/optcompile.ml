@@ -1,4 +1,4 @@
-(*s: ./driver/optcompile.ml *)
+(*s: driver/optcompile.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -183,4 +183,4 @@ let implementation sourcefile =
 let c_file name =
   if Ccomp.compile_file_native name <> 0 then exit 2
 (*e: function [[Optcompile.c_file]] *)
-(*e: ./driver/optcompile.ml *)
+(*e: driver/optcompile.ml *)

@@ -1,4 +1,4 @@
-(*s: ./utils/tbl.mli *)
+(*s: utils/tbl.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -36,4 +36,4 @@ val iter: ('a -> 'b -> 'c) -> ('a, 'b) t -> unit
 (*s: signature [[Tbl.print]] *)
 val print: ('a -> unit) -> ('b -> unit) -> ('a, 'b) t -> unit
 (*e: signature [[Tbl.print]] *)
-(*e: ./utils/tbl.mli *)
+(*e: utils/tbl.mli *)

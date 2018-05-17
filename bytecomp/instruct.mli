@@ -1,4 +1,4 @@
-(*s: ./bytecomp/instruct.mli *)
+(*s: bytecomp/instruct.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -142,4 +142,4 @@ val immed_min: int
 (*s: signature [[Instruct.immed_max]] *)
 val immed_max: int
 (*e: signature [[Instruct.immed_max]] *)
-(*e: ./bytecomp/instruct.mli *)
+(*e: bytecomp/instruct.mli *)

@@ -1,4 +1,4 @@
-(*s: ./bytecomp/bytelibrarian.mli *)
+(*s: bytecomp/bytelibrarian.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -37,4 +37,4 @@ exception Error of error
 (*s: signature [[Bytelibrarian.report_error]] *)
 val report_error: error -> unit
 (*e: signature [[Bytelibrarian.report_error]] *)
-(*e: ./bytecomp/bytelibrarian.mli *)
+(*e: bytecomp/bytelibrarian.mli *)

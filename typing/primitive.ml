@@ -1,4 +1,4 @@
-(*s: ./typing/primitive.ml *)
+(*s: typing/primitive.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -67,4 +67,4 @@ let print_description p =
   if p.prim_native_float then
     (print_space(); print_quoted "float")
 (*e: function [[Primitive.print_description]] *)
-(*e: ./typing/primitive.ml *)
+(*e: typing/primitive.ml *)

@@ -1,4 +1,4 @@
-(*s: ./bytecomp/bytelibrarian.ml *)
+(*s: bytecomp/bytelibrarian.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -106,4 +106,4 @@ let report_error = function
       print_string " is not a bytecode object file"
 (*e: constant [[Bytelibrarian.report_error]] *)
 
-(*e: ./bytecomp/bytelibrarian.ml *)
+(*e: bytecomp/bytelibrarian.ml *)

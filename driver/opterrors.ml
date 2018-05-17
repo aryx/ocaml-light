@@ -1,4 +1,4 @@
-(*s: ./driver/opterrors.ml *)
+(*s: driver/opterrors.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -57,4 +57,4 @@ let report_error exn =
   end;
   close_box(); print_newline()
 (*e: function [[Opterrors.report_error]] *)
-(*e: ./driver/opterrors.ml *)
+(*e: driver/opterrors.ml *)

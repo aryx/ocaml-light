@@ -1,4 +1,4 @@
-(*s: ./bytecomp/runtimedef.mli *)
+(*s: bytecomp/runtimedef.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -20,4 +20,4 @@ val builtin_exceptions: string array
 (*s: signature [[Runtimedef.builtin_primitives]] *)
 val builtin_primitives: string array
 (*e: signature [[Runtimedef.builtin_primitives]] *)
-(*e: ./bytecomp/runtimedef.mli *)
+(*e: bytecomp/runtimedef.mli *)

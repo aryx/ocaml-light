@@ -1,4 +1,4 @@
-(*s: ./bytecomp/translcore.ml *)
+(*s: bytecomp/translcore.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -684,4 +684,4 @@ let report_error = function
       print_string
       "This kind of expression is not allowed as right-hand side of `let rec'"
 (*e: constant [[Translcore.report_error]] *)
-(*e: ./bytecomp/translcore.ml *)
+(*e: bytecomp/translcore.ml *)

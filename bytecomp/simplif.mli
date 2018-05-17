@@ -1,4 +1,4 @@
-(*s: ./bytecomp/simplif.mli *)
+(*s: bytecomp/simplif.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -19,4 +19,4 @@ open Lambda
 (*s: signature [[Simplif.simplify_lambda]] *)
 val simplify_lambda: lambda -> lambda
 (*e: signature [[Simplif.simplify_lambda]] *)
-(*e: ./bytecomp/simplif.mli *)
+(*e: bytecomp/simplif.mli *)

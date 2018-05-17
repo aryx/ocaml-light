@@ -1,4 +1,4 @@
-(*s: ./typing/typedecl.ml *)
+(*s: typing/typedecl.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -221,4 +221,4 @@ let report_error = function
       print_space(); Printtyp.type_expr ty
 (*e: function [[Typedecl.report_error]] *)
 
-(*e: ./typing/typedecl.ml *)
+(*e: typing/typedecl.ml *)

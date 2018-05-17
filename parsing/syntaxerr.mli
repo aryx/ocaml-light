@@ -1,4 +1,4 @@
-(*s: ./parsing/syntaxerr.mli *)
+(*s: parsing/syntaxerr.mli *)
 (*s: copyright header 1997 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -30,4 +30,4 @@ exception Escape_error
 (*s: signature [[Syntaxerr.report_error]] *)
 val report_error: error -> unit
 (*e: signature [[Syntaxerr.report_error]] *)
-(*e: ./parsing/syntaxerr.mli *)
+(*e: parsing/syntaxerr.mli *)

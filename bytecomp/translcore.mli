@@ -1,4 +1,4 @@
-(*s: ./bytecomp/translcore.mli *)
+(*s: bytecomp/translcore.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -55,4 +55,4 @@ exception Error of Location.t * error
 (*s: signature [[Translcore.report_error]] *)
 val report_error: error -> unit
 (*e: signature [[Translcore.report_error]] *)
-(*e: ./bytecomp/translcore.mli *)
+(*e: bytecomp/translcore.mli *)

@@ -1,4 +1,4 @@
-(*s: ./driver/opterrors.mli *)
+(*s: driver/opterrors.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -17,4 +17,4 @@
 
 val report_error: exn -> unit
 (*e: signature [[Opterrors.report_error]] *)
-(*e: ./driver/opterrors.mli *)
+(*e: driver/opterrors.mli *)

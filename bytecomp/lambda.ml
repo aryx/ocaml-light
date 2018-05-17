@@ -1,4 +1,4 @@
-(*s: ./bytecomp/lambda.ml *)
+(*s: bytecomp/lambda.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -248,4 +248,4 @@ let rec transl_path = function
   | Pdot(p, s, pos) ->
       Lprim(Pfield pos, [transl_path p])
 (*e: constant [[Lambda.transl_path]] *)
-(*e: ./bytecomp/lambda.ml *)
+(*e: bytecomp/lambda.ml *)

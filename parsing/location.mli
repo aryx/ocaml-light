@@ -1,4 +1,4 @@
-(*s: ./parsing/location.mli *)
+(*s: parsing/location.mli *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -52,4 +52,4 @@ val reset: unit -> unit
 (*s: signature [[Location.highlight_locations]] *)
 val highlight_locations: t -> t -> bool
 (*e: signature [[Location.highlight_locations]] *)
-(*e: ./parsing/location.mli *)
+(*e: parsing/location.mli *)

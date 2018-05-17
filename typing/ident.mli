@@ -1,4 +1,4 @@
-(*s: ./typing/ident.mli *)
+(*s: typing/ident.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -83,4 +83,4 @@ val find_name: string -> 'a tbl -> 'a
 val print_tbl: ('a -> unit) -> 'a tbl -> unit
 (*e: signature [[Ident.print_tbl]] *)
 
-(*e: ./typing/ident.mli *)
+(*e: typing/ident.mli *)

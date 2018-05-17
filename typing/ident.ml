@@ -1,4 +1,4 @@
-(*s: ./typing/ident.ml *)
+(*s: typing/ident.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -222,4 +222,4 @@ let print_tbl print_elt tbl =
   close_box()
 (*e: function [[Ident.print_tbl]] *)
 
-(*e: ./typing/ident.ml *)
+(*e: typing/ident.ml *)

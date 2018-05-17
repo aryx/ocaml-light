@@ -1,4 +1,4 @@
-(*s: ./driver/compile.ml *)
+(*s: driver/compile.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -203,4 +203,4 @@ let c_file name =
   if Ccomp.compile_file_bytecode name <> 0 
   then exit 2
 (*e: function [[Compile.c_file]] *)
-(*e: ./driver/compile.ml *)
+(*e: driver/compile.ml *)

@@ -1,4 +1,4 @@
-(*s: ./typing/includemod.ml *)
+(*s: typing/includemod.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -315,4 +315,4 @@ let report_error errlist =
       close_box()
 (*e: function [[Includemod.report_error]] *)
 
-(*e: ./typing/includemod.ml *)
+(*e: typing/includemod.ml *)

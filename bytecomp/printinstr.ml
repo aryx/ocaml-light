@@ -1,4 +1,4 @@
-(*s: ./bytecomp/printinstr.ml *)
+(*s: bytecomp/printinstr.ml *)
 (*s: copyright header *)
 (***********************************************************************)
 (*                                                                     *)
@@ -114,4 +114,4 @@ let instrlist il =
   instruction_list il;
   close_box()
 (*e: function [[Printinstr.instrlist]] *)
-(*e: ./bytecomp/printinstr.ml *)
+(*e: bytecomp/printinstr.ml *)

@@ -1,4 +1,4 @@
-(*s: ./utils/config.mli *)
+(*s: utils/config.mli *)
 
 (*s: copyright header *)
 (***********************************************************************)
@@ -118,4 +118,4 @@ val ext_asm: string
 val ext_lib: string
         (* Extension for library files, e.g. [.a] under Unix. *)
 (*e: signature [[Config.ext_lib]] *)
-(*e: ./utils/config.mli *)
+(*e: utils/config.mli *)

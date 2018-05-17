@@ -1,4 +1,4 @@
-(*s: ./typing/includecore.mli *)
+(*s: typing/includecore.mli *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -35,4 +35,4 @@ val exception_declarations:
 (*e: signature [[Includecore.exception_declarations]] *)
 
 
-(*e: ./typing/includecore.mli *)
+(*e: typing/includecore.mli *)

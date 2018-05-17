@@ -1,4 +1,4 @@
-(*s: ./typing/ctype.ml *)
+(*s: typing/ctype.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -507,4 +507,4 @@ let rec arity ty =
   | _ -> 0
 (*e: function [[Ctype.arity]] *)
 
-(*e: ./typing/ctype.ml *)
+(*e: typing/ctype.ml *)

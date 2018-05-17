@@ -1,4 +1,4 @@
-(*s: ./typing/types.ml *)
+(*s: typing/types.ml *)
 (*s: copyright header0 *)
 (***********************************************************************)
 (*                                                                     *)
@@ -133,4 +133,4 @@ and signature_item =
   | Tsig_exception of Ident.t * exception_declaration
   | Tsig_module of Ident.t * module_type
 (*e: type [[Types.signature_item]] *)
-(*e: ./typing/types.ml *)
+(*e: typing/types.ml *)
