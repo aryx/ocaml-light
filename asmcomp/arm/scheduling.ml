@@ -15,7 +15,7 @@ open Mach
 
 open Schedgen
 
-(*s: function Scheduling.scheduler *)
+(*s: function [[Scheduling.scheduler]] *)
 (* Instruction scheduling for the Sparc *)
 
 let scheduler () = 
@@ -62,11 +62,11 @@ let scheduler () =
   | _ -> 1
  );
   }
-(*e: function Scheduling.scheduler *)
+(*e: function [[Scheduling.scheduler]] *)
 
-(*s: function Scheduling.fundecl *)
+(*s: function [[Scheduling.fundecl]] *)
 let fundecl f = 
   let s = scheduler () in
   s.schedule_fundecl s f
-(*e: function Scheduling.fundecl *)
+(*e: function [[Scheduling.fundecl]] *)
 (*e: asmcomp/arm/scheduling.ml *)

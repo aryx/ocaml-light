@@ -22,10 +22,10 @@ extern value **ref_table_ptr, **ref_table_limit;
 extern asize_t minor_heap_size;
 extern int in_minor_collection;
 
-/*s: function Is_young */
+/*s: function [[Is_young]] */
 #define Is_young(val) \
   ((addr)(val) > (addr)young_start && (addr)(val) < (addr)young_end)
-/*e: function Is_young */
+/*e: function [[Is_young]] */
 
 extern void set_minor_heap_size (asize_t);
 extern void minor_collection (void);

@@ -35,14 +35,14 @@ typedef size_t asize_t;
 typedef char * addr;
 
 #ifdef __GNUC__
-/*s: constant Noreturn */
+/*s: constant [[Noreturn]] */
 /* Works only in GCC 2.5 and later */
 #define Noreturn __attribute ((noreturn))
-/*e: constant Noreturn */
+/*e: constant [[Noreturn]] */
 #else
-/*s: constant Noreturn (byterun/misc.h) */
+/*s: constant [[Noreturn]]([[(byterun/misc.h)]]) */
 #define Noreturn
-/*e: constant Noreturn (byterun/misc.h) */
+/*e: constant [[Noreturn]]([[(byterun/misc.h)]]) */
 #endif
 
 /* Assertions */
@@ -50,9 +50,9 @@ typedef char * addr;
 #ifdef DEBUG
 #define Assert(x) if (!(x)) failed_assert ( #x , __FILE__, __LINE__)
 #else
-/*s: function Assert */
+/*s: function [[Assert]] */
 #define Assert(x)
-/*e: function Assert */
+/*e: function [[Assert]] */
 #endif
 
 void failed_assert (char *, char *, int) Noreturn;

@@ -23,17 +23,17 @@ open Types
 open Typedtree
 open Lambda
 
-(*s: type Translcore.error *)
+(*s: type [[Translcore.error]] *)
 type error =
     Illegal_letrec_pat
   | Illegal_letrec_expr
-(*e: type Translcore.error *)
+(*e: type [[Translcore.error]] *)
 
-(*s: exception Translcore.Error *)
+(*s: exception [[Translcore.Error]] *)
 exception Error of Location.t * error
-(*e: exception Translcore.Error *)
+(*e: exception [[Translcore.Error]] *)
 
-(*s: constant Translcore.comparisons_table *)
+(*s: constant [[Translcore.comparisons_table]] *)
 (* Translation of primitives *)
 
 let comparisons_table = create_hashtable 11 [
@@ -81,9 +81,9 @@ let comparisons_table = create_hashtable 11 [
        Pccall{prim_name = "greaterequal"; prim_arity = 2; prim_alloc = false;
               prim_native_name = ""; prim_native_float = false})
 ]
-(*e: constant Translcore.comparisons_table *)
+(*e: constant [[Translcore.comparisons_table]] *)
 
-(*s: constant Translcore.primitives_table *)
+(*s: constant [[Translcore.primitives_table]] *)
 let primitives_table = create_hashtable 31 [
   "%identity", Pidentity;
 
@@ -154,7 +154,7 @@ let primitives_table = create_hashtable 31 [
   "%obj_field", Parrayrefu Paddrarray;
   "%obj_set_field", Parraysetu Paddrarray
 ]
-(*e: constant Translcore.primitives_table *)
+(*e: constant [[Translcore.primitives_table]] *)
 
 let same_base_type ty1 ty2 =
   match (Ctype.repr ty1, Ctype.repr ty2) with
@@ -186,7 +186,7 @@ let array_kind arg =
 let has_base_type exp base_ty = 
   same_base_type exp.exp_type base_ty
 
-(*s: function Translcore.has_base_type *)
+(*s: function [[Translcore.has_base_type]] *)
 (*
 let has_base_type exp base_ty =
   let exp_ty =
@@ -195,16 +195,16 @@ let has_base_type exp base_ty =
     {desc = Tconstr(p1, _, _)}, {desc = Tconstr(p2, _, _)} -> Path.same p1 p2
   | (_, _) -> false
 *)
-(*e: function Translcore.has_base_type *)
+(*e: function [[Translcore.has_base_type]] *)
 
-(*s: function Translcore.maybe_pointer *)
+(*s: function [[Translcore.maybe_pointer]] *)
 (*
 let maybe_pointer arg =
   not(has_base_type arg Predef.type_int or has_base_type arg Predef.type_char)
 *)
-(*e: function Translcore.maybe_pointer *)
+(*e: function [[Translcore.maybe_pointer]] *)
 
-(*s: function Translcore.array_element_kind *)
+(*s: function [[Translcore.array_element_kind]] *)
 (*
 let array_element_kind env ty =
   let ty = Ctype.repr (Ctype.expand_head env ty) in
@@ -238,9 +238,9 @@ let array_element_kind env ty =
   | _ ->
       Paddrarray
 *)
-(*e: function Translcore.array_element_kind *)
+(*e: function [[Translcore.array_element_kind]] *)
 
-(*s: function Translcore.array_kind *)
+(*s: function [[Translcore.array_kind]] *)
 (*
 let array_kind arg =
   let ty = Ctype.correct_levels arg.exp_type in
@@ -251,15 +251,15 @@ let array_kind arg =
   | _ ->
     fatal_error "Translcore.array_kind"
 *)
-(*e: function Translcore.array_kind *)
+(*e: function [[Translcore.array_kind]] *)
 
-(*s: constant Translcore.prim_makearray *)
+(*s: constant [[Translcore.prim_makearray]] *)
 let prim_makearray =
   { prim_name = "make_vect"; prim_arity = 2; prim_alloc = true;
     prim_native_name = ""; prim_native_float = false }
-(*e: constant Translcore.prim_makearray *)
+(*e: constant [[Translcore.prim_makearray]] *)
 
-(*s: function Translcore.transl_prim *)
+(*s: function [[Translcore.transl_prim]] *)
 let transl_prim prim args =
   try
     let (gencomp, intcomp, floatcomp, stringcomp) =
@@ -294,9 +294,9 @@ let transl_prim prim args =
     end
   with Not_found ->
     Pccall prim
-(*e: function Translcore.transl_prim *)
+(*e: function [[Translcore.transl_prim]] *)
 
-(*s: function Translcore.transl_primitive *)
+(*s: function [[Translcore.transl_primitive]] *)
 (* Eta-expand a primitive without knowing the types of its arguments *)
 
 let transl_primitive p =
@@ -314,13 +314,13 @@ let transl_primitive p =
     if n <= 0 then [] else Ident.create "prim" :: make_params (n-1) in
   let params = make_params p.prim_arity in
   Lfunction(Curried, params, Lprim(prim, List.map (fun id -> Lvar id) params))
-(*e: function Translcore.transl_primitive *)
+(*e: function [[Translcore.transl_primitive]] *)
 
 (* To check the well-formedness of r.h.s. of "let rec" definitions *)
 
 module IdentSet = Set
 
-(*s: function Translcore.check_recursive_lambda *)
+(*s: function [[Translcore.check_recursive_lambda]] *)
 let check_recursive_lambda idlist lam =
   let rec check_top = function
       Lfunction(kind, params, body) as funct -> true
@@ -345,27 +345,27 @@ let check_recursive_lambda idlist lam =
         let fv = free_variables lam in
         List.for_all (fun id -> not(IdentSet.mem id fv)) idlist
   in check_top lam
-(*e: function Translcore.check_recursive_lambda *)
+(*e: function [[Translcore.check_recursive_lambda]] *)
 
-(*s: exception Translcore.Not_constant *)
+(*s: exception [[Translcore.Not_constant]] *)
 (* To propagate structured constants *)
 
 exception Not_constant
-(*e: exception Translcore.Not_constant *)
+(*e: exception [[Translcore.Not_constant]] *)
 
-(*s: constant Translcore.extract_constant *)
+(*s: constant [[Translcore.extract_constant]] *)
 let extract_constant = function
     Lconst sc -> sc
   | _ -> raise Not_constant
-(*e: constant Translcore.extract_constant *)
+(*e: constant [[Translcore.extract_constant]] *)
 
-(*s: constant Translcore.extract_float *)
+(*s: constant [[Translcore.extract_float]] *)
 let extract_float = function
     Const_base(Const_float f) -> f
   | _ -> fatal_error "Translcore.extract_float"
-(*e: constant Translcore.extract_float *)
+(*e: constant [[Translcore.extract_float]] *)
 
-(*s: function Translcore.name_pattern *)
+(*s: function [[Translcore.name_pattern]] *)
 (* To find reasonable names for let-bound and lambda-bound idents *)
 
 let rec name_pattern default = function
@@ -375,9 +375,9 @@ let rec name_pattern default = function
         Tpat_var id -> id
       | Tpat_alias(p, id) -> id
       | _ -> name_pattern default rem
-(*e: function Translcore.name_pattern *)
+(*e: function [[Translcore.name_pattern]] *)
 
-(*s: function Translcore.event_before *)
+(*s: function [[Translcore.event_before]] *)
 (* Insertion of debugging events *)
 
 let event_before exp lam =
@@ -387,9 +387,9 @@ let event_before exp lam =
                     lev_repr = None;
                     lev_env =  ()(* Env.summary exp.exp_env*)})
   else lam
-(*e: function Translcore.event_before *)
+(*e: function [[Translcore.event_before]] *)
 
-(*s: function Translcore.event_after *)
+(*s: function [[Translcore.event_after]] *)
 let event_after exp lam =
   if !Clflags.debug
   then Levent(lam, {lev_loc = exp.exp_loc.Location.loc_end;
@@ -397,9 +397,9 @@ let event_after exp lam =
                     lev_repr = None;
                     lev_env = () (* Env.summary exp.exp_env*)})
   else lam
-(*e: function Translcore.event_after *)
+(*e: function [[Translcore.event_after]] *)
 
-(*s: function Translcore.event_function *)
+(*s: function [[Translcore.event_function]] *)
 let event_function exp lam =
   if !Clflags.debug then
     let repr = Some (ref 0) in
@@ -411,10 +411,10 @@ let event_function exp lam =
                    lev_env = () (* Env.summary  exp.exp_env*)}))
   else
     lam None
-(*e: function Translcore.event_function *)
+(*e: function [[Translcore.event_function]] *)
 
 (* Translation of expressions *)
-(*s: function Translcore.transl_exp *)
+(*s: function [[Translcore.transl_exp]] *)
 let rec transl_exp e =
   match e.exp_desc with
   (*s: [[Translcore.transl_exp()]] cases *)
@@ -591,7 +591,7 @@ let rec transl_exp e =
   (*e: [[Translcore.transl_exp()]] cases *)
   | _ ->
       fatal_error "Translcore.transl"
-(*e: function Translcore.transl_exp *)
+(*e: function [[Translcore.transl_exp]] *)
 
 and transl_list expr_list =
   List.map transl_exp expr_list
@@ -604,7 +604,7 @@ and transl_cases pat_expr_list =
 and transl_tupled_cases patl_expr_list =
   List.map (fun (patl, expr) -> (patl, transl_exp expr)) patl_expr_list
 
-(*s: function Translcore.transl_function *)
+(*s: function [[Translcore.transl_function]] *)
 and transl_function loc untuplify_fn repr pat_expr_list =
   match pat_expr_list with
     [pat, ({exp_desc = Texp_function pl} as exp)] ->
@@ -634,9 +634,9 @@ and transl_function loc untuplify_fn repr pat_expr_list =
       ((Curried, [param]),
        Matching.for_function loc repr (Lvar param)
          (transl_cases pat_expr_list))
-(*e: function Translcore.transl_function *)
+(*e: function [[Translcore.transl_function]] *)
 
-(*s: function Translcore.transl_let *)
+(*s: function [[Translcore.transl_let]] *)
 and transl_let rec_flag pat_expr_list body =
   match rec_flag with
     Nonrecursive ->
@@ -661,21 +661,21 @@ and transl_let rec_flag pat_expr_list body =
         (id, lam) in
       Lletrec(List.map2 transl_case pat_expr_list idlist, body)
 
-(*e: function Translcore.transl_let *)
+(*e: function [[Translcore.transl_let]] *)
 
-(*s: function Translcore.transl_exception *)
+(*s: function [[Translcore.transl_exception]] *)
 (* Compile an exception definition *)
 
 let transl_exception id decl =
     Lprim(Pmakeblock(0, Immutable),
           [Lconst(Const_base(Const_string(Ident.name id)))])
-(*e: function Translcore.transl_exception *)
+(*e: function [[Translcore.transl_exception]] *)
 
 (* Error report *)
 
 open Format
 
-(*s: constant Translcore.report_error *)
+(*s: constant [[Translcore.report_error]] *)
 let report_error = function
     Illegal_letrec_pat ->
       print_string
@@ -683,5 +683,5 @@ let report_error = function
   | Illegal_letrec_expr ->
       print_string
       "This kind of expression is not allowed as right-hand side of `let rec'"
-(*e: constant Translcore.report_error *)
+(*e: constant [[Translcore.report_error]] *)
 (*e: ./bytecomp/translcore.ml *)

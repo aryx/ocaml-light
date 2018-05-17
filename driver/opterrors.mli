@@ -12,9 +12,9 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Opterrors.report_error *)
+(*s: signature [[Opterrors.report_error]] *)
 (* Error report *)
 
 val report_error: exn -> unit
-(*e: signature Opterrors.report_error *)
+(*e: signature [[Opterrors.report_error]] *)
 (*e: ./driver/opterrors.mli *)

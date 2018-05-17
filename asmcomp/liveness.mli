@@ -12,10 +12,10 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Liveness.fundecl *)
+(*s: signature [[Liveness.fundecl]] *)
 (* Liveness analysis.
    Annotate mach code with the set of regs live at each point. *)
 
 val fundecl: Mach.fundecl -> unit
-(*e: signature Liveness.fundecl *)
+(*e: signature [[Liveness.fundecl]] *)
 (*e: asmcomp/liveness.mli *)

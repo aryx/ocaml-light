@@ -16,22 +16,22 @@
 
 open Format
 
-(*s: type Syntaxerr.error *)
+(*s: type [[Syntaxerr.error]] *)
 (* Auxiliary type for reporting syntax errors *)
 
 type error =
     Unclosed of Location.t * string * Location.t * string
   | Other of Location.t
-(*e: type Syntaxerr.error *)
+(*e: type [[Syntaxerr.error]] *)
 
-(*s: exception Syntaxerr.Error *)
+(*s: exception [[Syntaxerr.Error]] *)
 exception Error of error
-(*e: exception Syntaxerr.Error *)
-(*s: exception Syntaxerr.Escape_error *)
+(*e: exception [[Syntaxerr.Error]] *)
+(*s: exception [[Syntaxerr.Escape_error]] *)
 exception Escape_error
-(*e: exception Syntaxerr.Escape_error *)
+(*e: exception [[Syntaxerr.Escape_error]] *)
 
-(*s: function Syntaxerr.report_error *)
+(*s: function [[Syntaxerr.report_error]] *)
 let report_error = function
     Unclosed(opening_loc, opening, closing_loc, closing) ->
       if String.length !Location.input_name = 0
@@ -55,6 +55,6 @@ let report_error = function
   | Other loc ->
       Location.print loc;
       print_string "Syntax error"
-(*e: function Syntaxerr.report_error *)
+(*e: function [[Syntaxerr.report_error]] *)
 
 (*e: ./parsing/syntaxerr.ml *)

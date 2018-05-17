@@ -11,30 +11,30 @@
 (*                                                                     *)
 (***********************************************************************)
 (*e: copyright header *)
-(*s: type Tbl.t *)
+(*s: type [[Tbl.t]] *)
 
 type ('a, 'b) t =
     Empty
   | Node of ('a, 'b) t * 'a * 'b * ('a, 'b) t * int
-(*e: type Tbl.t *)
+(*e: type [[Tbl.t]] *)
 
-(*s: constant Tbl.empty *)
+(*s: constant [[Tbl.empty]] *)
 let empty = Empty
-(*e: constant Tbl.empty *)
+(*e: constant [[Tbl.empty]] *)
 
-(*s: constant Tbl.height *)
+(*s: constant [[Tbl.height]] *)
 let height = function
     Empty -> 0
   | Node(_,_,_,_,h) -> h
-(*e: constant Tbl.height *)
+(*e: constant [[Tbl.height]] *)
 
-(*s: function Tbl.create *)
+(*s: function [[Tbl.create]] *)
 let create l x d r =
   let hl = height l and hr = height r in
   Node(l, x, d, r, (if hl >= hr then hl + 1 else hr + 1))
-(*e: function Tbl.create *)
+(*e: function [[Tbl.create]] *)
 
-(*s: function Tbl.bal *)
+(*s: function [[Tbl.bal]] *)
 let bal l x d r =
   let hl = height l and hr = height r in
   if hl > hr + 1 then
@@ -53,9 +53,9 @@ let bal l x d r =
     | _ -> assert false
   else
     create l x d r
-(*e: function Tbl.bal *)
+(*e: function [[Tbl.bal]] *)
 
-(*s: function Tbl.add *)
+(*s: function [[Tbl.add]] *)
 let rec add x data = function
     Empty ->
       Node(Empty, x, data, Empty, 1)
@@ -67,9 +67,9 @@ let rec add x data = function
         bal (add x data l) v d r
       else
         bal l v d (add x data r)
-(*e: function Tbl.add *)
+(*e: function [[Tbl.add]] *)
 
-(*s: function Tbl.find *)
+(*s: function [[Tbl.find]] *)
 let rec find x = function
     Empty ->
       raise Not_found
@@ -77,18 +77,18 @@ let rec find x = function
       let c = compare x v in
       if c = 0 then d
       else find x (if c < 0 then l else r)
-(*e: function Tbl.find *)
+(*e: function [[Tbl.find]] *)
 
-(*s: function Tbl.merge *)
+(*s: function [[Tbl.merge]] *)
 let rec merge t1 t2 =
   match (t1, t2) with
     (Empty, t) -> t
   | (t, Empty) -> t
   | (Node(l1, v1, d1, r1, h1), Node(l2, v2, d2, r2, h2)) ->
       bal l1 v1 d1 (bal (merge r1 l2) v2 d2 r2)
-(*e: function Tbl.merge *)
+(*e: function [[Tbl.merge]] *)
 
-(*s: function Tbl.remove *)
+(*s: function [[Tbl.remove]] *)
 let rec remove x = function
     Empty ->
       Empty
@@ -100,18 +100,18 @@ let rec remove x = function
         bal (remove x l) v d r
       else
         bal l v d (remove x r)
-(*e: function Tbl.remove *)
+(*e: function [[Tbl.remove]] *)
 
-(*s: function Tbl.iter *)
+(*s: function [[Tbl.iter]] *)
 let rec iter f = function
     Empty -> ()
   | Node(l, v, d, r, _) ->
       iter f l; f v d; iter f r
-(*e: function Tbl.iter *)
+(*e: function [[Tbl.iter]] *)
 
 open Format
 
-(*s: function Tbl.print *)
+(*s: function [[Tbl.print]] *)
 (* @Scheck: dumper *)
 let print print_key print_data tbl =
   open_hvbox 2;
@@ -124,5 +124,5 @@ let print print_key print_data tbl =
         tbl;
   print_string "]]";
   close_box()
-(*e: function Tbl.print *)
+(*e: function [[Tbl.print]] *)
 (*e: ./utils/tbl.ml *)

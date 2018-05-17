@@ -29,37 +29,37 @@
 #include "roots.h"
 #include "signals.h"
 
-/*s: global async_signal_mode */
+/*s: global [[async_signal_mode]] */
 volatile int async_signal_mode = 0;
-/*e: global async_signal_mode */
-/*s: global pending_signal */
+/*e: global [[async_signal_mode]] */
+/*s: global [[pending_signal]] */
 volatile int pending_signal = 0;
-/*e: global pending_signal */
-/*s: global something_to_do */
+/*e: global [[pending_signal]] */
+/*s: global [[something_to_do]] */
 volatile int something_to_do = 0;
-/*e: global something_to_do */
-/*s: global force_major_slice */
+/*e: global [[something_to_do]] */
+/*s: global [[force_major_slice]] */
 volatile int force_major_slice = 0;
-/*e: global force_major_slice */
-/*s: global signal_handlers */
+/*e: global [[force_major_slice]] */
+/*s: global [[signal_handlers]] */
 value signal_handlers = 0;
-/*e: global signal_handlers */
-/*s: global enter_blocking_section_hook */
+/*e: global [[signal_handlers]] */
+/*s: global [[enter_blocking_section_hook]] */
 void (*enter_blocking_section_hook)() = NULL;
-/*e: global enter_blocking_section_hook */
-/*s: global leave_blocking_section_hook */
+/*e: global [[enter_blocking_section_hook]] */
+/*s: global [[leave_blocking_section_hook]] */
 void (*leave_blocking_section_hook)() = NULL;
-/*e: global leave_blocking_section_hook */
+/*e: global [[leave_blocking_section_hook]] */
 
-/*s: function execute_signal */
+/*s: function [[execute_signal]] */
 static void execute_signal(int signal_number)
 {
   Assert (!async_signal_mode);
   callback(Field(signal_handlers, signal_number), Val_int(signal_number));
 }
-/*e: function execute_signal */
+/*e: function [[execute_signal]] */
 
-/*s: function handle_signal */
+/*s: function [[handle_signal]] */
 void handle_signal(int signal_number)
 {
 #ifndef POSIX_SIGNALS
@@ -76,17 +76,17 @@ void handle_signal(int signal_number)
     something_to_do = 1;
   }
 }
-/*e: function handle_signal */
+/*e: function [[handle_signal]] */
 
-/*s: function urge_major_slice */
+/*s: function [[urge_major_slice]] */
 void urge_major_slice (void)
 {
   force_major_slice = 1;
   something_to_do = 1;
 }
-/*e: function urge_major_slice */
+/*e: function [[urge_major_slice]] */
 
-/*s: function enter_blocking_section */
+/*s: function [[enter_blocking_section]] */
 void enter_blocking_section(void)
 {
   int temp;
@@ -103,138 +103,138 @@ void enter_blocking_section(void)
   }
   if (enter_blocking_section_hook != NULL) enter_blocking_section_hook();
 }
-/*e: function enter_blocking_section */
+/*e: function [[enter_blocking_section]] */
 
-/*s: function leave_blocking_section */
+/*s: function [[leave_blocking_section]] */
 void leave_blocking_section(void)
 {
   if (leave_blocking_section_hook != NULL) leave_blocking_section_hook();
   Assert(async_signal_mode);
   async_signal_mode = 0;
 }
-/*e: function leave_blocking_section */
+/*e: function [[leave_blocking_section]] */
 
 #ifndef SIGABRT
-/*s: constant SIGABRT */
+/*s: constant [[SIGABRT]] */
 #define SIGABRT -1
-/*e: constant SIGABRT */
+/*e: constant [[SIGABRT]] */
 #endif
 #ifndef SIGALRM
-/*s: constant SIGALRM */
+/*s: constant [[SIGALRM]] */
 #define SIGALRM -1
-/*e: constant SIGALRM */
+/*e: constant [[SIGALRM]] */
 #endif
 #ifndef SIGFPE
-/*s: constant SIGFPE */
+/*s: constant [[SIGFPE]] */
 #define SIGFPE -1
-/*e: constant SIGFPE */
+/*e: constant [[SIGFPE]] */
 #endif
 #ifndef SIGHUP
-/*s: constant SIGHUP */
+/*s: constant [[SIGHUP]] */
 #define SIGHUP -1
-/*e: constant SIGHUP */
+/*e: constant [[SIGHUP]] */
 #endif
 #ifndef SIGILL
-/*s: constant SIGILL */
+/*s: constant [[SIGILL]] */
 #define SIGILL -1
-/*e: constant SIGILL */
+/*e: constant [[SIGILL]] */
 #endif
 #ifndef SIGINT
-/*s: constant SIGINT */
+/*s: constant [[SIGINT]] */
 #define SIGINT -1
-/*e: constant SIGINT */
+/*e: constant [[SIGINT]] */
 #endif
 #ifndef SIGKILL
-/*s: constant SIGKILL */
+/*s: constant [[SIGKILL]] */
 #define SIGKILL -1
-/*e: constant SIGKILL */
+/*e: constant [[SIGKILL]] */
 #endif
 #ifndef SIGPIPE
-/*s: constant SIGPIPE */
+/*s: constant [[SIGPIPE]] */
 #define SIGPIPE -1
-/*e: constant SIGPIPE */
+/*e: constant [[SIGPIPE]] */
 #endif
 #ifndef SIGQUIT
-/*s: constant SIGQUIT */
+/*s: constant [[SIGQUIT]] */
 #define SIGQUIT -1
-/*e: constant SIGQUIT */
+/*e: constant [[SIGQUIT]] */
 #endif
 #ifndef SIGSEGV
-/*s: constant SIGSEGV */
+/*s: constant [[SIGSEGV]] */
 #define SIGSEGV -1
-/*e: constant SIGSEGV */
+/*e: constant [[SIGSEGV]] */
 #endif
 #ifndef SIGTERM
-/*s: constant SIGTERM */
+/*s: constant [[SIGTERM]] */
 #define SIGTERM -1
-/*e: constant SIGTERM */
+/*e: constant [[SIGTERM]] */
 #endif
 #ifndef SIGUSR1
-/*s: constant SIGUSR1 */
+/*s: constant [[SIGUSR1]] */
 #define SIGUSR1 -1
-/*e: constant SIGUSR1 */
+/*e: constant [[SIGUSR1]] */
 #endif
 #ifndef SIGUSR2
-/*s: constant SIGUSR2 */
+/*s: constant [[SIGUSR2]] */
 #define SIGUSR2 -1
-/*e: constant SIGUSR2 */
+/*e: constant [[SIGUSR2]] */
 #endif
 #ifndef SIGCHLD
-/*s: constant SIGCHLD */
+/*s: constant [[SIGCHLD]] */
 #define SIGCHLD -1
-/*e: constant SIGCHLD */
+/*e: constant [[SIGCHLD]] */
 #endif
 #ifndef SIGCONT
-/*s: constant SIGCONT */
+/*s: constant [[SIGCONT]] */
 #define SIGCONT -1
-/*e: constant SIGCONT */
+/*e: constant [[SIGCONT]] */
 #endif
 #ifndef SIGSTOP
-/*s: constant SIGSTOP */
+/*s: constant [[SIGSTOP]] */
 #define SIGSTOP -1
-/*e: constant SIGSTOP */
+/*e: constant [[SIGSTOP]] */
 #endif
 #ifndef SIGTSTP
-/*s: constant SIGTSTP */
+/*s: constant [[SIGTSTP]] */
 #define SIGTSTP -1
-/*e: constant SIGTSTP */
+/*e: constant [[SIGTSTP]] */
 #endif
 #ifndef SIGTTIN
-/*s: constant SIGTTIN */
+/*s: constant [[SIGTTIN]] */
 #define SIGTTIN -1
-/*e: constant SIGTTIN */
+/*e: constant [[SIGTTIN]] */
 #endif
 #ifndef SIGTTOU
-/*s: constant SIGTTOU */
+/*s: constant [[SIGTTOU]] */
 #define SIGTTOU -1
-/*e: constant SIGTTOU */
+/*e: constant [[SIGTTOU]] */
 #endif
 #ifndef SIGVTALRM
-/*s: constant SIGVTALRM */
+/*s: constant [[SIGVTALRM]] */
 #define SIGVTALRM -1
-/*e: constant SIGVTALRM */
+/*e: constant [[SIGVTALRM]] */
 #endif
 #ifndef SIGPROF
-/*s: constant SIGPROF */
+/*s: constant [[SIGPROF]] */
 #define SIGPROF -1
-/*e: constant SIGPROF */
+/*e: constant [[SIGPROF]] */
 #endif
 
-/*s: global posix_signals */
+/*s: global [[posix_signals]] */
 int posix_signals[] = {
   SIGABRT, SIGALRM, SIGFPE, SIGHUP, SIGILL, SIGINT, SIGKILL, SIGPIPE,
   SIGQUIT, SIGSEGV, SIGTERM, SIGUSR1, SIGUSR2, SIGCHLD, SIGCONT,
   SIGSTOP, SIGTSTP, SIGTTIN, SIGTTOU, SIGVTALRM, SIGPROF
 };
-/*e: global posix_signals */
+/*e: global [[posix_signals]] */
 
 #ifndef NSIG
-/*s: constant NSIG */
+/*s: constant [[NSIG]] */
 #define NSIG 32
-/*e: constant NSIG */
+/*e: constant [[NSIG]] */
 #endif
 
-/*s: function install_signal_handler */
+/*s: function [[install_signal_handler]] */
 value install_signal_handler(value signal_number, value action) /* ML */
 {
   int sig;
@@ -277,5 +277,5 @@ value install_signal_handler(value signal_number, value action) /* ML */
 #endif
   return Val_unit;
 }
-/*e: function install_signal_handler */
+/*e: function [[install_signal_handler]] */
 /*e: byterun/signals.c */

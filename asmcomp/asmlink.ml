@@ -19,7 +19,7 @@ open Misc
 open Config
 open Compilenv
 
-(*s: type Asmlink.error (asmcomp/asmlink.ml) *)
+(*s: type [[Asmlink.error]]([[(asmcomp/asmlink.ml)]]) *)
 type error =
     File_not_found of string
   | Not_an_object_file of string
@@ -28,24 +28,24 @@ type error =
   | Inconsistent_implementation of string * string * string
   | Assembler_error of string
   | Linking_error
-(*e: type Asmlink.error (asmcomp/asmlink.ml) *)
+(*e: type [[Asmlink.error]]([[(asmcomp/asmlink.ml)]]) *)
 
-(*s: exception Asmlink.Error (asmcomp/asmlink.ml) *)
+(*s: exception [[Asmlink.Error]]([[(asmcomp/asmlink.ml)]]) *)
 exception Error of error
-(*e: exception Asmlink.Error (asmcomp/asmlink.ml) *)
+(*e: exception [[Asmlink.Error]]([[(asmcomp/asmlink.ml)]]) *)
 
-(*s: constant Asmlink.crc_interfaces *)
+(*s: constant [[Asmlink.crc_interfaces]] *)
 (* Consistency check between interfaces and implementations *)
 
 let crc_interfaces =
-(*e: constant Asmlink.crc_interfaces *)
+(*e: constant [[Asmlink.crc_interfaces]] *)
       (Hashtbl.create 17 : (string, string * Digest.t) Hashtbl.t)
-(*s: constant Asmlink.crc_implementations *)
+(*s: constant [[Asmlink.crc_implementations]] *)
 let crc_implementations =
-(*e: constant Asmlink.crc_implementations *)
+(*e: constant [[Asmlink.crc_implementations]] *)
       (Hashtbl.create 17 : (string, string * Digest.t) Hashtbl.t)
 
-(*s: function Asmlink.check_consistency *)
+(*s: function [[Asmlink.check_consistency]] *)
 let check_consistency file_name unit crc =
   List.iter
     (fun (name, crc) ->
@@ -74,32 +74,32 @@ let check_consistency file_name unit crc =
       end)
     unit.ui_imports_cmx;
   Hashtbl.add crc_implementations unit.ui_name (file_name, crc)
-(*e: function Asmlink.check_consistency *)
+(*e: function [[Asmlink.check_consistency]] *)
 
 (* First pass: determine which units are needed *)
 
 module StringSet = Set
 
-(*s: constant Asmlink.missing_globals *)
+(*s: constant [[Asmlink.missing_globals]] *)
 let missing_globals = ref StringSet.empty
-(*e: constant Asmlink.missing_globals *)
+(*e: constant [[Asmlink.missing_globals]] *)
 
-(*s: function Asmlink.is_required *)
+(*s: function [[Asmlink.is_required]] *)
 let is_required name =
   StringSet.mem name !missing_globals
-(*e: function Asmlink.is_required *)
+(*e: function [[Asmlink.is_required]] *)
 
-(*s: function Asmlink.add_required *)
+(*s: function [[Asmlink.add_required]] *)
 let add_required (name, crc) =
   missing_globals := StringSet.add name !missing_globals
-(*e: function Asmlink.add_required *)
+(*e: function [[Asmlink.add_required]] *)
 
-(*s: function Asmlink.remove_required *)
+(*s: function [[Asmlink.remove_required]] *)
 let remove_required name =
   missing_globals := StringSet.remove name !missing_globals
-(*e: function Asmlink.remove_required *)
+(*e: function [[Asmlink.remove_required]] *)
 
-(*s: function Asmlink.scan_file *)
+(*s: function [[Asmlink.scan_file]] *)
 let scan_file obj_name tolink =
   let file_name =
     try
@@ -139,13 +139,13 @@ let scan_file obj_name tolink =
     info_crc_list tolink
   end
   else raise(Error(Not_an_object_file file_name))
-(*e: function Asmlink.scan_file *)
+(*e: function [[Asmlink.scan_file]] *)
 
 (* Second pass: generate the startup file and link it with everything else *)
 
 module IntSet = Set
 
-(*s: function Asmlink.make_startup_file *)
+(*s: function [[Asmlink.make_startup_file]] *)
 let make_startup_file filename info_list =
   let oc = open_out filename in
   Emitaux.output_channel := oc;
@@ -183,9 +183,9 @@ let make_startup_file filename info_list =
     (Cmmgen.frame_table("startup" :: "system" :: name_list));
   Emit.end_assembly();
   close_out oc
-(*e: function Asmlink.make_startup_file *)
+(*e: function [[Asmlink.make_startup_file]] *)
 
-(*s: function Asmlink.call_linker *)
+(*s: function [[Asmlink.call_linker]] *)
 let call_linker file_list startup_file =
   let libname = "libasmrun" ^ ext_lib in
   let runtime_lib =
@@ -215,9 +215,9 @@ let call_linker file_list startup_file =
             startup_file
             (String.concat " " (List.rev file_list))
   in if Ccomp.command cmd <> 0 then raise(Error Linking_error)
-(*e: function Asmlink.call_linker *)
+(*e: function [[Asmlink.call_linker]] *)
 
-(*s: function Asmlink.object_file_name *)
+(*s: function [[Asmlink.object_file_name]] *)
 let object_file_name name =
   let file_name =
     try
@@ -230,9 +230,9 @@ let object_file_name name =
     Filename.chop_suffix file_name ".cmxa" ^ ext_lib
   else
     fatal_error "Asmlink.object_file_name: bad ext"
-(*e: function Asmlink.object_file_name *)
+(*e: function [[Asmlink.object_file_name]] *)
 
-(*s: function Asmlink.link *)
+(*s: function [[Asmlink.link]] *)
 (* Main entry point *)
 
 let link objfiles =
@@ -253,13 +253,13 @@ let link objfiles =
   with x ->
     remove_file startup_obj;
     raise x
-(*e: function Asmlink.link *)
+(*e: function [[Asmlink.link]] *)
 
 (* Error report *)
 
 open Format
 
-(*s: function Asmlink.report_error *)
+(*s: function [[Asmlink.report_error]] *)
 let report_error = function
     File_not_found name ->
       print_string "Cannot find file "; print_string name
@@ -290,5 +290,5 @@ let report_error = function
       print_string "Error while assembling "; print_string file
   | Linking_error ->
       print_string "Error during linking"
-(*e: function Asmlink.report_error *)
+(*e: function [[Asmlink.report_error]] *)
 (*e: asmcomp/asmlink.ml *)

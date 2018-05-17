@@ -20,32 +20,32 @@ open Types
 open Typedtree
 
 
-(*s: function Parmatch.make_pat *)
+(*s: function [[Parmatch.make_pat]] *)
 let make_pat desc ty =
   {pat_desc = desc; pat_loc = Location.none; pat_type = ty}
-(*e: function Parmatch.make_pat *)
+(*e: function [[Parmatch.make_pat]] *)
 
-(*s: constant Parmatch.omega *)
+(*s: constant [[Parmatch.omega]] *)
 let omega = make_pat Tpat_any Ctype.none
-(*e: constant Parmatch.omega *)
+(*e: constant [[Parmatch.omega]] *)
 
-(*s: function Parmatch.omegas *)
+(*s: function [[Parmatch.omegas]] *)
 let rec omegas i =
   if i <= 0 then [] else omega :: omegas (i-1)
-(*e: function Parmatch.omegas *)
+(*e: function [[Parmatch.omegas]] *)
 
-(*s: function Parmatch.omega_list *)
+(*s: function [[Parmatch.omega_list]] *)
 let omega_list l = omegas(List.length l)
-(*e: function Parmatch.omega_list *)
+(*e: function [[Parmatch.omega_list]] *)
 
-(*s: function Parmatch.has_guard *)
+(*s: function [[Parmatch.has_guard]] *)
 let has_guard act =
   match act.exp_desc with
     Texp_when(_, _) -> true
   | _ -> false
-(*e: function Parmatch.has_guard *)
+(*e: function [[Parmatch.has_guard]] *)
 
-(*s: function Parmatch.simple_match *)
+(*s: function [[Parmatch.simple_match]] *)
 let simple_match p1 p2 = 
   match p1.pat_desc, p2.pat_desc with
     Tpat_construct(c1, _), Tpat_construct(c2, _) ->
@@ -56,25 +56,25 @@ let simple_match p1 p2 =
   | Tpat_record(_), Tpat_record(_) -> true
   | _, (Tpat_any | Tpat_var(_)) -> true
   | _, _ -> false
-(*e: function Parmatch.simple_match *)
+(*e: function [[Parmatch.simple_match]] *)
 
-(*s: function Parmatch.record_labels *)
+(*s: function [[Parmatch.record_labels]] *)
 (* Return the set of labels and number of fields for a record pattern. *)
 
 let record_labels p =
   match p.pat_desc with
     Tpat_record((lbl1, pat1) :: rem) -> Array.to_list lbl1.lbl_all
   | _ -> fatal_error "Parmatch.record_labels"
-(*e: function Parmatch.record_labels *)
+(*e: function [[Parmatch.record_labels]] *)
 
-(*s: function Parmatch.record_num_fields *)
+(*s: function [[Parmatch.record_num_fields]] *)
 let record_num_fields p =
   match p.pat_desc with
     Tpat_record((lbl1, pat1) :: rem) -> Array.length lbl1.lbl_all
   | _ -> fatal_error "Parmatch.record_num_fields"
-(*e: function Parmatch.record_num_fields *)
+(*e: function [[Parmatch.record_num_fields]] *)
 
-(*s: function Parmatch.set_fields *)
+(*s: function [[Parmatch.set_fields]] *)
 let set_fields size l =
   let v = Array.create size omega in
   let rec change_rec l = match l with
@@ -82,9 +82,9 @@ let set_fields size l =
   | [] -> () in
   change_rec l;
   Array.to_list v
-(*e: function Parmatch.set_fields *)
+(*e: function [[Parmatch.set_fields]] *)
 
-(*s: function Parmatch.simple_match_args *)
+(*s: function [[Parmatch.simple_match_args]] *)
 let simple_match_args p1 p2 =
   match p2.pat_desc with
     Tpat_construct(cstr, args) -> args
@@ -98,9 +98,9 @@ let simple_match_args p1 p2 =
       | _ -> []
       end
   | _ -> []
-(*e: function Parmatch.simple_match_args *)
+(*e: function [[Parmatch.simple_match_args]] *)
 
-(*s: function Parmatch.simple_pat *)
+(*s: function [[Parmatch.simple_pat]] *)
 (*
   Computes the discriminating pattern for matching by the first
   column of pss, that is:
@@ -120,9 +120,9 @@ let rec simple_pat q pss = match pss with
         make_pat (Tpat_record (List.map (fun lbl -> (lbl,omega)) (record_labels p)))
                  p.pat_type
   | _ -> q
-(*e: function Parmatch.simple_pat *)
+(*e: function [[Parmatch.simple_pat]] *)
 
-(*s: function Parmatch.filter_one *)
+(*s: function [[Parmatch.filter_one]] *)
 let filter_one q pss =
   let rec filter_rec = function
       ({pat_desc = Tpat_alias(p,_)}::ps)::pss -> 
@@ -135,9 +135,9 @@ let filter_one q pss =
         else filter_rec pss
     | _ -> [] in
   filter_rec pss
-(*e: function Parmatch.filter_one *)
+(*e: function [[Parmatch.filter_one]] *)
 
-(*s: function Parmatch.filter_extra *)
+(*s: function [[Parmatch.filter_extra]] *)
 let filter_extra pss =
   let rec filter_rec = function
       ({pat_desc = Tpat_alias(p,_)}::ps)::pss -> 
@@ -149,9 +149,9 @@ let filter_extra pss =
     | _::pss  -> filter_rec pss
     | [] -> [] in
   filter_rec pss
-(*e: function Parmatch.filter_extra *)
+(*e: function [[Parmatch.filter_extra]] *)
 
-(*s: function Parmatch.filter_all *)
+(*s: function [[Parmatch.filter_all]] *)
 let filter_all pat0 pss =
 
   let rec insert q qs env =
@@ -192,10 +192,10 @@ let filter_all pat0 pss =
       | _ -> [])
       pss)
     pss
-(*e: function Parmatch.filter_all *)
+(*e: function [[Parmatch.filter_all]] *)
 
       
-(*s: function Parmatch.full_match *)
+(*s: function [[Parmatch.full_match]] *)
 let full_match env =
   match env with
     ({pat_desc = Tpat_construct(c,_)},_) :: _ ->
@@ -206,9 +206,9 @@ let full_match env =
   | ({pat_desc = Tpat_tuple(_)},_) :: _ -> true
   | ({pat_desc = Tpat_record(_)},_) :: _ -> true
   | _ -> fatal_error "Parmatch.full_match"
-(*e: function Parmatch.full_match *)
+(*e: function [[Parmatch.full_match]] *)
 
-(*s: function Parmatch.satisfiable *)
+(*s: function [[Parmatch.satisfiable]] *)
 (*
   Is the last row of pattern matrix pss + qs satisfiable ?
         That is :
@@ -243,18 +243,18 @@ let rec satisfiable pss qs =
     | q::qs ->
         let q0 = simple_pat q pss in
         satisfiable (filter_one q0 pss) (simple_match_args q0 q @ qs)
-(*e: function Parmatch.satisfiable *)
+(*e: function [[Parmatch.satisfiable]] *)
 
-(*s: function Parmatch.initial_matrix *)
+(*s: function [[Parmatch.initial_matrix]] *)
 let rec initial_matrix = function
     [] -> []
   | (pat, act) :: rem ->
        if has_guard act
        then initial_matrix rem
        else [pat] :: initial_matrix rem
-(*e: function Parmatch.initial_matrix *)
+(*e: function [[Parmatch.initial_matrix]] *)
 
-(*s: function Parmatch.le_pat *)
+(*s: function [[Parmatch.le_pat]] *)
 let rec le_pat p q =
   match (p.pat_desc, q.pat_desc) with
     (Tpat_var _ | Tpat_any), _ -> true
@@ -275,9 +275,9 @@ and le_pats ps qs =
   match ps,qs with
     p::ps, q::qs -> le_pat p q & le_pats ps qs
   | _, _         -> true
-(*e: function Parmatch.le_pat *)
+(*e: function [[Parmatch.le_pat]] *)
 
-(*s: function Parmatch.get_mins *)
+(*s: function [[Parmatch.get_mins]] *)
 let get_mins ps =
   let rec select_rec r = function
     [] -> r
@@ -286,24 +286,24 @@ let get_mins ps =
       then select_rec r ps
       else select_rec (p::r) ps in
   select_rec [] (select_rec [] ps)
-(*e: function Parmatch.get_mins *)
+(*e: function [[Parmatch.get_mins]] *)
 
-(*s: function Parmatch.check_partial *)
+(*s: function [[Parmatch.check_partial]] *)
 let check_partial loc casel =
   let pss = get_mins (initial_matrix casel) in
   if match pss with
       []     -> true
     | ps::_  -> satisfiable pss (List.map (fun _ -> omega) ps)
   then Location.print_warning loc "this pattern-matching is not exhaustive"
-(*e: function Parmatch.check_partial *)
+(*e: function [[Parmatch.check_partial]] *)
 
-(*s: function Parmatch.location_of_clause *)
+(*s: function [[Parmatch.location_of_clause]] *)
 let location_of_clause = function
     pat :: _ -> pat.pat_loc
   | _ -> fatal_error "Parmatch.location_of_clause"
-(*e: function Parmatch.location_of_clause *)
+(*e: function [[Parmatch.location_of_clause]] *)
 
-(*s: function Parmatch.check_unused *)
+(*s: function [[Parmatch.check_unused]] *)
 let check_unused casel =
   let prefs =   
     List.fold_right
@@ -319,5 +319,5 @@ let check_unused casel =
         Location.print_warning (location_of_clause qs)
                                 "this match case is unused.")
     prefs
-(*e: function Parmatch.check_unused *)
+(*e: function [[Parmatch.check_unused]] *)
 (*e: ./typing/parmatch.ml *)

@@ -30,7 +30,7 @@
 #include "mlvalues.h"
 #include "signals.h"
 
-/*s: function expand_heap */
+/*s: function [[expand_heap]] */
 /* Allocate more memory from malloc for the heap.
    Return a block of at least the requested size (in words).
    Return NULL when out of memory.
@@ -128,9 +128,9 @@ static char *expand_heap (mlsize_t request)
   stat_heap_size += malloc_request;
   return Bp_hp (mem);
 }
-/*e: function expand_heap */
+/*e: function [[expand_heap]] */
 
-/*s: function shrink_heap */
+/*s: function [[shrink_heap]] */
 /* Remove the heap chunk [chunk] from the heap and give the memory back
    to [malloc].
 */
@@ -172,9 +172,9 @@ void shrink_heap (char *chunk)
   /* Free the [malloc]ed block that contains [chunk]. */
   free (Chunk_block (chunk));
 }
-/*e: function shrink_heap */
+/*e: function [[shrink_heap]] */
 
-/*s: function alloc_shr */
+/*s: function [[alloc_shr]] */
 value alloc_shr (mlsize_t wosize, tag_t tag)
 {
   char *hp, *new_block;
@@ -206,9 +206,9 @@ value alloc_shr (mlsize_t wosize, tag_t tag)
   if (allocated_words > Wsize_bsize (minor_heap_size)) urge_major_slice ();
   return Val_hp (hp);
 }
-/*e: function alloc_shr */
+/*e: function [[alloc_shr]] */
 
-/*s: function adjust_gc_speed */
+/*s: function [[adjust_gc_speed]] */
 /* Use this function to tell the major GC to speed up when you use
    finalized objects to automatically deallocate extra-heap objects.
    The GC will do at least one cycle every [max] allocated words;
@@ -228,9 +228,9 @@ void adjust_gc_speed (mlsize_t mem, mlsize_t max)
   if (extra_heap_memory > Wsize_bsize (minor_heap_size) / 2) 
     urge_major_slice ();
 }
-/*e: function adjust_gc_speed */
+/*e: function [[adjust_gc_speed]] */
 
-/*s: function initialize */
+/*s: function [[initialize]] */
 /* You must use [initialize] to store the initial value in a field of
    a shared block, unless you are sure the value is not a young block.
    A block value [v] is a shared block if and only if [Is_in_heap (v)]
@@ -248,9 +248,9 @@ void initialize (value *fp, value val)
     }
   }
 }
-/*e: function initialize */
+/*e: function [[initialize]] */
 
-/*s: function modify */
+/*s: function [[modify]] */
 /* You must use [modify] to change a field of an existing shared block,
    unless you are sure the value being overwritten is not a shared block and
    the value being written is not a young block. */
@@ -259,9 +259,9 @@ void modify (value *fp, value val)
 {
   Modify (fp, val);
 }
-/*e: function modify */
+/*e: function [[modify]] */
 
-/*s: function stat_alloc */
+/*s: function [[stat_alloc]] */
 void * stat_alloc (asize_t sz)
 {
   void * result = malloc (sz);
@@ -269,16 +269,16 @@ void * stat_alloc (asize_t sz)
   if (result == NULL) raise_out_of_memory ();
   return result;
 }
-/*e: function stat_alloc */
+/*e: function [[stat_alloc]] */
 
-/*s: function stat_free */
+/*s: function [[stat_free]] */
 void stat_free (void * blk)
 {
   free (blk);
 }
-/*e: function stat_free */
+/*e: function [[stat_free]] */
 
-/*s: function stat_resize */
+/*s: function [[stat_resize]] */
 void * stat_resize (void * blk, asize_t sz)
 {
   void * result = realloc (blk, sz);
@@ -286,6 +286,6 @@ void * stat_resize (void * blk, asize_t sz)
   if (result == NULL) raise_out_of_memory ();
   return result;
 }
-/*e: function stat_resize */
+/*e: function [[stat_resize]] */
 
 /*e: byterun/memory.c */

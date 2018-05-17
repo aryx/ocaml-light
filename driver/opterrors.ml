@@ -17,7 +17,7 @@
 open Format
 open Location
 
-(*s: function Opterrors.report_error *)
+(*s: function [[Opterrors.report_error]] *)
 (* Report an error *)
 
 let report_error exn =
@@ -56,5 +56,5 @@ let report_error exn =
       close_box(); raise x
   end;
   close_box(); print_newline()
-(*e: function Opterrors.report_error *)
+(*e: function [[Opterrors.report_error]] *)
 (*e: ./driver/opterrors.ml *)

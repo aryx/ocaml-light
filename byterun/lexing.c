@@ -21,7 +21,7 @@
 #include "stacks.h"
 #include "str.h"
 
-/*s: struct lexer_buffer */
+/*s: struct [[lexer_buffer]] */
 struct lexer_buffer {
   value refill_buff;
   value lex_buffer;
@@ -33,9 +33,9 @@ struct lexer_buffer {
   value lex_last_action;
   value lex_eof_reached;
 };
-/*e: struct lexer_buffer */
+/*e: struct [[lexer_buffer]] */
 
-/*s: struct lexing_table */
+/*s: struct [[lexing_table]] */
 struct lexing_table {
   value lex_base;
   value lex_backtrk;
@@ -43,21 +43,21 @@ struct lexing_table {
   value lex_trans;
   value lex_check;
 };
-/*e: struct lexing_table */
+/*e: struct [[lexing_table]] */
 
 #ifdef ARCH_BIG_ENDIAN
-/*s: function Short ifdef ARCH_BIG_ENDIAN */
+/*s: function [[Short]] (ifdef [[ARCH_BIG_ENDIAN]]) */
 #define Short(tbl,n) \
   (*((unsigned char *)((tbl) + (n) * sizeof(short))) + \
           (*((schar *)((tbl) + (n) * sizeof(short) + 1)) << 8))
-/*e: function Short ifdef ARCH_BIG_ENDIAN */
+/*e: function [[Short]] (ifdef [[ARCH_BIG_ENDIAN]]) */
 #else
-/*s: function Short */
+/*s: function [[Short]] */
 #define Short(tbl,n) (((short *)(tbl))[n])
-/*e: function Short */
+/*e: function [[Short]] */
 #endif
 
-/*s: function lex_engine */
+/*s: function [[lex_engine]] */
 value lex_engine(struct lexing_table *tbl, value start_state, struct lexer_buffer *lexbuf)     /* ML */
 {
   int state, base, backtrk, c;
@@ -114,6 +114,6 @@ value lex_engine(struct lexing_table *tbl, value start_state, struct lexer_buffe
     }
   }
 }
-/*e: function lex_engine */
+/*e: function [[lex_engine]] */
 
 /*e: byterun/lexing.c */

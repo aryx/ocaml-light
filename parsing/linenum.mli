@@ -12,7 +12,7 @@
 (***********************************************************************)
 (*e: copyright header 1997 *)
 
-(*s: signature Linenum.for_position *)
+(*s: signature [[Linenum.for_position]] *)
 (* An auxiliary lexer for determining the line number corresponding to
    a file position, honoring the directives # linenum "filename" *)
 
@@ -22,5 +22,5 @@ val for_position: string -> int -> string * int * int
            First result is name of actual source file.
            Second result is line number in that source file.
            Third result is position of beginning of that line in [file]. *)
-(*e: signature Linenum.for_position *)
+(*e: signature [[Linenum.for_position]] *)
 (*e: ./parsing/linenum.mli *)

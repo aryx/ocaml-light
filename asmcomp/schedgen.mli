@@ -12,7 +12,7 @@
 (***********************************************************************)
 (*e: copyright header 1997 *)
 
-(*s: type Schedgen.code_dag_node *)
+(*s: type [[Schedgen.code_dag_node]] *)
 (* Instruction scheduling *)
 
 type code_dag_node =
@@ -23,9 +23,9 @@ type code_dag_node =
     mutable length: int;
     mutable ancestors: int;
     mutable emitted_ancestors: int }
-(*e: type Schedgen.code_dag_node *)
+(*e: type [[Schedgen.code_dag_node]] *)
 
-(*s: type Schedgen.scheduler *)
+(*s: type [[Schedgen.scheduler]] *)
 type scheduler = {
   (* old: virtual *)
   (* Can be overriden by processor description *)
@@ -59,11 +59,11 @@ type scheduler = {
    code_dag_node list -> int -> Linearize.instruction -> Linearize.instruction;
  
 }
-(*e: type Schedgen.scheduler *)
+(*e: type [[Schedgen.scheduler]] *)
 
-(*s: signature Schedgen.scheduler_generic *)
+(*s: signature [[Schedgen.scheduler_generic]] *)
 val scheduler_generic: unit -> scheduler
-(*e: signature Schedgen.scheduler_generic *)
+(*e: signature [[Schedgen.scheduler_generic]] *)
 
 (*
   oper_issue_cycles = super.oper_issue_cycles;

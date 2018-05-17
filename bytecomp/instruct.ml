@@ -14,16 +14,16 @@
 
 open Lambda
 
-(*s: type Instruct.compilation_env *)
+(*s: type [[Instruct.compilation_env]] *)
 (* Structure of compilation environments *)
 
 type compilation_env =
   { ce_stack: int Ident.tbl; (* Positions of variables in the stack *)
     ce_heap: int Ident.tbl } (* Structure of the heap-allocated env *)
-(*e: type Instruct.compilation_env *)
+(*e: type [[Instruct.compilation_env]] *)
 
 
-(*s: type Instruct.debug_event *)
+(*s: type [[Instruct.debug_event]] *)
 type debug_event =
   { mutable ev_pos: int;                (* Position in bytecode *)
     ev_module: string;                  (* Name of defining module *)
@@ -35,36 +35,36 @@ type debug_event =
     ev_compenv: compilation_env;        (* Compilation environment *)
     ev_stacksize: int;                  (* Size of stack frame *)
     ev_repr: debug_event_repr }         (* Position of the representative *)
-(*e: type Instruct.debug_event *)
+(*e: type [[Instruct.debug_event]] *)
 
-(*s: type Instruct.debug_event_kind *)
+(*s: type [[Instruct.debug_event_kind]] *)
 and debug_event_kind =
     Event_before
   | Event_after of Types.type_expr
   | Event_pseudo
-(*e: type Instruct.debug_event_kind *)
+(*e: type [[Instruct.debug_event_kind]] *)
 
-(*s: type Instruct.debug_event_info *)
+(*s: type [[Instruct.debug_event_info]] *)
 and debug_event_info =
     Event_function
   | Event_return of int
   | Event_other
-(*e: type Instruct.debug_event_info *)
+(*e: type [[Instruct.debug_event_info]] *)
 
-(*s: type Instruct.debug_event_repr *)
+(*s: type [[Instruct.debug_event_repr]] *)
 and debug_event_repr =
     Event_none
   | Event_parent of int ref
   | Event_child of int ref
-(*e: type Instruct.debug_event_repr *)
+(*e: type [[Instruct.debug_event_repr]] *)
 
-(*s: type Instruct.label *)
+(*s: type [[Instruct.label]] *)
 (* Abstract machine instructions *)
 
 type label = int                        (* Symbolic code labels *)
-(*e: type Instruct.label *)
+(*e: type [[Instruct.label]] *)
 
-(*s: type Instruct.instruction *)
+(*s: type [[Instruct.instruction]] *)
 type instruction =
     Klabel of label
 
@@ -125,7 +125,7 @@ type instruction =
 
   | Kevent of debug_event
   | Kstop
-(*e: type Instruct.instruction *)
+(*e: type [[Instruct.instruction]] *)
 
 let immed_min = -0x40000000
 and immed_max = 0x3FFFFFFF

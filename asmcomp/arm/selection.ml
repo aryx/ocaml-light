@@ -22,7 +22,7 @@ open Mach
 
 open Selectgen
 
-(*s: function Selection.is_immed *)
+(*s: function [[Selection.is_immed]] *)
 (* Immediate operands are 8-bit immediate values, zero-extended, and rotated
    right by 0, 2, 4, ... 30 bits.
    To avoid problems with Caml's 31-bit arithmetic,
@@ -32,25 +32,25 @@ let rec is_immed n shift =
   if shift > 22 then false
   else if n land (0xFF lsl shift) = n then true
   else is_immed n (shift + 2)
-(*e: function Selection.is_immed *)
+(*e: function [[Selection.is_immed]] *)
 
-(*s: function Selection.is_offset *)
+(*s: function [[Selection.is_offset]] *)
 (* We have 12-bit signed offsets for word accesses,
    8-bit signed word offsets for float accesses,
    and 8-bit byte offsets for bytes and shorts.
    Use lowest common denominator. *)
 
 let is_offset n = n < 128 && n > -128
-(*e: function Selection.is_offset *)
+(*e: function [[Selection.is_offset]] *)
 
-(*s: function Selection.is_intconst *)
+(*s: function [[Selection.is_intconst]] *)
 let is_intconst = function Cconst_int n -> true | _ -> false
-(*e: function Selection.is_intconst *)
+(*e: function [[Selection.is_intconst]] *)
 
 
 
 
-(*s: function Selection.select_shift_arith *)
+(*s: function [[Selection.select_shift_arith]] *)
 let select_shift_arith super self = (fun op shiftop shiftrevop args ->
   match args with
     [arg1; Cop(Clsl, [arg2; Cconst_int n])]
@@ -68,10 +68,10 @@ let select_shift_arith super self = (fun op shiftop shiftrevop args ->
   | _ ->
       super.select_operation self op args
  )
-(*e: function Selection.select_shift_arith *)
+(*e: function [[Selection.select_shift_arith]] *)
 
 
-(*s: function Selection.selector *)
+(*s: function [[Selection.selector]] *)
 (* Instruction selection *)
 
 let selector () = 
@@ -177,13 +177,13 @@ let selector () =
     super.insert_op self op rs rd
  );
  }
-(*e: function Selection.selector *)
+(*e: function [[Selection.selector]] *)
 
 
-(*s: function Selection.fundecl *)
+(*s: function [[Selection.fundecl]] *)
 let fundecl f = 
   let s = selector () in
   s.emit_fundecl s f
-(*e: function Selection.fundecl *)
+(*e: function [[Selection.fundecl]] *)
 
 (*e: asmcomp/arm/selection.ml *)

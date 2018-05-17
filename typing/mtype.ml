@@ -18,7 +18,7 @@ open Path
 open Types
 
 
-(*s: function Mtype.scrape *)
+(*s: function [[Mtype.scrape]] *)
 let rec scrape env mty =
   match mty with
     Tmty_ident p ->
@@ -33,7 +33,7 @@ let rec scrape env mty =
       end
 *)
   | _ -> mty
-(*e: function Mtype.scrape *)
+(*e: function [[Mtype.scrape]] *)
 
 let rec strengthen env mty p =
   match scrape env mty with
@@ -65,15 +65,15 @@ and strengthen_sig env sg p =
       strengthen_sig (Env.add_module id mty env) rem p
       (* Need to add the module in case it defines manifest module types *)
 
-(*s: type Mtype.variance *)
+(*s: type [[Mtype.variance]] *)
 (* In nondep_supertype, env is only used for the type it assigns to id.
    Hence there is no need to keep env up-to-date by adding the bindings
    traversed. *)
 
 type variance = Co | Contra | Strict
-(*e: type Mtype.variance *)
+(*e: type [[Mtype.variance]] *)
 
-(*s: function Mtype.nondep_supertype *)
+(*s: function [[Mtype.nondep_supertype]] *)
 let nondep_supertype env mid mty =
 
   let rec nondep_mty var mty =
@@ -135,5 +135,5 @@ let nondep_supertype env mid mty =
 
   in
     nondep_mty Co mty
-(*e: function Mtype.nondep_supertype *)
+(*e: function [[Mtype.nondep_supertype]] *)
 (*e: ./typing/mtype.ml *)

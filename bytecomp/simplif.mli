@@ -16,7 +16,7 @@
 
 open Lambda
 
-(*s: signature Simplif.simplify_lambda *)
+(*s: signature [[Simplif.simplify_lambda]] *)
 val simplify_lambda: lambda -> lambda
-(*e: signature Simplif.simplify_lambda *)
+(*e: signature [[Simplif.simplify_lambda]] *)
 (*e: ./bytecomp/simplif.mli *)

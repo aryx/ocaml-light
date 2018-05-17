@@ -12,10 +12,10 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Reload.fundecl *)
+(*s: signature [[Reload.fundecl]] *)
 (* Insert load/stores for pseudoregs that got assigned to stack locations. *)
 
 val fundecl: Mach.fundecl -> Mach.fundecl * bool
-(*e: signature Reload.fundecl *)
+(*e: signature [[Reload.fundecl]] *)
 
 (*e: asmcomp/reload.mli *)

@@ -21,35 +21,35 @@ open Types
 open Lambda
 open Instruct
 
-(*s: constant Bytegen.label_counter *)
+(*s: constant [[Bytegen.label_counter]] *)
 (**** Label generation ****)
 
 let label_counter = ref 0
-(*e: constant Bytegen.label_counter *)
+(*e: constant [[Bytegen.label_counter]] *)
 
-(*s: function Bytegen.new_label *)
+(*s: function [[Bytegen.new_label]] *)
 let new_label () =
   incr label_counter; !label_counter
-(*e: function Bytegen.new_label *)
+(*e: function [[Bytegen.new_label]] *)
 
-(*s: constant Bytegen.empty_env *)
+(*s: constant [[Bytegen.empty_env]] *)
 (**** Operations on compilation environments. ****)
 
 let empty_env =
   { ce_stack = Ident.empty; ce_heap = Ident.empty }
-(*e: constant Bytegen.empty_env *)
+(*e: constant [[Bytegen.empty_env]] *)
 
-(*s: function Bytegen.add_var *)
+(*s: function [[Bytegen.add_var]] *)
 (* Add a stack-allocated variable *)
 
 let add_var id pos env =
   { ce_stack = Ident.add id pos env.ce_stack;
     ce_heap = env.ce_heap }
-(*e: function Bytegen.add_var *)
+(*e: function [[Bytegen.add_var]] *)
 
 (**** Examination of the continuation ****)
 
-(*s: constant Bytegen.label_code *)
+(*s: constant [[Bytegen.label_code]] *)
 (* Return a label to the beginning of the given continuation.
    If the sequence starts with a branch, use the target of that branch
    as the label, thus avoiding a jump to a jump. *)
@@ -58,9 +58,9 @@ let label_code = function
     Kbranch lbl :: _ as cont -> (lbl, cont)
   | Klabel lbl :: _ as cont -> (lbl, cont)
   | cont -> let lbl = new_label() in (lbl, Klabel lbl :: cont)
-(*e: constant Bytegen.label_code *)
+(*e: constant [[Bytegen.label_code]] *)
 
-(*s: function Bytegen.make_branch *)
+(*s: function [[Bytegen.make_branch]] *)
 (* Return a branch to the continuation. That is, an instruction that,
    when executed, branches to the continuation or performs what the
    continuation performs. We avoid generating branches to branches and
@@ -73,9 +73,9 @@ let make_branch cont =
   | Kraise :: _ -> (Kraise, cont)
   | Klabel lbl :: _ -> (Kbranch lbl, cont)
   | _ -> let lbl = new_label() in (Kbranch lbl, Klabel lbl :: cont)
-(*e: function Bytegen.make_branch *)
+(*e: function [[Bytegen.make_branch]] *)
 
-(*s: constant Bytegen.discard_dead_code *)
+(*s: constant [[Bytegen.discard_dead_code]] *)
 (* Discard all instructions up to the next label.
    This function is to be applied to the continuation before adding a
    non-terminating instruction (branch, raise, return) in front of it. *)
@@ -84,9 +84,9 @@ let rec discard_dead_code = function
     [] -> []
   | (Klabel _ | Krestart | Ksetglobal _) :: _ as cont -> cont
   | _ :: cont -> discard_dead_code cont
-(*e: constant Bytegen.discard_dead_code *)
+(*e: constant [[Bytegen.discard_dead_code]] *)
 
-(*s: constant Bytegen.is_tailcall *)
+(*s: constant [[Bytegen.is_tailcall]] *)
 (* Check if we're in tailcall position *)
 
 let rec is_tailcall = function
@@ -94,9 +94,9 @@ let rec is_tailcall = function
   | Klabel _ :: c -> is_tailcall c
   | Kpop _ :: c -> is_tailcall c
   | _ -> false
-(*e: constant Bytegen.is_tailcall *)
+(*e: constant [[Bytegen.is_tailcall]] *)
 
-(*s: function Bytegen.add_pop *)
+(*s: function [[Bytegen.add_pop]] *)
 (* Add a Kpop N instruction in front of a continuation *)
 
 let rec add_pop n cont =
@@ -106,21 +106,21 @@ let rec add_pop n cont =
     | Kreturn m :: cont -> Kreturn(n + m) :: cont
     | Kraise :: _ -> cont
     | _ -> Kpop n :: cont
-(*e: function Bytegen.add_pop *)
+(*e: function [[Bytegen.add_pop]] *)
 
-(*s: constant Bytegen.add_const_unit *)
+(*s: constant [[Bytegen.add_const_unit]] *)
 (* Add the constant "unit" in front of a continuation *)
 
 let add_const_unit = function
     (Kacc _ | Kconst _ | Kgetglobal _ | Kpush_retaddr _) :: _ as cont -> cont
   | cont -> Kconst const_unit :: cont
-(*e: constant Bytegen.add_const_unit *)
+(*e: constant [[Bytegen.add_const_unit]] *)
 
 (**** Auxiliary for compiling "let rec" ****)
 
 module IdentSet = Set
 
-(*s: constant Bytegen.size_of_lambda *)
+(*s: constant [[Bytegen.size_of_lambda]] *)
 let rec size_of_lambda = function
   | Lfunction(kind, params, body) as funct ->
       1 + IdentSet.cardinal(free_variables funct)
@@ -130,9 +130,9 @@ let rec size_of_lambda = function
   | Lletrec(bindings, body) -> size_of_lambda body
   | Levent (lam, _) -> size_of_lambda lam
   | _ -> fatal_error "Bytegen.size_of_lambda"
-(*e: constant Bytegen.size_of_lambda *)
+(*e: constant [[Bytegen.size_of_lambda]] *)
 
-(*s: function Bytegen.copy_event *)
+(*s: function [[Bytegen.copy_event]] *)
 (**** Merging consecutive events ****)
 
 let copy_event ev kind info repr =
@@ -145,26 +145,26 @@ let copy_event ev kind info repr =
     ev_compenv = ev.ev_compenv;
     ev_stacksize = ev.ev_stacksize;
     ev_repr = repr }
-(*e: function Bytegen.copy_event *)
+(*e: function [[Bytegen.copy_event]] *)
 
-(*s: function Bytegen.merge_infos *)
+(*s: function [[Bytegen.merge_infos]] *)
 let merge_infos ev ev' =
   match ev.ev_info, ev'.ev_info with
     Event_other, info -> info
   | info, Event_other -> info
   | _                 -> fatal_error "Bytegen.merge_infos"
-(*e: function Bytegen.merge_infos *)
+(*e: function [[Bytegen.merge_infos]] *)
 
-(*s: function Bytegen.merge_repr *)
+(*s: function [[Bytegen.merge_repr]] *)
 let merge_repr ev ev' =
   match ev.ev_repr, ev'.ev_repr with
     Event_none, x -> x
   | x, Event_none -> x
   | Event_parent r, Event_child r' when r == r' && !r = 1 -> Event_none
   | _, _          -> fatal_error "Bytegen.merge_repr"
-(*e: function Bytegen.merge_repr *)
+(*e: function [[Bytegen.merge_repr]] *)
 
-(*s: function Bytegen.merge_events *)
+(*s: function [[Bytegen.merge_events]] *)
 let merge_events ev ev' =
   let (maj, min) =
     match ev.ev_kind, ev'.ev_kind with
@@ -177,9 +177,9 @@ let merge_events ev ev' =
     | Event_after _, (Event_after _ | Event_before) -> ev, ev'
   in
   copy_event maj maj.ev_kind (merge_infos maj min) (merge_repr maj min)
-(*e: function Bytegen.merge_events *)
+(*e: function [[Bytegen.merge_events]] *)
 
-(*s: function Bytegen.weaken_event *)
+(*s: function [[Bytegen.weaken_event]] *)
 let weaken_event ev cont =
   match ev.ev_kind with
     Event_after _ ->
@@ -204,14 +204,14 @@ let weaken_event ev cont =
       end
   | _ ->
       Kevent ev :: cont
-(*e: function Bytegen.weaken_event *)
+(*e: function [[Bytegen.weaken_event]] *)
   
-(*s: function Bytegen.add_event *)
+(*s: function [[Bytegen.add_event]] *)
 let add_event ev =
   function
     Kevent ev' :: cont -> weaken_event (merge_events ev ev') cont
   | cont               -> weaken_event ev cont
-(*e: function Bytegen.add_event *)
+(*e: function [[Bytegen.add_event]] *)
 
 (**** Compilation of a lambda expression ****)
 
@@ -220,18 +220,18 @@ let add_event ev =
 let lbl_staticfail = ref 0
 and sz_staticfail = ref 0
 
-(*s: constant Bytegen.functions_to_compile *)
+(*s: constant [[Bytegen.functions_to_compile]] *)
 (* Function bodies that remain to be compiled *)
 
 let functions_to_compile  =
-(*e: constant Bytegen.functions_to_compile *)
+(*e: constant [[Bytegen.functions_to_compile]] *)
   (Stack.create () : (Ident.t list * lambda * label * Ident.t list) Stack.t)
 
-(*s: constant Bytegen.compunit_name *)
+(*s: constant [[Bytegen.compunit_name]] *)
 (* Name of current compilation unit (for debugging events) *)
 
 let compunit_name = ref ""
-(*e: constant Bytegen.compunit_name *)
+(*e: constant [[Bytegen.compunit_name]] *)
 
 (* Compile an expression.
    The value of the expression is left in the accumulator.
@@ -567,7 +567,7 @@ and comp_binary_test env cond ifso ifnot sz cont =
     end in
   comp_expr env cond sz cont_cond
 
-(*s: function Bytegen.comp_function *)
+(*s: function [[Bytegen.comp_function]] *)
 (**** Compilation of functions ****)
 
 let comp_function (params, fun_body, entry_lbl, free_vars) cont =
@@ -584,9 +584,9 @@ let comp_function (params, fun_body, entry_lbl, free_vars) cont =
     Krestart :: Klabel entry_lbl :: Kgrab(arity - 1) :: cont1
   else
     Klabel entry_lbl :: cont1
-(*e: function Bytegen.comp_function *)
+(*e: function [[Bytegen.comp_function]] *)
 
-(*s: function Bytegen.comp_remainder *)
+(*s: function [[Bytegen.comp_remainder]] *)
 let comp_remainder cont =
   let c = ref cont in
   begin try
@@ -597,9 +597,9 @@ let comp_remainder cont =
     ()
   end;
   !c
-(*e: function Bytegen.comp_remainder *)
+(*e: function [[Bytegen.comp_remainder]] *)
 
-(*s: function Bytegen.compile_implementation *)
+(*s: function [[Bytegen.compile_implementation]] *)
 (**** Compilation of a lambda phrase ****)
 
 let compile_implementation modulename expr =
@@ -614,9 +614,9 @@ let compile_implementation modulename expr =
     Kbranch lbl_init :: comp_remainder (Klabel lbl_init :: init_code)
   end else
     init_code
-(*e: function Bytegen.compile_implementation *)
+(*e: function [[Bytegen.compile_implementation]] *)
 
-(*s: function Bytegen.compile_phrase *)
+(*s: function [[Bytegen.compile_phrase]] *)
 let compile_phrase expr =
   Stack.clear functions_to_compile;
   label_counter := 0;
@@ -625,6 +625,6 @@ let compile_phrase expr =
   let init_code = comp_expr empty_env expr 1 [Kreturn 1] in
   let fun_code = comp_remainder [] in
   (init_code, fun_code)
-(*e: function Bytegen.compile_phrase *)
+(*e: function [[Bytegen.compile_phrase]] *)
 
 (*e: ./bytecomp/bytegen.ml *)

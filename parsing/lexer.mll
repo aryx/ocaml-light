@@ -18,26 +18,26 @@
 open Misc
 open Parser
 
-(*s: type Lexer.error *)
+(*s: type [[Lexer.error]] *)
 type error =
     Illegal_character
   | Unterminated_comment
   | Unterminated_string
-(*e: type Lexer.error *)
-(*s: exception Lexer.Error *)
+(*e: type [[Lexer.error]] *)
+(*s: exception [[Lexer.Error]] *)
 exception Error of error * int * int
-(*e: exception Lexer.Error *)
+(*e: exception [[Lexer.Error]] *)
 
 (*s: Lexer helpers *)
 (* For nested comments *)
 
-(*s: global Lexer.comment_depth *)
+(*s: global [[Lexer.comment_depth]] *)
 let comment_depth = ref 0
-(*e: global Lexer.comment_depth *)
+(*e: global [[Lexer.comment_depth]] *)
 
 (* The table of keywords *)
 
-(*s: constant Lexer.keyword_table *)
+(*s: constant [[Lexer.keyword_table]] *)
 let keyword_table =
   create_hashtable 149 [
     "true", TRUE;
@@ -97,7 +97,7 @@ let keyword_table =
     "lazy", LAZY;
     (*e: [[Lexer.keyword_table]] elements *)
 ]
-(*e: constant Lexer.keyword_table *)
+(*e: constant [[Lexer.keyword_table]] *)
 
 (* To buffer string literals *)
 
@@ -150,14 +150,14 @@ let char_for_decimal_code lexbuf i =
 
 (* To store the position of the beginning of a string or comment *)
 
-(*s: global Lexer.start_pos *)
+(*s: global [[Lexer.start_pos]] *)
 let start_pos = ref 0
-(*e: global Lexer.start_pos *)
+(*e: global [[Lexer.start_pos]] *)
 (*e: Lexer helpers *)
 
 (* Error report *)
 open Format
-(*s: function Lexer.report_error *)
+(*s: function [[Lexer.report_error]] *)
 let report_error = function
     Illegal_character ->
       print_string "Illegal character"
@@ -165,7 +165,7 @@ let report_error = function
       print_string "Comment not terminated"
   | Unterminated_string ->
       print_string "String literal not terminated"
-(*e: function Lexer.report_error *)
+(*e: function [[Lexer.report_error]] *)
 }
 
 (*s: rule Lexer.token *)

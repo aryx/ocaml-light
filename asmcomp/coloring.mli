@@ -12,9 +12,9 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Coloring.allocate_registers *)
+(*s: signature [[Coloring.allocate_registers]] *)
 (* Register allocation by coloring of the interference graph *)
 
 val allocate_registers: unit -> unit
-(*e: signature Coloring.allocate_registers *)
+(*e: signature [[Coloring.allocate_registers]] *)
 (*e: asmcomp/coloring.mli *)

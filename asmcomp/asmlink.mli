@@ -12,13 +12,13 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Asmlink.link *)
+(*s: signature [[Asmlink.link]] *)
 (* Link a set of .cmx/.o files and produce an executable *)
 
 val link: string list -> unit
-(*e: signature Asmlink.link *)
+(*e: signature [[Asmlink.link]] *)
 
-(*s: type Asmlink.error *)
+(*s: type [[Asmlink.error]] *)
 type error =
     File_not_found of string
   | Not_an_object_file of string
@@ -27,13 +27,13 @@ type error =
   | Inconsistent_implementation of string * string * string
   | Assembler_error of string
   | Linking_error
-(*e: type Asmlink.error *)
+(*e: type [[Asmlink.error]] *)
 
-(*s: exception Asmlink.Error *)
+(*s: exception [[Asmlink.Error]] *)
 exception Error of error
-(*e: exception Asmlink.Error *)
+(*e: exception [[Asmlink.Error]] *)
 
-(*s: signature Asmlink.report_error *)
+(*s: signature [[Asmlink.report_error]] *)
 val report_error: error -> unit
-(*e: signature Asmlink.report_error *)
+(*e: signature [[Asmlink.report_error]] *)
 (*e: asmcomp/asmlink.mli *)

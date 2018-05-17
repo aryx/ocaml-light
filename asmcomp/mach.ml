@@ -12,23 +12,23 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: type Mach.integer_comparison (asmcomp/mach.ml) *)
+(*s: type [[Mach.integer_comparison]]([[(asmcomp/mach.ml)]]) *)
 (* Representation of machine code by sequences of pseudoinstructions *)
 
 type integer_comparison =
     Isigned of Cmm.comparison
   | Iunsigned of Cmm.comparison
-(*e: type Mach.integer_comparison (asmcomp/mach.ml) *)
+(*e: type [[Mach.integer_comparison]]([[(asmcomp/mach.ml)]]) *)
 
-(*s: type Mach.integer_operation (asmcomp/mach.ml) *)
+(*s: type [[Mach.integer_operation]]([[(asmcomp/mach.ml)]]) *)
 type integer_operation =
     Iadd | Isub | Imul | Idiv | Imod
   | Iand | Ior | Ixor | Ilsl | Ilsr | Iasr
   | Icomp of integer_comparison
   | Icheckbound
-(*e: type Mach.integer_operation (asmcomp/mach.ml) *)
+(*e: type [[Mach.integer_operation]]([[(asmcomp/mach.ml)]]) *)
 
-(*s: type Mach.test (asmcomp/mach.ml) *)
+(*s: type [[Mach.test]]([[(asmcomp/mach.ml)]]) *)
 type test =
     Itruetest
   | Ifalsetest
@@ -37,9 +37,9 @@ type test =
   | Ifloattest of Cmm.comparison * bool
   | Ioddtest
   | Ieventest
-(*e: type Mach.test (asmcomp/mach.ml) *)
+(*e: type [[Mach.test]]([[(asmcomp/mach.ml)]]) *)
 
-(*s: type Mach.operation (asmcomp/mach.ml) *)
+(*s: type [[Mach.operation]]([[(asmcomp/mach.ml)]]) *)
 type operation =
     Imove
   | Ispill
@@ -61,18 +61,18 @@ type operation =
   | Inegf | Iabsf | Iaddf | Isubf | Imulf | Idivf
   | Ifloatofint | Iintoffloat
   | Ispecific of Arch.specific_operation
-(*e: type Mach.operation (asmcomp/mach.ml) *)
+(*e: type [[Mach.operation]]([[(asmcomp/mach.ml)]]) *)
 
-(*s: type Mach.instruction (asmcomp/mach.ml) *)
+(*s: type [[Mach.instruction]]([[(asmcomp/mach.ml)]]) *)
 type instruction =
   { desc: instruction_desc;
     next: instruction;
     arg: Reg.t array;
     res: Reg.t array;
     mutable live: Reg.t Set.t }
-(*e: type Mach.instruction (asmcomp/mach.ml) *)
+(*e: type [[Mach.instruction]]([[(asmcomp/mach.ml)]]) *)
 
-(*s: type Mach.instruction_desc (asmcomp/mach.ml) *)
+(*s: type [[Mach.instruction_desc]]([[(asmcomp/mach.ml)]]) *)
 and instruction_desc =
     Iend
   | Iop of operation
@@ -84,45 +84,45 @@ and instruction_desc =
   | Iexit
   | Itrywith of instruction * instruction
   | Iraise
-(*e: type Mach.instruction_desc (asmcomp/mach.ml) *)
+(*e: type [[Mach.instruction_desc]]([[(asmcomp/mach.ml)]]) *)
 
-(*s: type Mach.fundecl (asmcomp/mach.ml) *)
+(*s: type [[Mach.fundecl]]([[(asmcomp/mach.ml)]]) *)
 type fundecl =
   { fun_name: string;
     fun_args: Reg.t array;
     fun_body: instruction;
     fun_fast: bool }
-(*e: type Mach.fundecl (asmcomp/mach.ml) *)
+(*e: type [[Mach.fundecl]]([[(asmcomp/mach.ml)]]) *)
 
-(*s: constant Mach.dummy_instr *)
+(*s: constant [[Mach.dummy_instr]] *)
 let rec dummy_instr =
   { desc = Iend; 
     next = dummy_instr;
     arg = [||]; 
     res = [||];
     live = (*Reg.*)Set.empty }
-(*e: constant Mach.dummy_instr *)
+(*e: constant [[Mach.dummy_instr]] *)
 
-(*s: function Mach.end_instr *)
+(*s: function [[Mach.end_instr]] *)
 let end_instr () =
   { desc = Iend; 
     next = dummy_instr;
     arg = [||]; 
     res = [||];
     live = (*Reg.*)Set.empty }
-(*e: function Mach.end_instr *)
+(*e: function [[Mach.end_instr]] *)
 
-(*s: function Mach.instr_cons *)
+(*s: function [[Mach.instr_cons]] *)
 let instr_cons d a r n =
   { desc = d; next = n; arg = a; res = r; live = (*Reg.*)Set.empty }
-(*e: function Mach.instr_cons *)
+(*e: function [[Mach.instr_cons]] *)
 
-(*s: function Mach.instr_cons_live *)
+(*s: function [[Mach.instr_cons_live]] *)
 let instr_cons_live d a r l n =
   { desc = d; next = n; arg = a; res = r; live = l }
-(*e: function Mach.instr_cons_live *)
+(*e: function [[Mach.instr_cons_live]] *)
 
-(*s: function Mach.instr_iter *)
+(*s: function [[Mach.instr_iter]] *)
 let rec instr_iter f i =
   match i.desc with
     Iend -> ()
@@ -148,6 +148,6 @@ let rec instr_iter f i =
       | Iraise -> ()
       | _ ->
           instr_iter f i.next      
-(*e: function Mach.instr_iter *)
+(*e: function [[Mach.instr_iter]] *)
 
 (*e: asmcomp/mach.ml *)

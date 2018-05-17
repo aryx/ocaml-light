@@ -12,9 +12,9 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Scheduling.fundecl *)
+(*s: signature [[Scheduling.fundecl]] *)
 (* Instruction scheduling *)
 
 val fundecl: Linearize.fundecl -> Linearize.fundecl
-(*e: signature Scheduling.fundecl *)
+(*e: signature [[Scheduling.fundecl]] *)
 (*e: asmcomp/scheduling.mli *)

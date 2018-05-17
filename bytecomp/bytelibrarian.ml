@@ -18,32 +18,32 @@ open Misc
 open Config
 open Emitcode
 
-(*s: type Bytelibrarian.error *)
+(*s: type [[Bytelibrarian.error]] *)
 type error =
     File_not_found of string
   | Not_an_object_file of string
-(*e: type Bytelibrarian.error *)
+(*e: type [[Bytelibrarian.error]] *)
 
-(*s: exception Bytelibrarian.Error *)
+(*s: exception [[Bytelibrarian.Error]] *)
 exception Error of error
-(*e: exception Bytelibrarian.Error *)
+(*e: exception [[Bytelibrarian.Error]] *)
 
-(*s: function Bytelibrarian.copy_compunit *)
+(*s: function [[Bytelibrarian.copy_compunit]] *)
 let copy_compunit ic oc compunit =
   seek_in ic compunit.cu_pos;
   compunit.cu_pos <- pos_out oc;
-  (*s: [[Bytelibrarian.copy_compunit()]] set cu_force_link if link everything *)
+  (*s: [[Bytelibrarian.copy_compunit()]] set [[cu_force_link]] if link everything *)
   compunit.cu_force_link <- !Clflags.link_everything;
-  (*e: [[Bytelibrarian.copy_compunit()]] set cu_force_link if link everything *)
+  (*e: [[Bytelibrarian.copy_compunit()]] set [[cu_force_link]] if link everything *)
   copy_file_chunk ic oc compunit.cu_codesize;
   if compunit.cu_debug > 0 then begin
     seek_in ic compunit.cu_debug;
     compunit.cu_debug <- pos_out oc;
     copy_file_chunk ic oc compunit.cu_debugsize
   end
-(*e: function Bytelibrarian.copy_compunit *)
+(*e: function [[Bytelibrarian.copy_compunit]] *)
 
-(*s: function Bytelibrarian.copy_object_file *)
+(*s: function [[Bytelibrarian.copy_object_file]] *)
 let copy_object_file oc name =
   let file_name =
     try
@@ -74,9 +74,9 @@ let copy_object_file oc name =
   with x ->
     close_in ic;
     raise x
-(*e: function Bytelibrarian.copy_object_file *)
+(*e: function [[Bytelibrarian.copy_object_file]] *)
 
-(*s: function Bytelibrarian.create_archive *)
+(*s: function [[Bytelibrarian.create_archive]] *)
 let create_archive file_list lib_name =
   let outchan = open_out lib_name in
   try
@@ -93,17 +93,17 @@ let create_archive file_list lib_name =
     close_out outchan;
     remove_file lib_name;
     raise x
-(*e: function Bytelibrarian.create_archive *)
+(*e: function [[Bytelibrarian.create_archive]] *)
 
 open Format
 
-(*s: constant Bytelibrarian.report_error *)
+(*s: constant [[Bytelibrarian.report_error]] *)
 let report_error = function
     File_not_found name ->
       print_string "Cannot find file "; print_string name
   | Not_an_object_file name ->
       print_string "The file "; print_string name;
       print_string " is not a bytecode object file"
-(*e: constant Bytelibrarian.report_error *)
+(*e: constant [[Bytelibrarian.report_error]] *)
 
 (*e: ./bytecomp/bytelibrarian.ml *)

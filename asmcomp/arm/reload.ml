@@ -14,11 +14,11 @@
 
 open Reloadgen
 
-(*s: function Reload.fundecl *)
+(*s: function [[Reload.fundecl]] *)
 (* Reloading for the ARM *)
 
 let fundecl f =
   let reloader = Reloadgen.reload_generic () in
   reloader.fundecl reloader f
-(*e: function Reload.fundecl *)
+(*e: function [[Reload.fundecl]] *)
 (*e: asmcomp/arm/reload.ml *)

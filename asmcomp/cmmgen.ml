@@ -23,7 +23,7 @@ open Lambda
 open Clambda
 open Cmm
 
-(*s: function Cmmgen.bind *)
+(*s: function [[Cmmgen.bind]] *)
 (* Local binding of complex expressions *)
 
 let bind name arg fn =
@@ -31,9 +31,9 @@ let bind name arg fn =
     Cvar _ | Cconst_int _ | Cconst_natint _ | Cconst_symbol _
   | Cconst_pointer _ -> fn arg
   | _ -> let id = Ident.create name in Clet(id, arg, fn (Cvar id))
-(*e: function Cmmgen.bind *)
+(*e: function [[Cmmgen.bind]] *)
 
-(*s: constant Cmmgen.float_tag *)
+(*s: constant [[Cmmgen.float_tag]] *)
 (* Block headers. Meaning of the tag field:
        0 - 248: regular blocks
        249: infix closure
@@ -45,84 +45,84 @@ let bind name arg fn =
        255: finalized *)
 
 let float_tag = Cconst_int 253
-(*e: constant Cmmgen.float_tag *)
-(*s: constant Cmmgen.floatarray_tag *)
+(*e: constant [[Cmmgen.float_tag]] *)
+(*s: constant [[Cmmgen.floatarray_tag]] *)
 let floatarray_tag = Cconst_int 254
-(*e: constant Cmmgen.floatarray_tag *)
+(*e: constant [[Cmmgen.floatarray_tag]] *)
 
-(*s: function Cmmgen.block_header *)
+(*s: function [[Cmmgen.block_header]] *)
 let block_header tag sz =
   Nativeint.add (Nativeint.shift (Nativeint.from sz) 10) (Nativeint.from tag)
-(*e: function Cmmgen.block_header *)
-(*s: function Cmmgen.closure_header *)
+(*e: function [[Cmmgen.block_header]] *)
+(*s: function [[Cmmgen.closure_header]] *)
 let closure_header sz = block_header 250 sz
-(*e: function Cmmgen.closure_header *)
-(*s: function Cmmgen.infix_header *)
+(*e: function [[Cmmgen.closure_header]] *)
+(*s: function [[Cmmgen.infix_header]] *)
 let infix_header ofs = block_header 249 ofs
-(*e: function Cmmgen.infix_header *)
-(*s: constant Cmmgen.float_header *)
+(*e: function [[Cmmgen.infix_header]] *)
+(*s: constant [[Cmmgen.float_header]] *)
 let float_header = block_header 253 (size_float / size_addr)
-(*e: constant Cmmgen.float_header *)
-(*s: function Cmmgen.floatarray_header *)
+(*e: constant [[Cmmgen.float_header]] *)
+(*s: function [[Cmmgen.floatarray_header]] *)
 let floatarray_header len = block_header 254 (len * size_float / size_addr)
-(*e: function Cmmgen.floatarray_header *)
-(*s: function Cmmgen.string_header *)
+(*e: function [[Cmmgen.floatarray_header]] *)
+(*s: function [[Cmmgen.string_header]] *)
 let string_header len = block_header 252 ((len + size_addr) / size_addr)
-(*e: function Cmmgen.string_header *)
+(*e: function [[Cmmgen.string_header]] *)
 
-(*s: function Cmmgen.alloc_block_header *)
+(*s: function [[Cmmgen.alloc_block_header]] *)
 let alloc_block_header tag sz = Cconst_natint(block_header tag sz)
-(*e: function Cmmgen.alloc_block_header *)
-(*s: constant Cmmgen.alloc_float_header *)
+(*e: function [[Cmmgen.alloc_block_header]] *)
+(*s: constant [[Cmmgen.alloc_float_header]] *)
 let alloc_float_header = Cconst_natint(float_header)
-(*e: constant Cmmgen.alloc_float_header *)
-(*s: function Cmmgen.alloc_floatarray_header *)
+(*e: constant [[Cmmgen.alloc_float_header]] *)
+(*s: function [[Cmmgen.alloc_floatarray_header]] *)
 let alloc_floatarray_header len = Cconst_natint(floatarray_header len)
-(*e: function Cmmgen.alloc_floatarray_header *)
-(*s: function Cmmgen.alloc_closure_header *)
+(*e: function [[Cmmgen.alloc_floatarray_header]] *)
+(*s: function [[Cmmgen.alloc_closure_header]] *)
 let alloc_closure_header sz = Cconst_natint(closure_header sz)
-(*e: function Cmmgen.alloc_closure_header *)
-(*s: function Cmmgen.alloc_infix_header *)
+(*e: function [[Cmmgen.alloc_closure_header]] *)
+(*s: function [[Cmmgen.alloc_infix_header]] *)
 let alloc_infix_header ofs = Cconst_natint(infix_header ofs)
-(*e: function Cmmgen.alloc_infix_header *)
+(*e: function [[Cmmgen.alloc_infix_header]] *)
 
-(*s: constant Cmmgen.max_repr_int *)
+(*s: constant [[Cmmgen.max_repr_int]] *)
 (* Integers *)
 
 let max_repr_int = max_int asr 1
-(*e: constant Cmmgen.max_repr_int *)
-(*s: constant Cmmgen.min_repr_int *)
+(*e: constant [[Cmmgen.max_repr_int]] *)
+(*s: constant [[Cmmgen.min_repr_int]] *)
 let min_repr_int = min_int asr 1
-(*e: constant Cmmgen.min_repr_int *)
+(*e: constant [[Cmmgen.min_repr_int]] *)
 
-(*s: function Cmmgen.int_const *)
+(*s: function [[Cmmgen.int_const]] *)
 let int_const n =
   if n <= max_repr_int & n >= min_repr_int
   then Cconst_int((n lsl 1) + 1)
   else Cconst_natint(Nativeint.add (Nativeint.shift (Nativeint.from n) 1)
                                    (Nativeint.from 1))
-(*e: function Cmmgen.int_const *)
+(*e: function [[Cmmgen.int_const]] *)
 
-(*s: function Cmmgen.add_const *)
+(*s: function [[Cmmgen.add_const]] *)
 let add_const c n =
   if n = 0 then c else Cop(Caddi, [c; Cconst_int n])
-(*e: function Cmmgen.add_const *)
+(*e: function [[Cmmgen.add_const]] *)
 
-(*s: function Cmmgen.incr_int *)
+(*s: function [[Cmmgen.incr_int]] *)
 let incr_int = function
     Cconst_int n when n < max_int -> Cconst_int(n+1)
   | Cop(Caddi, [c; Cconst_int n]) when n < max_int -> add_const c (n+1)
   | c -> add_const c 1
-(*e: function Cmmgen.incr_int *)
+(*e: function [[Cmmgen.incr_int]] *)
 
-(*s: function Cmmgen.decr_int *)
+(*s: function [[Cmmgen.decr_int]] *)
 let decr_int = function
     Cconst_int n when n > min_int -> Cconst_int(n-1)
   | Cop(Caddi, [c; Cconst_int n]) when n > min_int -> add_const c (n-1)
   | c -> add_const c (-1)
-(*e: function Cmmgen.decr_int *)
+(*e: function [[Cmmgen.decr_int]] *)
 
-(*s: function Cmmgen.add_int *)
+(*s: function [[Cmmgen.add_int]] *)
 let add_int c1 c2 =
   match (c1, c2) with
     (Cop(Caddi, [c1; Cconst_int n1]),
@@ -134,9 +134,9 @@ let add_int c1 c2 =
       add_const (Cop(Caddi, [c1; c2])) n2
   | (c1, c2) ->
       Cop(Caddi, [c1; c2])
-(*e: function Cmmgen.add_int *)
+(*e: function [[Cmmgen.add_int]] *)
 
-(*s: function Cmmgen.sub_int *)
+(*s: function [[Cmmgen.sub_int]] *)
 let sub_int c1 c2 =
   match (c1, c2) with
     (Cop(Caddi, [c1; Cconst_int n1]),
@@ -150,43 +150,43 @@ let sub_int c1 c2 =
       add_const c1 (-n)
   | (c1, c2) ->
       Cop(Csubi, [c1; c2])
-(*e: function Cmmgen.sub_int *)
+(*e: function [[Cmmgen.sub_int]] *)
 
-(*s: function Cmmgen.tag_int *)
+(*s: function [[Cmmgen.tag_int]] *)
 let tag_int = function
     Cconst_int n -> int_const n
   | c -> Cop(Caddi, [Cop(Clsl, [c; Cconst_int 1]); Cconst_int 1])
-(*e: function Cmmgen.tag_int *)
+(*e: function [[Cmmgen.tag_int]] *)
 
-(*s: function Cmmgen.untag_int *)
+(*s: function [[Cmmgen.untag_int]] *)
 let untag_int = function
     Cconst_int n -> Cconst_int(n asr 1)
   | Cop(Caddi, [Cop(Clsl, [c; Cconst_int 1]); Cconst_int 1]) -> c
   | c -> Cop(Casr, [c; Cconst_int 1])
-(*e: function Cmmgen.untag_int *)
+(*e: function [[Cmmgen.untag_int]] *)
 
-(*s: function Cmmgen.test_bool *)
+(*s: function [[Cmmgen.test_bool]] *)
 (* Bool *)
 
 let test_bool = function
     Cop(Caddi, [Cop(Clsl, [c; Cconst_int 1]); Cconst_int 1]) -> c
   | Cop(Clsl, [c; Cconst_int 1]) -> c
   | c -> Cop(Ccmpi Cne, [c; Cconst_int 1])
-(*e: function Cmmgen.test_bool *)
+(*e: function [[Cmmgen.test_bool]] *)
 
-(*s: function Cmmgen.box_float *)
+(*s: function [[Cmmgen.box_float]] *)
 (* Float *)
 
 let box_float c = Cop(Calloc, [alloc_float_header; c])
-(*e: function Cmmgen.box_float *)
+(*e: function [[Cmmgen.box_float]] *)
 
-(*s: function Cmmgen.unbox_float *)
+(*s: function [[Cmmgen.unbox_float]] *)
 let unbox_float = function
     Cop(Calloc, [header; c]) -> c
   | c -> Cop(Cload typ_float, [c])
-(*e: function Cmmgen.unbox_float *)
+(*e: function [[Cmmgen.unbox_float]] *)
 
-(*s: function Cmmgen.is_unboxed_float *)
+(*s: function [[Cmmgen.is_unboxed_float]] *)
 let is_unboxed_float = function
     Uconst(Const_base(Const_float f)) -> true
   | Uprim(p, _) ->
@@ -198,13 +198,13 @@ let is_unboxed_float = function
         | _ -> false
       end
   | _ -> false
-(*e: function Cmmgen.is_unboxed_float *)
+(*e: function [[Cmmgen.is_unboxed_float]] *)
 
-(*s: exception Cmmgen.Cannot_subst_float *)
+(*s: exception [[Cmmgen.Cannot_subst_float]] *)
 exception Cannot_subst_float
-(*e: exception Cmmgen.Cannot_subst_float *)
+(*e: exception [[Cmmgen.Cannot_subst_float]] *)
 
-(*s: function Cmmgen.subst_boxed_float *)
+(*s: function [[Cmmgen.subst_boxed_float]] *)
 let subst_boxed_float boxed_id unboxed_id exp =
   let need_boxed = ref false in
   let assigned = ref false in
@@ -232,15 +232,15 @@ let subst_boxed_float boxed_id unboxed_id exp =
     | e -> e in
   let res = subst exp in
   (res, !need_boxed, !assigned)  
-(*e: function Cmmgen.subst_boxed_float *)
+(*e: function [[Cmmgen.subst_boxed_float]] *)
 
-(*s: function Cmmgen.return_unit *)
+(*s: function [[Cmmgen.return_unit]] *)
 (* Unit *)
 
 let return_unit c = Csequence(c, Cconst_pointer 1)
-(*e: function Cmmgen.return_unit *)
+(*e: function [[Cmmgen.return_unit]] *)
 
-(*s: function Cmmgen.remove_unit *)
+(*s: function [[Cmmgen.remove_unit]] *)
 let rec remove_unit = function
     Cconst_pointer 1 -> Ctuple []
   | Csequence(c, Cconst_pointer 1) -> c
@@ -263,80 +263,80 @@ let rec remove_unit = function
   | Cexit -> Cexit
   | Ctuple [] as c -> c
   | c -> Csequence(c, Ctuple [])
-(*e: function Cmmgen.remove_unit *)
+(*e: function [[Cmmgen.remove_unit]] *)
 
-(*s: function Cmmgen.field_address *)
+(*s: function [[Cmmgen.field_address]] *)
 (* Access to block fields *)
 
 let field_address ptr n =
   if n = 0
   then ptr
   else Cop(Cadda, [ptr; Cconst_int(n * size_addr)])
-(*e: function Cmmgen.field_address *)
+(*e: function [[Cmmgen.field_address]] *)
 
-(*s: function Cmmgen.get_field *)
+(*s: function [[Cmmgen.get_field]] *)
 let get_field ptr n =
   Cop(Cload typ_addr, [field_address ptr n])
-(*e: function Cmmgen.get_field *)
+(*e: function [[Cmmgen.get_field]] *)
 
-(*s: function Cmmgen.set_field *)
+(*s: function [[Cmmgen.set_field]] *)
 let set_field ptr n newval =
   Cop(Cstore, [field_address ptr n; newval])
-(*e: function Cmmgen.set_field *)
+(*e: function [[Cmmgen.set_field]] *)
 
-(*s: function Cmmgen.header *)
+(*s: function [[Cmmgen.header]] *)
 let header ptr =
   Cop(Cload typ_int, [Cop(Cadda, [ptr; Cconst_int(-size_int)])])
-(*e: function Cmmgen.header *)
+(*e: function [[Cmmgen.header]] *)
 
-(*s: constant Cmmgen.tag_offset *)
+(*s: constant [[Cmmgen.tag_offset]] *)
 let tag_offset =
   if big_endian then -1 else -size_int
-(*e: constant Cmmgen.tag_offset *)
+(*e: constant [[Cmmgen.tag_offset]] *)
 
-(*s: function Cmmgen.get_tag *)
+(*s: function [[Cmmgen.get_tag]] *)
 let get_tag ptr =
   if Proc.word_addressed then           (* If byte loads are slow *)
     Cop(Cand, [header ptr; Cconst_int 255])
   else                                  (* If byte loads are efficient *)
     Cop(Cloadchunk Byte_unsigned,
         [Cop(Cadda, [ptr; Cconst_int(tag_offset)])])
-(*e: function Cmmgen.get_tag *)
+(*e: function [[Cmmgen.get_tag]] *)
 
-(*s: constant Cmmgen.log2_size_addr *)
+(*s: constant [[Cmmgen.log2_size_addr]] *)
 (* Array indexing *)
 
 let log2_size_addr = Misc.log2 size_addr
-(*e: constant Cmmgen.log2_size_addr *)
-(*s: constant Cmmgen.log2_size_float *)
+(*e: constant [[Cmmgen.log2_size_addr]] *)
+(*s: constant [[Cmmgen.log2_size_float]] *)
 let log2_size_float = Misc.log2 size_float
-(*e: constant Cmmgen.log2_size_float *)
+(*e: constant [[Cmmgen.log2_size_float]] *)
 
-(*s: constant Cmmgen.wordsize_shift *)
+(*s: constant [[Cmmgen.wordsize_shift]] *)
 let wordsize_shift = 9
-(*e: constant Cmmgen.wordsize_shift *)
-(*s: constant Cmmgen.numfloat_shift *)
+(*e: constant [[Cmmgen.wordsize_shift]] *)
+(*s: constant [[Cmmgen.numfloat_shift]] *)
 let numfloat_shift = 9 + log2_size_float - log2_size_addr
-(*e: constant Cmmgen.numfloat_shift *)
+(*e: constant [[Cmmgen.numfloat_shift]] *)
 
-(*s: function Cmmgen.is_addr_array *)
+(*s: function [[Cmmgen.is_addr_array]] *)
 let is_addr_array hdr =
   Cop(Ccmpi Cne, [Cop(Cand, [hdr; Cconst_int 255]); floatarray_tag])
-(*e: function Cmmgen.is_addr_array *)
+(*e: function [[Cmmgen.is_addr_array]] *)
 
-(*s: function Cmmgen.addr_array_length *)
+(*s: function [[Cmmgen.addr_array_length]] *)
 let addr_array_length hdr = Cop(Clsr, [hdr; Cconst_int wordsize_shift])
-(*e: function Cmmgen.addr_array_length *)
-(*s: function Cmmgen.float_array_length *)
+(*e: function [[Cmmgen.addr_array_length]] *)
+(*s: function [[Cmmgen.float_array_length]] *)
 let float_array_length hdr = Cop(Clsr, [hdr; Cconst_int numfloat_shift])
-(*e: function Cmmgen.float_array_length *)
+(*e: function [[Cmmgen.float_array_length]] *)
 
-(*s: function Cmmgen.lsl_const *)
+(*s: function [[Cmmgen.lsl_const]] *)
 let lsl_const c n =
   Cop(Clsl, [c; Cconst_int n])
-(*e: function Cmmgen.lsl_const *)
+(*e: function [[Cmmgen.lsl_const]] *)
 
-(*s: function Cmmgen.array_indexing *)
+(*s: function [[Cmmgen.array_indexing]] *)
 let array_indexing log2size ptr ofs =
   match ofs with
     Cconst_int n ->
@@ -350,36 +350,36 @@ let array_indexing log2size ptr ofs =
   | _ ->
       Cop(Cadda, [Cop(Cadda, [ptr; lsl_const ofs (log2size - 1)]);
                   Cconst_int((-1) lsl (log2size - 1))])
-(*e: function Cmmgen.array_indexing *)
+(*e: function [[Cmmgen.array_indexing]] *)
 
-(*s: function Cmmgen.addr_array_ref *)
+(*s: function [[Cmmgen.addr_array_ref]] *)
 let addr_array_ref arr ofs =
   Cop(Cload typ_addr, [array_indexing log2_size_addr arr ofs])
-(*e: function Cmmgen.addr_array_ref *)
-(*s: function Cmmgen.unboxed_float_array_ref *)
+(*e: function [[Cmmgen.addr_array_ref]] *)
+(*s: function [[Cmmgen.unboxed_float_array_ref]] *)
 let unboxed_float_array_ref arr ofs =
   Cop(Cload typ_float, [array_indexing log2_size_float arr ofs])
-(*e: function Cmmgen.unboxed_float_array_ref *)
-(*s: function Cmmgen.float_array_ref *)
+(*e: function [[Cmmgen.unboxed_float_array_ref]] *)
+(*s: function [[Cmmgen.float_array_ref]] *)
 let float_array_ref arr ofs =
   box_float(unboxed_float_array_ref arr ofs)
-(*e: function Cmmgen.float_array_ref *)
+(*e: function [[Cmmgen.float_array_ref]] *)
 
-(*s: function Cmmgen.addr_array_set *)
+(*s: function [[Cmmgen.addr_array_set]] *)
 let addr_array_set arr ofs newval =
   Cop(Cextcall("modify", typ_void, false),
       [array_indexing log2_size_addr arr ofs; newval])
-(*e: function Cmmgen.addr_array_set *)
-(*s: function Cmmgen.int_array_set *)
+(*e: function [[Cmmgen.addr_array_set]] *)
+(*s: function [[Cmmgen.int_array_set]] *)
 let int_array_set arr ofs newval =
   Cop(Cstore, [array_indexing log2_size_addr arr ofs; newval])
-(*e: function Cmmgen.int_array_set *)
-(*s: function Cmmgen.float_array_set *)
+(*e: function [[Cmmgen.int_array_set]] *)
+(*s: function [[Cmmgen.float_array_set]] *)
 let float_array_set arr ofs newval =
   Cop(Cstore, [array_indexing log2_size_float arr ofs; newval])
-(*e: function Cmmgen.float_array_set *)
+(*e: function [[Cmmgen.float_array_set]] *)
 
-(*s: function Cmmgen.string_length *)
+(*s: function [[Cmmgen.string_length]] *)
 (* String length *)
 
 let string_length exp =
@@ -395,9 +395,9 @@ let string_length exp =
              [Cvar tmp_var;
               Cop(Cloadchunk Byte_unsigned,
                   [Cop(Cadda, [str; Cvar tmp_var])])])))
-(*e: function Cmmgen.string_length *)
+(*e: function [[Cmmgen.string_length]] *)
 
-(*s: function Cmmgen.fundecls_size *)
+(*s: function [[Cmmgen.fundecls_size]] *)
 (* To compile "let rec" over values *)
 
 let fundecls_size fundecls =
@@ -407,9 +407,9 @@ let fundecls_size fundecls =
       sz := !sz + 1 + (if arity = 1 then 2 else 3))
     fundecls;
   !sz
-(*e: function Cmmgen.fundecls_size *)
+(*e: function [[Cmmgen.fundecls_size]] *)
 
-(*s: function Cmmgen.expr_size_and_tag *)
+(*s: function [[Cmmgen.expr_size_and_tag]] *)
 let rec expr_size_and_tag = function
     Uclosure(fundecls, clos_vars) ->
       (fundecls_size fundecls + List.length clos_vars, 250)
@@ -423,14 +423,14 @@ let rec expr_size_and_tag = function
       expr_size_and_tag body
   | _ ->
       fatal_error "Cmmgen.expr_size_and_tag"
-(*e: function Cmmgen.expr_size_and_tag *)
+(*e: function [[Cmmgen.expr_size_and_tag]] *)
 
-(*s: function Cmmgen.dummy_block *)
+(*s: function [[Cmmgen.dummy_block]] *)
 let dummy_block (size, tag) =
   let rec init_val i =
     if i >= size then [] else Cconst_int 0 :: init_val(i+1) in
   Cop(Calloc, alloc_block_header tag size :: init_val 0)
-(*e: function Cmmgen.dummy_block *)
+(*e: function [[Cmmgen.dummy_block]] *)
 
 let rec store_contents ptr = function
     Cop(Calloc, header :: fields) ->
@@ -453,21 +453,21 @@ and store_fields ptr pos = function
       Csequence(store, store_fields ptr (pos + 1) rem)
             
 
-(*s: function Cmmgen.apply_function *)
+(*s: function [[Cmmgen.apply_function]] *)
 (* Record application and currying functions *)
 
 let apply_function n =
   Compilenv.need_apply_fun n; "caml_apply" ^ string_of_int n
-(*e: function Cmmgen.apply_function *)
-(*s: function Cmmgen.curry_function *)
+(*e: function [[Cmmgen.apply_function]] *)
+(*s: function [[Cmmgen.curry_function]] *)
 let curry_function n =
   Compilenv.need_curry_fun n;
   if n >= 0
   then "caml_curry" ^ string_of_int n
   else "caml_tuplify" ^ string_of_int (-n)
-(*e: function Cmmgen.curry_function *)
+(*e: function [[Cmmgen.curry_function]] *)
 
-(*s: function Cmmgen.transl_comparison *)
+(*s: function [[Cmmgen.transl_comparison]] *)
 (* Comparisons *)
 
 let transl_comparison = function
@@ -477,32 +477,32 @@ let transl_comparison = function
   | Lambda.Cgt -> Cgt
   | Lambda.Cle -> Cle
   | Lambda.Clt -> Clt
-(*e: function Cmmgen.transl_comparison *)
+(*e: function [[Cmmgen.transl_comparison]] *)
 
-(*s: constant Cmmgen.const_label *)
+(*s: constant [[Cmmgen.const_label]] *)
 (* Translate structured constants *)
 
 let const_label = ref 0
-(*e: constant Cmmgen.const_label *)
+(*e: constant [[Cmmgen.const_label]] *)
 
-(*s: function Cmmgen.new_const_label *)
+(*s: function [[Cmmgen.new_const_label]] *)
 let new_const_label () =
   incr const_label;
   !const_label
-(*e: function Cmmgen.new_const_label *)
+(*e: function [[Cmmgen.new_const_label]] *)
 
-(*s: function Cmmgen.new_const_symbol *)
+(*s: function [[Cmmgen.new_const_symbol]] *)
 let new_const_symbol () =
   incr const_label;
   Compilenv.current_unit_name () ^ "_" ^ string_of_int !const_label
-(*e: function Cmmgen.new_const_symbol *)
+(*e: function [[Cmmgen.new_const_symbol]] *)
 
-(*s: constant Cmmgen.structured_constants *)
+(*s: constant [[Cmmgen.structured_constants]] *)
 let structured_constants =
-(*e: constant Cmmgen.structured_constants *)
+(*e: constant [[Cmmgen.structured_constants]] *)
   (Hashtbl.create 19 : (structured_constant, string) Hashtbl.t)
 
-(*s: function Cmmgen.transl_constant *)
+(*s: function [[Cmmgen.transl_constant]] *)
 let transl_constant = function
     Const_base(Const_int n) ->
       int_const n
@@ -519,13 +519,13 @@ let transl_constant = function
           Hashtbl.add structured_constants cst lbl;
           lbl
       in Cconst_symbol lbl
-(*e: function Cmmgen.transl_constant *)
+(*e: function [[Cmmgen.transl_constant]] *)
 
-(*s: constant Cmmgen.functions *)
+(*s: constant [[Cmmgen.functions]] *)
 (* Translate an expression *)
 
 let functions = (Queue.create() : (string * Ident.t list * ulambda) Queue.t)
-(*e: constant Cmmgen.functions *)
+(*e: constant [[Cmmgen.functions]] *)
 
 let rec transl = function
     Uvar id ->
@@ -981,7 +981,7 @@ and transl_letrec bindings cont =
         Csequence(store_contents (Cvar id) (transl exp), fill_blocks rem)
   in init_blocks bindings
 
-(*s: function Cmmgen.transl_function *)
+(*s: function [[Cmmgen.transl_function]] *)
 (* Translate a function definition *)
 
 let transl_function lbl params body =
@@ -989,13 +989,13 @@ let transl_function lbl params body =
              fun_args = List.map (fun id -> (id, typ_addr)) params;
              fun_body = transl body;
              fun_fast = !Clflags.optimize_for_speed}
-(*e: function Cmmgen.transl_function *)
+(*e: function [[Cmmgen.transl_function]] *)
 
 (* Translate all function definitions *)
 
 module StringSet = Set
 
-(*s: function Cmmgen.transl_all_functions *)
+(*s: function [[Cmmgen.transl_all_functions]] *)
 let rec transl_all_functions already_translated cont =
   try
     let (lbl, params, body) = Queue.take functions in
@@ -1006,7 +1006,7 @@ let rec transl_all_functions already_translated cont =
                            (transl_function lbl params body :: cont)
   with Queue.Empty ->
     cont
-(*e: function Cmmgen.transl_all_functions *)
+(*e: function [[Cmmgen.transl_all_functions]] *)
 
 (* Emit structured constants *)
 
@@ -1072,7 +1072,7 @@ and emit_string_constant s cont =
   let n = size_int - 1 - (String.length s) mod size_int in
   Cstring s :: Cskip n :: Cint8 n :: cont
 
-(*s: function Cmmgen.emit_all_constants *)
+(*s: function [[Cmmgen.emit_all_constants]] *)
 (* Emit all structured constants *)
 
 let emit_all_constants cont =
@@ -1082,9 +1082,9 @@ let emit_all_constants cont =
     structured_constants;
   Hashtbl.clear structured_constants;
   !c
-(*e: function Cmmgen.emit_all_constants *)
+(*e: function [[Cmmgen.emit_all_constants]] *)
 
-(*s: function Cmmgen.compunit *)
+(*s: function [[Cmmgen.compunit]] *)
 (* Translate a compilation unit *)
 
 let compunit size ulam =
@@ -1097,9 +1097,9 @@ let compunit size ulam =
   Cdata [Cint(block_header 0 size);
          Cdefine_symbol glob;
          Cskip(size * size_addr)] :: c3
-(*e: function Cmmgen.compunit *)
+(*e: function [[Cmmgen.compunit]] *)
 
-(*s: function Cmmgen.apply_function (asmcomp/cmmgen.ml) *)
+(*s: function [[Cmmgen.apply_function]]([[(asmcomp/cmmgen.ml)]]) *)
 (* Generate an application function:
      (defun caml_applyN (a1 ... aN clos)
        (if (= clos.arity N)
@@ -1138,9 +1138,9 @@ let apply_function arity =
     fun_args = List.map (fun id -> (id, typ_addr)) all_args;
     fun_body = body;
     fun_fast = true}
-(*e: function Cmmgen.apply_function (asmcomp/cmmgen.ml) *)
+(*e: function [[Cmmgen.apply_function]]([[(asmcomp/cmmgen.ml)]]) *)
 
-(*s: function Cmmgen.tuplify_function *)
+(*s: function [[Cmmgen.tuplify_function]] *)
 (* Generate tuplifying functions:
       (defun caml_tuplifyN (arg clos)
         (app clos.direct #0(arg) ... #N-1(arg) clos)) *)
@@ -1159,9 +1159,9 @@ let tuplify_function arity =
       Cop(Capply typ_addr,
           get_field (Cvar clos) 2 :: access_components 0 @ [Cvar clos]);
     fun_fast = true}
-(*e: function Cmmgen.tuplify_function *)
+(*e: function [[Cmmgen.tuplify_function]] *)
 
-(*s: function Cmmgen.final_curry_function *)
+(*s: function [[Cmmgen.final_curry_function]] *)
 (* Generate currying functions:
       (defun caml_curryN (arg clos)
          (alloc HDR caml_curryN_1 arg clos))
@@ -1197,9 +1197,9 @@ let final_curry_function arity =
     fun_args = [last_arg, typ_addr; last_clos, typ_addr];
     fun_body = curry_fun [] last_clos (arity-1);
     fun_fast = true}
-(*e: function Cmmgen.final_curry_function *)
+(*e: function [[Cmmgen.final_curry_function]] *)
 
-(*s: function Cmmgen.intermediate_curry_functions *)
+(*s: function [[Cmmgen.intermediate_curry_functions]] *)
 let rec intermediate_curry_functions arity num =
   if num = arity - 1 then
     [final_curry_function arity]
@@ -1217,16 +1217,16 @@ let rec intermediate_curry_functions arity num =
       fun_fast = true}
     :: intermediate_curry_functions arity (num+1)
   end
-(*e: function Cmmgen.intermediate_curry_functions *)
+(*e: function [[Cmmgen.intermediate_curry_functions]] *)
     
-(*s: function Cmmgen.curry_function (asmcomp/cmmgen.ml) *)
+(*s: function [[Cmmgen.curry_function]]([[(asmcomp/cmmgen.ml)]]) *)
 let curry_function arity =
   if arity >= 0
   then intermediate_curry_functions arity 0
   else [tuplify_function (-arity)]
-(*e: function Cmmgen.curry_function (asmcomp/cmmgen.ml) *)
+(*e: function [[Cmmgen.curry_function]]([[(asmcomp/cmmgen.ml)]]) *)
 
-(*s: function Cmmgen.entry_point *)
+(*s: function [[Cmmgen.entry_point]] *)
 (* Generate the entry point *)
 
 let entry_point namelist =
@@ -1240,31 +1240,31 @@ let entry_point namelist =
              fun_args = [];
              fun_body = body;
              fun_fast = false}
-(*e: function Cmmgen.entry_point *)
+(*e: function [[Cmmgen.entry_point]] *)
 
-(*s: constant Cmmgen.cint_zero *)
+(*s: constant [[Cmmgen.cint_zero]] *)
 (* Generate the table of globals *)
 
 let cint_zero = Cint(Nativeint.from 0)
-(*e: constant Cmmgen.cint_zero *)
+(*e: constant [[Cmmgen.cint_zero]] *)
 
-(*s: function Cmmgen.global_table *)
+(*s: function [[Cmmgen.global_table]] *)
 let global_table namelist =
   Cdata(Cdefine_symbol "caml_globals" ::
         List.map (fun name -> Csymbol_address name) namelist @
         [cint_zero])
-(*e: function Cmmgen.global_table *)
+(*e: function [[Cmmgen.global_table]] *)
 
-(*s: function Cmmgen.frame_table *)
+(*s: function [[Cmmgen.frame_table]] *)
 (* Generate the master table of frame descriptors *)
 
 let frame_table namelist =
   Cdata(Cdefine_symbol "caml_frametable" ::
         List.map (fun name -> Csymbol_address(name ^ "_frametable")) namelist @
         [cint_zero])
-(*e: function Cmmgen.frame_table *)
+(*e: function [[Cmmgen.frame_table]] *)
 
-(*s: function Cmmgen.segment_table *)
+(*s: function [[Cmmgen.segment_table]] *)
 (* Generate the table of module data and code segments *)
 
 let segment_table namelist symbol begname endname =
@@ -1275,22 +1275,22 @@ let segment_table namelist symbol begname endname =
             Csymbol_address(name ^ endname) :: lst)
           namelist
           [cint_zero])
-(*e: function Cmmgen.segment_table *)
+(*e: function [[Cmmgen.segment_table]] *)
 
-(*s: function Cmmgen.data_segment_table *)
+(*s: function [[Cmmgen.data_segment_table]] *)
 let data_segment_table namelist =
   segment_table namelist "caml_data_segments" "_data_begin" "_data_end"
-(*e: function Cmmgen.data_segment_table *)
+(*e: function [[Cmmgen.data_segment_table]] *)
 
-(*s: function Cmmgen.code_segment_table *)
+(*s: function [[Cmmgen.code_segment_table]] *)
 let code_segment_table namelist =
   segment_table namelist "caml_code_segments" "_code_begin" "_code_end"
-(*e: function Cmmgen.code_segment_table *)
+(*e: function [[Cmmgen.code_segment_table]] *)
 
-(*s: function Cmmgen.predef_exception *)
+(*s: function [[Cmmgen.predef_exception]] *)
 (* Initialize a predefined exception *)
 
 let predef_exception name =
   Cdata(emit_constant name (Const_block(0,[Const_base(Const_string name)])) [])
-(*e: function Cmmgen.predef_exception *)
+(*e: function [[Cmmgen.predef_exception]] *)
 (*e: asmcomp/cmmgen.ml *)

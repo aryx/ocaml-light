@@ -24,11 +24,11 @@
 #include "memory.h"
 #include "alloc.h"
 
-/*s: constant ERRCODE */
+/*s: constant [[ERRCODE]] */
 #define ERRCODE 256
-/*e: constant ERRCODE */
+/*e: constant [[ERRCODE]] */
 
-/*s: struct parser_tables */
+/*s: struct [[parser_tables]] */
 struct parser_tables {    /* Mirrors parse_tables in ../stdlib/parsing.mli */
   value actions;
   value transl_const;
@@ -45,9 +45,9 @@ struct parser_tables {    /* Mirrors parse_tables in ../stdlib/parsing.mli */
   char * check;
   value error_function;
 };
-/*e: struct parser_tables */
+/*e: struct [[parser_tables]] */
 
-/*s: struct parser_env */
+/*s: struct [[parser_env]] */
 struct parser_env {       /* Mirrors parser_env in ../stdlib/parsing.ml */
   value s_stack;
   value v_stack;
@@ -66,14 +66,14 @@ struct parser_env {       /* Mirrors parser_env in ../stdlib/parsing.ml */
   value state;
   value errflag;
 };
-/*e: struct parser_env */
+/*e: struct [[parser_env]] */
 
 #ifdef ARCH_BIG_ENDIAN
-/*s: function Short (byterun/parsing.c) */
+/*s: function [[Short]]([[(byterun/parsing.c)]]) */
 #define Short(tbl,n) \
   (*((unsigned char *)((tbl) + (n) * sizeof(short))) + \
           (*((schar *)((tbl) + (n) * sizeof(short) + 1)) << 8))
-/*e: function Short (byterun/parsing.c) */
+/*e: function [[Short]]([[(byterun/parsing.c)]]) */
 #else
 /*s: function Short (byterun/parsing.c)2 */
 #define Short(tbl,n) (((short *)(tbl))[n])
@@ -81,77 +81,77 @@ struct parser_env {       /* Mirrors parser_env in ../stdlib/parsing.ml */
 #endif
 
 #ifdef DEBUG
-/*s: global parser_trace */
+/*s: global [[parser_trace]] */
 int parser_trace = 0;
-/*e: global parser_trace */
-/*s: function Trace */
+/*e: global [[parser_trace]] */
+/*s: function [[Trace]] */
 #define Trace(act) if(parser_trace) act
-/*e: function Trace */
+/*e: function [[Trace]] */
 #else
-/*s: function Trace (byterun/parsing.c) */
+/*s: function [[Trace]]([[(byterun/parsing.c)]]) */
 #define Trace(act)
-/*e: function Trace (byterun/parsing.c) */
+/*e: function [[Trace]]([[(byterun/parsing.c)]]) */
 #endif
 
 /* Input codes */
-/*s: constant START */
+/*s: constant [[START]] */
 /* Mirrors parser_input in ../stdlib/parsing.ml */
 #define START 0
-/*e: constant START */
-/*s: constant TOKEN_READ */
+/*e: constant [[START]] */
+/*s: constant [[TOKEN_READ]] */
 #define TOKEN_READ 1
-/*e: constant TOKEN_READ */
-/*s: constant STACKS_GROWN_1 */
+/*e: constant [[TOKEN_READ]] */
+/*s: constant [[STACKS_GROWN_1]] */
 #define STACKS_GROWN_1 2
-/*e: constant STACKS_GROWN_1 */
-/*s: constant STACKS_GROWN_2 */
+/*e: constant [[STACKS_GROWN_1]] */
+/*s: constant [[STACKS_GROWN_2]] */
 #define STACKS_GROWN_2 3
-/*e: constant STACKS_GROWN_2 */
-/*s: constant SEMANTIC_ACTION_COMPUTED */
+/*e: constant [[STACKS_GROWN_2]] */
+/*s: constant [[SEMANTIC_ACTION_COMPUTED]] */
 #define SEMANTIC_ACTION_COMPUTED 4
-/*e: constant SEMANTIC_ACTION_COMPUTED */
-/*s: constant ERROR_DETECTED */
+/*e: constant [[SEMANTIC_ACTION_COMPUTED]] */
+/*s: constant [[ERROR_DETECTED]] */
 #define ERROR_DETECTED 5
-/*e: constant ERROR_DETECTED */
+/*e: constant [[ERROR_DETECTED]] */
 
 /* Output codes */
-/*s: constant READ_TOKEN */
+/*s: constant [[READ_TOKEN]] */
 /* Mirrors parser_output in ../stdlib/parsing.ml */
 #define READ_TOKEN Val_int(0) 
-/*e: constant READ_TOKEN */
-/*s: constant RAISE_PARSE_ERROR */
+/*e: constant [[READ_TOKEN]] */
+/*s: constant [[RAISE_PARSE_ERROR]] */
 #define RAISE_PARSE_ERROR Val_int(1)
-/*e: constant RAISE_PARSE_ERROR */
-/*s: constant GROW_STACKS_1 */
+/*e: constant [[RAISE_PARSE_ERROR]] */
+/*s: constant [[GROW_STACKS_1]] */
 #define GROW_STACKS_1 Val_int(2)
-/*e: constant GROW_STACKS_1 */
-/*s: constant GROW_STACKS_2 */
+/*e: constant [[GROW_STACKS_1]] */
+/*s: constant [[GROW_STACKS_2]] */
 #define GROW_STACKS_2 Val_int(3)
-/*e: constant GROW_STACKS_2 */
-/*s: constant COMPUTE_SEMANTIC_ACTION */
+/*e: constant [[GROW_STACKS_2]] */
+/*s: constant [[COMPUTE_SEMANTIC_ACTION]] */
 #define COMPUTE_SEMANTIC_ACTION Val_int(4)
-/*e: constant COMPUTE_SEMANTIC_ACTION */
-/*s: constant CALL_ERROR_FUNCTION */
+/*e: constant [[COMPUTE_SEMANTIC_ACTION]] */
+/*s: constant [[CALL_ERROR_FUNCTION]] */
 #define CALL_ERROR_FUNCTION Val_int(5)
-/*e: constant CALL_ERROR_FUNCTION */
+/*e: constant [[CALL_ERROR_FUNCTION]] */
 
-/*s: constant SAVE */
+/*s: constant [[SAVE]] */
 /* To preserve local variables when communicating with the ML code */
 
 #define SAVE \
   env->sp = Val_int(sp), \
   env->state = Val_int(state), \
   env->errflag = Val_int(errflag)
-/*e: constant SAVE */
+/*e: constant [[SAVE]] */
 
-/*s: constant RESTORE */
+/*s: constant [[RESTORE]] */
 #define RESTORE \
   sp = Int_val(env->sp), \
   state = Int_val(env->state), \
   errflag = Int_val(env->errflag)
-/*e: constant RESTORE */
+/*e: constant [[RESTORE]] */
 
-/*s: function parse_engine */
+/*s: function [[parse_engine]] */
 /* The pushdown automata */
 
 value parse_engine(struct parser_tables *tables, struct parser_env *env, value cmd, value arg) /* ML */
@@ -300,5 +300,5 @@ value parse_engine(struct parser_tables *tables, struct parser_env *env, value c
   }
   
 }
-/*e: function parse_engine */
+/*e: function [[parse_engine]] */
 /*e: byterun/parsing.c */

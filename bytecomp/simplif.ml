@@ -18,15 +18,15 @@
 open Asttypes
 open Lambda
 
-(*s: exception Simplif.Real_reference *)
+(*s: exception [[Simplif.Real_reference]] *)
 (* To transform let-bound references into variables *)
 
 exception Real_reference
-(*e: exception Simplif.Real_reference *)
+(*e: exception [[Simplif.Real_reference]] *)
 
 module IdentSet = Set
 
-(*s: function Simplif.eliminate_ref *)
+(*s: function [[Simplif.eliminate_ref]] *)
 let rec eliminate_ref id = function
     Lvar v as lam ->
       if Ident.same v id then raise Real_reference else lam
@@ -80,9 +80,9 @@ let rec eliminate_ref id = function
       Lassign(v, eliminate_ref id e)
   | Levent(l, ev) ->
       Levent(eliminate_ref id l, ev)
-(*e: function Simplif.eliminate_ref *)
+(*e: function [[Simplif.eliminate_ref]] *)
 
-(*s: function Simplif.simplify_lambda *)
+(*s: function [[Simplif.simplify_lambda]] *)
 (* Simplification of lets *)
 
 let simplify_lambda lam =
@@ -198,5 +198,5 @@ let simplify_lambda lam =
   | Levent(l, ev) -> Levent(simplif l, ev)
   in
   simplif lam
-(*e: function Simplif.simplify_lambda *)
+(*e: function [[Simplif.simplify_lambda]] *)
 (*e: ./bytecomp/simplif.ml *)

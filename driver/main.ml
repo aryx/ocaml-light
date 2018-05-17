@@ -15,18 +15,18 @@
 open Config
 open Clflags
 
-(*s: function Main.process_interface_file *)
+(*s: function [[Main.process_interface_file]] *)
 let process_interface_file name =
   Compile.interface name
-(*e: function Main.process_interface_file *)
+(*e: function [[Main.process_interface_file]] *)
 
-(*s: function Main.process_implementation_file *)
+(*s: function [[Main.process_implementation_file]] *)
 let process_implementation_file name =
   Compile.implementation name;
   objfiles := (Filename.chop_extension name ^ ".cmo") :: !objfiles
-(*e: function Main.process_implementation_file *)
+(*e: function [[Main.process_implementation_file]] *)
 
-(*s: function Main.process_file *)
+(*s: function [[Main.process_file]] *)
 let process_file name =
   match () with
   | _ when Filename.check_suffix name ".ml" ->
@@ -52,9 +52,9 @@ let process_file name =
   (*e: [[Main.process_file()]] cases *)
   | _ -> 
       raise(Arg.Bad("don't know what to do with " ^ name))
-(*e: function Main.process_file *)
+(*e: function [[Main.process_file]] *)
 
-(*s: function Main.print_version_number *)
+(*s: function [[Main.print_version_number]] *)
 let print_version_number () =
   print_string "The Objective Caml compiler, version ";
   print_string Config.version; 
@@ -62,13 +62,13 @@ let print_version_number () =
   print_string "Standard library directory: ";
   print_string Config.standard_library; 
   print_newline()
-(*e: function Main.print_version_number *)
+(*e: function [[Main.print_version_number]] *)
 
-(*s: constant Main.usage *)
+(*s: constant [[Main.usage]] *)
 let usage = "Usage: ocamlc <options> <files>\nOptions are:"
-(*e: constant Main.usage *)
+(*e: constant [[Main.usage]] *)
 
-(*s: function Main.main *)
+(*s: function [[Main.main]] *)
 let main () =
   try
     Arg.parse [
@@ -160,10 +160,10 @@ let main () =
     Format.set_formatter_out_channel stderr;
     Errors.report_error x;
     exit 2
-(*e: function Main.main *)
+(*e: function [[Main.main]] *)
 
-(*s: toplevel Main._1 *)
+(*s: toplevel [[Main._1]] *)
 let _ = 
   Printexc.catch main ()
-(*e: toplevel Main._1 *)
+(*e: toplevel [[Main._1]] *)
 (*e: ./driver/main.ml *)

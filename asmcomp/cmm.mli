@@ -12,40 +12,40 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: type Cmm.machtype_component *)
+(*s: type [[Cmm.machtype_component]] *)
 (* Second intermediate language (machine independent) *)
 
 type machtype_component =
     Addr
   | Int
   | Float
-(*e: type Cmm.machtype_component *)
+(*e: type [[Cmm.machtype_component]] *)
 
-(*s: type Cmm.machtype *)
+(*s: type [[Cmm.machtype]] *)
 type machtype = machtype_component array
-(*e: type Cmm.machtype *)
+(*e: type [[Cmm.machtype]] *)
 
-(*s: signature Cmm.typ_void *)
+(*s: signature [[Cmm.typ_void]] *)
 val typ_void: machtype
-(*e: signature Cmm.typ_void *)
-(*s: signature Cmm.typ_addr *)
+(*e: signature [[Cmm.typ_void]] *)
+(*s: signature [[Cmm.typ_addr]] *)
 val typ_addr: machtype
-(*e: signature Cmm.typ_addr *)
-(*s: signature Cmm.typ_int *)
+(*e: signature [[Cmm.typ_addr]] *)
+(*s: signature [[Cmm.typ_int]] *)
 val typ_int: machtype
-(*e: signature Cmm.typ_int *)
-(*s: signature Cmm.typ_float *)
+(*e: signature [[Cmm.typ_int]] *)
+(*s: signature [[Cmm.typ_float]] *)
 val typ_float: machtype
-(*e: signature Cmm.typ_float *)
+(*e: signature [[Cmm.typ_float]] *)
 
-(*s: signature Cmm.size_component *)
+(*s: signature [[Cmm.size_component]] *)
 val size_component: machtype_component -> int
-(*e: signature Cmm.size_component *)
-(*s: signature Cmm.size_machtype *)
+(*e: signature [[Cmm.size_component]] *)
+(*s: signature [[Cmm.size_machtype]] *)
 val size_machtype: machtype -> int
-(*e: signature Cmm.size_machtype *)
+(*e: signature [[Cmm.size_machtype]] *)
 
-(*s: type Cmm.comparison *)
+(*s: type [[Cmm.comparison]] *)
 type comparison =
     Ceq
   | Cne
@@ -53,25 +53,25 @@ type comparison =
   | Cle
   | Cgt
   | Cge
-(*e: type Cmm.comparison *)
+(*e: type [[Cmm.comparison]] *)
 
-(*s: signature Cmm.negate_comparison *)
+(*s: signature [[Cmm.negate_comparison]] *)
 val negate_comparison: comparison -> comparison
-(*e: signature Cmm.negate_comparison *)
-(*s: signature Cmm.swap_comparison *)
+(*e: signature [[Cmm.negate_comparison]] *)
+(*s: signature [[Cmm.swap_comparison]] *)
 val swap_comparison: comparison -> comparison
-(*e: signature Cmm.swap_comparison *)
+(*e: signature [[Cmm.swap_comparison]] *)
 
-(*s: type Cmm.memory_chunk *)
+(*s: type [[Cmm.memory_chunk]] *)
 type memory_chunk =
     Byte_unsigned
   | Byte_signed
   | Sixteen_unsigned
   | Sixteen_signed
   | Word
-(*e: type Cmm.memory_chunk *)
+(*e: type [[Cmm.memory_chunk]] *)
 
-(*s: type Cmm.operation *)
+(*s: type [[Cmm.operation]] *)
 type operation =
     Capply of machtype
   | Cextcall of string * machtype * bool
@@ -92,9 +92,9 @@ type operation =
   | Ccmpf of comparison
   | Craise
   | Ccheckbound
-(*e: type Cmm.operation *)
+(*e: type [[Cmm.operation]] *)
 
-(*s: type Cmm.expression *)
+(*s: type [[Cmm.expression]] *)
 type expression =
     Cconst_int of int
   | Cconst_natint of Nativeint.t
@@ -113,17 +113,17 @@ type expression =
   | Ccatch of expression * expression
   | Cexit
   | Ctrywith of expression * Ident.t * expression
-(*e: type Cmm.expression *)
+(*e: type [[Cmm.expression]] *)
 
-(*s: type Cmm.fundecl *)
+(*s: type [[Cmm.fundecl]] *)
 type fundecl =
   { fun_name: string;
     fun_args: (Ident.t * machtype) list;
     fun_body: expression;
     fun_fast: bool }
-(*e: type Cmm.fundecl *)
+(*e: type [[Cmm.fundecl]] *)
 
-(*s: type Cmm.data_item *)
+(*s: type [[Cmm.data_item]] *)
 type data_item =
     Cdefine_symbol of string
   | Cdefine_label of int
@@ -136,12 +136,12 @@ type data_item =
   | Cstring of string
   | Cskip of int
   | Calign of int
-(*e: type Cmm.data_item *)
+(*e: type [[Cmm.data_item]] *)
 
-(*s: type Cmm.phrase *)
+(*s: type [[Cmm.phrase]] *)
 type phrase =
     Cfunction of fundecl
   | Cdata of data_item list
-(*e: type Cmm.phrase *)
+(*e: type [[Cmm.phrase]] *)
 
 (*e: asmcomp/cmm.mli *)

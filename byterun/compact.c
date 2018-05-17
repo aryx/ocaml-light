@@ -30,7 +30,7 @@
 extern unsigned long percent_free;             /* major_gc.c */
 extern void shrink_heap (char *);              /* memory.c */
 
-/*s: function Make_ehd */
+/*s: function [[Make_ehd]] */
 /* Encoded headers: the color is stored in the 2 least significant bits.
    (For pointer inversion, we need to distinguish headers from pointers.)
    s is a Wosize, t is a tag, and c is a color (a two-bit number)
@@ -42,19 +42,19 @@ extern void shrink_heap (char *);              /* memory.c */
    3: integer or encoded (noninfix) header
 */
 #define Make_ehd(s,t,c) (((s) << 10) | (t) << 2 | (c))
-/*e: function Make_ehd */
-/*s: function Whsize_ehd */
+/*e: function [[Make_ehd]] */
+/*s: function [[Whsize_ehd]] */
 #define Whsize_ehd(h) Whsize_hd (h)
-/*e: function Whsize_ehd */
-/*s: function Wosize_ehd */
+/*e: function [[Whsize_ehd]] */
+/*s: function [[Wosize_ehd]] */
 #define Wosize_ehd(h) Wosize_hd (h)
-/*e: function Wosize_ehd */
-/*s: function Tag_ehd */
+/*e: function [[Wosize_ehd]] */
+/*s: function [[Tag_ehd]] */
 #define Tag_ehd(h) (((h) >> 2) & 0xFF)
-/*e: function Tag_ehd */
-/*s: function Ecolor */
+/*e: function [[Tag_ehd]] */
+/*s: function [[Ecolor]] */
 #define Ecolor(w) ((w) & 3)
-/*e: function Ecolor */
+/*e: function [[Ecolor]] */
 
 typedef unsigned long word;
 
@@ -110,18 +110,18 @@ static void invert_pointer_at (word *p)
   }
 }
 
-/*s: function invert_root */
+/*s: function [[invert_root]] */
 static void invert_root (value v, value *p)
 {
   invert_pointer_at ((word *) p);
 }
-/*e: function invert_root */
+/*e: function [[invert_root]] */
 
-/*s: global compact_fl */
+/*s: global [[compact_fl]] */
 static char *compact_fl;
-/*e: global compact_fl */
+/*e: global [[compact_fl]] */
 
-/*s: function init_compact_allocate */
+/*s: function [[init_compact_allocate]] */
 static void init_compact_allocate (void)
 {
   char *ch = heap_start;
@@ -131,9 +131,9 @@ static void init_compact_allocate (void)
   }
   compact_fl = heap_start;
 }
-/*e: function init_compact_allocate */
+/*e: function [[init_compact_allocate]] */
 
-/*s: function compact_allocate */
+/*s: function [[compact_allocate]] */
 static char *compact_allocate (mlsize_t size)
                                       /* in bytes, including header */
 {
@@ -153,9 +153,9 @@ static char *compact_allocate (mlsize_t size)
   Chunk_alloc (chunk) += size;
   return adr;
 }
-/*e: function compact_allocate */
+/*e: function [[compact_allocate]] */
 
-/*s: function compact_heap */
+/*s: function [[compact_heap]] */
 void compact_heap (void)
 {
   char *ch, *chend;
@@ -396,13 +396,13 @@ void compact_heap (void)
   ++ stat_compactions;
   gc_message ("done.\n", 0);
 }
-/*e: function compact_heap */
+/*e: function [[compact_heap]] */
 
-/*s: global percent_max */
+/*s: global [[percent_max]] */
 unsigned long percent_max;
-/*e: global percent_max */
+/*e: global [[percent_max]] */
 
-/*s: function compact_heap_maybe */
+/*s: function [[compact_heap_maybe]] */
 void compact_heap_maybe (void)
 {
   /* Estimated free words in the heap: FW = 1.5 * fl_cur_size
@@ -426,5 +426,5 @@ void compact_heap_maybe (void)
     break;
   }
 }
-/*e: function compact_heap_maybe */
+/*e: function [[compact_heap_maybe]] */
 /*e: byterun/compact.c */

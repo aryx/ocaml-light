@@ -12,7 +12,7 @@
 /***********************************************************************/
 /*e: copyright header C xavier */
 
-/*s: enum instructions */
+/*s: enum [[instructions]] */
 /* The instruction set. */
 
 enum instructions {
@@ -103,11 +103,12 @@ enum instructions {
   DUMMY, 
   UPDATE,
   /*e: recursive definition opcodes */
-  /*s: exception opcodes */
+  /*s: exception [[opcodes]] */
   PUSHTRAP, 
   POPTRAP, 
   RAISE,
-  /*e: exception opcodes */
+  /*e: exception [[opcodes]] */
+
   /*s: signal opcodes */
   CHECK_SIGNALS,
   /*e: signal opcodes */
@@ -136,5 +137,5 @@ enum instructions {
   STOP, EVENT, BREAK
   /*e: debugger opcodes */
 };
-/*e: enum instructions */
+/*e: enum [[instructions]] */
 /*e: byterun/instruct.h */

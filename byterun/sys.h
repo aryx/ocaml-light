@@ -17,9 +17,9 @@
 
 #include "misc.h"
 
-/*s: constant NO_ARG */
+/*s: constant [[NO_ARG]] */
 #define NO_ARG Val_int(0)
-/*e: constant NO_ARG */
+/*e: constant [[NO_ARG]] */
 extern void sys_error (value);
 extern void sys_init (char **);
 extern value sys_exit (value);

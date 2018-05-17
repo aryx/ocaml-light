@@ -27,7 +27,7 @@
 #include "mlvalues.h"
 #include "str.h"
 
-/*s: function int_of_string */
+/*s: function [[int_of_string]] */
 value int_of_string(value s)          /* ML */
 {
   long res;
@@ -73,9 +73,9 @@ value int_of_string(value s)          /* ML */
     failwith("int_of_string");
   return Val_long(sign < 0 ? -res : res);
 }
-/*e: function int_of_string */
+/*e: function [[int_of_string]] */
 
-/*s: function format_int */
+/*s: function [[format_int]] */
 value format_int(value fmt, value arg)      /* ML */
 {
   char format_string[32], format_buffer[32];
@@ -111,5 +111,5 @@ value format_int(value fmt, value arg)      /* ML */
   }
   return res;
 }
-/*e: function format_int */
+/*e: function [[format_int]] */
 /*e: byterun/ints.c */

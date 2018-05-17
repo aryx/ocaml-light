@@ -18,7 +18,7 @@ open Path
 open Types
 
 
-(*s: constants Predef.ident_xxx *)
+(*s: constants [[Predef.ident_xxx]] *)
 let ident_int = Ident.create "int"
 and ident_char = Ident.create "char"
 and ident_string = Ident.create "string"
@@ -30,10 +30,10 @@ and ident_exn = Ident.create "exn"
 
 and ident_array = Ident.create "array"
 and ident_list = Ident.create "list"
-(*x: constants Predef.ident_xxx *)
+(*x: constants [[Predef.ident_xxx]] *)
 and ident_format = Ident.create "format"
-(*e: constants Predef.ident_xxx *)
-(*s: constants Predef.path_xxx *)
+(*e: constants [[Predef.ident_xxx]] *)
+(*s: constants [[Predef.path_xxx]] *)
 let path_int = Pident ident_int
 and path_char = Pident ident_char
 and path_string = Pident ident_string
@@ -42,15 +42,15 @@ and path_bool = Pident ident_bool
 and path_unit = Pident ident_unit
 
 and path_list = Pident ident_list
-(*x: constants Predef.path_xxx *)
+(*x: constants [[Predef.path_xxx]] *)
 and path_exn = Pident ident_exn
-(*x: constants Predef.path_xxx *)
+(*x: constants [[Predef.path_xxx]] *)
 and path_format = Pident ident_format
-(*x: constants Predef.path_xxx *)
+(*x: constants [[Predef.path_xxx]] *)
 and path_array = Pident ident_array
-(*e: constants Predef.path_xxx *)
+(*e: constants [[Predef.path_xxx]] *)
 
-(*s: constants Predef.type_xxx *)
+(*s: constants [[Predef.type_xxx]] *)
 let type_int     = Tconstr(path_int, [])
 and type_char    = Tconstr(path_char, [])
 and type_string  = Tconstr(path_string, [])
@@ -59,14 +59,14 @@ and type_bool    = Tconstr(path_bool, [])
 and type_unit    = Tconstr(path_unit, [])
 
 and type_list t = Tconstr(path_list, [t])
-(*x: constants Predef.type_xxx *)
+(*x: constants [[Predef.type_xxx]] *)
 and type_exn = Tconstr(path_exn, [])
-(*x: constants Predef.type_xxx *)
+(*x: constants [[Predef.type_xxx]] *)
 and type_array t = Tconstr(path_array, [t])
-(*e: constants Predef.type_xxx *)
+(*e: constants [[Predef.type_xxx]] *)
 
 
-(*s: constants Predef.ident_exn_xxx *)
+(*s: constants [[Predef.ident_exn_xxx]] *)
 let ident_match_failure    = Ident.create "Match_failure"
 and ident_out_of_memory    = Ident.create "Out_of_memory"
 and ident_invalid_argument = Ident.create "Invalid_argument"
@@ -76,13 +76,13 @@ and ident_sys_error        = Ident.create "Sys_error"
 and ident_end_of_file      = Ident.create "End_of_file"
 and ident_division_by_zero = Ident.create "Division_by_zero"
 and ident_stack_overflow   = Ident.create "Stack_overflow"
-(*e: constants Predef.ident_exn_xxx *)
+(*e: constants [[Predef.ident_exn_xxx]] *)
 
-(*s: constant Predef.path_match_failure *)
+(*s: constant [[Predef.path_match_failure]] *)
 let path_match_failure = Pident ident_match_failure
-(*e: constant Predef.path_match_failure *)
+(*e: constant [[Predef.path_match_failure]] *)
 
-(*s: function Predef.build_initial_env *)
+(*s: function [[Predef.build_initial_env]] *)
 let build_initial_env add_type add_exception empty_env =
   let newvar() =
     (* Cannot call the real newvar from ctype here
@@ -174,14 +174,14 @@ let build_initial_env add_type add_exception empty_env =
   add_type ident_int decl_abstr (
   empty_env
   )))))))))))))))))))
-(*e: function Predef.build_initial_env *)
+(*e: function [[Predef.build_initial_env]] *)
 
-(*s: constant Predef.builtin_values *)
+(*s: constant [[Predef.builtin_values]] *)
 let builtin_values =
   List.map (fun id -> Ident.make_global id; (Ident.name id, id))
       [ident_match_failure; ident_out_of_memory; ident_stack_overflow;
        ident_invalid_argument;
        ident_failure; ident_not_found; ident_sys_error; ident_end_of_file;
        ident_division_by_zero]
-(*e: constant Predef.builtin_values *)
+(*e: constant [[Predef.builtin_values]] *)
 (*e: ./typing/predef.ml *)

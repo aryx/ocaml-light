@@ -13,9 +13,9 @@
 /*e: copyright header C xavier and damien */
 
 #ifndef _roots_
-/*s: constant _roots_ */
+/*s: constant [[_roots_]] */
 #define _roots_
-/*e: constant _roots_ */
+/*e: constant [[_roots_]] */
 
 #include "misc.h"
 #include "memory.h"

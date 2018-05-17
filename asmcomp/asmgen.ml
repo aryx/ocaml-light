@@ -20,35 +20,35 @@ open Clflags
 open Misc
 open Cmm
 
-(*s: type Asmgen.error (asmcomp/asmgen.ml) *)
+(*s: type [[Asmgen.error]]([[(asmcomp/asmgen.ml)]]) *)
 type error = Assembler_error of string
-(*e: type Asmgen.error (asmcomp/asmgen.ml) *)
+(*e: type [[Asmgen.error]]([[(asmcomp/asmgen.ml)]]) *)
 
-(*s: exception Asmgen.Error (asmcomp/asmgen.ml) *)
+(*s: exception [[Asmgen.Error]]([[(asmcomp/asmgen.ml)]]) *)
 exception Error of error
-(*e: exception Asmgen.Error (asmcomp/asmgen.ml) *)
+(*e: exception [[Asmgen.Error]]([[(asmcomp/asmgen.ml)]]) *)
 
-(*s: function Asmgen.liveness *)
+(*s: function [[Asmgen.liveness]] *)
 let liveness phrase =
   Liveness.fundecl phrase; phrase
-(*e: function Asmgen.liveness *)
+(*e: function [[Asmgen.liveness]] *)
 
-(*s: function Asmgen.dump_if *)
+(*s: function [[Asmgen.dump_if]] *)
 let dump_if flag message phrase =
   if !flag then Printmach.phase message phrase;
   phrase
-(*e: function Asmgen.dump_if *)
+(*e: function [[Asmgen.dump_if]] *)
 
-(*s: function Asmgen.dump_linear_if *)
+(*s: function [[Asmgen.dump_linear_if]] *)
 let dump_linear_if flag message phrase =
   if !flag then begin
     print_string "*** "; print_string message; print_newline();
     Printlinear.fundecl phrase; print_newline()
   end;
   phrase
-(*e: function Asmgen.dump_linear_if *)
+(*e: function [[Asmgen.dump_linear_if]] *)
 
-(*s: function Asmgen.regalloc *)
+(*s: function [[Asmgen.regalloc]] *)
 let rec regalloc round fd =
   if round > 50 then
     fatal_error(fd.Mach.fun_name ^
@@ -64,13 +64,13 @@ let rec regalloc round fd =
   if redo_regalloc 
   then begin Reg.reinit(); Liveness.fundecl newfd; regalloc (round+1) newfd end
   else newfd
-(*e: function Asmgen.regalloc *)
+(*e: function [[Asmgen.regalloc]] *)
 
-(*s: function Asmgen.TODOOPERATOR *)
+(*s: function [[Asmgen.TODOOPERATOR]] *)
 let (++) x f = f x
-(*e: function Asmgen.TODOOPERATOR *)
+(*e: function [[Asmgen.TODOOPERATOR]] *)
 
-(*s: function Asmgen.compile_fundecl *)
+(*s: function [[Asmgen.compile_fundecl]] *)
 let compile_fundecl fd_cmm =
   Reg.reset();
   fd_cmm
@@ -90,17 +90,17 @@ let compile_fundecl fd_cmm =
   ++ Scheduling.fundecl
   ++ dump_linear_if dump_scheduling "After instruction scheduling"
   ++ Emit.fundecl
-(*e: function Asmgen.compile_fundecl *)
+(*e: function [[Asmgen.compile_fundecl]] *)
 
-(*s: function Asmgen.compile_phrase *)
+(*s: function [[Asmgen.compile_phrase]] *)
 let compile_phrase p =
   if !dump_cmm then begin Printcmm.phrase p; print_newline() end;
   match p with
     Cfunction fd -> compile_fundecl fd
   | Cdata dl -> Emit.data dl
-(*e: function Asmgen.compile_phrase *)
+(*e: function [[Asmgen.compile_phrase]] *)
 
-(*s: function Asmgen.compile_implementation *)
+(*s: function [[Asmgen.compile_implementation]] *)
 let compile_implementation prefixname size lam =
   let asmfile =
     if !keep_asm_file
@@ -121,14 +121,14 @@ let compile_implementation prefixname size lam =
   if Proc.assemble_file asmfile (prefixname ^ ext_obj) <> 0
   then raise(Error(Assembler_error asmfile));
   if !keep_asm_file then () else remove_file asmfile
-(*e: function Asmgen.compile_implementation *)
+(*e: function [[Asmgen.compile_implementation]] *)
 
-(*s: function Asmgen.report_error *)
+(*s: function [[Asmgen.report_error]] *)
 (* Error report *)
 
 let report_error = function
     Assembler_error file ->
       print_string "Assembler error, input left in file ";
       print_string file
-(*e: function Asmgen.report_error *)
+(*e: function [[Asmgen.report_error]] *)
 (*e: asmcomp/asmgen.ml *)
