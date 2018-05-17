@@ -18,17 +18,17 @@ open Misc
 open Config
 open Compilenv
 
-(*s: type Asmlibrarian.error (asmcomp/asmlibrarian.ml) *)
+(*s: type [[Asmlibrarian.error]]([[(asmcomp/asmlibrarian.ml)]]) *)
 type error =
     File_not_found of string
   | Archiver_error of string
-(*e: type Asmlibrarian.error (asmcomp/asmlibrarian.ml) *)
+(*e: type [[Asmlibrarian.error]]([[(asmcomp/asmlibrarian.ml)]]) *)
 
-(*s: exception Asmlibrarian.Error (asmcomp/asmlibrarian.ml) *)
+(*s: exception [[Asmlibrarian.Error]]([[(asmcomp/asmlibrarian.ml)]]) *)
 exception Error of error
-(*e: exception Asmlibrarian.Error (asmcomp/asmlibrarian.ml) *)
+(*e: exception [[Asmlibrarian.Error]]([[(asmcomp/asmlibrarian.ml)]]) *)
 
-(*s: function Asmlibrarian.read_info *)
+(*s: function [[Asmlibrarian.read_info]] *)
 let read_info name =
   let filename =
     try
@@ -43,9 +43,9 @@ let read_info name =
      need the approximation. *)
   info.ui_approx <- Clambda.Value_unknown;
   (Filename.chop_suffix filename ".cmx" ^ ext_obj, (info, crc))
-(*e: function Asmlibrarian.read_info *)
+(*e: function [[Asmlibrarian.read_info]] *)
 
-(*s: function Asmlibrarian.create_archive *)
+(*s: function [[Asmlibrarian.create_archive]] *)
 let create_archive file_list lib_name =
   let archive_name = Filename.chop_suffix lib_name ".cmxa" ^ ext_lib in
   let outchan = open_out_bin lib_name in
@@ -62,17 +62,17 @@ let create_archive file_list lib_name =
     remove_file lib_name;
     remove_file archive_name;
     raise x
-(*e: function Asmlibrarian.create_archive *)
+(*e: function [[Asmlibrarian.create_archive]] *)
 
 open Format
 
-(*s: function Asmlibrarian.report_error *)
+(*s: function [[Asmlibrarian.report_error]] *)
 let report_error = function
     File_not_found name ->
       print_string "Cannot find file "; print_string name
   | Archiver_error name ->
       print_string "Error while creating the library ";
       print_string name
-(*e: function Asmlibrarian.report_error *)
+(*e: function [[Asmlibrarian.report_error]] *)
 
 (*e: asmcomp/asmlibrarian.ml *)

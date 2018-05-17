@@ -12,19 +12,19 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: type Selectgen.environment *)
+(*s: type [[Selectgen.environment]] *)
 (* Selection of pseudo-instructions, assignment of pseudo-registers,
    sequentialization. *)
 
 type environment = (Ident.t, Reg.t array) Tbl.t
-(*e: type Selectgen.environment *)
+(*e: type [[Selectgen.environment]] *)
 
-(*s: signature Selectgen.size_expr *)
+(*s: signature [[Selectgen.size_expr]] *)
 val size_expr : environment -> Cmm.expression -> int
-(*e: signature Selectgen.size_expr *)
+(*e: signature [[Selectgen.size_expr]] *)
 
 
-(*s: type Selectgen.selector *)
+(*s: type [[Selectgen.selector]] *)
 type selector = {
   (* old: virtuals *)
 
@@ -161,11 +161,11 @@ type selector = {
    Cmm.expression -> Mach.operation * Cmm.expression;
 
 }
-(*e: type Selectgen.selector *)
+(*e: type [[Selectgen.selector]] *)
 
-(*s: signature Selectgen.selector_generic *)
+(*s: signature [[Selectgen.selector_generic]] *)
 val selector_generic: unit -> selector
-(*e: signature Selectgen.selector_generic *)
+(*e: signature [[Selectgen.selector_generic]] *)
 
 
 (*

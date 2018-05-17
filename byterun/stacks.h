@@ -28,12 +28,12 @@ extern value * extern_sp;
 extern value * trapsp;
 extern value * trap_barrier;
 
-/*s: function Trap_pc */
+/*s: function [[Trap_pc]] */
 #define Trap_pc(tp) (((code_t *)(tp))[0])
-/*e: function Trap_pc */
-/*s: function Trap_link */
+/*e: function [[Trap_pc]] */
+/*s: function [[Trap_link]] */
 #define Trap_link(tp) (((value **)(tp))[1])
-/*e: function Trap_link */
+/*e: function [[Trap_link]] */
 
 void reset_roots (void);
 void init_stack (unsigned long init_max_size);

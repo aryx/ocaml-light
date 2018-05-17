@@ -42,14 +42,14 @@ extern int errno;
 
 extern char * strerror(int);
 
-/*s: function error_message */
+/*s: function [[error_message]] */
 char * error_message(void)
 {
   return strerror(errno);
 }
-/*e: function error_message */
+/*e: function [[error_message]] */
 
-/*s: function sys_error */
+/*s: function [[sys_error]] */
 void sys_error(value arg)
 {
   char * err = error_message();
@@ -69,9 +69,9 @@ void sys_error(value arg)
   }
   raise_sys_error(str);
 }
-/*e: function sys_error */
+/*e: function [[sys_error]] */
 
-/*s: function sys_exit */
+/*s: function [[sys_exit]] */
 value sys_exit(value retcode)          /* ML */
 {
 #ifndef NATIVE_CODE
@@ -80,15 +80,15 @@ value sys_exit(value retcode)          /* ML */
   exit(Int_val(retcode));
   return Val_unit;
 }
-/*e: function sys_exit */
+/*e: function [[sys_exit]] */
 
-/*s: global sys_open_flags */
+/*s: global [[sys_open_flags]] */
 static int sys_open_flags[] = {
   O_RDONLY, O_WRONLY, O_APPEND, O_CREAT, O_TRUNC, O_EXCL, O_NONBLOCK
 };
-/*e: global sys_open_flags */
+/*e: global [[sys_open_flags]] */
 
-/*s: function sys_open */
+/*s: function [[sys_open]] */
 value sys_open(value path, value flags, value perm) /* ML */
 {
   int ret;
@@ -97,25 +97,25 @@ value sys_open(value path, value flags, value perm) /* ML */
   if (ret == -1) sys_error(path);
   return Val_long(ret);
 }
-/*e: function sys_open */
+/*e: function [[sys_open]] */
 
-/*s: function sys_close */
+/*s: function [[sys_close]] */
 value sys_close(value fd)             /* ML */
 {
   close(Int_val(fd));
   return Val_unit;
 }
-/*e: function sys_close */
+/*e: function [[sys_close]] */
 
-/*s: function sys_file_exists */
+/*s: function [[sys_file_exists]] */
 value sys_file_exists(value name)     /* ML */
 {
   struct stat st;
   return Val_bool(stat(String_val(name), &st) == 0);
 }
-/*e: function sys_file_exists */
+/*e: function [[sys_file_exists]] */
 
-/*s: function sys_remove */
+/*s: function [[sys_remove]] */
 value sys_remove(value name)          /* ML */
 {
   int ret;
@@ -123,35 +123,35 @@ value sys_remove(value name)          /* ML */
   if (ret != 0) sys_error(name);
   return Val_unit;
 }
-/*e: function sys_remove */
+/*e: function [[sys_remove]] */
 
-/*s: function sys_rename */
+/*s: function [[sys_rename]] */
 value sys_rename(value oldname, value newname) /* ML */
 {
   if (rename(String_val(oldname), String_val(newname)) != 0)
     sys_error(oldname);
   return Val_unit;
 }
-/*e: function sys_rename */
+/*e: function [[sys_rename]] */
 
-/*s: function sys_chdir */
+/*s: function [[sys_chdir]] */
 value sys_chdir(value dirname)        /* ML */
 {
   if (chdir(String_val(dirname)) != 0) sys_error(dirname);
   return Val_unit;
 }
-/*e: function sys_chdir */
+/*e: function [[sys_chdir]] */
 
-/*s: function sys_getcwd */
+/*s: function [[sys_getcwd]] */
 value sys_getcwd(value unit)          /* ML */
 {
   char buff[4096];
   if (getcwd(buff, sizeof(buff)) == 0) sys_error(NO_ARG);
   return copy_string(buff);
 }
-/*e: function sys_getcwd */
+/*e: function [[sys_getcwd]] */
 
-/*s: function sys_getenv */
+/*s: function [[sys_getenv]] */
 value sys_getenv(value var)           /* ML */
 {
   char * res;
@@ -160,36 +160,36 @@ value sys_getenv(value var)           /* ML */
   if (res == 0) raise_not_found();
   return copy_string(res);
 }
-/*e: function sys_getenv */
+/*e: function [[sys_getenv]] */
 
-/*s: global main_argv */
+/*s: global [[main_argv]] */
 char ** caml_main_argv;
-/*e: global main_argv */
+/*e: global [[main_argv]] */
 
-/*s: function sys_get_argv */
+/*s: function [[sys_get_argv]] */
 value sys_get_argv(value unit)        /* ML */
 {
   return copy_string_array(caml_main_argv);
 }
-/*e: function sys_get_argv */
+/*e: function [[sys_get_argv]] */
 
-/*s: function sys_init */
+/*s: function [[sys_init]] */
 void sys_init(char **argv)
 {
   caml_main_argv = argv;
 }
-/*e: function sys_init */
+/*e: function [[sys_init]] */
 
-/*s: function sys_system_command */
+/*s: function [[sys_system_command]] */
 value sys_system_command(value command)   /* ML */
 {
   int retcode = system(String_val(command));
   if (retcode == -1) sys_error(command);
   return Val_int(retcode);
 }
-/*e: function sys_system_command */
+/*e: function [[sys_system_command]] */
 
-/*s: function sys_get_config */
+/*s: function [[sys_get_config]] */
 value sys_get_config(value unit)  /* ML */
 {
   value result;
@@ -203,17 +203,17 @@ value sys_get_config(value unit)  /* ML */
   End_roots ();
   return result;
 }
-/*e: function sys_get_config */
+/*e: function [[sys_get_config]] */
 
 /* Search path function */
 
 #ifndef S_ISREG
-/*s: function S_ISREG */
+/*s: function [[S_ISREG]] */
 #define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
-/*e: function S_ISREG */
+/*e: function [[S_ISREG]] */
 #endif
 
-/*s: function searchpath */
+/*s: function [[searchpath]] */
 char * searchpath(char * name)
 {
   char * fullname;
@@ -239,5 +239,5 @@ char * searchpath(char * name)
   }
   return fullname;
 }
-/*e: function searchpath */
+/*e: function [[searchpath]] */
 /*e: byterun/sys.c */

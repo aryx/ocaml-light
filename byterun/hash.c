@@ -18,14 +18,14 @@
 #include "memory.h"
 #include "str.h"
 
-/*s: global hash_accu */
+/*s: global [[hash_accu]] */
 static unsigned long hash_accu;
-/*e: global hash_accu */
+/*e: global [[hash_accu]] */
 static long hash_univ_limit, hash_univ_count;
 
 static void hash_aux(value obj);
 
-/*s: function hash_univ_param */
+/*s: function [[hash_univ_param]] */
 value hash_univ_param(value count, value limit, value obj) /* ML */
 {
   hash_univ_limit = Long_val(limit);
@@ -36,20 +36,20 @@ value hash_univ_param(value count, value limit, value obj) /* ML */
   /* The & has two purposes: ensure that the return value is positive
      and give the same result on 32 bit and 64 bit architectures. */
 }
-/*e: function hash_univ_param */
+/*e: function [[hash_univ_param]] */
 
-/*s: constant Alpha */
+/*s: constant [[Alpha]] */
 #define Alpha 65599
-/*e: constant Alpha */
-/*s: constant Beta */
+/*e: constant [[Alpha]] */
+/*s: constant [[Beta]] */
 #define Beta 19
-/*e: constant Beta */
-/*s: function Combine */
+/*e: constant [[Beta]] */
+/*s: function [[Combine]] */
 #define Combine(new)  (hash_accu = hash_accu * Alpha + (new))
-/*e: function Combine */
-/*s: function Combine_small */
+/*e: function [[Combine]] */
+/*s: function [[Combine_small]] */
 #define Combine_small(new) (hash_accu = hash_accu * Beta + (new))
-/*e: function Combine_small */
+/*e: function [[Combine_small]] */
 
 static void hash_aux(value obj)
 {

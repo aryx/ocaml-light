@@ -14,10 +14,10 @@
 
 open Lambda
 
-(*s: signature Printlambda.structured_constant *)
+(*s: signature [[Printlambda.structured_constant]] *)
 val structured_constant: structured_constant -> unit
-(*e: signature Printlambda.structured_constant *)
-(*s: signature Printlambda.lambda *)
+(*e: signature [[Printlambda.structured_constant]] *)
+(*s: signature [[Printlambda.lambda]] *)
 val lambda: lambda -> unit
-(*e: signature Printlambda.lambda *)
+(*e: signature [[Printlambda.lambda]] *)
 (*e: ./bytecomp/printlambda.mli *)

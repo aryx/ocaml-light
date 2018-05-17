@@ -16,7 +16,7 @@
 
 open Location
 
-(*s: function Parse.skip_phrase *)
+(*s: function [[Parse.skip_phrase]] *)
 (* Skip tokens to the end of the phrase *)
 let rec skip_phrase lexbuf =
   try
@@ -27,17 +27,17 @@ let rec skip_phrase lexbuf =
     | Lexer.Error (Lexer.Unterminated_comment, _, _) -> ()
     | Lexer.Error (Lexer.Unterminated_string, _, _) -> ()
     | Lexer.Error(_,_,_) -> skip_phrase lexbuf
-(*e: function Parse.skip_phrase *)
+(*e: function [[Parse.skip_phrase]] *)
 
-(*s: function Parse.maybe_skip_phrase *)
+(*s: function [[Parse.maybe_skip_phrase]] *)
 let maybe_skip_phrase lexbuf =
   if Parsing.is_current_lookahead Parser.SEMISEMI
   or Parsing.is_current_lookahead Parser.EOF
   then ()
   else skip_phrase lexbuf
-(*e: function Parse.maybe_skip_phrase *)
+(*e: function [[Parse.maybe_skip_phrase]] *)
 
-(*s: function Parse.wrap *)
+(*s: function [[Parse.wrap]] *)
 let wrap parsing_fun lexbuf =
   try
     let ast = parsing_fun Lexer.token lexbuf in
@@ -61,17 +61,17 @@ let wrap parsing_fun lexbuf =
         if !Location.input_name = "" 
         then maybe_skip_phrase lexbuf;
         raise err
-(*e: function Parse.wrap *)
+(*e: function [[Parse.wrap]] *)
 
-(*s: function Parse.implementation *)
+(*s: function [[Parse.implementation]] *)
 let implementation = wrap Parser.implementation
-(*e: function Parse.implementation *)
-(*s: function Parse.interface *)
+(*e: function [[Parse.implementation]] *)
+(*s: function [[Parse.interface]] *)
 let interface = wrap Parser.interface
-(*e: function Parse.interface *)
+(*e: function [[Parse.interface]] *)
 
-(*s: function Parse.xxx *)
+(*s: function [[Parse.xxx]] *)
 let toplevel_phrase = wrap Parser.toplevel_phrase
 let use_file = wrap Parser.use_file
-(*e: function Parse.xxx *)
+(*e: function [[Parse.xxx]] *)
 (*e: ./parsing/parse.ml *)

@@ -19,12 +19,12 @@ open Mach
 open Printmach
 open Linearize
 
-(*s: function Printlinear.label *)
+(*s: function [[Printlinear.label]] *)
 let label l =
   print_string "L"; print_int l
-(*e: function Printlinear.label *)
+(*e: function [[Printlinear.label]] *)
 
-(*s: function Printlinear.instr *)
+(*s: function [[Printlinear.instr]] *)
 let instr i =
   match i.desc with
     Lend -> ()
@@ -76,20 +76,20 @@ let instr i =
       print_string "pop trap"
   | Lraise ->
       print_string "raise "; reg i.arg.(0)
-(*e: function Printlinear.instr *)
+(*e: function [[Printlinear.instr]] *)
 
-(*s: function Printlinear.all_instr *)
+(*s: function [[Printlinear.all_instr]] *)
 let rec all_instr i =
   match i.desc with
     Lend -> ()
   | _ -> instr i; print_cut(); all_instr i.next
-(*e: function Printlinear.all_instr *)
+(*e: function [[Printlinear.all_instr]] *)
 
-(*s: function Printlinear.fundecl *)
+(*s: function [[Printlinear.fundecl]] *)
 let fundecl f =
   open_vbox 2;
   print_string f.fun_name; print_string ":"; print_cut();
   all_instr f.fun_body;
   close_box()
-(*e: function Printlinear.fundecl *)
+(*e: function [[Printlinear.fundecl]] *)
 (*e: asmcomp/printlinear.ml *)

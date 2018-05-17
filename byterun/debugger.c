@@ -32,24 +32,24 @@
 #include "stacks.h"
 #include "sys.h"
 
-/*s: global debugger_in_use */
+/*s: global [[debugger_in_use]] */
 int debugger_in_use = 0;
-/*e: global debugger_in_use */
-/*s: global event_count */
+/*e: global [[debugger_in_use]] */
+/*s: global [[event_count]] */
 unsigned long event_count;
-/*e: global event_count */
+/*e: global [[event_count]] */
 
 #ifndef HAS_SOCKETS
-/*s: function debugger_init ifndef HAS_SOCKETS */
+/*s: function [[debugger_init]] (ifndef [[HAS_SOCKETS]]) */
 void debugger_init(void)
 {
 }
-/*e: function debugger_init ifndef HAS_SOCKETS */
-/*s: function debugger ifndef HAS_SOCKETS */
+/*e: function [[debugger_init]] (ifndef [[HAS_SOCKETS]]) */
+/*s: function debugger (ifndef [[HAS_SOCKETS]]) */
 void debugger(enum event_kind event)
 {
 }
-/*e: function debugger ifndef HAS_SOCKETS */
+/*e: function debugger (ifndef [[HAS_SOCKETS]]) */
 #else
 
 #include <unistd.h>
@@ -61,31 +61,31 @@ void debugger(enum event_kind event)
 #include <arpa/inet.h>
 #include <netdb.h>
 
-/*s: global sock_domain */
+/*s: global [[sock_domain]] */
 static int sock_domain;         /* Socket domain for the debugger */
-/*e: global sock_domain */
-/*s: global sock_addr */
+/*e: global [[sock_domain]] */
+/*s: global [[sock_addr]] */
 static union {                  /* Socket address for the debugger */
   struct sockaddr s_gen;
   struct sockaddr_un s_unix;
   struct sockaddr_in s_inet;
 } sock_addr;
-/*e: global sock_addr */
-/*s: global sock_addr_len */
+/*e: global [[sock_addr]] */
+/*s: global [[sock_addr_len]] */
 static int sock_addr_len;       /* Length of sock_addr */
-/*e: global sock_addr_len */
+/*e: global [[sock_addr_len]] */
 
-/*s: global dbg_socket */
+/*s: global [[dbg_socket]] */
 static int dbg_socket = -1;     /* The socket connected to the debugger */
-/*e: global dbg_socket */
-/*s: global dbg_in */
+/*e: global [[dbg_socket]] */
+/*s: global [[dbg_in]] */
 static struct channel * dbg_in; /* Input channel on the socket */
-/*e: global dbg_in */
-/*s: global dbg_out */
+/*e: global [[dbg_in]] */
+/*s: global [[dbg_out]] */
 static struct channel * dbg_out;/* Output channel on the socket */
-/*e: global dbg_out */
+/*e: global [[dbg_out]] */
 
-/*s: function open_connection */
+/*s: function [[open_connection]] */
 static void open_connection(void)
 {
   dbg_socket = socket(sock_domain, SOCK_STREAM, 0);
@@ -98,18 +98,18 @@ static void open_connection(void)
   putword(dbg_out, getpid());
   flush(dbg_out);
 }
-/*e: function open_connection */
+/*e: function [[open_connection]] */
 
-/*s: function close_connection */
+/*s: function [[close_connection]] */
 static void close_connection(void)
 {
   close_channel(dbg_in);
   close_channel(dbg_out);
   dbg_socket = -1;              /* was closed by close_channel */
 }
-/*e: function close_connection */
+/*e: function [[close_connection]] */
 
-/*s: function debugger_init */
+/*s: function [[debugger_init]] */
 void debugger_init(void)
 {
   char * address;
@@ -154,9 +154,9 @@ void debugger_init(void)
   debugger_in_use = 1;
   trap_barrier = stack_high;
 }
-/*e: function debugger_init */
+/*e: function [[debugger_init]] */
 
-/*s: function getval */
+/*s: function [[getval]] */
 static value getval(struct channel *chan)
 {
   value res;
@@ -164,16 +164,16 @@ static value getval(struct channel *chan)
     raise_end_of_file(); /* Bad, but consistent with getword */
   return res;
 }
-/*e: function getval */
+/*e: function [[getval]] */
 
-/*s: function putval */
+/*s: function [[putval]] */
 static void putval(struct channel *chan, value val)
 {
   really_putblock(chan, (char *) &val, sizeof(val));
 }
-/*e: function putval */
+/*e: function [[putval]] */
 
-/*s: function safe_output_value */
+/*s: function [[safe_output_value]] */
 static void safe_output_value(struct channel *chan, value val)
 {
   struct longjmp_buffer raise_buf, * saved_external_raise;
@@ -189,22 +189,22 @@ static void safe_output_value(struct channel *chan, value val)
   }
   external_raise = saved_external_raise;
 }
-/*e: function safe_output_value */
+/*e: function [[safe_output_value]] */
 
-/*s: function Pc */
+/*s: function [[Pc]] */
 #define Pc(sp) ((code_t)(sp[0]))
-/*e: function Pc */
-/*s: function Env */
+/*e: function [[Pc]] */
+/*s: function [[Env]] */
 #define Env(sp) (sp[1])
-/*e: function Env */
-/*s: function Extra_args */
+/*e: function [[Env]] */
+/*s: function [[Extra_args]] */
 #define Extra_args(sp) (Long_val((sp[2])))
-/*e: function Extra_args */
-/*s: function Locals */
+/*e: function [[Extra_args]] */
+/*s: function [[Locals]] */
 #define Locals(sp) (sp + 3)
-/*e: function Locals */
+/*e: function [[Locals]] */
 
-/*s: function debugger */
+/*s: function [[debugger]] */
 void debugger(enum event_kind event)
 {
   int frame_number;
@@ -359,7 +359,7 @@ void debugger(enum event_kind event)
     }
   }
 }
-/*e: function debugger */
+/*e: function [[debugger]] */
 
 #endif
 /*e: byterun/debugger.c */

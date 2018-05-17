@@ -12,9 +12,9 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Errors.report_error *)
+(*s: signature [[Errors.report_error]] *)
 (* Error report *)
 
 val report_error: exn -> unit
-(*e: signature Errors.report_error *)
+(*e: signature [[Errors.report_error]] *)
 (*e: ./driver/errors.mli *)

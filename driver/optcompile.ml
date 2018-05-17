@@ -19,7 +19,7 @@ open Config
 open Format
 open Typedtree
 
-(*s: function Optcompile.init_path *)
+(*s: function [[Optcompile.init_path]] *)
 (* Initialize the search path.
    The current directory is always searched first,
    then the directories specified with the -I option (in command-line order),
@@ -33,9 +33,9 @@ let init_path () =
      !Clflags.include_dirs in
   load_path := "" :: List.rev (Config.standard_library :: dirs);
   Env.reset_cache()
-(*e: function Optcompile.init_path *)
+(*e: function [[Optcompile.init_path]] *)
 
-(*s: function Optcompile.initial_env *)
+(*s: function [[Optcompile.initial_env]] *)
 (* Return the initial environment in which compilation proceeds. *)
 
 let initial_env () =
@@ -46,9 +46,9 @@ let initial_env () =
     else Env.open_pers_signature "Pervasives" Env.initial
   with Not_found ->
     fatal_error "cannot open Pervasives.cmi"
-(*e: function Optcompile.initial_env *)
+(*e: function [[Optcompile.initial_env]] *)
 
-(*s: function Optcompile.preprocess *)
+(*s: function [[Optcompile.preprocess]] *)
 (* Optionally preprocess a source file *)
 
 let preprocess sourcefile tmpfile =
@@ -62,22 +62,22 @@ let preprocess sourcefile tmpfile =
         exit 2
       end;
       tmpfile
-(*e: function Optcompile.preprocess *)
+(*e: function [[Optcompile.preprocess]] *)
 
-(*s: function Optcompile.remove_preprocessed *)
+(*s: function [[Optcompile.remove_preprocessed]] *)
 let remove_preprocessed inputfile =
   match !Clflags.preprocessor with
     None -> ()
   | Some _ -> remove_file inputfile
-(*e: function Optcompile.remove_preprocessed *)
+(*e: function [[Optcompile.remove_preprocessed]] *)
 
-(*s: exception Optcompile.Outdated_version *)
+(*s: exception [[Optcompile.Outdated_version]] *)
 (* Parse a file or get a dumped syntax tree in it *)
 
 exception Outdated_version
-(*e: exception Optcompile.Outdated_version *)
+(*e: exception [[Optcompile.Outdated_version]] *)
 
-(*s: function Optcompile.parse_file *)
+(*s: function [[Optcompile.parse_file]] *)
 let parse_file inputfile parse_fun ast_magic =
   let ic = open_in_bin inputfile in
   let is_ast_file =
@@ -107,9 +107,9 @@ let parse_file inputfile parse_fun ast_magic =
   in
   close_in ic;
   ast
-(*e: function Optcompile.parse_file *)
+(*e: function [[Optcompile.parse_file]] *)
 
-(*s: function Optcompile.interface *)
+(*s: function [[Optcompile.interface]] *)
 (* Compile a .mli file *)
 
 let interface sourcefile =
@@ -121,17 +121,17 @@ let interface sourcefile =
   if !Clflags.print_types then (Printtyp.signature sg; print_newline());
   Env.save_signature sg modulename (prefixname ^ ".cmi");
   remove_preprocessed inputfile
-(*e: function Optcompile.interface *)
+(*e: function [[Optcompile.interface]] *)
 
-(*s: function Optcompile.print_if *)
+(*s: function [[Optcompile.print_if]] *)
 (* Compile a .ml file *)
 
 let print_if flag printer arg =
   if !flag then begin printer arg; print_newline() end;
   arg
-(*e: function Optcompile.print_if *)
+(*e: function [[Optcompile.print_if]] *)
 
-(*s: function Optcompile.implementation *)
+(*s: function [[Optcompile.implementation]] *)
 let implementation sourcefile =
   let prefixname = Filename.chop_extension sourcefile in
   let modulename = String.capitalize(Filename.basename prefixname) in
@@ -177,10 +177,10 @@ let implementation sourcefile =
         (print_if Clflags.dump_rawlambda Printlambda.lambda lam)));
   Compilenv.save_unit_info (prefixname ^ ".cmx");
   remove_preprocessed inputfile
-(*e: function Optcompile.implementation *)
+(*e: function [[Optcompile.implementation]] *)
 
-(*s: function Optcompile.c_file *)
+(*s: function [[Optcompile.c_file]] *)
 let c_file name =
   if Ccomp.compile_file_native name <> 0 then exit 2
-(*e: function Optcompile.c_file *)
+(*e: function [[Optcompile.c_file]] *)
 (*e: ./driver/optcompile.ml *)

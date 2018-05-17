@@ -12,10 +12,10 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Closure.intro *)
+(*s: signature [[Closure.intro]] *)
 (* Introduction of closures, uncurrying, recognition of direct calls *)
 
 val intro: int -> Lambda.lambda -> Clambda.ulambda
-(*e: signature Closure.intro *)
+(*e: signature [[Closure.intro]] *)
 
 (*e: asmcomp/closure.mli *)

@@ -10,13 +10,13 @@
 value md5_string (value str, value ofs, value len);
 value md5_chan (value vchan, value len);
 
-/*s: struct MD5Context */
+/*s: struct [[MD5Context]] */
 struct MD5Context {
         uint32 buf[4];
         uint32 bits[2];
         unsigned char in[64];
 };
-/*e: struct MD5Context */
+/*e: struct [[MD5Context]] */
 
 void MD5Init (struct MD5Context *context);
 void MD5Update (struct MD5Context *context, unsigned char *buf, unsigned len);

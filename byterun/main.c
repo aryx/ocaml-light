@@ -21,12 +21,12 @@
 
 extern void caml_main (char **);
 
-/*s: function main */
+/*s: function [[main]] */
 int main(int argc, char **argv)
 {
   caml_main(argv);
   sys_exit(Val_int(0));
   return 0; /* not reached */
 }
-/*e: function main */
+/*e: function [[main]] */
 /*e: byterun/main.c */

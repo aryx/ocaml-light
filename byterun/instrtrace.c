@@ -26,19 +26,19 @@
 extern code_t start_code;
 extern char * names_of_cprim[];
 
-/*s: global icount */
+/*s: global [[icount]] */
 long icount = 0;
-/*e: global icount */
+/*e: global [[icount]] */
 
-/*s: function stop_here */
+/*s: function [[stop_here]] */
 void stop_here () {}
-/*e: function stop_here */
+/*e: function [[stop_here]] */
 
-/*s: global trace_flag */
+/*s: global [[trace_flag]] */
 int trace_flag = 0;
-/*e: global trace_flag */
+/*e: global [[trace_flag]] */
 
-/*s: function disasm_instr */
+/*s: function [[disasm_instr]] */
 void disasm_instr(pc)
      code_t pc;
 {
@@ -70,7 +70,7 @@ void disasm_instr(pc)
       printf("\n");
     }
 }
-/*e: function disasm_instr */
+/*e: function [[disasm_instr]] */
 
 #endif
 /*e: byterun/instrtrace.c */

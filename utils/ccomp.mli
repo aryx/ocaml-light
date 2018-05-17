@@ -14,16 +14,16 @@
 
 (* Compiling C files and building C libraries *)
 
-(*s: signature Ccomp.command *)
+(*s: signature [[Ccomp.command]] *)
 val command: string -> int
-(*e: signature Ccomp.command *)
-(*s: signature Ccomp.compile_file_bytecode *)
+(*e: signature [[Ccomp.command]] *)
+(*s: signature [[Ccomp.compile_file_bytecode]] *)
 val compile_file_bytecode: string -> int
-(*e: signature Ccomp.compile_file_bytecode *)
-(*s: signature Ccomp.compile_file_native *)
+(*e: signature [[Ccomp.compile_file_bytecode]] *)
+(*s: signature [[Ccomp.compile_file_native]] *)
 val compile_file_native: string -> int
-(*e: signature Ccomp.compile_file_native *)
-(*s: signature Ccomp.create_archive *)
+(*e: signature [[Ccomp.compile_file_native]] *)
+(*s: signature [[Ccomp.create_archive]] *)
 val create_archive: string -> string list -> int
-(*e: signature Ccomp.create_archive *)
+(*e: signature [[Ccomp.create_archive]] *)
 (*e: ./utils/ccomp.mli *)

@@ -17,17 +17,17 @@
 open Types
 open Typedtree
 
-(*s: signature Includemod.modtypes *)
+(*s: signature [[Includemod.modtypes]] *)
 val modtypes: Env.t -> module_type -> module_type -> module_coercion
-(*e: signature Includemod.modtypes *)
-(*s: signature Includemod.signatures *)
+(*e: signature [[Includemod.modtypes]] *)
+(*s: signature [[Includemod.signatures]] *)
 val signatures: Env.t -> signature -> signature -> module_coercion
-(*e: signature Includemod.signatures *)
-(*s: signature Includemod.compunit *)
+(*e: signature [[Includemod.signatures]] *)
+(*s: signature [[Includemod.compunit]] *)
 val compunit: string -> signature -> string -> signature -> module_coercion
-(*e: signature Includemod.compunit *)
+(*e: signature [[Includemod.compunit]] *)
 
-(*s: type Includemod.error *)
+(*s: type [[Includemod.error]] *)
 type error =
     Missing_field of Ident.t
   (* X do not match Y *)
@@ -38,13 +38,13 @@ type error =
   | Module_types of module_type * module_type
 
   | Interface_mismatch of string * string
-(*e: type Includemod.error *)
+(*e: type [[Includemod.error]] *)
 
-(*s: exception Includemod.Error *)
+(*s: exception [[Includemod.Error]] *)
 exception Error of error list
-(*e: exception Includemod.Error *)
+(*e: exception [[Includemod.Error]] *)
 
-(*s: signature Includemod.report_error *)
+(*s: signature [[Includemod.report_error]] *)
 val report_error: error list -> unit
-(*e: signature Includemod.report_error *)
+(*e: signature [[Includemod.report_error]] *)
 (*e: ./typing/includemod.mli *)

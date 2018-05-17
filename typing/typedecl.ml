@@ -20,7 +20,7 @@ open Typedtree
 open Typetexp
 
 
-(*s: type Typedecl.error *)
+(*s: type [[Typedecl.error]] *)
 type error =
     Repeated_parameter
   | Duplicate_constructor of string
@@ -28,13 +28,13 @@ type error =
   | Duplicate_label of string
   | Recursive_abbrev of string
   | Definition_mismatch of type_expr
-(*e: type Typedecl.error *)
+(*e: type [[Typedecl.error]] *)
 
-(*s: exception Typedecl.Error *)
+(*s: exception [[Typedecl.Error]] *)
 exception Error of Location.t * error
-(*e: exception Typedecl.Error *)
+(*e: exception [[Typedecl.Error]] *)
 
-(*s: function Typedecl.enter_types *)
+(*s: function [[Typedecl.enter_types]] *)
 (* Enter all declared types in the environment as abstract types *)
 
 let rec enter_types env = function
@@ -49,13 +49,13 @@ let rec enter_types env = function
       let (id, extenv) = Env.enter_type name decl env in
       let (rem_id, final_env) = enter_types extenv srem in
       (id :: rem_id, final_env)
-(*e: function Typedecl.enter_types *)
+(*e: function [[Typedecl.enter_types]] *)
 
 (* Translate one type declaration *)
 
 module StringSet = Set
 
-(*s: function Typedecl.transl_declaration *)
+(*s: function [[Typedecl.transl_declaration]] *)
 let transl_declaration env (name, sdecl) id =
   Ctype.begin_def();
   reset_type_variables();
@@ -135,9 +135,9 @@ let transl_declaration env (name, sdecl) id =
   );
   (*e: [[Typedecl.transl_declaration()]] sanity check decl *)
   (id, decl)
-(*e: function Typedecl.transl_declaration *)
+(*e: function [[Typedecl.transl_declaration]] *)
 
-(*s: function Typedecl.check_recursive_abbrev *)
+(*s: function [[Typedecl.check_recursive_abbrev]] *)
 (* Check for recursive abbrevs *)
 
 let check_recursive_abbrev env (name, sdecl) (id, decl) =
@@ -146,9 +146,9 @@ let check_recursive_abbrev env (name, sdecl) (id, decl) =
       if Ctype.free_type_ident env [id] ty
       then raise(Error(sdecl.ptype_loc, Recursive_abbrev name))
   | _ -> ()
-(*e: function Typedecl.check_recursive_abbrev *)
+(*e: function [[Typedecl.check_recursive_abbrev]] *)
 
-(*s: function Typedecl.transl_type_decl *)
+(*s: function [[Typedecl.transl_type_decl]] *)
 (* Translate a set of mutually recursive type declarations *)
 
 let transl_type_decl env name_sdecl_list =
@@ -176,9 +176,9 @@ let transl_type_decl env name_sdecl_list =
   (* Done *)
   (*e: [[Typedecl.transl_type_decl()]] check recursive abbrevs *)
   (decls, newenv)
-(*e: function Typedecl.transl_type_decl *)
+(*e: function [[Typedecl.transl_type_decl]] *)
 
-(*s: function Typedecl.transl_exception *)
+(*s: function [[Typedecl.transl_exception]] *)
 (* Translate an exception declaration *)
 
 let transl_exception env excdecl =
@@ -186,22 +186,22 @@ let transl_exception env excdecl =
   reset_type_variables();
 
   List.map (transl_simple_type env true) excdecl
-(*e: function Typedecl.transl_exception *)
+(*e: function [[Typedecl.transl_exception]] *)
 
-(*s: function Typedecl.transl_value_decl *)
+(*s: function [[Typedecl.transl_value_decl]] *)
 (* Translate a value declaration *)
 
 let transl_value_decl env valdecl =
   let ty = Typetexp.transl_type_scheme env valdecl.pval_type in
   { val_type = ty;
     val_prim = Primitive.parse_declaration (Ctype.arity ty) valdecl.pval_prim }
-(*e: function Typedecl.transl_value_decl *)
+(*e: function [[Typedecl.transl_value_decl]] *)
 
 (* Error report *)
 
 open Format
 
-(*s: function Typedecl.report_error *)
+(*s: function [[Typedecl.report_error]] *)
 let report_error = function
     Repeated_parameter ->
       print_string "A type parameter occurs several times"
@@ -219,6 +219,6 @@ let report_error = function
       print_string
         "The variant or record definition does not match that of type";
       print_space(); Printtyp.type_expr ty
-(*e: function Typedecl.report_error *)
+(*e: function [[Typedecl.report_error]] *)
 
 (*e: ./typing/typedecl.ml *)

@@ -12,7 +12,7 @@
 (***********************************************************************)
 (*e: copyright header 1997 *)
 
-(*s: type Reloadgen.reloader *)
+(*s: type [[Reloadgen.reloader]] *)
 
 type reloader = {
  reload_operation :
@@ -40,11 +40,11 @@ type reloader = {
    reloader -> Mach.instruction -> Mach.instruction;
  
 }
-(*e: type Reloadgen.reloader *)
+(*e: type [[Reloadgen.reloader]] *)
 
-(*s: signature Reloadgen.reload_generic *)
+(*s: signature [[Reloadgen.reload_generic]] *)
 val reload_generic: unit -> reloader
-(*e: signature Reloadgen.reload_generic *)
+(*e: signature [[Reloadgen.reload_generic]] *)
 
 (*
  reload_operation = super.eload_operation;

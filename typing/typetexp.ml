@@ -18,33 +18,33 @@ open Parsetree
 open Types
 open Ctype
 
-(*s: exception Typetexp.Already_bound *)
+(*s: exception [[Typetexp.Already_bound]] *)
 exception Already_bound
-(*e: exception Typetexp.Already_bound *)
+(*e: exception [[Typetexp.Already_bound]] *)
 
-(*s: type Typetexp.error *)
+(*s: type [[Typetexp.error]] *)
 type error =
     Unbound_type_variable of string
   | Unbound_type_constructor of Longident.t
   | Type_arity_mismatch of Longident.t * int * int
-(*e: type Typetexp.error *)
+(*e: type [[Typetexp.error]] *)
 
-(*s: exception Typetexp.Error *)
+(*s: exception [[Typetexp.Error]] *)
 exception Error of Location.t * error
-(*e: exception Typetexp.Error *)
+(*e: exception [[Typetexp.Error]] *)
 
-(*s: constant Typetexp.type_variables *)
+(*s: constant [[Typetexp.type_variables]] *)
 (* Translation of type expressions *)
 
 let type_variables = ref (Tbl.empty : (string, Types.type_expr) Tbl.t)
-(*e: constant Typetexp.type_variables *)
+(*e: constant [[Typetexp.type_variables]] *)
 
-(*s: function Typetexp.reset_type_variables *)
+(*s: function [[Typetexp.reset_type_variables]] *)
 let reset_type_variables () =
   type_variables := Tbl.empty
-(*e: function Typetexp.reset_type_variables *)
+(*e: function [[Typetexp.reset_type_variables]] *)
 
-(*s: function Typetexp.enter_type_variable *)
+(*s: function [[Typetexp.enter_type_variable]] *)
 let enter_type_variable name =
   try
     Tbl.find name !type_variables; 
@@ -53,9 +53,9 @@ let enter_type_variable name =
     let v = new_global_var() in
     type_variables := Tbl.add name v !type_variables;
     v
-(*e: function Typetexp.enter_type_variable *)
+(*e: function [[Typetexp.enter_type_variable]] *)
 
-(*s: function Typetexp.transl_simple_type *)
+(*s: function [[Typetexp.transl_simple_type]] *)
 let rec transl_simple_type env fixed styp =
   match styp.ptyp_desc with
   | Ptyp_var name ->
@@ -64,13 +64,13 @@ let rec transl_simple_type env fixed styp =
       with Not_found ->
         if fixed 
         then raise(Error(styp.ptyp_loc, Unbound_type_variable name))
-        (*s: [[Typetexp.transl_simple_type()]] when not fixed and Not_found *)
+        (*s: [[Typetexp.transl_simple_type()]] when not fixed and [[Not_found]] *)
         else begin
           let v = new_global_var() in
           type_variables := Tbl.add name v !type_variables;
           v
         end
-        (*e: [[Typetexp.transl_simple_type()]] when not fixed and Not_found *)
+        (*e: [[Typetexp.transl_simple_type()]] when not fixed and [[Not_found]] *)
       end
   | Ptyp_constr(lid, stl) ->
       let (path, decl) =
@@ -91,9 +91,9 @@ let rec transl_simple_type env fixed styp =
              transl_simple_type env fixed st2)
   | Ptyp_tuple stl ->
       Ttuple(List.map (transl_simple_type env fixed) stl)
-(*e: function Typetexp.transl_simple_type *)
+(*e: function [[Typetexp.transl_simple_type]] *)
 
-(*s: function Typetexp.transl_type_scheme *)
+(*s: function [[Typetexp.transl_type_scheme]] *)
 let transl_type_scheme env styp =
   Ctype.reset_def();
   reset_type_variables();
@@ -104,14 +104,14 @@ let transl_type_scheme env styp =
 
   generalize typ;
   typ
-(*e: function Typetexp.transl_type_scheme *)
+(*e: function [[Typetexp.transl_type_scheme]] *)
 
 (* Error report *)
 
 open Format
 open Printtyp
 
-(*s: function Typetexp.report_error *)
+(*s: function [[Typetexp.report_error]] *)
 let report_error = function
     Unbound_type_variable name ->
       print_string "Unbound type parameter "; print_string name
@@ -125,5 +125,5 @@ let report_error = function
       print_string "but is here applied to "; print_int provided;
       print_string " argument(s)";
       close_box()
-(*e: function Typetexp.report_error *)
+(*e: function [[Typetexp.report_error]] *)
 (*e: ./typing/typetexp.ml *)

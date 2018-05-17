@@ -12,9 +12,9 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Split.fundecl *)
+(*s: signature [[Split.fundecl]] *)
 (* Renaming of registers at reload points to split live ranges. *)
 
 val fundecl: Mach.fundecl -> Mach.fundecl
-(*e: signature Split.fundecl *)
+(*e: signature [[Split.fundecl]] *)
 (*e: asmcomp/split.mli *)

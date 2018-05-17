@@ -18,11 +18,11 @@
 open Asttypes
 open Lambda
 
-(*s: type Clambda.function_label (asmcomp/clambda.ml) *)
+(*s: type [[Clambda.function_label]]([[(asmcomp/clambda.ml)]]) *)
 type function_label = string
-(*e: type Clambda.function_label (asmcomp/clambda.ml) *)
+(*e: type [[Clambda.function_label]]([[(asmcomp/clambda.ml)]]) *)
 
-(*s: type Clambda.ulambda (asmcomp/clambda.ml) *)
+(*s: type [[Clambda.ulambda]]([[(asmcomp/clambda.ml)]]) *)
 type ulambda =
     Uvar of Ident.t
   | Uconst of structured_constant
@@ -43,18 +43,18 @@ type ulambda =
   | Uwhile of ulambda * ulambda
   | Ufor of Ident.t * ulambda * ulambda * direction_flag * ulambda
   | Uassign of Ident.t * ulambda
-(*e: type Clambda.ulambda (asmcomp/clambda.ml) *)
+(*e: type [[Clambda.ulambda]]([[(asmcomp/clambda.ml)]]) *)
 
-(*s: type Clambda.ulambda_switch (asmcomp/clambda.ml) *)
+(*s: type [[Clambda.ulambda_switch]]([[(asmcomp/clambda.ml)]]) *)
 and ulambda_switch =
   { us_index_consts: int array;
     us_cases_consts: ulambda array;
     us_index_blocks: int array;
     us_cases_blocks: ulambda array;
     us_checked: bool }
-(*e: type Clambda.ulambda_switch (asmcomp/clambda.ml) *)
+(*e: type [[Clambda.ulambda_switch]]([[(asmcomp/clambda.ml)]]) *)
 
-(*s: type Clambda.function_description (asmcomp/clambda.ml) *)
+(*s: type [[Clambda.function_description]]([[(asmcomp/clambda.ml)]]) *)
 (* Description of known functions *)
 
 type function_description =
@@ -62,14 +62,14 @@ type function_description =
     fun_arity: int;                     (* Number of arguments *)
     mutable fun_closed: bool;           (* True if environment not used *)
     mutable fun_inline: (Ident.t list * ulambda) option }
-(*e: type Clambda.function_description (asmcomp/clambda.ml) *)
+(*e: type [[Clambda.function_description]]([[(asmcomp/clambda.ml)]]) *)
 
-(*s: type Clambda.value_approximation (asmcomp/clambda.ml) *)
+(*s: type [[Clambda.value_approximation]]([[(asmcomp/clambda.ml)]]) *)
 (* Approximation of values *)
 
 type value_approximation =
     Value_closure of function_description * value_approximation
   | Value_tuple of value_approximation array
   | Value_unknown
-(*e: type Clambda.value_approximation (asmcomp/clambda.ml) *)
+(*e: type [[Clambda.value_approximation]]([[(asmcomp/clambda.ml)]]) *)
 (*e: asmcomp/clambda.ml *)

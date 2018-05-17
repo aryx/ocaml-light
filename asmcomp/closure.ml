@@ -22,7 +22,7 @@ open Clambda
 
 module IdentSet = Set
 
-(*s: function Closure.split_list *)
+(*s: function [[Closure.split_list]] *)
 (* Auxiliaries for compiling functions *)
 
 let rec split_list n l =
@@ -31,17 +31,17 @@ let rec split_list n l =
       [] -> fatal_error "Closure.split_list"
     | a::l -> let (l1, l2) = split_list (n-1) l in (a::l1, l2)
   end
-(*e: function Closure.split_list *)
+(*e: function [[Closure.split_list]] *)
 
-(*s: function Closure.build_closure_env *)
+(*s: function [[Closure.build_closure_env]] *)
 let rec build_closure_env env_param pos = function
     [] -> Tbl.empty
   | id :: rem ->
       Tbl.add id (Uprim(Pfield pos, [Uvar env_param])) 
               (build_closure_env env_param (pos+1) rem)
-(*e: function Closure.build_closure_env *)
+(*e: function [[Closure.build_closure_env]] *)
 
-(*s: function Closure.occurs_var *)
+(*s: function [[Closure.occurs_var]] *)
 (* Check if a variable occurs in a [clambda] term. *)
 
 let occurs_var var u =
@@ -77,9 +77,9 @@ let occurs_var var u =
     with Exit ->
       true
   in occurs u
-(*e: function Closure.occurs_var *)
+(*e: function [[Closure.occurs_var]] *)
 
-(*s: function Closure.prim_size *)
+(*s: function [[Closure.prim_size]] *)
 (* Determine whether the estimated size of a clambda term is below
    some threshold *)
 
@@ -105,9 +105,9 @@ let prim_size prim args =
   | Parraysets kind -> if kind = Pgenarray then 22 else 10
   | Pbittest -> 3
   | _ -> 2 (* arithmetic and comparisons *)
-(*e: function Closure.prim_size *)
+(*e: function [[Closure.prim_size]] *)
 
-(*s: function Closure.lambda_smaller *)
+(*s: function [[Closure.lambda_smaller]] *)
 let lambda_smaller lam threshold =
   let size = ref 0 in
   let rec lambda_size lam =
@@ -162,9 +162,9 @@ let lambda_smaller lam threshold =
     lambda_size lam; !size <= threshold
   with Exit ->
     false
-(*e: function Closure.lambda_smaller *)
+(*e: function [[Closure.lambda_smaller]] *)
 
-(*s: function Closure.is_pure *)
+(*s: function [[Closure.is_pure]] *)
 (* Check if a lambda term denoting a function is ``pure'',
    that is without side-effects *and* not containing function definitions *)
 
@@ -173,9 +173,9 @@ let rec is_pure = function
   | Lprim(Pgetglobal id, _) -> true
   | Lprim(Pfield n, [arg]) -> is_pure arg
   | _ -> false
-(*e: function Closure.is_pure *)
+(*e: function [[Closure.is_pure]] *)
 
-(*s: function Closure.direct_apply *)
+(*s: function [[Closure.direct_apply]] *)
 (* Generate a direct application *)
 
 let direct_apply fundesc funct ufunct uargs =
@@ -189,15 +189,15 @@ let direct_apply fundesc funct ufunct uargs =
           (fun param arg body -> Ulet(param, arg, body))
           params app_args body in
   (if is_pure funct then app else Usequence(ufunct, app))
-(*e: function Closure.direct_apply *)
+(*e: function [[Closure.direct_apply]] *)
 
-(*s: constant Closure.global_approx *)
+(*s: constant [[Closure.global_approx]] *)
 (* Maintain the approximation of the global structure being defined *)
 
 let global_approx = ref([||] : value_approximation array)
-(*e: constant Closure.global_approx *)
+(*e: constant [[Closure.global_approx]] *)
 
-(*s: function Closure.close_var *)
+(*s: function [[Closure.close_var]] *)
 (* Uncurry an expression and explicitate closures.
    Also return the approximation of the expression.
    The approximation environment [fenv] maps idents to approximations.
@@ -207,14 +207,14 @@ let global_approx = ref([||] : value_approximation array)
 
 let close_var cenv id =
   try Tbl.find id cenv with Not_found -> Uvar id
-(*e: function Closure.close_var *)
+(*e: function [[Closure.close_var]] *)
 
-(*s: function Closure.approx_var *)
+(*s: function [[Closure.approx_var]] *)
 let approx_var fenv id =
   try Tbl.find id fenv with Not_found -> Value_unknown 
-(*e: function Closure.approx_var *)
+(*e: function [[Closure.approx_var]] *)
 
-(*s: function Closure.close *)
+(*s: function [[Closure.close]] *)
 let rec close fenv cenv = function
     Lvar id ->
       (close_var cenv id, approx_var fenv id)
@@ -461,9 +461,9 @@ and close_switch fenv cenv num_keys cases =
         incr num_cases)
     cases;
   (index, Array.of_list(List.rev !ucases))
-(*e: function Closure.close *)
+(*e: function [[Closure.close]] *)
 
-(*s: function Closure.intro *)
+(*s: function [[Closure.intro]] *)
 (* The entry point *)
 
 let intro size lam =
@@ -472,5 +472,5 @@ let intro size lam =
   Compilenv.set_global_approx(Value_tuple !global_approx);
   global_approx := [||];
   ulam
-(*e: function Closure.intro *)
+(*e: function [[Closure.intro]] *)
 (*e: asmcomp/closure.ml *)

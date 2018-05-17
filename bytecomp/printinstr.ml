@@ -19,7 +19,7 @@ open Lambda
 open Instruct
 
 
-(*s: constant Printinstr.instruction *)
+(*s: constant [[Printinstr.instruction]] *)
 let instruction = function
     Klabel lbl -> print_string "L"; print_int lbl; print_string ":"
   | Kacc n -> print_string "\tacc "; print_int n
@@ -97,21 +97,21 @@ let instruction = function
   | Koffsetref n -> print_string "\toffsetref "; print_int n
   | Kstop -> print_string "\tstop"
   | Kevent ev -> print_string "\tevent "; print_int ev.ev_char
-(*e: constant Printinstr.instruction *)
+(*e: constant [[Printinstr.instruction]] *)
 
-(*s: constant Printinstr.instruction_list *)
+(*s: constant [[Printinstr.instruction_list]] *)
 let rec instruction_list = function
     [] -> ()
   | Klabel lbl :: il ->
       print_string "L"; print_int lbl; print_string ":"; instruction_list il
   | instr :: il ->
       instruction instr; print_space(); instruction_list il
-(*e: constant Printinstr.instruction_list *)
+(*e: constant [[Printinstr.instruction_list]] *)
  
-(*s: function Printinstr.instrlist *)
+(*s: function [[Printinstr.instrlist]] *)
 let instrlist il =
   open_vbox 0;
   instruction_list il;
   close_box()
-(*e: function Printinstr.instrlist *)
+(*e: function [[Printinstr.instrlist]] *)
 (*e: ./bytecomp/printinstr.ml *)

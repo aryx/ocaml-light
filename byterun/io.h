@@ -21,12 +21,12 @@
 #include "mlvalues.h"
 
 #ifndef IO_BUFFER_SIZE
-/*s: constant IO_BUFFER_SIZE */
+/*s: constant [[IO_BUFFER_SIZE]] */
 #define IO_BUFFER_SIZE 4096
-/*e: constant IO_BUFFER_SIZE */
+/*e: constant [[IO_BUFFER_SIZE]] */
 #endif
 
-/*s: struct channel */
+/*s: struct [[channel]] */
 struct channel {
   int fd;                       /* Unix file descriptor */
   long offset;                  /* Absolute position of fd in the file */
@@ -36,7 +36,7 @@ struct channel {
   void * mutex;                 /* Placeholder for mutex (for systhreads) */
   char buff[IO_BUFFER_SIZE];    /* The buffer itself */
 };
-/*e: struct channel */
+/*e: struct [[channel]] */
 
 /* For an output channel:
      [offset] is the absolute position of the beginning of the buffer [buff].
@@ -44,21 +44,21 @@ struct channel {
      [offset] is the absolute position of the logical end of the buffer, [max].
 */
 
-/*s: function putch */
+/*s: function [[putch]] */
 /* Functions and macros that can be called from C.  Take arguments of
    type struct channel *.  No locking is performed. */
 
 #define putch(channel, ch)                                                  \
   { if ((channel)->curr >= (channel)->end) flush_partial(channel);          \
     *((channel)->curr)++ = (ch); }
-/*e: function putch */
+/*e: function [[putch]] */
 
-/*s: function getch */
+/*s: function [[getch]] */
 #define getch(channel)                                                      \
   ((channel)->curr >= (channel)->max                                        \
    ? refill(channel)                                                        \
    : (unsigned char) *((channel))->curr++)
-/*e: function getch */
+/*e: function [[getch]] */
 
 struct channel * open_descriptor (int);
 void close_channel (struct channel *);
@@ -74,11 +74,11 @@ uint32 getword (struct channel *);
 int getblock (struct channel *, char *, long);
 int really_getblock (struct channel *, char *, long);
 
-/*s: function Channel */
+/*s: function [[Channel]] */
 /* Extract a struct channel * from the heap object representing it */
 
 #define Channel(v) ((struct channel *) Field(v, 1))
-/*e: function Channel */
+/*e: function [[Channel]] */
 
 /* The locking machinery */
 

@@ -18,7 +18,7 @@
 open Reg
 open Mach
 
-(*s: function Interf.build_graph *)
+(*s: function [[Interf.build_graph]] *)
 let build_graph fundecl =
 
   (* The interference graph is represented in two ways:
@@ -182,6 +182,6 @@ let build_graph fundecl =
   in
 
   interf fundecl.fun_body; prefer 8 fundecl.fun_body
-(*e: function Interf.build_graph *)
+(*e: function [[Interf.build_graph]] *)
 
 (*e: asmcomp/interf.ml *)

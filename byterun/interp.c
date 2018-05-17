@@ -48,55 +48,55 @@ sp is a local copy of the global variable extern_sp. */
 /* Instruction decoding */
 
 #ifdef THREADED_CODE
-/*s: macro Instruct for THREADED_CODE */
+/*s: macro [[Instruct]] for [[THREADED_CODE]] */
 #  define Instruct(name) lbl_##name
-/*e: macro Instruct for THREADED_CODE */
+/*e: macro [[Instruct]] for [[THREADED_CODE]] */
 #  if defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
-/*s: constant Jumptbl_base */
+/*s: constant [[Jumptbl_base]] */
 #    define Jumptbl_base ((char *) &&lbl_ACC0)
-/*e: constant Jumptbl_base */
+/*e: constant [[Jumptbl_base]] */
 #  else
-/*s: constant Jumptbl_base (byterun/interp.c) */
+/*s: constant [[Jumptbl_base]]([[(byterun/interp.c)]]) */
 #    define Jumptbl_base ((char *) 0)
-/*e: constant Jumptbl_base (byterun/interp.c) */
-/*s: constant jumptbl_base */
+/*e: constant [[Jumptbl_base]]([[(byterun/interp.c)]]) */
+/*s: constant [[jumptbl_base]] */
 #    define jumptbl_base ((char *) 0)
-/*e: constant jumptbl_base */
+/*e: constant [[jumptbl_base]] */
 #  endif
 #  ifdef DEBUG
-/*s: macro Next for THREADED_CODE ifdef DEBUG */
+/*s: macro [[Next]] for [[THREADED_CODE]] ifdef [[DEBUG]] */
 #    define Next goto next_instr
-/*e: macro Next for THREADED_CODE ifdef DEBUG */
+/*e: macro [[Next]] for [[THREADED_CODE]] ifdef [[DEBUG]] */
 #  else
-/*s: macro Next for THREADED_CODE */
+/*s: macro [[Next]] for [[THREADED_CODE]] */
 #    define Next goto *(void *)(jumptbl_base + *pc++)
-/*e: macro Next for THREADED_CODE */
+/*e: macro [[Next]] for [[THREADED_CODE]] */
 #  endif
 #else
-/*s: macro Instruct */
+/*s: macro [[Instruct]] */
 #  define Instruct(name) case name
-/*e: macro Instruct */
-/*s: macro Next */
+/*e: macro [[Instruct]] */
+/*s: macro [[Next]] */
 #  define Next break
-/*e: macro Next */
+/*e: macro [[Next]] */
 #endif
 
-/*s: constant Setup_for_gc (byterun/interp.c) */
+/*s: constant [[Setup_for_gc]]([[(byterun/interp.c)]]) */
 /* GC interface */
 
 #define Setup_for_gc { sp -= 2; sp[0] = accu; sp[1] = env; extern_sp = sp; }
-/*e: constant Setup_for_gc (byterun/interp.c) */
-/*s: constant Restore_after_gc (byterun/interp.c) */
+/*e: constant [[Setup_for_gc]]([[(byterun/interp.c)]]) */
+/*s: constant [[Restore_after_gc]]([[(byterun/interp.c)]]) */
 #define Restore_after_gc { accu = sp[0]; env = sp[1]; sp += 2; }
-/*e: constant Restore_after_gc (byterun/interp.c) */
-/*s: constant Setup_for_c_call */
+/*e: constant [[Restore_after_gc]]([[(byterun/interp.c)]]) */
+/*s: constant [[Setup_for_c_call]] */
 #define Setup_for_c_call { *--sp = env; extern_sp = sp; }
-/*e: constant Setup_for_c_call */
-/*s: constant Restore_after_c_call */
+/*e: constant [[Setup_for_c_call]] */
+/*s: constant [[Restore_after_c_call]] */
 #define Restore_after_c_call { sp = extern_sp; env = *sp++; }
-/*e: constant Restore_after_c_call */
+/*e: constant [[Restore_after_c_call]] */
 
-/*s: constant Setup_for_debugger */
+/*s: constant [[Setup_for_debugger]] */
 /* Debugger interface */
 
 #define Setup_for_debugger \
@@ -104,22 +104,22 @@ sp is a local copy of the global variable extern_sp. */
      sp[0] = accu; sp[1] = (value)(pc - 1); \
      sp[2] = env; sp[3] = Val_long(extra_args); \
      extern_sp = sp; }
-/*e: constant Setup_for_debugger */
-/*s: constant Restore_after_debugger */
+/*e: constant [[Setup_for_debugger]] */
+/*s: constant [[Restore_after_debugger]] */
 #define Restore_after_debugger { sp += 4; }
-/*e: constant Restore_after_debugger */
+/*e: constant [[Restore_after_debugger]] */
 
 #ifdef THREADED_CODE
-/*s: macro Restart_curr_instr if THREADED_CODE */
+/*s: macro [[Restart_curr_instr]] (if [[THREADED_CODE]]) */
 #define Restart_curr_instr \
   goto *(jumptable[saved_code[pc - 1 - start_code]])
-/*e: macro Restart_curr_instr if THREADED_CODE */
+/*e: macro [[Restart_curr_instr]] (if [[THREADED_CODE]]) */
 #else
-/*s: macro Restart_curr_instr */
+/*s: macro [[Restart_curr_instr]] */
 #define Restart_curr_instr \
   curr_instr = saved_code[pc - 1 - start_code]; \
   goto dispatch_instr
-/*e: macro Restart_curr_instr */
+/*e: macro [[Restart_curr_instr]] */
 #endif
 
 /* Register optimization.
@@ -139,22 +139,22 @@ sp is a local copy of the global variable extern_sp. */
 
 /* The interpreter itself */
 
-/*s: function interpreter */
+/*s: function [[interpreter]] */
 value interprete(code_t prog, asize_t prog_size)
 {
-  /*s: [[interprete()]] local variables */
-  /*s: [[interpreter()]] ifdef PC_REG */
+  /*s: [[interpreter()]] local variables */
+  /*s: [[interpreter()]] ifdef [[PC_REG]] */
   #ifdef PC_REG
     register code_t pc PC_REG;
     register value * sp SP_REG;
     register value accu ACCU_REG;
-  /*e: [[interpreter()]] ifdef PC_REG */
+  /*e: [[interpreter()]] ifdef [[PC_REG]] */
   #else
   register code_t pc;
   register value * sp;
   register value accu;
   #endif
-  /*s: [[interpreter()]] ifdef THREADED_CODE, jumptbl_base register declaration */
+  /*s: [[interpreter()]] ifdef [[THREADED_CODE]], [[jumptbl_base]] register declaration */
   #if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
   #ifdef JUMPTBL_BASE_REG
     register char * jumptbl_base JUMPTBL_BASE_REG;
@@ -162,55 +162,56 @@ value interprete(code_t prog, asize_t prog_size)
     register char * jumptbl_base;
   #endif
   #endif
-  /*e: [[interpreter()]] ifdef THREADED_CODE, jumptbl_base register declaration */
+  /*e: [[interpreter()]] ifdef [[THREADED_CODE]], [[jumptbl_base]] register declaration */
   value env;
   long extra_args;
 
   #ifndef THREADED_CODE
   opcode_t curr_instr;
   #endif
-  /*s: [[interprete()]] other local variables */
+  /*s: [[interpreter()]] other local variables */
   value * modify_dest, modify_newval;
-  /*x: [[interprete()]] other local variables */
+  /*x: [[interpreter()]] other local variables */
   struct longjmp_buffer *    initial_external_raise;
   int                        initial_sp_offset;
   struct caml__roots_block * initial_local_roots;
   int                        initial_callback_depth;
-  /*x: [[interprete()]] other local variables */
+  /*x: [[interpreter()]] other local variables */
   struct longjmp_buffer raise_buf;
-  /*e: [[interprete()]] other local variables */
-  /*e: [[interprete()]] local variables */
-  /*s: [[interprete()]] initialisations */
-  /*s: [[interprete()]] ifdef THREADED_CODE initialisations */
-  /*s: [[interpreter()]] ifdef THREADED_CODE, jumptable declaration */
+  /*e: [[interpreter()]] other local variables */
+  /*e: [[interpreter()]] local variables */
+
+  /*s: [[interpreter()]] initialisations */
+  /*s: [[interpreter()]] ifdef [[THREADED_CODE]] initialisations */
+  /*s: [[interpreter()]] ifdef [[THREADED_CODE]], [[jumptable]] declaration */
   #ifdef THREADED_CODE
     static void * jumptable[] = {
   #    include "jumptbl.h"
     };
   #endif
-  /*e: [[interpreter()]] ifdef THREADED_CODE, jumptable declaration */
+  /*e: [[interpreter()]] ifdef [[THREADED_CODE]], [[jumptable]] declaration */
   if (prog == NULL) {           /* Interpreter is initializing */
-    /*s: [[interpreter()]] ifdef THREADED_CODE, initializing */
+    /*s: [[interpreter()]] ifdef [[THREADED_CODE]], initializing */
     #ifdef THREADED_CODE
         instr_table = (char **) jumptable; 
         instr_base = Jumptbl_base;
     #endif
-    /*e: [[interpreter()]] ifdef THREADED_CODE, initializing */
+    /*e: [[interpreter()]] ifdef [[THREADED_CODE]], initializing */
     return Val_unit;
   }
-  /*s: [[interpreter()]] ifdef THREADED_CODE, jumptbl_base setting */
+  /*s: [[interpreter()]] ifdef [[THREADED_CODE]], [[jumptbl_base]] setting */
   #if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
     jumptbl_base = Jumptbl_base;
   #endif
-  /*e: [[interpreter()]] ifdef THREADED_CODE, jumptbl_base setting */
-  /*e: [[interprete()]] ifdef THREADED_CODE initialisations */
-  /*s: [[interprete()]] initial_xxx initialisations */
+  /*e: [[interpreter()]] ifdef [[THREADED_CODE]], [[jumptbl_base]] setting */
+  /*e: [[interpreter()]] ifdef [[THREADED_CODE]] initialisations */
+  /*s: [[interpreter()]] [[initial_xxx]] initialisations */
   initial_local_roots = local_roots;
   initial_sp_offset = (char *) stack_high - (char *) extern_sp;
   initial_external_raise = external_raise;
   initial_callback_depth = callback_depth;
-  /*e: [[interprete()]] initial_xxx initialisations */
-  /*s: [[interprete()]] exception initialisations */
+  /*e: [[interpreter()]] [[initial_xxx]] initialisations */
+  /*s: [[interpreter()]] exception initialisations */
   if (sigsetjmp(raise_buf.buf, 1)) {
     local_roots = initial_local_roots;
     sp = extern_sp;
@@ -220,16 +221,16 @@ value interprete(code_t prog, asize_t prog_size)
     goto raise_exception;
   }
   external_raise = &raise_buf;
-  /*e: [[interprete()]] exception initialisations */
+  /*e: [[interpreter()]] exception initialisations */
 
   sp = extern_sp;
   pc = prog;
   extra_args = 0;
   env = Atom(0);
   accu = Val_int(0);
-  /*e: [[interprete()]] initialisations */
+  /*e: [[interpreter()]] initialisations */
 
-  /*s: [[interpreter()]] ifdef THREADED_CODE, loop start */
+  /*s: [[interpreter()]] ifdef [[THREADED_CODE]], loop start */
   #ifdef THREADED_CODE
   #ifdef DEBUG
    next_instr:
@@ -238,17 +239,17 @@ value interprete(code_t prog, asize_t prog_size)
     Assert(sp <= stack_high);
   #endif
     goto *(void *)(jumptbl_base + *pc++); /* Jump to the first instruction */
-  /*e: [[interpreter()]] ifdef THREADED_CODE, loop start */
+  /*e: [[interpreter()]] ifdef [[THREADED_CODE]], loop start */
   #else
   while(1) {
-    /*s: [[interpreter()]] ifdef DEBUG, loop start */
+    /*s: [[interpreter()]] ifdef [[DEBUG]], loop start */
     #ifdef DEBUG
         if (icount-- == 0) stop_here ();
         if (trace_flag) disasm_instr(pc);
         Assert(sp >= stack_low);
         Assert(sp <= stack_high);
     #endif
-    /*e: [[interpreter()]] ifdef DEBUG, loop start */
+    /*e: [[interpreter()]] ifdef [[DEBUG]], loop start */
     curr_instr = *pc++;
     dispatch_instr:
     switch(curr_instr) {
@@ -709,6 +710,7 @@ value interprete(code_t prog, asize_t prog_size)
 
         Instruct(PUSHTRAP):
           sp -= 4;
+          // push
           Trap_pc(sp) = pc + *pc;
           Trap_link(sp) = trapsp;
           sp[2] = env;
@@ -730,6 +732,7 @@ value interprete(code_t prog, asize_t prog_size)
         raise_exception:
           if (trapsp >= trap_barrier) debugger(TRAP_BARRIER);
           if (backtrace_active) stash_backtrace(accu, pc, sp);
+          // unwind the stack
           sp = trapsp;
           if ((char *) sp >= (char *) stack_high - initial_sp_offset) {
             exn_bucket = accu;
@@ -737,15 +740,17 @@ value interprete(code_t prog, asize_t prog_size)
             extern_sp = sp;
             siglongjmp(external_raise->buf, 1);
           }
+          // restore
           pc = Trap_pc(sp);
           trapsp = Trap_link(sp);
           env = sp[2];
           extra_args = Long_val(sp[3]);
+
           sp += 4;
           Next;
     /*e: [[interpreter()]] exception cases */
     /*s: [[interpreter()]] signal cases */
-    /*s: [[interpreter()]] before CHECK_SIGNALS case */
+    /*s: [[interpreter()]] before [[CHECK_SIGNALS]] case */
     /* Stack checks */
 
         check_stacks:
@@ -755,7 +760,7 @@ value interprete(code_t prog, asize_t prog_size)
             sp = extern_sp;
           }
           /* Fall through CHECK_SIGNALS */
-    /*e: [[interpreter()]] before CHECK_SIGNALS case */
+    /*e: [[interpreter()]] before [[CHECK_SIGNALS]] case */
 
     /* Signal handling */
 
@@ -894,20 +899,20 @@ value interprete(code_t prog, asize_t prog_size)
           Next;
         }
     /*x: [[interpreter()]] arithmetics cases */
-        Instruct(ANDINT):
-          accu = (value)((long) accu & (long) *sp++); Next;
-        Instruct(ORINT):
-          accu = (value)((long) accu | (long) *sp++); Next;
-        Instruct(XORINT):
-          accu = (value)(((long) accu ^ (long) *sp++) | 1); Next;
+    Instruct(ANDINT):
+      accu = (value)((long) accu & (long) *sp++); Next;
+    Instruct(ORINT):
+      accu = (value)((long) accu | (long) *sp++); Next;
+    Instruct(XORINT):
+      accu = (value)(((long) accu ^ (long) *sp++) | 1); Next;
     /*x: [[interpreter()]] arithmetics cases */
-        Instruct(LSLINT):
-          accu = (value)((((long) accu - 1) << Long_val(*sp++)) + 1); Next;
-        Instruct(LSRINT):
-          accu = (value)((((unsigned long) accu - 1) >> Long_val(*sp++)) | 1);
-          Next;
-        Instruct(ASRINT):
-          accu = (value)((((long) accu - 1) >> Long_val(*sp++)) | 1); Next;
+    Instruct(LSLINT):
+      accu = (value)((((long) accu - 1) << Long_val(*sp++)) + 1); Next;
+    Instruct(LSRINT):
+      accu = (value)((((unsigned long) accu - 1) >> Long_val(*sp++)) | 1);
+      Next;
+    Instruct(ASRINT):
+      accu = (value)((((long) accu - 1) >> Long_val(*sp++)) | 1); Next;
     /*x: [[interpreter()]] arithmetics cases */
     #define Integer_comparison(opname,tst) \
         Instruct(opname): \
@@ -990,5 +995,5 @@ value interprete(code_t prog, asize_t prog_size)
   }
   #endif /* ifndef THREADED_CODE */
 }
-/*e: function interpreter */
+/*e: function [[interpreter]] */
 /*e: byterun/interp.c */

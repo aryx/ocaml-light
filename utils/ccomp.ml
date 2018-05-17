@@ -14,7 +14,7 @@
 
 (* Compiling C files and building C libraries *)
 
-(*s: function Ccomp.command *)
+(*s: function [[Ccomp.command]] *)
 let command cmdline =
   if !Clflags.verbose then begin
     prerr_string "+ ";
@@ -29,9 +29,9 @@ let command cmdline =
   end;
   ret
   
-(*e: function Ccomp.command *)
+(*e: function [[Ccomp.command]] *)
 
-(*s: function Ccomp.compile_file_bytecode *)
+(*s: function [[Ccomp.compile_file_bytecode]] *)
 let compile_file_bytecode name =
   command
    (Printf.sprintf
@@ -43,9 +43,9 @@ let compile_file_bytecode name =
                  (List.rev !Clflags.include_dirs)))
      Config.standard_library
      name)
-(*e: function Ccomp.compile_file_bytecode *)
+(*e: function [[Ccomp.compile_file_bytecode]] *)
 
-(*s: function Ccomp.compile_file_native *)
+(*s: function [[Ccomp.compile_file_native]] *)
 let compile_file_native name =
   command
    (Printf.sprintf
@@ -57,9 +57,9 @@ let compile_file_native name =
                  (List.rev !Clflags.include_dirs)))
      Config.standard_library
      name)
-(*e: function Ccomp.compile_file_native *)
+(*e: function [[Ccomp.compile_file_native]] *)
 
-(*s: function Ccomp.create_archive *)
+(*s: function [[Ccomp.create_archive]] *)
 let create_archive archive file_list =
   Misc.remove_file archive;
   match Config.system with
@@ -70,5 +70,5 @@ let create_archive archive file_list =
       if r1 <> 0 or String.length Config.ranlib = 0
       then r1
       else command(Config.ranlib ^ " " ^ archive)
-(*e: function Ccomp.create_archive *)
+(*e: function [[Ccomp.create_archive]] *)
 (*e: ./utils/ccomp.ml *)

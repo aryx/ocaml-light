@@ -29,7 +29,7 @@ typedef struct {
   char *next_bp;   /* Pointer to the first byte of the next block. */
 } block;
 
-/*s: global sentinel */
+/*s: global [[sentinel]] */
 /* The sentinel can be located anywhere in memory, but it must not be
    adjacent to any heap object. */
 static struct {
@@ -38,33 +38,33 @@ static struct {
   value first_bp;
   value filler2; /* Make sure the sentinel is never adjacent to any block. */
 } sentinel = {0, Make_header (0, 0, Blue), 0, 0};
-/*e: global sentinel */
+/*e: global [[sentinel]] */
 
-/*s: constant Fl_head */
+/*s: constant [[Fl_head]] */
 #define Fl_head ((char *) (&(sentinel.first_bp)))
-/*e: constant Fl_head */
-/*s: global fl_prev */
+/*e: constant [[Fl_head]] */
+/*s: global [[fl_prev]] */
 static char *fl_prev = Fl_head;  /* Current allocation pointer. */
-/*e: global fl_prev */
-/*s: global fl_last */
+/*e: global [[fl_prev]] */
+/*s: global [[fl_last]] */
 static char *fl_last = NULL;     /* Last block in the list.  Only valid
                                     just after fl_allocate returned NULL. */
-/*e: global fl_last */
-/*s: global fl_merge */
+/*e: global [[fl_last]] */
+/*s: global [[fl_merge]] */
 char *fl_merge = Fl_head;        /* Current insertion pointer.  Managed
                                     jointly with [sweep_slice]. */
-/*e: global fl_merge */
-/*s: global fl_cur_size */
+/*e: global [[fl_merge]] */
+/*s: global [[fl_cur_size]] */
 asize_t fl_cur_size = 0;         /* How many free words were added since
                                     the latest fl_init_merge. */
-/*e: global fl_cur_size */
+/*e: global [[fl_cur_size]] */
 
-/*s: function Next */
+/*s: function [[Next]] */
 #define Next(b) (((block *) (b))->next_bp)
-/*e: function Next */
+/*e: function [[Next]] */
 
 #ifdef DEBUG
-/*s: function fl_check */
+/*s: function [[fl_check]] */
 void fl_check (void)
 {
   char *cur, *prev;
@@ -82,10 +82,10 @@ void fl_check (void)
   Assert (prev_found || fl_prev == Fl_head);
   Assert (merge_found || fl_merge == Fl_head);
 }
-/*e: function fl_check */
+/*e: function [[fl_check]] */
 #endif
 
-/*s: function allocate_block */
+/*s: function [[allocate_block]] */
 /* [allocate_block] is called by [fl_allocate].  Given a suitable free
    block and the desired size, it allocates a new block from the free
    block.  There are three cases:
@@ -121,9 +121,9 @@ static char *allocate_block (mlsize_t wh_sz, char *prev, char *cur)
   fl_prev = prev;
   return cur + Bosize_hd (h) - Bsize_wsize (wh_sz);
 }  
-/*e: function allocate_block */
+/*e: function [[allocate_block]] */
 
-/*s: function fl_allocate */
+/*s: function [[fl_allocate]] */
 /* [fl_allocate] does not set the header of the newly allocated block.
    The calling function must do it before any GC function gets called.
    [fl_allocate] returns a head pointer.
@@ -158,13 +158,13 @@ char *fl_allocate (mlsize_t wo_sz)
     /* No suitable block was found. */
   return NULL;
 }
-/*e: function fl_allocate */
+/*e: function [[fl_allocate]] */
 
-/*s: global last_fragment */
+/*s: global [[last_fragment]] */
 static char *last_fragment;
-/*e: global last_fragment */
+/*e: global [[last_fragment]] */
 
-/*s: function fl_init_merge */
+/*s: function [[fl_init_merge]] */
 void fl_init_merge (void)
 {
   last_fragment = NULL;
@@ -174,9 +174,9 @@ void fl_init_merge (void)
   fl_check ();
 #endif
 }
-/*e: function fl_init_merge */
+/*e: function [[fl_init_merge]] */
 
-/*s: function fl_reset */
+/*s: function [[fl_reset]] */
 /* This is called by compact_heap. */
 void fl_reset (void)
 {
@@ -184,9 +184,9 @@ void fl_reset (void)
   fl_prev = Fl_head;
   fl_init_merge ();
 }
-/*e: function fl_reset */
+/*e: function [[fl_reset]] */
 
-/*s: function fl_merge_block */
+/*s: function [[fl_merge_block]] */
 /* [fl_merge_block] returns the head pointer of the next block after [bp],
    because merging blocks may change the size of [bp]. */
 char *fl_merge_block (char *bp)
@@ -258,9 +258,9 @@ char *fl_merge_block (char *bp)
   }
   return adj;
 }
-/*e: function fl_merge_block */
+/*e: function [[fl_merge_block]] */
 
-/*s: function fl_add_block */
+/*s: function [[fl_add_block]] */
 /* This is a heap extension.  We have to insert it in the right place
    in the free-list.
    [fl_add_block] can only be called just after a call to [fl_allocate]
@@ -301,5 +301,5 @@ void fl_add_block (char *bp)
     if (prev == fl_merge && bp <= gc_sweep_hp) fl_merge = bp;
   }
 }
-/*e: function fl_add_block */
+/*e: function [[fl_add_block]] */
 /*e: byterun/freelist.c */

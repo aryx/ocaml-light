@@ -22,7 +22,7 @@ open Typedtree
 open Ctype
 
 
-(*s: type Typecore.error *)
+(*s: type [[Typecore.error]] *)
 type error =
     Unbound_value       of Longident.t
   | Unbound_constructor of Longident.t
@@ -42,13 +42,13 @@ type error =
   | Label_not_mutable of Longident.t
 
   | Bad_format of string
-(*e: type Typecore.error *)
+(*e: type [[Typecore.error]] *)
 
-(*s: exception Typecore.Error *)
+(*s: exception [[Typecore.Error]] *)
 exception Error of Location.t * error
-(*e: exception Typecore.Error *)
+(*e: exception [[Typecore.Error]] *)
 
-(*s: function Typecore.type_constant *)
+(*s: function [[Typecore.type_constant]] *)
 (* Typing of constants *)
 
 let type_constant = function
@@ -56,9 +56,9 @@ let type_constant = function
   | Const_char _ -> Predef.type_char
   | Const_string _ -> Predef.type_string
   | Const_float _ -> Predef.type_float
-(*e: function Typecore.type_constant *)
+(*e: function [[Typecore.type_constant]] *)
 
-(*s: function Typecore.unify_pat *)
+(*s: function [[Typecore.unify_pat]] *)
 (* Typing of patterns *)
 
 let unify_pat env pat expected_ty =
@@ -66,22 +66,22 @@ let unify_pat env pat expected_ty =
     unify env pat.pat_type expected_ty
   with Unify ->
     raise(Error(pat.pat_loc, Pattern_type_clash(pat.pat_type, expected_ty)))
-(*e: function Typecore.unify_pat *)
+(*e: function [[Typecore.unify_pat]] *)
 
-(*s: constant Typecore.pattern_variables *)
+(*s: constant [[Typecore.pattern_variables]] *)
 let pattern_variables = ref ([]: (Ident.t * type_expr) list)
-(*e: constant Typecore.pattern_variables *)
+(*e: constant [[Typecore.pattern_variables]] *)
 
-(*s: function Typecore.enter_variable *)
+(*s: function [[Typecore.enter_variable]] *)
 let enter_variable loc name ty =
   if List.exists (fun (id, ty) -> Ident.name id = name) !pattern_variables
   then raise(Error(loc, Multiply_bound_variable));
   let id = Ident.create name in
   pattern_variables := (id, ty) :: !pattern_variables;
   id
-(*e: function Typecore.enter_variable *)
+(*e: function [[Typecore.enter_variable]] *)
 
-(*s: function Typecore.type_pat *)
+(*s: function [[Typecore.type_pat]] *)
 let rec type_pat env sp =
   match sp.ppat_desc with
     Ppat_any ->
@@ -167,9 +167,9 @@ let rec type_pat env sp =
       let ty = Typetexp.transl_simple_type env false sty in
       unify_pat env p ty;
       p
-(*e: function Typecore.type_pat *)
+(*e: function [[Typecore.type_pat]] *)
 
-(*s: function Typecore.add_pattern_variables *)
+(*s: function [[Typecore.add_pattern_variables]] *)
 let add_pattern_variables env =
   let pv = !pattern_variables in
   pattern_variables := [];
@@ -177,25 +177,25 @@ let add_pattern_variables env =
     (fun (id, ty) env ->
       Env.add_value id {val_type = ty; val_prim = None} env)
     pv env
-(*e: function Typecore.add_pattern_variables *)
+(*e: function [[Typecore.add_pattern_variables]] *)
 
-(*s: function Typecore.type_pattern *)
+(*s: function [[Typecore.type_pattern]] *)
 let type_pattern env spat =
   pattern_variables := [];
   let pat = type_pat env spat in
   let new_env = add_pattern_variables env in
   (pat, new_env)
-(*e: function Typecore.type_pattern *)
+(*e: function [[Typecore.type_pattern]] *)
 
-(*s: function Typecore.type_pattern_list *)
+(*s: function [[Typecore.type_pattern_list]] *)
 let type_pattern_list env spatl =
   pattern_variables := [];
   let patl = List.map (type_pat env) spatl in
   let new_env = add_pattern_variables env in
   (patl, new_env)
-(*e: function Typecore.type_pattern_list *)
+(*e: function [[Typecore.type_pattern_list]] *)
 
-(*s: function Typecore.is_nonexpansive *)
+(*s: function [[Typecore.is_nonexpansive]] *)
 (* Generalization criterion for expressions *)
 
 let rec is_nonexpansive exp =
@@ -227,9 +227,9 @@ let rec is_nonexpansive exp =
   (*e: [[Typecore.is_nonexpansive()]] extra cases *)
 
   | _ -> false
-(*e: function Typecore.is_nonexpansive *)
+(*e: function [[Typecore.is_nonexpansive]] *)
 
-(*s: function Typecore.type_format *)
+(*s: function [[Typecore.type_format]] *)
 (* Typing of printf formats *)
 
 let type_format loc fmt =
@@ -274,9 +274,9 @@ let type_format loc fmt =
         )
     | _ -> scan_format (i+1) in
   Tconstr(Predef.path_format, [scan_format 0; ty_input; ty_result])
-(*e: function Typecore.type_format *)
+(*e: function [[Typecore.type_format]] *)
 
-(*s: function Typecore.unify_exp *)
+(*s: function [[Typecore.unify_exp]] *)
 (* Typing of expressions *)
 
 let unify_exp env exp expected_ty =
@@ -284,9 +284,9 @@ let unify_exp env exp expected_ty =
     unify env exp.exp_type expected_ty
   with Unify ->
     raise(Error(exp.exp_loc, Expr_type_clash(exp.exp_type, expected_ty)))
-(*e: function Typecore.unify_exp *)
+(*e: function [[Typecore.unify_exp]] *)
 
-(*s: function Typecore.type_exp *)
+(*s: function [[Typecore.type_exp]] *)
 let rec type_exp env sexp =
   match sexp.pexp_desc with
   (*s: [[Typecore.type_exp()]] match cases *)
@@ -569,9 +569,9 @@ let rec type_exp env sexp =
         exp_loc = sexp.pexp_loc;
         exp_type = Predef.type_array ty }
   (*e: [[Typecore.type_exp()]] match cases *)
-(*e: function Typecore.type_exp *)
+(*e: function [[Typecore.type_exp]] *)
 
-(*s: function Typecode.type_expect *)
+(*s: function [[Typecode.type_expect]] *)
 (* Typing of an expression with an expected type.
    Some constructs are treated specially to provide better error messages. *)
 
@@ -609,9 +609,9 @@ and type_expect env sexp ty_expected =
       let exp = type_exp env sexp in
       unify_exp env exp ty_expected;
       exp
-(*e: function Typecode.type_expect *)
+(*e: function [[Typecode.type_expect]] *)
 
-(*s: function Typecore.type_statement *)
+(*s: function [[Typecore.type_statement]] *)
 (* Typing of statements (expressions whose values are discarded) *)
 
 and type_statement env sexp =
@@ -623,9 +623,9 @@ and type_statement env sexp =
            maybe some arguments are missing.";
         exp
     | _ -> exp
-(*e: function Typecore.type_statement *)
+(*e: function [[Typecore.type_statement]] *)
 
-(*s: function Typecore.type_cases *)
+(*s: function [[Typecore.type_cases]] *)
 (* Typing of match cases *)
 
 and type_cases env ty_arg ty_res caselist =
@@ -635,9 +635,9 @@ and type_cases env ty_arg ty_res caselist =
       let exp = type_expect ext_env sexp ty_res in
       (pat, exp)
   ) caselist
-(*e: function Typecore.type_cases *)
+(*e: function [[Typecore.type_cases]] *)
 
-(*s: function Typecode.type_let *)
+(*s: function [[Typecode.type_let]] *)
 (* Typing of let bindings *)
 
 and type_let env rec_flag spat_sexp_list =
@@ -679,9 +679,9 @@ and type_let env rec_flag spat_sexp_list =
   (*e: [[Typecode.type_let()]] after typing, generalize or not *)
 
   (List.combine pat_list exp_list, new_env)
-(*e: function Typecode.type_let *)
+(*e: function [[Typecode.type_let]] *)
 
-(*s: function Typecore.type_binding *)
+(*s: function [[Typecore.type_binding]] *)
 (* Typing of toplevel bindings *)
 
 let type_binding env rec_flag spat_sexp_list =
@@ -689,40 +689,40 @@ let type_binding env rec_flag spat_sexp_list =
   Typetexp.reset_type_variables();
 
   type_let env rec_flag spat_sexp_list
-(*e: function Typecore.type_binding *)
+(*e: function [[Typecore.type_binding]] *)
 
-(*s: function Typecore.type_expression *)
+(*s: function [[Typecore.type_expression]] *)
 (* Typing of toplevel expressions *)
 
 let type_expression env sexp =
-  (*s: [[Typecore.type_expression()]] before type_exp *)
-  (*s: [[Typecore.type_expression()]] before begin_def, reset *)
+  (*s: [[Typecore.type_expression()]] before [[type_exp]] *)
+  (*s: [[Typecore.type_expression()]] before [[begin_def]], reset *)
   reset_def();
   Typetexp.reset_type_variables();
-  (*e: [[Typecore.type_expression()]] before begin_def, reset *)
+  (*e: [[Typecore.type_expression()]] before [[begin_def]], reset *)
   begin_def();
-  (*e: [[Typecore.type_expression()]] before type_exp *)
+  (*e: [[Typecore.type_expression()]] before [[type_exp]] *)
   let exp = type_exp env sexp in
-  (*s: [[Typecore.type_expression()]] after type_exp *)
+  (*s: [[Typecore.type_expression()]] after [[type_exp]] *)
   end_def();
-  (*e: [[Typecore.type_expression()]] after type_exp *)
-  (*s: [[Typecore.type_expression()]] after type_exp, generalize or not *)
+  (*e: [[Typecore.type_expression()]] after [[type_exp]] *)
+  (*s: [[Typecore.type_expression()]] after [[type_exp]], generalize or not *)
   if 
     (*s: [[Typecore.type_expression()]] generalization criteria *)
     is_nonexpansive exp 
     (*e: [[Typecore.type_expression()]] generalization criteria *)
   then generalize exp.exp_type;
-  (*e: [[Typecore.type_expression()]] after type_exp, generalize or not *)
+  (*e: [[Typecore.type_expression()]] after [[type_exp]], generalize or not *)
 
   exp
-(*e: function Typecore.type_expression *)
+(*e: function [[Typecore.type_expression]] *)
 
 (* Error report *)
 
 open Format
 open Printtyp
 
-(*s: function Typecore.report_error *)
+(*s: function [[Typecore.report_error]] *)
 let report_error = function
     Unbound_value lid ->
       print_string "Unbound value "; longident lid
@@ -781,5 +781,5 @@ let report_error = function
       print_string " is not mutable"
   | Bad_format s ->
       print_string "Bad format `"; print_string s; print_string "'"
-(*e: function Typecore.report_error *)
+(*e: function [[Typecore.report_error]] *)
 (*e: ./typing/typecore.ml *)

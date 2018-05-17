@@ -16,10 +16,10 @@
 
 open Instruct
 
-(*s: signature Printinstr.instruction *)
+(*s: signature [[Printinstr.instruction]] *)
 val instruction: instruction -> unit
-(*e: signature Printinstr.instruction *)
-(*s: signature Printinstr.instrlist *)
+(*e: signature [[Printinstr.instruction]] *)
+(*s: signature [[Printinstr.instrlist]] *)
 val instrlist: instruction list -> unit
-(*e: signature Printinstr.instrlist *)
+(*e: signature [[Printinstr.instrlist]] *)
 (*e: ./bytecomp/printinstr.mli *)

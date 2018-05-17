@@ -14,17 +14,17 @@
 
 (* Entry points in the parser *)
 
-(*s: signature Parse.implementation *)
+(*s: signature [[Parse.implementation]] *)
 val implementation : Lexing.lexbuf -> Parsetree.structure
-(*e: signature Parse.implementation *)
-(*s: signature Parse.interface *)
+(*e: signature [[Parse.implementation]] *)
+(*s: signature [[Parse.interface]] *)
 val interface : Lexing.lexbuf -> Parsetree.signature
-(*e: signature Parse.interface *)
-(*s: signature Parse.toplevel_phrase *)
+(*e: signature [[Parse.interface]] *)
+(*s: signature [[Parse.toplevel_phrase]] *)
 val toplevel_phrase : Lexing.lexbuf -> Parsetree.toplevel_phrase
-(*e: signature Parse.toplevel_phrase *)
-(*s: signature Parse.use_file *)
+(*e: signature [[Parse.toplevel_phrase]] *)
+(*s: signature [[Parse.use_file]] *)
 val use_file : Lexing.lexbuf -> Parsetree.toplevel_phrase list
-(*e: signature Parse.use_file *)
+(*e: signature [[Parse.use_file]] *)
 
 (*e: ./parsing/parse.mli *)

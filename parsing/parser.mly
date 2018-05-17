@@ -43,7 +43,7 @@ let mkoperator name pos =
   { pexp_desc = Pexp_ident(Lident name); pexp_loc = rhs_loc pos }
 /*(*e: functions Parser.mkoperator *)*/
 
-/*(*s: function Parser.mkassert *)*/
+/*(*s: function [[Parser.mkassert]] *)*/
 let mkassert e =
   let {loc_start = st; loc_end = en} = Location.symbol_loc () in
   let triple = mkexp (Pexp_tuple
@@ -60,9 +60,9 @@ let mkassert e =
   | _ -> if !Clflags.noassert
          then un
          else mkexp (Pexp_ifthenelse (e, un, Some raiser))
-/*(*e: function Parser.mkassert *)*/
+/*(*e: function [[Parser.mkassert]] *)*/
 
-/*(*s: function Parser.mklazy *)*/
+/*(*s: function [[Parser.mklazy]] *)*/
 let mklazy e =
   let void_pat = mkpat (Ppat_construct (Lident "()", None)) in
   let f = mkexp (Pexp_function ([void_pat, e])) in
@@ -70,14 +70,14 @@ let mklazy e =
   let df = mkexp (Pexp_construct (delayed, Some f)) in
   let r = mkexp (Pexp_ident (Ldot (Lident "Pervasives", "ref"))) in
   mkexp (Pexp_apply (r, [df]))
-/*(*e: function Parser.mklazy *)*/
+/*(*e: function [[Parser.mklazy]] *)*/
 
-/*(*s: function Parser.mkinfix *)*/
+/*(*s: function [[Parser.mkinfix]] *)*/
 let mkinfix arg1 name arg2 =
   mkexp(Pexp_apply(mkoperator name 2, [arg1; arg2]))
-/*(*e: function Parser.mkinfix *)*/
+/*(*e: function [[Parser.mkinfix]] *)*/
 
-/*(*s: function Parser.mkuminus *)*/
+/*(*s: function [[Parser.mkuminus]] *)*/
 let mkuminus name arg =
   match arg.pexp_desc with
     Pexp_constant(Const_int n) ->
@@ -86,9 +86,9 @@ let mkuminus name arg =
       mkexp(Pexp_constant(Const_float("-" ^ f)))
   | _ ->
       mkexp(Pexp_apply(mkoperator ("~" ^ name) 1, [arg]))
-/*(*e: function Parser.mkuminus *)*/
+/*(*e: function [[Parser.mkuminus]] *)*/
 
-/*(*s: function Parser.mklistexp *)*/
+/*(*s: function [[Parser.mklistexp]] *)*/
 let rec mklistexp = function
     [] ->
       mkexp(Pexp_construct(Lident "[]", None))
@@ -96,9 +96,9 @@ let rec mklistexp = function
       mkexp(Pexp_construct(Lident "::",
                            Some(mkexp(Pexp_tuple[e1; mklistexp el]))
                            ))
-/*(*e: function Parser.mklistexp *)*/
+/*(*e: function [[Parser.mklistexp]] *)*/
 
-/*(*s: function Parser.mklistpat *)*/
+/*(*s: function [[Parser.mklistpat]] *)*/
 let rec mklistpat = function
     [] ->
       mkpat(Ppat_construct(Lident "[]", None))
@@ -106,19 +106,19 @@ let rec mklistpat = function
       mkpat(Ppat_construct(Lident "::",
                            Some(mkpat(Ppat_tuple[p1; mklistpat pl]))
                            ))
-/*(*e: function Parser.mklistpat *)*/
+/*(*e: function [[Parser.mklistpat]] *)*/
 
-/*(*s: function Parser.mkstrexp *)*/
+/*(*s: function [[Parser.mkstrexp]] *)*/
 let mkstrexp e =
   { pstr_desc = Pstr_eval e; pstr_loc = e.pexp_loc }
-/*(*e: function Parser.mkstrexp *)*/
+/*(*e: function [[Parser.mkstrexp]] *)*/
 
-/*(*s: function Parser.array_function *)*/
+/*(*s: function [[Parser.array_function]] *)*/
 let array_function str name =
   Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))
-/*(*e: function Parser.array_function *)*/
+/*(*e: function [[Parser.array_function]] *)*/
 
-/*(*s: function Parser.mkrangepat *)*/
+/*(*s: function [[Parser.mkrangepat]] *)*/
 let rec mkrangepat c1 c2 =
   if c1 > c2 
   then mkrangepat c2 c1 
@@ -127,7 +127,7 @@ let rec mkrangepat c1 c2 =
     then mkpat(Ppat_constant(Const_char c1)) 
     else mkpat(Ppat_or(mkpat(Ppat_constant(Const_char c1)),
                        mkrangepat (Char.chr(Char.code c1 + 1)) c2))
-/*(*e: function Parser.mkrangepat *)*/
+/*(*e: function [[Parser.mkrangepat]] *)*/
 
 let syntax_error () =
   raise Syntaxerr.Escape_error
@@ -294,11 +294,11 @@ structure:
 structure_tail:
     /* empty */                                 { [] }
   | structure_item structure_tail               { $1 :: $2 }
-  /*(*s: rule structure_tail optional semisemi cases *)*/
+  /*(*s: rule [[structure_tail]] optional semisemi cases *)*/
   | SEMISEMI                                    { [] }
   | SEMISEMI seq_expr structure_tail            { mkstrexp $2 :: $3 }
   | SEMISEMI structure_item structure_tail      { $2 :: $3 }
-  /*(*e: rule structure_tail optional semisemi cases *)*/
+  /*(*e: rule [[structure_tail]] optional semisemi cases *)*/
 ;
 /*(*x: structure rules *)*/
 structure_item:
@@ -335,20 +335,20 @@ module_expr:
       { mkmod(Pmod_constraint($2, $4)) }
   | LPAREN module_expr RPAREN
       { $2 }
-  /*(*s: rule module_expr error cases *)*/
+  /*(*s: rule [[module_expr]] error cases *)*/
   | STRUCT structure error
       { unclosed "struct" 1 "end" 3 }
   | LPAREN module_expr COLON module_type error
       { unclosed "(" 1 ")" 5 }
   | LPAREN module_expr error
       { unclosed "(" 1 ")" 3 }
-  /*(*e: rule module_expr error cases *)*/
+  /*(*e: rule [[module_expr]] error cases *)*/
 ;
 /*(*e: structure rules *)*/
 
 /* Module types */
 
-/*(*s: signature rules *)*/
+/*(*s: signature [[rules]] *)*/
 signature:
     /* empty */                                 { [] }
   | signature signature_item                    { $2 :: $1 }
@@ -356,7 +356,7 @@ signature:
   | signature signature_item SEMISEMI           { $2 :: $1 }
   /*(*e: rule signature optional semisemi cases *)*/
 ;
-/*(*x: signature rules *)*/
+/*(*x: signature [[rules]] *)*/
 signature_item:
     VAL val_ident COLON core_type
       { mksig(Psig_value($2, {pval_type = $4; pval_prim = []})) }
@@ -373,7 +373,7 @@ signature_item:
   | OPEN mod_longident
       { mksig(Psig_open $2) }
 ;
-/*(*x: signature rules *)*/
+/*(*x: signature [[rules]] *)*/
 module_declaration:
     COLON module_type
       { $2 }
@@ -386,15 +386,15 @@ module_type:
       { mkmty(Pmty_signature(List.rev $2)) }
   | LPAREN module_type RPAREN
       { $2 }
-  /*(*s: rule module_type error cases *)*/
+  /*(*s: rule [[module_type]] error cases *)*/
   | SIG signature error
       { unclosed "sig" 1 "end" 3 }
   | LPAREN module_type error
       { unclosed "(" 1 ")" 3 }
-  /*(*e: rule module_type error cases *)*/
+  /*(*e: rule [[module_type]] error cases *)*/
 ;
 
-/*(*e: signature rules *)*/
+/*(*e: signature [[rules]] *)*/
 
 
 /* Core expressions */
@@ -510,45 +510,45 @@ simple_expr:
       { $2 }
   | BEGIN seq_expr END
       { $2 }
-  /*(*s: rule simple_expr cases *)*/
+  /*(*s: rule [[simple_expr]] cases *)*/
   | constr_longident
       { mkexp(Pexp_construct($1, None)) }
-  /*(*x: rule simple_expr cases *)*/
+  /*(*x: rule [[simple_expr]] cases *)*/
   | LBRACKET expr_semi_list opt_semi RBRACKET
       { mklistexp(List.rev $2) }
-  /*(*x: rule simple_expr cases *)*/
+  /*(*x: rule [[simple_expr]] cases *)*/
   | LBRACE lbl_expr_list opt_semi RBRACE
       { mkexp(Pexp_record(List.rev $2)) }
-  /*(*x: rule simple_expr cases *)*/
+  /*(*x: rule [[simple_expr]] cases *)*/
   | simple_expr DOT label_longident
       { mkexp(Pexp_field($1, $3)) }
-  /*(*x: rule simple_expr cases *)*/
+  /*(*x: rule [[simple_expr]] cases *)*/
   |  val_longident
       { mkexp(Pexp_ident $1) }
-  /*(*x: rule simple_expr cases *)*/
+  /*(*x: rule [[simple_expr]] cases *)*/
   | PREFIXOP simple_expr
       { mkexp(Pexp_apply(mkoperator $1 1, [$2])) }
-  /*(*x: rule simple_expr cases *)*/
+  /*(*x: rule [[simple_expr]] cases *)*/
   | LPAREN seq_expr type_constraint RPAREN
       { mkexp(Pexp_constraint($2, $3)) }
-  /*(*x: rule simple_expr cases *)*/
+  /*(*x: rule [[simple_expr]] cases *)*/
   | LBRACE simple_expr WITH lbl_expr_list opt_semi RBRACE
       { mkexp(Pexp_record_with($2, List.rev $4)) }
-  /*(*x: rule simple_expr cases *)*/
+  /*(*x: rule [[simple_expr]] cases *)*/
   | LBRACKETBAR expr_semi_list opt_semi BARRBRACKET
       { mkexp(Pexp_array(List.rev $2)) }
   | LBRACKETBAR BARRBRACKET
       { mkexp(Pexp_array []) }
-  /*(*x: rule simple_expr cases *)*/
+  /*(*x: rule [[simple_expr]] cases *)*/
   | simple_expr DOT LPAREN seq_expr RPAREN
       { mkexp(Pexp_apply(mkexp(Pexp_ident(array_function "Array" "get")),
                          [$1; $4])) }
-  /*(*x: rule simple_expr cases *)*/
+  /*(*x: rule [[simple_expr]] cases *)*/
   | simple_expr DOT LBRACKET seq_expr RBRACKET
       { mkexp(Pexp_apply(mkexp(Pexp_ident(array_function "String" "get")),
                          [$1; $4])) }
-  /*(*e: rule simple_expr cases *)*/
-  /*(*s: rule simple_expr error cases *)*/
+  /*(*e: rule [[simple_expr]] cases *)*/
+  /*(*s: rule [[simple_expr]] error cases *)*/
   | LPAREN seq_expr error
       { unclosed "(" 1 ")" 3 }
   | BEGIN seq_expr error
@@ -563,7 +563,7 @@ simple_expr:
       { unclosed "[|" 1 "|]" 4 }
   | LBRACKET expr_semi_list opt_semi error
       { unclosed "[" 1 "]" 4 }
-  /*(*e: rule simple_expr error cases *)*/
+  /*(*e: rule [[simple_expr]] error cases *)*/
 ;
 /*(*x: expression rules *)*/
 lbl_expr_list:
@@ -590,10 +590,10 @@ fun_binding:
       { $2 }
   | simple_pattern fun_binding
       { mkexp(Pexp_function[$1,$2]) }
-  /*(*s: rule fun_binding cases *)*/
+  /*(*s: rule [[fun_binding]] cases *)*/
   | type_constraint EQUAL seq_expr %prec prec_let
       { mkexp(Pexp_constraint($3, $1)) }
-  /*(*e: rule fun_binding cases *)*/
+  /*(*e: rule [[fun_binding]] cases *)*/
 ;
 /*(*x: expression rules *)*/
 type_constraint:
@@ -657,14 +657,14 @@ simple_pattern:
 
   | LPAREN pattern COLON core_type RPAREN
       { mkpat(Ppat_constraint($2, $4)) }
-  /*(*s: rule simple_pattern other cases *)*/
+  /*(*s: rule [[simple_pattern]] other cases *)*/
     | LBRACKET pattern_semi_list opt_semi RBRACKET
         { mklistpat(List.rev $2) }
-  /*(*x: rule simple_pattern other cases *)*/
+  /*(*x: rule [[simple_pattern]] other cases *)*/
   | CHAR DOTDOT CHAR
       { mkrangepat $1 $3 }
-  /*(*e: rule simple_pattern other cases *)*/
-  /*(*s: rule simple_pattern error cases *)*/
+  /*(*e: rule [[simple_pattern]] other cases *)*/
+  /*(*s: rule [[simple_pattern]] error cases *)*/
   | LBRACE lbl_pattern_list opt_semi error
       { unclosed "{" 1 "}" 4 }
   | LBRACKET pattern_semi_list opt_semi error
@@ -673,7 +673,7 @@ simple_pattern:
       { unclosed "(" 1 ")" 3 }
   | LPAREN pattern COLON core_type error
       { unclosed "(" 1 ")" 5 }
-  /*(*e: rule simple_pattern error cases *)*/
+  /*(*e: rule [[simple_pattern]] error cases *)*/
 ;
 /*(*x: pattern rules *)*/
 lbl_pattern_list:
@@ -700,27 +700,27 @@ type_declaration:
 ;
 /*(*x: type declaration rules *)*/
 type_kind:
-  /*(*s: rule type_kind cases *)*/
+  /*(*s: rule [[type_kind]] cases *)*/
   | EQUAL constructor_declarations
       { (Ptype_variant(List.rev $2), None) }
   | EQUAL BAR constructor_declarations
       { (Ptype_variant(List.rev $3), None) }
-  /*(*x: rule type_kind cases *)*/
+  /*(*x: rule [[type_kind]] cases *)*/
   | EQUAL LBRACE label_declarations opt_semi RBRACE
       { (Ptype_record(List.rev $3), None) }
-  /*(*x: rule type_kind cases *)*/
+  /*(*x: rule [[type_kind]] cases *)*/
   |  /*empty*/
       { (Ptype_abstract, None) }
-  /*(*x: rule type_kind cases *)*/
+  /*(*x: rule [[type_kind]] cases *)*/
   | EQUAL core_type %prec prec_type_def
       { (Ptype_abstract, Some $2) }
-  /*(*x: rule type_kind cases *)*/
+  /*(*x: rule [[type_kind]] cases *)*/
   | EQUAL core_type EQUAL opt_bar constructor_declarations %prec prec_type_def
       { (Ptype_variant(List.rev $5), Some $2) }
   | EQUAL core_type EQUAL LBRACE label_declarations opt_semi RBRACE
     %prec prec_type_def
       { (Ptype_record(List.rev $5), Some $2) }
-  /*(*e: rule type_kind cases *)*/
+  /*(*e: rule [[type_kind]] cases *)*/
 ;
 /*(*x: type declaration rules *)*/
 type_parameters:
@@ -862,14 +862,14 @@ val_longident:
 
 /* Toplevel directives */
 
-/*(*s: toplevel rules *)*/
+/*(*s: toplevel [[rules]] *)*/
 toplevel_directive:
     SHARP ident                 { Ptop_dir($2, Pdir_none) }
   | SHARP ident STRING          { Ptop_dir($2, Pdir_string $3) }
   | SHARP ident INT             { Ptop_dir($2, Pdir_int $3) }
   | SHARP ident val_longident   { Ptop_dir($2, Pdir_ident $3) }
 ;
-/*(*e: toplevel rules *)*/
+/*(*e: toplevel [[rules]] *)*/
 
 /*(*s: extra rules *)*/
 primitive_declaration:

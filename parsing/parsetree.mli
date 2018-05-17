@@ -18,29 +18,29 @@ open Asttypes
 
 (* Type expressions for the core language *)
 
-(*s: type Parsetree.core_type *)
+(*s: type [[Parsetree.core_type]] *)
 type core_type =
   { ptyp_desc: core_type_desc;
     ptyp_loc: Location.t }
-(*e: type Parsetree.core_type *)
+(*e: type [[Parsetree.core_type]] *)
 
-(*s: type Parsetree.core_type_desc *)
+(*s: type [[Parsetree.core_type_desc]] *)
 and core_type_desc = 
   | Ptyp_var of string
   | Ptyp_arrow of core_type * core_type
   | Ptyp_tuple of core_type list
   | Ptyp_constr of Longident.t * core_type list
-(*e: type Parsetree.core_type_desc *)
+(*e: type [[Parsetree.core_type_desc]] *)
 
 (* Value expressions for the core language *)
 
-(*s: type Parsetree.pattern *)
+(*s: type [[Parsetree.pattern]] *)
 type pattern =
   { ppat_desc: pattern_desc;
     ppat_loc: Location.t }
-(*e: type Parsetree.pattern *)
+(*e: type [[Parsetree.pattern]] *)
 
-(*s: type Parsetree.pattern_desc *)
+(*s: type [[Parsetree.pattern_desc]] *)
 and pattern_desc =
     Ppat_any
   | Ppat_var of string
@@ -53,15 +53,15 @@ and pattern_desc =
   | Ppat_alias of pattern * string
   | Ppat_constraint of pattern * core_type
   | Ppat_or of pattern * pattern
-(*e: type Parsetree.pattern_desc *)
+(*e: type [[Parsetree.pattern_desc]] *)
 
-(*s: type Parsetree.expression *)
+(*s: type [[Parsetree.expression]] *)
 type expression =
   { pexp_desc: expression_desc;
     pexp_loc: Location.t }
-(*e: type Parsetree.expression *)
+(*e: type [[Parsetree.expression]] *)
 
-(*s: type Parsetree.expression_desc *)
+(*s: type [[Parsetree.expression_desc]] *)
 and expression_desc =
   | Pexp_constant of Asttypes.constant
   | Pexp_construct of Longident.t * expression option
@@ -97,19 +97,19 @@ and expression_desc =
   (*x: [[Parsetree.expression_desc]] cases *)
   | Pexp_array of expression list
   (*e: [[Parsetree.expression_desc]] cases *)
-(*e: type Parsetree.expression_desc *)
+(*e: type [[Parsetree.expression_desc]] *)
 
-(*s: type Parsetree.value_description *)
+(*s: type [[Parsetree.value_description]] *)
 (* Value descriptions *)
 
 type value_description =
   { pval_type: core_type;
     pval_prim: string list }
-(*e: type Parsetree.value_description *)
+(*e: type [[Parsetree.value_description]] *)
 
 (* Type declarations *)
 
-(*s: type Parsetree.type_declaration *)
+(*s: type [[Parsetree.type_declaration]] *)
 type type_declaration =
   { ptype_params: string list;
     ptype_kind: type_kind;
@@ -118,47 +118,47 @@ type type_declaration =
     ptype_manifest: core_type option;
     (*e: [[Parsetree.type_declaration]] other fields *)
   }
-(*e: type Parsetree.type_declaration *)
+(*e: type [[Parsetree.type_declaration]] *)
 
-(*s: type Parsetree.type_kind *)
+(*s: type [[Parsetree.type_kind]] *)
 and type_kind =
   | Ptype_variant of (string * core_type list) list
   | Ptype_record of (string * mutable_flag * core_type) list
   (*s: [[Parsetree.type_kind]] cases *)
   | Ptype_abstract
   (*e: [[Parsetree.type_kind]] cases *)
-(*e: type Parsetree.type_kind *)
+(*e: type [[Parsetree.type_kind]] *)
 
-(*s: type Parsetree.exception_declaration *)
+(*s: type [[Parsetree.exception_declaration]] *)
 type exception_declaration = core_type list
-(*e: type Parsetree.exception_declaration *)
+(*e: type [[Parsetree.exception_declaration]] *)
 
 (* Type expressions for the module language *)
 
-(*s: type Parsetree.module_type *)
+(*s: type [[Parsetree.module_type]] *)
 type module_type =
   { pmty_desc: module_type_desc;
     pmty_loc: Location.t }
-(*e: type Parsetree.module_type *)
+(*e: type [[Parsetree.module_type]] *)
 
-(*s: type Parsetree.module_type_desc *)
+(*s: type [[Parsetree.module_type_desc]] *)
 and module_type_desc =
     Pmty_ident of Longident.t
   | Pmty_signature of signature
-(*e: type Parsetree.module_type_desc *)
+(*e: type [[Parsetree.module_type_desc]] *)
 
 
-(*s: type Parsetree.signature *)
+(*s: type [[Parsetree.signature]] *)
 and signature = signature_item list
-(*e: type Parsetree.signature *)
+(*e: type [[Parsetree.signature]] *)
 
-(*s: type Parsetree.signature_item *)
+(*s: type [[Parsetree.signature_item]] *)
 and signature_item =
   { psig_desc: signature_item_desc;
     psig_loc: Location.t }
-(*e: type Parsetree.signature_item *)
+(*e: type [[Parsetree.signature_item]] *)
 
-(*s: type Parsetree.signature_item_desc *)
+(*s: type [[Parsetree.signature_item_desc]] *)
 and signature_item_desc =
     Psig_value of string * value_description
   | Psig_type of (string * type_declaration) list
@@ -166,34 +166,34 @@ and signature_item_desc =
 
   | Psig_module of string * module_type
   | Psig_open of Longident.t
-(*e: type Parsetree.signature_item_desc *)
+(*e: type [[Parsetree.signature_item_desc]] *)
 
 (* Value expressions for the module language *)
 
-(*s: type Parsetree.module_expr *)
+(*s: type [[Parsetree.module_expr]] *)
 type module_expr =
   { pmod_desc: module_expr_desc;
     pmod_loc: Location.t }
-(*e: type Parsetree.module_expr *)
+(*e: type [[Parsetree.module_expr]] *)
 
-(*s: type Parsetree.module_expr_desc *)
+(*s: type [[Parsetree.module_expr_desc]] *)
 and module_expr_desc =
     Pmod_ident of Longident.t
   | Pmod_structure of structure
   | Pmod_constraint of module_expr * module_type
-(*e: type Parsetree.module_expr_desc *)
+(*e: type [[Parsetree.module_expr_desc]] *)
 
-(*s: type Parsetree.structure *)
+(*s: type [[Parsetree.structure]] *)
 and structure = structure_item list
-(*e: type Parsetree.structure *)
+(*e: type [[Parsetree.structure]] *)
 
-(*s: type Parsetree.structure_item *)
+(*s: type [[Parsetree.structure_item]] *)
 and structure_item =
   { pstr_desc: structure_item_desc;
     pstr_loc: Location.t }
-(*e: type Parsetree.structure_item *)
+(*e: type [[Parsetree.structure_item]] *)
 
-(*s: type Parsetree.structure_item_desc *)
+(*s: type [[Parsetree.structure_item_desc]] *)
 and structure_item_desc =
     Pstr_eval of expression
   | Pstr_value of rec_flag * (pattern * expression) list
@@ -204,21 +204,21 @@ and structure_item_desc =
 
   | Pstr_module of string * module_expr
   | Pstr_open of Longident.t
-(*e: type Parsetree.structure_item_desc *)
+(*e: type [[Parsetree.structure_item_desc]] *)
 
 (* Toplevel phrases *)
 
-(*s: type Parsetree.toplevel_phrase *)
+(*s: type [[Parsetree.toplevel_phrase]] *)
 type toplevel_phrase =
     Ptop_def of structure
   | Ptop_dir of string * directive_argument
-(*e: type Parsetree.toplevel_phrase *)
+(*e: type [[Parsetree.toplevel_phrase]] *)
 
-(*s: type Parsetree.directive_argument *)
+(*s: type [[Parsetree.directive_argument]] *)
 and directive_argument =
     Pdir_none
   | Pdir_string of string
   | Pdir_int of int
   | Pdir_ident of Longident.t
-(*e: type Parsetree.directive_argument *)
+(*e: type [[Parsetree.directive_argument]] *)
 (*e: ./parsing/parsetree.mli *)

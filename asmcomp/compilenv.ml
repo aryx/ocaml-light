@@ -18,18 +18,18 @@ open Config
 open Misc
 open Clambda
 
-(*s: type Compilenv.error (asmcomp/compilenv.ml) *)
+(*s: type [[Compilenv.error]]([[(asmcomp/compilenv.ml)]]) *)
 type error =
     Not_a_unit_info of string
   | Corrupted_unit_info of string
   | Illegal_renaming of string * string
-(*e: type Compilenv.error (asmcomp/compilenv.ml) *)
+(*e: type [[Compilenv.error]]([[(asmcomp/compilenv.ml)]]) *)
 
-(*s: exception Compilenv.Error (asmcomp/compilenv.ml) *)
+(*s: exception [[Compilenv.Error]]([[(asmcomp/compilenv.ml)]]) *)
 exception Error of error
-(*e: exception Compilenv.Error (asmcomp/compilenv.ml) *)
+(*e: exception [[Compilenv.Error]]([[(asmcomp/compilenv.ml)]]) *)
 
-(*s: type Compilenv.unit_infos (asmcomp/compilenv.ml) *)
+(*s: type [[Compilenv.unit_infos]]([[(asmcomp/compilenv.ml)]]) *)
 (* Each .o file has a matching .cmx file that provides the following infos
    on the compilation unit:
      - list of other units imported, with CRCs of their .cmx files
@@ -48,14 +48,14 @@ type unit_infos =
     mutable ui_curry_fun: int list;             (* Currying functions needed *)
     mutable ui_apply_fun: int list;             (* Apply functions needed *)
     mutable ui_force_link: bool }               (* Always linked *)
-(*e: type Compilenv.unit_infos (asmcomp/compilenv.ml) *)
+(*e: type [[Compilenv.unit_infos]]([[(asmcomp/compilenv.ml)]]) *)
 
-(*s: constant Compilenv.global_approx_table *)
+(*s: constant [[Compilenv.global_approx_table]] *)
 let global_approx_table =
-(*e: constant Compilenv.global_approx_table *)
+(*e: constant [[Compilenv.global_approx_table]] *)
   (Hashtbl.create 17 : (string, value_approximation) Hashtbl.t)
 
-(*s: constant Compilenv.current_unit *)
+(*s: constant [[Compilenv.current_unit]] *)
 let current_unit =
   { ui_name = "";
     ui_imports_cmi = [];
@@ -64,9 +64,9 @@ let current_unit =
     ui_curry_fun = [];
     ui_apply_fun = [];
     ui_force_link = false }
-(*e: constant Compilenv.current_unit *)
+(*e: constant [[Compilenv.current_unit]] *)
 
-(*s: function Compilenv.reset *)
+(*s: function [[Compilenv.reset]] *)
 let reset name =
   Hashtbl.clear global_approx_table;
   current_unit.ui_name <- name;
@@ -75,14 +75,14 @@ let reset name =
   current_unit.ui_curry_fun <- [];
   current_unit.ui_apply_fun <- [];
   current_unit.ui_force_link <- false
-(*e: function Compilenv.reset *)
+(*e: function [[Compilenv.reset]] *)
 
-(*s: function Compilenv.current_unit_name *)
+(*s: function [[Compilenv.current_unit_name]] *)
 let current_unit_name () =
   current_unit.ui_name
-(*e: function Compilenv.current_unit_name *)
+(*e: function [[Compilenv.current_unit_name]] *)
 
-(*s: function Compilenv.read_unit_info *)
+(*s: function [[Compilenv.read_unit_info]] *)
 let read_unit_info filename =
   let ic = open_in_bin filename in
   try
@@ -99,16 +99,16 @@ let read_unit_info filename =
   with End_of_file | Failure _ ->
     close_in ic;
     raise(Error(Corrupted_unit_info(filename)))
-(*e: function Compilenv.read_unit_info *)
+(*e: function [[Compilenv.read_unit_info]] *)
 
-(*s: constant Compilenv.cmx_not_found_crc *)
+(*s: constant [[Compilenv.cmx_not_found_crc]] *)
 (* Return the approximation of a global identifier *)
 
 let cmx_not_found_crc =
   "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
-(*e: constant Compilenv.cmx_not_found_crc *)
+(*e: constant [[Compilenv.cmx_not_found_crc]] *)
 
-(*s: function Compilenv.global_approx *)
+(*s: function [[Compilenv.global_approx]] *)
 let global_approx global_ident =
   let modname = Ident.name global_ident in
   try
@@ -128,30 +128,30 @@ let global_approx global_ident =
       (modname, crc) :: current_unit.ui_imports_cmx;
     Hashtbl.add global_approx_table modname approx;
     approx
-(*e: function Compilenv.global_approx *)
+(*e: function [[Compilenv.global_approx]] *)
 
-(*s: function Compilenv.set_global_approx *)
+(*s: function [[Compilenv.set_global_approx]] *)
 (* Register the approximation of the module being compiled *)
 
 let set_global_approx approx =
   current_unit.ui_approx <- approx
-(*e: function Compilenv.set_global_approx *)
+(*e: function [[Compilenv.set_global_approx]] *)
 
-(*s: function Compilenv.need_curry_fun *)
+(*s: function [[Compilenv.need_curry_fun]] *)
 (* Record that a currying function or application function is needed *)
 
 let need_curry_fun n =
   if not (List.mem n current_unit.ui_curry_fun) then
     current_unit.ui_curry_fun <- n :: current_unit.ui_curry_fun
-(*e: function Compilenv.need_curry_fun *)
+(*e: function [[Compilenv.need_curry_fun]] *)
 
-(*s: function Compilenv.need_apply_fun *)
+(*s: function [[Compilenv.need_apply_fun]] *)
 let need_apply_fun n =
   if not (List.mem n current_unit.ui_apply_fun) then
     current_unit.ui_apply_fun <- n :: current_unit.ui_apply_fun
-(*e: function Compilenv.need_apply_fun *)
+(*e: function [[Compilenv.need_apply_fun]] *)
 
-(*s: function Compilenv.save_unit_info *)
+(*s: function [[Compilenv.save_unit_info]] *)
 (* Write the description of the current unit *)
 
 let save_unit_info filename =
@@ -163,13 +163,13 @@ let save_unit_info filename =
   let crc = Digest.file filename in
   Digest.output oc crc;
   close_out oc
-(*e: function Compilenv.save_unit_info *)
+(*e: function [[Compilenv.save_unit_info]] *)
 
 (* Error report *)
 
 open Format
 
-(*s: function Compilenv.report_error *)
+(*s: function [[Compilenv.report_error]] *)
 let report_error = function
     Not_a_unit_info filename ->
       print_string filename; print_space();
@@ -181,6 +181,6 @@ let report_error = function
       print_string filename; print_space();
       print_string "contains the description for unit"; print_space();
       print_string modname
-(*e: function Compilenv.report_error *)
+(*e: function [[Compilenv.report_error]] *)
 
 (*e: asmcomp/compilenv.ml *)

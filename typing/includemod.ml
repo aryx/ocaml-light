@@ -20,7 +20,7 @@ open Types
 open Typedtree
 
 
-(*s: type Includemod.error *)
+(*s: type [[Includemod.error]] *)
 type error =
     Missing_field of Ident.t
   (* X do not match Y *)
@@ -31,17 +31,17 @@ type error =
   | Module_types of module_type * module_type
 
   | Interface_mismatch of string * string
-(*e: type Includemod.error *)
+(*e: type [[Includemod.error]] *)
 
-(*s: exception Includemod.Error *)
+(*s: exception [[Includemod.Error]] *)
 exception Error of error list
-(*e: exception Includemod.Error *)
+(*e: exception [[Includemod.Error]] *)
 
 (* All functions "blah env x1 x2" check that x1 is included in x2,
    i.e. that x1 is the type of an implementation that fulfills the
    specification x2. If not, Error is raised with a backtrace of the error. *)
 
-(*s: function Includemod.value_descriptions *)
+(*s: function [[Includemod.value_descriptions]] *)
 (* Inclusion between value descriptions *)
 
 let value_descriptions env id vd1 vd2 =
@@ -49,33 +49,33 @@ let value_descriptions env id vd1 vd2 =
     Includecore.value_descriptions env vd1 vd2
   with Includecore.Dont_match ->
     raise(Error[Value_descriptions(id, vd1, vd2)])
-(*e: function Includemod.value_descriptions *)
+(*e: function [[Includemod.value_descriptions]] *)
 
-(*s: function Includemod.type_declarations *)
+(*s: function [[Includemod.type_declarations]] *)
 (* Inclusion between type declarations *)
 
 let type_declarations env id decl1 decl2 =
   if Includecore.type_declarations env id decl1 decl2
   then ()
   else raise(Error[Type_declarations(id, decl1, decl2)])
-(*e: function Includemod.type_declarations *)
+(*e: function [[Includemod.type_declarations]] *)
 
-(*s: function Includemod.exception_declarations *)
+(*s: function [[Includemod.exception_declarations]] *)
 (* Inclusion between exception declarations *)
 
 let exception_declarations env id decl1 decl2 =
   if Includecore.exception_declarations env decl1 decl2
   then ()
   else raise(Error[Exception_declarations(id, decl1, decl2)])
-(*e: function Includemod.exception_declarations *)
+(*e: function [[Includemod.exception_declarations]] *)
 
-(*s: exception Includemod.Dont_match *)
+(*s: exception [[Includemod.Dont_match]] *)
 (* Expand a module type identifier when possible *)
 
 exception Dont_match
-(*e: exception Includemod.Dont_match *)
+(*e: exception [[Includemod.Dont_match]] *)
 
-(*s: function Includemod.expand_module_path *)
+(*s: function [[Includemod.expand_module_path]] *)
 let expand_module_path env path =
   failwith "expand_module_path:TODO"
 (*
@@ -86,9 +86,9 @@ let expand_module_path env path =
   with Not_found ->
     raise Dont_match
 *)
-(*e: function Includemod.expand_module_path *)
+(*e: function [[Includemod.expand_module_path]] *)
 
-(*s: type Includemod.field_desc *)
+(*s: type [[Includemod.field_desc]] *)
 (* Extract name, kind and ident from a signature item *)
 
 type field_desc =
@@ -97,17 +97,17 @@ type field_desc =
   | Field_exception of string
   | Field_module of string
   | Field_modtype of string
-(*e: type Includemod.field_desc *)
+(*e: type [[Includemod.field_desc]] *)
 
-(*s: function Includemod.item_ident_name *)
+(*s: function [[Includemod.item_ident_name]] *)
 let item_ident_name = function
     Tsig_value(id, _) -> (id, Field_value(Ident.name id))
   | Tsig_type(id, _) -> (id, Field_type(Ident.name id))
   | Tsig_exception(id, _) -> (id, Field_exception(Ident.name id))
   | Tsig_module(id, _) -> (id, Field_module(Ident.name id))
-(*e: function Includemod.item_ident_name *)
+(*e: function [[Includemod.item_ident_name]] *)
 
-(*s: function Includemod.simplify_structure_coercion *)
+(*s: function [[Includemod.simplify_structure_coercion]] *)
 (* Simplify a structure coercion *)
 
 let simplify_structure_coercion cc =
@@ -121,9 +121,9 @@ let simplify_structure_coercion cc =
     Tcoerce_none
   with Exit ->
     Tcoerce_structure cc
-(*e: function Includemod.simplify_structure_coercion *)
+(*e: function [[Includemod.simplify_structure_coercion]] *)
 
-(*s: function Includemod.modtypes *)
+(*s: function [[Includemod.modtypes]] *)
 (* Inclusion between module types. 
    Return the restriction that transforms a value of the smaller type
    into a value of the bigger type. *)
@@ -149,9 +149,9 @@ and try_modtypes env mty1 mty2 =
       signatures env sig1 sig2
   | (_, _) ->
       raise Dont_match
-(*e: function Includemod.modtypes *)
+(*e: function [[Includemod.modtypes]] *)
 
-(*s: function Includemod.signatures *)
+(*s: function [[Includemod.signatures]] *)
 (* Inclusion between signatures *)
 
 and signatures env sig1 sig2 =
@@ -200,9 +200,9 @@ and signatures env sig1 sig2 =
 
   (* Do the pairing and checking, and return the final coercion *)
   simplify_structure_coercion(pair_components [] [] sig2)
-(*e: function Includemod.signatures *)
+(*e: function [[Includemod.signatures]] *)
 
-(*s: function Includemod.signature_components *)
+(*s: function [[Includemod.signature_components]] *)
 (* Inclusion between signature components *)
 
 and signature_components env = function
@@ -226,9 +226,9 @@ and signature_components env = function
       (pos, cc) :: signature_components env rem
   | _ ->
       fatal_error "Includemod.signature_components"
-(*e: function Includemod.signature_components *)
+(*e: function [[Includemod.signature_components]] *)
 
-(*s: function Includemod.check_modtype_inclusion *)
+(*s: function [[Includemod.check_modtype_inclusion]] *)
 (* Simplified inclusion check between module types *)
 
 let check_modtype_inclusion env mty1 mty2 =
@@ -236,13 +236,13 @@ let check_modtype_inclusion env mty1 mty2 =
     modtypes env mty1 mty2; ()
   with Error reasons ->
     raise Not_found
-(*e: function Includemod.check_modtype_inclusion *)
+(*e: function [[Includemod.check_modtype_inclusion]] *)
 
-(*s: toplevel Includemod._1 *)
+(*s: toplevel [[Includemod._1]] *)
 let _ = Env.check_modtype_inclusion := check_modtype_inclusion
-(*e: toplevel Includemod._1 *)
+(*e: toplevel [[Includemod._1]] *)
 
-(*s: function Includemod.compunit *)
+(*s: function [[Includemod.compunit]] *)
 (* Check that an implementation of a compilation unit meets its
    interface. *)
 
@@ -251,14 +251,14 @@ let compunit impl_name impl_sig intf_name intf_sig =
     signatures Env.initial impl_sig intf_sig
   with Error reasons ->
     raise(Error(Interface_mismatch(impl_name, intf_name) :: reasons))
-(*e: function Includemod.compunit *)
+(*e: function [[Includemod.compunit]] *)
 
 (* Error report *)
 
 open Format
 open Printtyp
 
-(*s: function Includemod.include_err *)
+(*s: function [[Includemod.include_err]] *)
 let include_err = function
     Missing_field id ->
       print_string "The field `"; ident id; 
@@ -302,9 +302,9 @@ let include_err = function
       print_string intf_name;
       print_string ":";
       close_box()
-(*e: function Includemod.include_err *)
+(*e: function [[Includemod.include_err]] *)
 
-(*s: function Includemod.report_error *)
+(*s: function [[Includemod.report_error]] *)
 let report_error errlist =
   match errlist with
     [] -> ()
@@ -313,6 +313,6 @@ let report_error errlist =
       include_err err;
       List.iter (fun err -> print_space(); include_err err) rem;
       close_box()
-(*e: function Includemod.report_error *)
+(*e: function [[Includemod.report_error]] *)
 
 (*e: ./typing/includemod.ml *)

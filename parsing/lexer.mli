@@ -12,25 +12,25 @@
 (***********************************************************************)
 (*e: copyright header *)
 
-(*s: signature Lexer.token *)
+(*s: signature [[Lexer.token]] *)
 (* The lexical analyzer *)
 
 val token: Lexing.lexbuf -> Parser.token
-(*e: signature Lexer.token *)
+(*e: signature [[Lexer.token]] *)
 
-(*s: type Lexer.error *)
+(*s: type [[Lexer.error]] *)
 type error =
     Illegal_character
   | Unterminated_comment
   | Unterminated_string
-(*e: type Lexer.error *)
+(*e: type [[Lexer.error]] *)
 
-(*s: exception Lexer.Error *)
+(*s: exception [[Lexer.Error]] *)
 exception Error of error * int * int
-(*e: exception Lexer.Error *)
+(*e: exception [[Lexer.Error]] *)
 
-(*s: signature Lexer.report_error *)
+(*s: signature [[Lexer.report_error]] *)
 val report_error: error -> unit
-(*e: signature Lexer.report_error *)
+(*e: signature [[Lexer.report_error]] *)
 
 (*e: ./parsing/lexer.mli *)
