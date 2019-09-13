@@ -292,3 +292,10 @@ let rec nth_opt l n =
   match l with
     [] -> None
   | a::l -> if n = 0 then Some a else nth_opt l (n-1)
+
+let rec find_map f = function
+    [] -> None
+  | x :: l ->
+      match f x with
+      | Some _ as result -> result
+      | None -> find_map f l

@@ -212,3 +212,10 @@ val nth_opt : 'a list -> int -> 'a option
    Return [None] if the list is too short.
    Raise [Invalid_argument "List.nth"] if [n] is negative.
    @since 4.05 *)
+
+val find_map : ('a -> 'b option) -> 'a list -> 'b option
+(** [find_map f l] applies [f] to the elements of [l] in order,
+   and returns the first result of the form [Some v], or [None]
+   if none exist.
+   @since 4.10.0
+ *)
