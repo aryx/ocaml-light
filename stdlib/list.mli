@@ -187,3 +187,9 @@ val iteri : (int -> 'a -> unit) -> 'a list -> unit
    itself as second argument.
    @since 4.00.0
  *)
+
+val concat_map : ('a -> 'b list) -> 'a list -> 'b list
+(** [concat_map f l] gives the same result as
+   {!concat}[ (]{!map}[ f l)].
+   @since 4.10.0
+ *)

@@ -274,3 +274,7 @@ let rec iteri i f = function
   | a::l -> f i a; iteri (i + 1) f l
 
 let iteri f l = iteri 0 f l
+
+let rec concat_map f = function
+    [] -> []
+  | a::l -> f a @ concat_map f l
