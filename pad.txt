@@ -72,9 +72,12 @@ it is maybe also a better candidate in the end for a fork because it has:
  - it is ocaml, which makes it simpler to try to compile
    my own project with it (e.g. syncweb). Same commands!
 
-** changes   
+* changes   
 
-Then I did many modifications, mostly removing stuff:
+** first "cleanup" modification
+
+After opting for ocaml 1.07 aas the starting point, 
+I did many modifications, mostly removing stuff:
  - removed support for Windows and Mac (the Makefile.nt, Makefile.Mac, etc)
  - removed native code compiler targets: alpha, hppa, m68k, power, and sparc,
    mips (just kept i386) and I backported the ARM port from ocaml 2.01
@@ -103,6 +106,7 @@ I have also rewritten a few:
  - if then else if --> match () with when
  - iter f data in data |> iter f
 
+** backport stuff from more recent OCaml
 
 Then I backported a few things from a more recent ocaml distribution:
  - config.sub and config.guess and runtest.sh so can have a working
@@ -113,6 +117,7 @@ Then I backported a few things from a more recent ocaml distribution:
    PR#5662 : typo in md5.c when clearing sensitive data in context
  - the items listed below
 
+** backport library functions from more recent OCaml
 
     Objective Caml 3.11.0:
     ----------------------
@@ -208,6 +213,9 @@ $ make bootstrap
 make install
 and run /usr/.../bin/ocaml ?
 but make bootstrap should already be a good test
+
+** TODO testsuite in ocaml-github repo! it was not part of ocaml-1.07.tgz
+but was part of the CVS repo!
 
 * Doc
 
