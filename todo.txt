@@ -2,6 +2,10 @@
 
 * Last
 
+** an ocaml preprocessor! with unicode and mixfix a la Agda!
+need update also efuns and codemap
+see parsing mixfix paper in downloads.
+
 ** small but useful
 
 *** improve error messages
