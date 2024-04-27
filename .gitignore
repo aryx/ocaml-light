@@ -20,10 +20,20 @@ asmrun/*.c
 
 # other syncweb/literate stuff
 /docs/literate/.OCaml.nwcache
+/docs/literate/OCaml.tex
 /docs/literate/OCaml-2.pdf
 /docs/literate/OCaml-3.pdf
 /docs/literate/defs_and_uses.list
 /docs/literate/lineage.pdf
+
+# latex object files
+*.aux
+*.brf
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
 
 # patch -p1 < ...
 *.rej
