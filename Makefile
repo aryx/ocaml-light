@@ -580,3 +580,10 @@ depend: beforedepend
 alldepend:: depend
 
 include .depend
+
+##############################################################################
+# Pad's targets
+##############################################################################
+# -filter semgrep
+visual:
+	codemap -screen_size 3 -efuns_client efuns_client -emacs_client /dev/null .
