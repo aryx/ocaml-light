@@ -104,7 +104,7 @@
 % ifallcode is used for:
 % - extra copyright, 
 % - composite operations optimisations in interprete()
-% - other stuff??
+% - native compiler (but at some point should be explained and part of the book)
 
 \begin{document}
 %******************************************************************************
@@ -161,7 +161,7 @@ a {compiler} for the functional language ML.
 \section{Motivations}
 
 Why? Because I think you are better programmer 
-ifyou fully understand how things work under the hood, and 
+if you fully understand how things work under the hood, and 
 given that more and more programs are written in
 dialects of this language (Haskell, OCaml, Scala, F\#, Swift, etc),
 and that many of its features are now incorporated in 
@@ -585,7 +585,7 @@ let input_name = ref ""
 (* Long identifiers, used in parsetree. *)
 
 type t =
-    Lident of string
+  | Lident of string
   | Ldot of t * string
 @
 %note: like a list, but enforce have at least one element
