@@ -1,18 +1,21 @@
+# OCaml object files
 *.cm*
 *.byte
 *.opt
 *.annot
 
+# C object files
 *.o
 *.a
 asmrun/*.c
 
-# when compile for plan9
+# when compiling for plan9
 *.8
 8.out
 *.5
 5.out
 
+# syncweb object files
 .md5sum_*
 
 # patch -p1 < ...
@@ -24,7 +27,9 @@ boot/Saved
 /boot/libcamlrun.a
 /boot/ocamlrun
 /boot/ocamlyacc
+
 /config/Makefile
+
 /bytecomp/opcodes.ml
 /bytecomp/runtimedef.ml
 /byterun/jumptbl.h
@@ -33,56 +38,66 @@ boot/Saved
 /byterun/opnames.h
 /byterun/primitives
 /byterun/prims.c
+
 /config/m.h
 /config/s.h
+
 /debugger/lexer.ml
 /debugger/ocamldebug
 /debugger/parser.ml
 /debugger/parser.mli
+
 /lex/lexer.ml
 /lex/ocamllex
 /lex/parser.ml
 /lex/parser.mli
+
 /ocaml
 /ocamlc
+
 /expunge
+
 /otherlibs/dynlink/extract_crc
 /otherlibs/str/regex-0.12/Makefile
 /otherlibs/str/regex-0.12/config.status
 /otherlibs/threads/pervasives.mli
+
 /parsing/lexer.ml
 /parsing/linenum.ml
 /parsing/parser.ml
 /parsing/parser.mli
+
 /stdlib/camlheader
+
 /tools/ocamldep
 /tools/ocamldep.ml
 /tools/ocamlprof
+
 /utils/config.ml
+
 /yacc/ocamlyacc
+
 /tools/debugger/lexer.ml
 /tools/debugger/ocamldebug
 /tools/debugger/parser.ml
 /tools/debugger/parser.mli
+
 /tools/misc/ocamldep
 /tools/misc/ocamldep.ml
 /tools/misc/ocamlprof
+
+# codemap/codegraph
 /graph_code.marshall
 /graph_code.marshall.opti
 /layer_bottomup.json
 /layer_graphcode_stats.json
 /layer_topdown.json
-/tests/a.out
 /PFFF_DB.json
 /PFFF_DB.marshall
 /TAGS
-/OCaml.aux
-/OCaml.brf
-/OCaml.log
-/OCaml.out
-/OCaml.pdf
-/OCaml.tex
-/OCaml.toc
+
+
+/tests/a.out
 /tests/hello.byte
 /tests/calc/lexer.ml
 /tests/calc/parser.ml
@@ -92,11 +107,15 @@ boot/Saved
 /yacc2/parser.ml
 /yacc2/parser.mli
 /tests/yacc/arith.ml
+
 /tools/dependencies/ocamldep
 /tools/dependencies/ocamldep.ml
+
 /tools/dumper/dumpobj
 /tools/dumper/objinfo
 /tools/dumper/opnames.ml
+
 /tools/profiler/ocamlprof
+
 /boot/ocamllex2
 /boot/ocamlyacc2
