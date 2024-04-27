@@ -228,7 +228,3 @@ OFFSETREF met () dans l'accu.
 3402009ef3e42d2977bbe0be6bb11841bd3445b8
 Faute d'orthographe sur un ident dans intern_from_string.
 
-*** TODO include tests/ from csl/ and ocaml examples from caml light
-(that have been updated to ocaml 3.08 by leroy on their distrib/contrib/
-I think)
-
