@@ -2,6 +2,59 @@
 
 * Last
 
+** Last
+
+*** add GHA checks, build, test, and semgrep
+
+*** add GHA check, to at least './configure; make coldstart; make world'
+
+*** make sync in CompilerGenerator.nw
+and move to xix/ ?
+
+*** -------------------------------------------------------------------
+
+*** make sync_c
+pb with config.h and md5sum entries
+regenerate from scratch? just skip this file?
+
+*** is ocamldebug and the other tools/ working
+check in CI again!
+
+*** can it compile when boot/ocamlc CAMLC is the OCaml 4.02.3?
+then add this check also in CI! so upward compatible!
+
+*** add GHA check for arm, does ocamlopt actually work?
+
+*** find 32 bits for building ocaml-light on 32 bits arch in GHA
+need to use qemu in GHA? like for our docker arm?
+
+https://github.com/marketplace/actions/setup-alpine-linux-environment
+
+*** try use it for Xix?
+
+*** include testsuite in OCaml-1.07 in git repo that was not in the
+distributed tgz!
+
+*** TODO include tests/ from csl/ and ocaml examples from caml light
+(that have been updated to ocaml 3.08 by leroy on their distrib/contrib/
+I think)
+=> more tests
+
+see work/OCAML/ocaml-examples-3.08
+
+*** LATER: diff lex/ ~/xix/lex/
+xix/lex is supposed to be the same than lex
+
+*** LATER: backport cool features from recent OCaml to ocaml light
+
+*** LATER: add 64 amd generation? and arm64? riscv?
+this was added recently; good test whether the code change that much
+
+*** LATER: try compile again byterun/ for plan9! with kencc
+
+*** LATER: try my xix/windows/ rio port to plan9 using ocaml-light compiled
+
+
 ** an ocaml preprocessor! with unicode and mixfix a la Agda!
 need update also efuns and codemap
 see parsing mixfix paper in downloads.
