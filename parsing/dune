@@ -1,0 +1,14 @@
+(library
+ (name parsing)
+ (wrapped false)
+ (libraries
+    stdlib
+    utils
+  )
+ (modules_without_implementation asttypes parsetree)
+; TODO lexer.ml and linenum.ml generation
+
+ (preprocess (pps ppx_deriving.show))
+)
+
+; (ocamllex lexer)

@@ -588,5 +588,12 @@ include .depend
 visual:
 	codemap -screen_size 3 -efuns_client efuns_client -emacs_client /dev/null .
 
+#pad: see also .github/workflows/docker.yml for the check in CI!
 build-docker:
 	docker build -t "ocaml-light" .
+
+# currently need to call make to generate some .ml (e.g., parser.ml, config.ml)
+dune-build:
+	make
+	rm -f stdlib/stdlib.cma
+	dune build

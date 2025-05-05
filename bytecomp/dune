@@ -1,0 +1,13 @@
+(library
+ (name bytecomp)
+ (wrapped false)
+ (flags (:standard -unsafe-string))
+ (libraries
+    stdlib
+    parsing
+    typing
+  )
+ ; TODO: generate runtimedef.ml like in Makefile 
+
+ (preprocess (pps ppx_deriving.show))
+)
