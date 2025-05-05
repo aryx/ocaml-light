@@ -1,6 +1,7 @@
 TOP=..
 
 SYNCFLAGS=-md5sum_in_auxfile -less_marks -lang ocaml
+SYNCFLAGS_FOR_C=-md5sum_in_auxfile -less_marks -lang C
 
 VERSION=3
 DOC=OCaml
@@ -255,8 +256,7 @@ sync: sync_c sync_yacc
 
 sync_c:VI:
 	for(i in $SRC_VIEWS_C) {
-        echo $i
-        $SYNCWEB -md5sum_in_auxfile -less_marks -lang C  $SRC_ORIG $i
+        $SYNCWEB $SYNCFLAGS_FOR_C  $SRC_ORIG $i
      }
 
 sync_yacc:VI:
@@ -273,13 +273,16 @@ sync_yacc:VI:
 # => have lots of .cmt now
 
 #less: could also run indexer for C code and append to defs_and_uses.list
+#TODO: resume syncweb-indexer! with cmt
+#index:V:
+#	$INDEXER -lang cmt $OCAMLLIGHT \
+#    | sed -e 's#main.cmt#Main#' \
+#    | grep -v 'Pervasives.:=' \
+#    | grep -v 'Pervasives.~' \
+#    | grep -v 'stdlib/' \
+#    > defs_and_uses.list
 index:V:
-	$INDEXER -lang cmt $OCAMLLIGHT \
-    | sed -e 's#main.cmt#Main#' \
-    | grep -v 'Pervasives.:=' \
-    | grep -v 'Pervasives.~' \
-    | grep -v 'stdlib/' \
-    > defs_and_uses.list
+	echo TODO index not working anymore
 
 
 #graph:
