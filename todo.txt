@@ -1,17 +1,45 @@
 -*- org -*-
 
+* Test infra
+
+** add testsuite from ocaml git and past ocaml distribs
+
+*** include testsuite in OCaml-1.07 in git repo that was not in the
+distributed tgz!
+
+*** -------------------------------------------------------------------
+
+*** TODO include tests/ from csl/ and ocaml examples from caml light
+(that have been updated to ocaml 3.08 by leroy on their distrib/contrib/
+I think)
+=> more tests
+
+see work/OCAML/ocaml-examples-3.08
+
+* Devops
+
+** GHA
+
+*** add GHA check, to at least './configure; make coldstart; make world'
+
+*** add GHA checks, build, test
+
+*** -------------------------------------------------------------------
+
+
+*** add semgrep.yml GHA
+
+* Later
+
+** an ocaml preprocessor! with unicode and mixfix a la Agda!
+need update also efuns and codemap
+see parsing mixfix paper in downloads.
+
+
 * Last
 
 ** Last
 
-*** add GHA checks, build, test, and semgrep
-
-*** add GHA check, to at least './configure; make coldstart; make world'
-
-*** make sync in CompilerGenerator.nw
-and move to xix/ ?
-
-*** -------------------------------------------------------------------
 
 *** make sync_c
 pb with config.h and md5sum entries
@@ -32,16 +60,6 @@ https://github.com/marketplace/actions/setup-alpine-linux-environment
 
 *** try use it for Xix?
 
-*** include testsuite in OCaml-1.07 in git repo that was not in the
-distributed tgz!
-
-*** TODO include tests/ from csl/ and ocaml examples from caml light
-(that have been updated to ocaml 3.08 by leroy on their distrib/contrib/
-I think)
-=> more tests
-
-see work/OCAML/ocaml-examples-3.08
-
 *** LATER: diff lex/ ~/xix/lex/
 xix/lex is supposed to be the same than lex
 
@@ -54,10 +72,6 @@ this was added recently; good test whether the code change that much
 
 *** LATER: try my xix/windows/ rio port to plan9 using ocaml-light compiled
 
-
-** an ocaml preprocessor! with unicode and mixfix a la Agda!
-need update also efuns and codemap
-see parsing mixfix paper in downloads.
 
 ** small but useful
 
