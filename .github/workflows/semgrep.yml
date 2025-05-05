@@ -1,6 +1,6 @@
 jobs:
   job:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
       # living on the edge!
       image: semgrep/semgrep:develop
@@ -20,6 +20,6 @@ on:
   workflow_dispatch: null
   push:
     branches:
-      - master
-  schedule:
-    - cron: 50 15 * * *
+      - main
+  #schedule:
+  #  - cron: 50 15 * * *
