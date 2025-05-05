@@ -14,7 +14,6 @@
 
 (* Detection of partial matches and unused match cases. *)
 
-open Typedtree
 
 (*s: signature [[Parmatch.check_partial]] *)
 val check_partial: 

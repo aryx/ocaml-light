@@ -34,7 +34,7 @@ let value_descriptions env vd1 vd2 =
           then Tcoerce_none 
           else raise Dont_match
       | (Some p, None) -> Tcoerce_primitive p
-      | (None, Some p) -> raise Dont_match
+      | (None, Some _p) -> raise Dont_match
       | (None, None) -> Tcoerce_none
   end else
     raise Dont_match
@@ -44,13 +44,13 @@ let value_descriptions env vd1 vd2 =
 (* Inclusion between type declarations *)
 
 let type_declarations env id decl1 decl2 =
-  decl1.type_arity = decl2.type_arity &
+  decl1.type_arity = decl2.type_arity &&
   begin match (decl1.type_kind, decl2.type_kind) with
       (_, Type_abstract) -> true
     | (Type_variant cstrs1, Type_variant cstrs2) ->
         for_all2
           (fun (cstr1, arg1) (cstr2, arg2) ->
-            cstr1 = cstr2 &
+            cstr1 = cstr2 &&
             for_all2
               (fun ty1 ty2 ->
                 Ctype.equal env decl1.type_params ty1 decl2.type_params ty2)
@@ -59,11 +59,11 @@ let type_declarations env id decl1 decl2 =
     | (Type_record labels1, Type_record labels2) ->
         for_all2
           (fun (lbl1, mut1, ty1) (lbl2, mut2, ty2) ->
-            lbl1 = lbl2 & mut1 = mut2 &
+            lbl1 = lbl2 && mut1 = mut2 &&
             Ctype.equal env decl1.type_params ty1 decl2.type_params ty2)
           labels1 labels2
     | (_, _) -> false
-  end &
+  end &&
   begin match (decl1.type_manifest, decl2.type_manifest) with
       (_, None) -> true
     | (Some ty1, Some ty2) ->

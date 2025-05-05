@@ -14,7 +14,6 @@
 
 (* Abstract syntax tree after typing *)
 
-open Misc
 open Asttypes
 open Types
 
@@ -137,11 +136,11 @@ let rec bound_idents pat =
     Tpat_any -> ()
   | Tpat_var id -> idents := id :: !idents
   | Tpat_alias(p, id) -> bound_idents p; idents := id :: !idents
-  | Tpat_constant cst -> ()
+  | Tpat_constant _cst -> ()
   | Tpat_tuple patl -> List.iter bound_idents patl
-  | Tpat_construct(cstr, patl) -> List.iter bound_idents patl
+  | Tpat_construct(_cstr, patl) -> List.iter bound_idents patl
   | Tpat_record lbl_pat_list ->
-      List.iter (fun (lbl, pat) -> bound_idents pat) lbl_pat_list
+      List.iter (fun (_lbl, pat) -> bound_idents pat) lbl_pat_list
   | Tpat_or(p1, p2) -> bound_idents p1; bound_idents p2
 (*e: function [[Typedtree.bound_idents]] *)
 
@@ -153,7 +152,7 @@ let pat_bound_idents pat =
 (*s: function [[Typedtree.rev_let_bound_idents]] *)
 let rev_let_bound_idents pat_expr_list =
   idents := [];
-  List.iter (fun (pat, expr) -> bound_idents pat) pat_expr_list;
+  List.iter (fun (pat, _expr) -> bound_idents pat) pat_expr_list;
   let res = !idents in idents := []; res
 (*e: function [[Typedtree.rev_let_bound_idents]] *)
 

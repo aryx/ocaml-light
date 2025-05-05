@@ -15,7 +15,6 @@
 (* Typing of type definitions and primitive definitions *)
 
 open Types
-open Typedtree
 
 (*s: signature [[Typedecl.transl_type_decl]] *)
 val transl_type_decl:

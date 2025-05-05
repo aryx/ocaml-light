@@ -115,7 +115,7 @@ let simplify_structure_coercion cc =
   try
     List.iter
       (fun (n, c) ->
-        if n <> !pos or c <> Tcoerce_none then raise Exit;
+        if n <> !pos || c <> Tcoerce_none then raise Exit;
         incr pos)
       cc;
     Tcoerce_none
@@ -233,7 +233,7 @@ and signature_components env = function
 
 let check_modtype_inclusion env mty1 mty2 =
   try
-    modtypes env mty1 mty2; ()
+    ignore (modtypes env mty1 mty2)
   with Error reasons ->
     raise Not_found
 (*e: function [[Includemod.check_modtype_inclusion]] *)

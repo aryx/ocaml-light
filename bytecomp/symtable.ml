@@ -106,7 +106,7 @@ let num_of_prim name =
 
 (*s: function [[Symtable.require_primitive]] *)
 let require_primitive name =
-  if name.[0] <> '%' then begin num_of_prim name; () end
+  if name.[0] <> '%' then begin ignore (num_of_prim name) end
 (*e: function [[Symtable.require_primitive]] *)
 
 (*s: function [[Symtable.all_primitives]] *)
@@ -160,7 +160,7 @@ let init () =
       literal_table := (c, cst) :: !literal_table)
     Runtimedef.builtin_exceptions;
   (* Enter the known C primitives *)
-  Array.iter (fun x -> enter_numtable c_prim_table x; ())
+  Array.iter (fun x -> ignore (enter_numtable c_prim_table x))
              Runtimedef.builtin_primitives
 (*e: function [[Symtable.init]] *)
 
@@ -265,7 +265,7 @@ let init_toplevel () =
   global_table := (input_value ic : Ident.t numtable);
   close_in ic;
   (* Enter the known C primitives *)
-  Array.iter (fun x -> enter_numtable c_prim_table x; ())
+  Array.iter (fun x -> ignore (enter_numtable c_prim_table x))
              (Meta.available_primitives())
 (*e: function [[Symtable.init_toplevel]] *)
 

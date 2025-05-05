@@ -63,14 +63,14 @@ let simple_match p1 p2 =
 
 let record_labels p =
   match p.pat_desc with
-    Tpat_record((lbl1, pat1) :: rem) -> Array.to_list lbl1.lbl_all
+    Tpat_record((lbl1, _pat1) :: _rem) -> Array.to_list lbl1.lbl_all
   | _ -> fatal_error "Parmatch.record_labels"
 (*e: function [[Parmatch.record_labels]] *)
 
 (*s: function [[Parmatch.record_num_fields]] *)
 let record_num_fields p =
   match p.pat_desc with
-    Tpat_record((lbl1, pat1) :: rem) -> Array.length lbl1.lbl_all
+    Tpat_record((lbl1, _pat1) :: _rem) -> Array.length lbl1.lbl_all
   | _ -> fatal_error "Parmatch.record_num_fields"
 (*e: function [[Parmatch.record_num_fields]] *)
 
@@ -87,7 +87,7 @@ let set_fields size l =
 (*s: function [[Parmatch.simple_match_args]] *)
 let simple_match_args p1 p2 =
   match p2.pat_desc with
-    Tpat_construct(cstr, args) -> args
+    Tpat_construct(_cstr, args) -> args
   | Tpat_tuple(args)  -> args
   | Tpat_record(args) ->  set_fields (record_num_fields p1) args
   | (Tpat_any | Tpat_var(_)) ->
@@ -116,7 +116,7 @@ let rec simple_pat q pss = match pss with
         simple_pat q pss
   | (({pat_desc = Tpat_tuple(args)} as p)::_)::_ ->
         make_pat (Tpat_tuple(omega_list args)) p.pat_type
-  | (({pat_desc = Tpat_record(args)} as p)::_)::pss ->
+  | (({pat_desc = Tpat_record(_args)} as p)::_)::_pss ->
         make_pat (Tpat_record (List.map (fun lbl -> (lbl,omega)) (record_labels p)))
                  p.pat_type
   | _ -> q
@@ -224,7 +224,7 @@ let rec satisfiable pss qs =
     match qs with
       [] -> false
     | {pat_desc = Tpat_or(q1,q2)}::qs ->
-        satisfiable pss (q1::qs) or satisfiable pss (q2::qs)
+        satisfiable pss (q1::qs) || satisfiable pss (q2::qs)
     | {pat_desc = Tpat_alias(q,_)}::qs ->
         satisfiable pss (q::qs)
     | {pat_desc = (Tpat_any | Tpat_var(_))}::qs ->
@@ -237,7 +237,7 @@ let rec satisfiable pss qs =
               satisfiable pss (simple_match_args p omega @ qs)  in
             if full_match constrs
             then List.exists try_non_omega constrs
-            else satisfiable (filter_extra pss) qs or
+            else satisfiable (filter_extra pss) qs ||
                  List.exists try_non_omega constrs
         end
     | q::qs ->
@@ -260,11 +260,11 @@ let rec le_pat p q =
     (Tpat_var _ | Tpat_any), _ -> true
   | Tpat_alias(p,_), _ -> le_pat p q
   | _, Tpat_alias(q,_) -> le_pat p q
-  | Tpat_or(p1,p2), _ -> le_pat p1 q or le_pat p2 q
-  | _, Tpat_or(q1,q2) -> le_pat p q1 & le_pat p q2
+  | Tpat_or(p1,p2), _ -> le_pat p1 q || le_pat p2 q
+  | _, Tpat_or(q1,q2) -> le_pat p q1 && le_pat p q2
   | Tpat_constant(c1), Tpat_constant(c2) -> c1 = c2
   | Tpat_construct(c1,ps), Tpat_construct(c2,qs) ->
-      c1.cstr_tag = c2.cstr_tag & le_pats ps qs
+      c1.cstr_tag = c2.cstr_tag && le_pats ps qs
   | Tpat_tuple(ps), Tpat_tuple(qs) -> le_pats ps qs
   | Tpat_record(l1), Tpat_record(l2) ->
      let size = record_num_fields p in
@@ -273,7 +273,7 @@ let rec le_pat p q =
 
 and le_pats ps qs =
   match ps,qs with
-    p::ps, q::qs -> le_pat p q & le_pats ps qs
+    p::ps, q::qs -> le_pat p q && le_pats ps qs
   | _, _         -> true
 (*e: function [[Parmatch.le_pat]] *)
 
@@ -307,7 +307,7 @@ let location_of_clause = function
 let check_unused casel =
   let prefs =   
     List.fold_right
-      (fun (pat,act as clause) r ->
+      (fun (pat,act as _clause) r ->
          if has_guard act
          then ([], ([pat], act)) :: r
          else ([], ([pat], act)) :: 

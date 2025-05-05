@@ -15,7 +15,6 @@
 (* Compute constructor and label descriptions from type declarations,
    determining their representation. *)
 
-open Misc
 open Asttypes
 open Types
 
@@ -24,8 +23,8 @@ let constructor_descrs ty_res cstrs =
   let num_consts = ref 0 in
   let num_nonconsts = ref 0 in
   cstrs |> List.iter (function 
-    | (name, []) -> incr num_consts
-    | (name, _)  -> incr num_nonconsts
+    | (_name, []) -> incr num_consts
+    | (_name, _)  -> incr num_nonconsts
   );
   let rec describe_constructors idx_const idx_nonconst = function
       [] -> []
@@ -69,7 +68,7 @@ let dummy_label =
 (* Cannot call ctype.repres here *)
 
 let rec is_float = function
-    Tvar{tvar_link = Some ty} -> is_float ty
+    Tvar {tvar_link = Some ty} -> is_float ty
   | Tconstr(p, _) -> Path.same p Predef.path_float
   | _ -> false
 (*e: function [[Datarepr.is_float]] *)
@@ -78,7 +77,7 @@ let rec is_float = function
 let label_descrs ty_res lbls =
   let all_labels = Array.create (List.length lbls) dummy_label in
   let repres =
-    if List.for_all (fun (name, flag, ty) -> is_float ty) lbls
+    if List.for_all (fun (_name, _flag, ty) -> is_float ty) lbls
     then Record_float
     else Record_regular in
   let rec describe_labels num = function

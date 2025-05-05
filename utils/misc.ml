@@ -36,7 +36,7 @@ let rec map_end f l1 l2 =
 let rec for_all2 pred l1 l2 =
   match (l1, l2) with
     ([], []) -> true
-  | (hd1::tl1, hd2::tl2) -> pred hd1 hd2 & for_all2 pred tl1 tl2
+  | (hd1::tl1, hd2::tl2) -> pred hd1 hd2 && for_all2 pred tl1 tl2
   | (_, _) -> false
 (*e: function [[Misc.for_all2]] *)
 
@@ -55,7 +55,7 @@ let rec filter pred =
 (*s: function [[Misc.mem_assq]] *)
 let rec mem_assq x = function
     [] -> false
-  | (a,b)::l -> a == x or mem_assq x l
+  | (a,_b)::l -> a == x || mem_assq x l
 (*e: function [[Misc.mem_assq]] *)
 
 (*s: function [[Misc.replicate_list]] *)
@@ -83,7 +83,7 @@ let find_in_path path name =
 let remove_file filename =
   try
     Sys.remove filename
-  with Sys_error msg ->
+  with Sys_error _msg ->
     ()
 (*e: function [[Misc.remove_file]] *)
 

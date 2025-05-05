@@ -9,6 +9,16 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* ported from ocaml 4.00 *)
+
+let (|>) o f =
+  f o
+
+(* ported from ocaml 3.12 *)
+
+(*external ignore : 'a -> unit = "%ignore"*)
+let ignore _ = ()
+
 (* $Id: pervasives.ml,v 1.24 1997/08/29 15:37:21 xleroy Exp $ *)
 
 type 'a option = None | Some of 'a
@@ -243,12 +253,12 @@ let rec input_line chan =
     raise End_of_file
   else if n > 0 then begin              (* n > 0: newline found in buffer *)
     let res = string_create (n-1) in
-    unsafe_input chan res 0 (n-1);
-    input_char chan;                    (* skip the newline *)
+    ignore (unsafe_input chan res 0 (n-1));
+    ignore (input_char chan);                    (* skip the newline *)
     res
   end else begin                        (* n < 0: newline not found *)
     let beg = string_create (-n) in
-    unsafe_input chan beg 0 (-n);
+    ignore (unsafe_input chan beg 0 (-n));
     try
       beg ^ input_line chan
     with End_of_file ->
@@ -318,16 +328,6 @@ let do_at_exit () = (!exit_function) ()
 let exit retcode =
   do_at_exit ();
   sys_exit retcode
-
-(* ported from ocaml 4.00 *)
-
-let (|>) o f =
-  f o
-
-(* ported from ocaml 3.12 *)
-
-(*external ignore : 'a -> unit = "%ignore"*)
-let ignore _ = ()
 
 external float_of_int : int -> float = "%floatofint"
 external int_of_float : float -> int = "%intoffloat"

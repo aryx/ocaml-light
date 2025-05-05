@@ -115,7 +115,7 @@ exception Not_a_path
 (*e: exception [[Typemod.Not_a_path]] *)
 
 (*s: function [[Typemod.path_of_module]] *)
-let rec path_of_module mexp =
+let path_of_module mexp =
   match mexp.mod_desc with
     Tmod_ident p -> p
   | _ -> raise Not_a_path

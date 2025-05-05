@@ -14,7 +14,6 @@
 
 (* Printing functions *)
 open Types
-open Typedtree
 
 (*s: signature [[Printtyp.longident]] *)
 val longident: Longident.t -> unit

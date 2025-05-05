@@ -14,7 +14,6 @@
 
 (* Substitutions *)
 
-open Misc
 open Path
 open Types
 
