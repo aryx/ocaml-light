@@ -22,6 +22,9 @@
 #include <sys/time.h>
 #endif
 
+//#include <unistd.h>
+int getpid(void);
+
 Display * grdisplay = NULL;
 
 static Bool gr_initialized = False;

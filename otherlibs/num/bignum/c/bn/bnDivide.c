@@ -16,7 +16,7 @@
 static char copyright[]="@(#)bnDivide.c: copyright Digital Equipment Corporation & INRIA 1988, 1989, 1990\n";
 
 
-static divide (nn, nl, dd, dl)
+static void divide (nn, nl, dd, dl)
 
 	 BigNum		nn, dd;
 register BigNumLength 	nl, dl;

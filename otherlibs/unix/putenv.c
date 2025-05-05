@@ -19,6 +19,10 @@
 //#include <stdlib.h>
 //#include <string.h>
 
+// include <strings.h>
+void bcopy(const void *src, void *dest, size_t n);
+
+
 value unix_putenv(value name, value val) /* ML */
 {
   mlsize_t namelen = string_length(name);
