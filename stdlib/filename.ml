@@ -67,7 +67,7 @@ let wnt_is_implicit n =
 
 let contains_colon n =
   try
-    String.index n ':'; true
+    ignore (String.index n ':'); true
   with Not_found ->
     false
 ;;

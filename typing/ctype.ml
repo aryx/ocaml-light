@@ -87,7 +87,7 @@ let rec generalize ty =
       generalize t1; generalize t2
   | Ttuple tl ->
       List.iter generalize tl
-  | Tconstr(p, tl) ->
+  | Tconstr(_p, tl) ->
       List.iter generalize tl
 (*e: function [[Ctype.generalize]] *)
 
@@ -102,7 +102,7 @@ let rec make_nongen ty =
       make_nongen t1; make_nongen t2
   | Ttuple tl ->
       List.iter make_nongen tl
-  | Tconstr(p, tl) ->
+  | Tconstr(_p, tl) ->
       List.iter make_nongen tl
 (*e: function [[Ctype.make_nongen]] *)
 
@@ -301,14 +301,14 @@ let rec moregen_occur tvar ty =
          instantiated. Otherwise, tvar is not generic
          and cannot be instantiated by a type that contains
          generic variables. *)
-      if v.tvar_level = generic_level & tvar.tvar_level < !current_level
+      if v.tvar_level = generic_level && tvar.tvar_level < !current_level
       then raise Unify
   (* boilerplate iterator *)
   | Tarrow(t1, t2) ->
       moregen_occur tvar t1; moregen_occur tvar t2
   | Ttuple tl ->
       List.iter (moregen_occur tvar) tl
-  | Tconstr(p, tl) ->
+  | Tconstr(_p, tl) ->
       List.iter (moregen_occur tvar) tl
 (*e: function [[Ctype.moregen_occur]] *)
 
@@ -398,7 +398,7 @@ let equal env params1 ty1 params2 ty2 =
           fatal_error "Ctype.equal"
         end
     | (Tarrow(t1, u1), Tarrow(t2, u2)) ->
-        eqtype t1 t2 & eqtype u1 u2
+        eqtype t1 t2 && eqtype u1 u2
     | (Ttuple tl1, Ttuple tl2) ->
         eqtype_list tl1 tl2
     | (Tconstr(p1, tl1), Tconstr(p2, tl2)) ->
@@ -430,7 +430,7 @@ let equal env params1 ty1 params2 ty2 =
   and eqtype_list tl1 tl2 =
     match (tl1, tl2) with
       ([], []) -> true
-    | (t1::r1, t2::r2) -> eqtype t1 t2 & eqtype_list r1 r2
+    | (t1::r1, t2::r2) -> eqtype t1 t2 && eqtype_list r1 r2
     | (_, _) -> false
   in
     eqtype ty1 ty2
@@ -441,7 +441,7 @@ let equal env params1 ty1 params2 ty2 =
 
 let rec nondep_type env id ty =
   match repr ty with
-    Tvar v as tvar -> tvar
+    Tvar _v as tvar -> tvar
   | Tarrow(t1, t2) ->
       Tarrow(nondep_type env id t1, nondep_type env id t2)
   | Ttuple tl ->
@@ -463,7 +463,7 @@ let rec free_type_ident env ids ty =
   match repr ty with
     Tvar _ -> false
   | Tconstr((Pident id as p), tl) ->
-      List.exists (Ident.same id) ids or begin
+      List.exists (Ident.same id) ids || begin
         try
           free_type_ident env (id::ids) (expand_abbrev env p tl)
         with Cannot_expand ->
@@ -488,9 +488,9 @@ let rec free_type_ident env ids ty =
 let rec closed_schema ty =
   match repr ty with
     Tvar v -> v.tvar_level = generic_level
-  | Tarrow(t1, t2) -> closed_schema t1 & closed_schema t2
+  | Tarrow(t1, t2) -> closed_schema t1 && closed_schema t2
   | Ttuple tl -> List.for_all closed_schema tl
-  | Tconstr(p, tl) -> List.for_all closed_schema tl
+  | Tconstr(_p, tl) -> List.for_all closed_schema tl
 (*e: function [[Ctype.closed_schema]] *)
 
 (*s: function [[Ctype.is_generic]] *)
@@ -503,7 +503,7 @@ let is_generic ty =
 (*s: function [[Ctype.arity]] *)
 let rec arity ty =
   match repr ty with
-    Tarrow(t1, t2) -> 1 + arity t2
+    Tarrow(_t1, t2) -> 1 + arity t2
   | _ -> 0
 (*e: function [[Ctype.arity]] *)
 

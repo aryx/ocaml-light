@@ -47,7 +47,7 @@ let reset_type_variables () =
 (*s: function [[Typetexp.enter_type_variable]] *)
 let enter_type_variable name =
   try
-    Tbl.find name !type_variables; 
+    ignore (Tbl.find name !type_variables); 
     raise Already_bound
   with Not_found ->
     let v = new_global_var() in

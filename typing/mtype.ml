@@ -19,9 +19,9 @@ open Types
 
 
 (*s: function [[Mtype.scrape]] *)
-let rec scrape env mty =
+let scrape _env mty =
   match mty with
-    Tmty_ident p ->
+    Tmty_ident _p ->
       failwith "Mtype.scrape:TODO"
 (*
       begin try
@@ -45,7 +45,7 @@ let rec strengthen env mty p =
 and strengthen_sig env sg p =
   match sg with
     [] -> []
-  | (Tsig_value(id, desc) as sigelt) :: rem ->
+  | (Tsig_value(_id, _desc) as sigelt) :: rem ->
       sigelt :: strengthen_sig env rem p
   | Tsig_type(id, decl) :: rem ->
       let newdecl =
@@ -58,7 +58,7 @@ and strengthen_sig env sg p =
                                                 decl.type_params)) }
         | _ -> decl in
       Tsig_type(id, newdecl) :: strengthen_sig env rem p
-  | (Tsig_exception(id, d) as sigelt) :: rem ->
+  | (Tsig_exception(_id, _d) as sigelt) :: rem ->
       sigelt :: strengthen_sig env rem p
   | Tsig_module(id, mty) :: rem ->
       Tsig_module(id, strengthen env mty (Pdot(p, Ident.name id, nopos))) ::

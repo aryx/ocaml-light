@@ -74,7 +74,7 @@ let pattern_variables = ref ([]: (Ident.t * type_expr) list)
 
 (*s: function [[Typecore.enter_variable]] *)
 let enter_variable loc name ty =
-  if List.exists (fun (id, ty) -> Ident.name id = name) !pattern_variables
+  if List.exists (fun (id, _ty) -> Ident.name id = name) !pattern_variables
   then raise(Error(loc, Multiply_bound_variable));
   let id = Ident.create name in
   pattern_variables := (id, ty) :: !pattern_variables;
@@ -202,12 +202,12 @@ let rec is_nonexpansive exp =
   match exp.exp_desc with
   | Texp_record lbl_exp_list ->
       lbl_exp_list |> List.for_all (fun (lbl, exp) -> 
-        lbl.lbl_mut = Immutable & is_nonexpansive exp
+        lbl.lbl_mut = Immutable && is_nonexpansive exp
        )
   | Texp_ident(_,_) -> true
   | Texp_constant _ -> true
-  | Texp_let(rec_flag, pat_exp_list, body) ->
-      List.for_all (fun (pat, exp) -> is_nonexpansive exp) pat_exp_list &
+  | Texp_let(_rec_flag, pat_exp_list, body) ->
+      List.for_all (fun (_pat, exp) -> is_nonexpansive exp) pat_exp_list &&
       is_nonexpansive body
   | Texp_function _ -> true
   | Texp_tuple el ->
@@ -215,13 +215,13 @@ let rec is_nonexpansive exp =
   | Texp_construct(_, el) ->
       List.for_all is_nonexpansive el
               
-  | Texp_field(exp, lbl) -> is_nonexpansive exp
+  | Texp_field(exp, _lbl) -> is_nonexpansive exp
   | Texp_array [] -> true
 
   (*s: [[Typecore.is_nonexpansive()]] extra cases *)
   | Texp_record_with (exp, lbl_exp_list) ->
       lbl_exp_list |> List.for_all (fun (lbl, exp) -> 
-        lbl.lbl_mut = Immutable & is_nonexpansive exp
+        lbl.lbl_mut = Immutable && is_nonexpansive exp
        ) &&
       is_nonexpansive exp
   (*e: [[Typecore.is_nonexpansive()]] extra cases *)
@@ -269,7 +269,7 @@ let type_format loc fmt =
                     Tarrow (ty_arg, scan_format (j+1)))
         | 't' ->
             Tarrow(Tarrow(ty_input, ty_result), scan_format (j+1))
-        | c ->
+        | _c ->
             raise(Error(loc, Bad_format(String.sub fmt i (j-i))))
         )
     | _ -> scan_format (i+1) in
@@ -345,7 +345,7 @@ let rec type_exp env sexp =
       (*s: [[Typecore.type_exp()]] record case, sanity check duplicates and missing *)
       let rec check_duplicates = function
         [] -> ()
-      | (lid, sarg) :: remainder ->
+      | (lid, _sarg) :: remainder ->
           if List.mem_assoc lid remainder
           then raise(Error(sexp.pexp_loc, Label_multiply_defined lid))
           else check_duplicates remainder 
@@ -549,7 +549,7 @@ let rec type_exp env sexp =
 
       let rec check_duplicates = function
         [] -> ()
-      | (lid, sarg) :: remainder ->
+      | (lid, _sarg) :: remainder ->
           if List.mem_assoc lid remainder
           then raise(Error(sexp.pexp_loc, Label_multiply_defined lid))
           else check_duplicates remainder 
@@ -647,7 +647,7 @@ and type_let env rec_flag spat_sexp_list =
   (*e: [[Typecode.type_let()]] before typing *)
   let (pat_list, new_env) =
     spat_sexp_list 
-    |> List.map (fun (spat, sexp) -> spat)
+    |> List.map (fun (spat, _sexp) -> spat)
     |> type_pattern_list env 
   in
   let exp_env =

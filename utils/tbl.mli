@@ -30,7 +30,7 @@ val find: 'a -> ('a, 'b) t -> 'b
 val remove: 'a -> ('a,  'b) t -> ('a, 'b) t
 (*e: signature [[Tbl.remove]] *)
 (*s: signature [[Tbl.iter]] *)
-val iter: ('a -> 'b -> 'c) -> ('a, 'b) t -> unit
+val iter: ('a -> 'b -> unit) -> ('a, 'b) t -> unit
 (*e: signature [[Tbl.iter]] *)
 
 (*s: signature [[Tbl.print]] *)

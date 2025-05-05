@@ -19,7 +19,6 @@ open Longident
 open Path
 open Asttypes
 open Types
-open Typedtree
 
 
 (*s: function [[Printtyp.longident]] *)
