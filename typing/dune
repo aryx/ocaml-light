@@ -1,0 +1,11 @@
+(library
+ (name typing)
+ (wrapped false)
+ (flags (:standard -unsafe-string))
+ (libraries
+    ;stdcompat
+
+   parsing
+  )
+ (preprocess (pps ppx_deriving.show))
+)

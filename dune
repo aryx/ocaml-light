@@ -1,0 +1,5 @@
+(env
+ (dev
+  ; TODO: gradually remove those -x and fix the code instead!
+  (flags (:standard -w -3-8-9-11-26-27-32-33-35-37-39-52)))
+)

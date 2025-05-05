@@ -1,0 +1,12 @@
+(library
+ (name stdlib)
+ (wrapped false)
+ ; -nopervasives -nostdlib
+ (flags (:standard -unsafe-string))
+ (libraries
+
+
+  )
+ 
+ (preprocess (pps ppx_deriving.show))
+)
