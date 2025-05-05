@@ -589,4 +589,4 @@ visual:
 	codemap -screen_size 3 -efuns_client efuns_client -emacs_client /dev/null .
 
 build-docker:
-	docker build -t "ocaml-lights" .
+	docker build -t "ocaml-light" .
