@@ -1,2 +1,37 @@
 /pad.txt
 /gitlog.txt
+
+# old skip_list.txt
+
+## when counting LOC really needed for plan9-ml
+#dir: asmrun
+#dir: asmcomp
+##dir: boot
+##dir: bytecomp
+##dir: byterun
+##dir: config
+#dir: docs
+##dir: driver
+#dir: emacs
+#dir: lex
+##dir: parsing
+#
+## skip too because included in plan9-ml/lib_core/stdlib
+#dir: stdlib
+#
+##dir: tests
+#dir: tools
+##dir: typing
+##dir: utils
+#dir: yacc
+#
+#dir: otherlibs/dbm
+#dir: otherlibs/dynlink
+#dir: otherlibs/graph
+#dir: otherlibs/num
+#dir: otherlibs/systhreads
+#
+## should skip the .ml at least too because included in plan9-ml/lib_core/
+##dir: otherlibs/str
+##dir: otherlibs/threads
+##dir: otherlibs/unix
