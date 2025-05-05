@@ -15,8 +15,21 @@ asmrun/*.c
 *.5
 5.out
 
+# when compiling with dune
+/_build
+
 # syncweb object files
 .md5sum_*
+
+# codemap/codegraph
+/graph_code.marshall
+/graph_code.marshall.opti
+/layer_bottomup.json
+/layer_graphcode_stats.json
+/layer_topdown.json
+/PFFF_DB.json
+/PFFF_DB.marshall
+/TAGS
 
 # other syncweb/literate stuff
 /docs/literate/.OCaml.nwcache
@@ -38,6 +51,29 @@ asmrun/*.c
 # patch -p1 < ...
 *.rej
 
+# ocamllex/ocamlyacc generated files
+
+/lex/lexer.ml
+/lex/ocamllex
+/lex/parser.ml
+/lex/parser.mli
+
+/parsing/lexer.ml
+/parsing/linenum.ml
+/parsing/parser.ml
+/parsing/parser.mli
+
+/tools/debugger/lexer.ml
+/tools/debugger/ocamldebug
+/tools/debugger/parser.ml
+/tools/debugger/parser.mli
+
+# generated OCaml code
+/bytecomp/opcodes.ml
+/bytecomp/runtimedef.ml
+
+# boot/
+
 boot/Saved
 
 /boot/camlheader
@@ -45,10 +81,10 @@ boot/Saved
 /boot/ocamlrun
 /boot/ocamlyacc
 
+# other
+
 /config/Makefile
 
-/bytecomp/opcodes.ml
-/bytecomp/runtimedef.ml
 /byterun/jumptbl.h
 /byterun/ocamlrun
 /byterun/ocamlrund
@@ -58,16 +94,6 @@ boot/Saved
 
 /config/m.h
 /config/s.h
-
-/debugger/lexer.ml
-/debugger/ocamldebug
-/debugger/parser.ml
-/debugger/parser.mli
-
-/lex/lexer.ml
-/lex/ocamllex
-/lex/parser.ml
-/lex/parser.mli
 
 /ocaml
 /ocamlc
@@ -79,11 +105,6 @@ boot/Saved
 /otherlibs/str/regex-0.12/config.status
 /otherlibs/threads/pervasives.mli
 
-/parsing/lexer.ml
-/parsing/linenum.ml
-/parsing/parser.ml
-/parsing/parser.mli
-
 /stdlib/camlheader
 
 /tools/ocamldep
@@ -94,35 +115,17 @@ boot/Saved
 
 /yacc/ocamlyacc
 
-/tools/debugger/lexer.ml
-/tools/debugger/ocamldebug
-/tools/debugger/parser.ml
-/tools/debugger/parser.mli
-
 /tools/misc/ocamldep
 /tools/misc/ocamldep.ml
 /tools/misc/ocamlprof
 
-# codemap/codegraph
-/graph_code.marshall
-/graph_code.marshall.opti
-/layer_bottomup.json
-/layer_graphcode_stats.json
-/layer_topdown.json
-/PFFF_DB.json
-/PFFF_DB.marshall
-/TAGS
-
-
 /tests/a.out
 /tests/hello.byte
+
 /tests/calc/lexer.ml
 /tests/calc/parser.ml
 /tests/calc/parser.mli
-/yacc2/lexer.ml
-/yacc2/ocamlyacc
-/yacc2/parser.ml
-/yacc2/parser.mli
+
 /tests/yacc/arith.ml
 
 /tools/dependencies/ocamldep
@@ -133,6 +136,3 @@ boot/Saved
 /tools/dumper/opnames.ml
 
 /tools/profiler/ocamlprof
-
-/boot/ocamllex2
-/boot/ocamlyacc2
