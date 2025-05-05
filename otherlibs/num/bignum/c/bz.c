@@ -24,6 +24,11 @@
 #include <values.h>
 */
 
+//#include <stdlib.h>
+void free(void *ptr);
+//#include <string.h>
+int strlen(const char *s);
+
 #define NULL                    0
 #define max(a,b) 		(a<b ? b : a)
 #define abs(x)			(x>=0 ? x : -(x))
