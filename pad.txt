@@ -76,7 +76,7 @@ it is maybe also a better candidate in the end for a fork because it has:
 
 ** first "cleanup" modification
 
-After opting for ocaml 1.07 aas the starting point, 
+After opting for ocaml 1.07 as the starting point, 
 I did many modifications, mostly removing stuff:
  - removed support for Windows and Mac (the Makefile.nt, Makefile.Mac, etc)
  - removed native code compiler targets: alpha, hppa, m68k, power, and sparc,
@@ -208,17 +208,7 @@ if you change types.mli, then the signature of the .cmo will
 change in which case you need to 
 $ make bootstrap
 
-* Test?
-
-make install
-and run /usr/.../bin/ocaml ?
-but make bootstrap should already be a good test
-
-** TODO testsuite in ocaml-github repo! it was not part of ocaml-1.07.tgz
-but was part of the CVS repo!
-
 * Doc
-
 http://moscova.inria.fr/oldjocaml/ocaml-1.07-refman/htmlman/index.html
 
 * Debugging ocamlc and ocamlrun themselves
