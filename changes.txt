@@ -2,9 +2,35 @@
 
 * TODO
 
-* 0.1 (Q2 2025) (Dockerfile, Github Actions CI checks (devops))
+** test infra
+
+** devops
+- shell.nix and nix.yml macOS and Linux GHA CI checks
+
+* 0.1 (Q2 2025) (Dockerfile, Github Actions CI checks (devops), dune, tests)
+
+** test infra
+- add back the test/ and testasmcomp/ (but not testobjects/) from
+  the OCaml github repo at the 1.07 time (commit a234a77991)
+
+** dev infra
+- compile ocaml light also with dune! so get better warnings,
+  faster build, and the production of .cmt in _build/ allowing
+  merlin to work correctly for file navigation and type info!
+
+** devops
+- add Dockerfile and docker.yml GHA (Github Action) CI
 
 * Beta (2017) (plan9 support)
 
-* Alpha (2015) (fork of OCaml 1.07 and reduction)
+- compile byterun/ for plan9 so I can run ocaml (light) bytecode programs
+  under my fork of plan9
+
+* Alpha (2015) (fork of OCaml 1.07 but remove OO and functors)
 # see also pad.txt history section
+
+- remove support for classes and objects (OO) as it complicated a lot the
+  typechecking code for a controversial features; typeclasses or
+  implicits are IMHO better. See also REMOVE_OBJ.patch
+- remove functors, again to simplify the code as ocaml light is meant
+  for educational purpose (part of my principia softwarica project)
