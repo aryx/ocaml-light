@@ -25,7 +25,7 @@
 ** devops
 - add Dockerfile and docker.yml GHA (Github Action) CI
 
-* Beta (2017) (plan9 support)
+* Beta (2018) (plan9 support)
 
 - compile byterun/ for plan9 so I can run ocaml (light) bytecode programs
   under my fork of plan9
