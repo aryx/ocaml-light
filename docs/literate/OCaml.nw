@@ -5097,7 +5097,7 @@ val same: t -> t -> bool
 let rec same p1 p2 =
   match (p1, p2) with
     (Pident id1, Pident id2) -> Ident.same id1 id2
-  | (Pdot(p1, s1, pos1), Pdot(p2, s2, pos2)) -> s1 = s2 & same p1 p2
+  | (Pdot(p1, s1, _pos1), Pdot(p2, s2, _pos2)) -> s1 = s2 && same p1 p2
   | (_, _) -> false
 @
 
@@ -5312,7 +5312,7 @@ let unify_exp env exp expected_ty =
 <<[[Typecore.type_exp()]] record case, sanity check duplicates and missing>>=
 let rec check_duplicates = function
   [] -> ()
-| (lid, sarg) :: remainder ->
+| (lid, _sarg) :: remainder ->
     if List.mem_assoc lid remainder
     then raise(Error(sexp.pexp_loc, Label_multiply_defined lid))
     else check_duplicates remainder 
@@ -5622,7 +5622,7 @@ and type_let env rec_flag spat_sexp_list =
   <<[[Typecode.type_let()]] before typing>>
   let (pat_list, new_env) =
     spat_sexp_list 
-    |> List.map (fun (spat, sexp) -> spat)
+    |> List.map (fun (spat, _sexp) -> spat)
     |> type_pattern_list env 
   in
   let exp_env =
@@ -5723,7 +5723,7 @@ let rec generalize ty =
       generalize t1; generalize t2
   | Ttuple tl ->
       List.iter generalize tl
-  | Tconstr(p, tl) ->
+  | Tconstr(_p, tl) ->
       List.iter generalize tl
 @
 % why special [] case? List.iter will work ...
@@ -5995,12 +5995,12 @@ let rec is_nonexpansive exp =
   match exp.exp_desc with
   | Texp_record lbl_exp_list ->
       lbl_exp_list |> List.for_all (fun (lbl, exp) -> 
-        lbl.lbl_mut = Immutable & is_nonexpansive exp
+        lbl.lbl_mut = Immutable && is_nonexpansive exp
        )
   | Texp_ident(_,_) -> true
   | Texp_constant _ -> true
-  | Texp_let(rec_flag, pat_exp_list, body) ->
-      List.for_all (fun (pat, exp) -> is_nonexpansive exp) pat_exp_list &
+  | Texp_let(_rec_flag, pat_exp_list, body) ->
+      List.for_all (fun (_pat, exp) -> is_nonexpansive exp) pat_exp_list &&
       is_nonexpansive body
   | Texp_function _ -> true
   | Texp_tuple el ->
@@ -6008,7 +6008,7 @@ let rec is_nonexpansive exp =
   | Texp_construct(_, el) ->
       List.for_all is_nonexpansive el
               
-  | Texp_field(exp, lbl) -> is_nonexpansive exp
+  | Texp_field(exp, _lbl) -> is_nonexpansive exp
   | Texp_array [] -> true
 
   <<[[Typecore.is_nonexpansive()]] extra cases>>
@@ -6050,7 +6050,7 @@ let rec make_nongen ty =
       make_nongen t1; make_nongen t2
   | Ttuple tl ->
       List.iter make_nongen tl
-  | Tconstr(p, tl) ->
+  | Tconstr(_p, tl) ->
       List.iter make_nongen tl
 @
 %old:  | Tconstr(p, []) ->
@@ -6264,7 +6264,7 @@ val enter_type_variable: string -> Types.type_expr
 <<function [[Typetexp.enter_type_variable]]>>=
 let enter_type_variable name =
   try
-    Tbl.find name !type_variables; 
+    ignore (Tbl.find name !type_variables); 
     raise Already_bound
   with Not_found ->
     let v = new_global_var() in
@@ -6749,7 +6749,7 @@ let rec free_type_ident env ids ty =
   match repr ty with
     Tvar _ -> false
   | Tconstr((Pident id as p), tl) ->
-      List.exists (Ident.same id) ids or begin
+      List.exists (Ident.same id) ids || begin
         try
           free_type_ident env (id::ids) (expand_abbrev env p tl)
         with Cannot_expand ->
@@ -6848,7 +6848,7 @@ let type_format loc fmt =
                     Tarrow (ty_arg, scan_format (j+1)))
         | 't' ->
             Tarrow(Tarrow(ty_input, ty_result), scan_format (j+1))
-        | c ->
+        | _c ->
             raise(Error(loc, Bad_format(String.sub fmt i (j-i))))
         )
     | _ -> scan_format (i+1) in
@@ -6962,7 +6962,7 @@ let value_descriptions env vd1 vd2 =
           then Tcoerce_none 
           else raise Dont_match
       | (Some p, None) -> Tcoerce_primitive p
-      | (None, Some p) -> raise Dont_match
+      | (None, Some _p) -> raise Dont_match
       | (None, None) -> Tcoerce_none
   end else
     raise Dont_match
@@ -7063,14 +7063,14 @@ let rec moregen_occur tvar ty =
          instantiated. Otherwise, tvar is not generic
          and cannot be instantiated by a type that contains
          generic variables. *)
-      if v.tvar_level = generic_level & tvar.tvar_level < !current_level
+      if v.tvar_level = generic_level && tvar.tvar_level < !current_level
       then raise Unify
   (* boilerplate iterator *)
   | Tarrow(t1, t2) ->
       moregen_occur tvar t1; moregen_occur tvar t2
   | Ttuple tl ->
       List.iter (moregen_occur tvar) tl
-  | Tconstr(p, tl) ->
+  | Tconstr(_p, tl) ->
       List.iter (moregen_occur tvar) tl
 @
 %  | Tconstr(p, []) ->
@@ -7098,13 +7098,13 @@ val exception_declarations:
 (* Inclusion between type declarations *)
 
 let type_declarations env id decl1 decl2 =
-  decl1.type_arity = decl2.type_arity &
+  decl1.type_arity = decl2.type_arity &&
   begin match (decl1.type_kind, decl2.type_kind) with
       (_, Type_abstract) -> true
     | (Type_variant cstrs1, Type_variant cstrs2) ->
         for_all2
           (fun (cstr1, arg1) (cstr2, arg2) ->
-            cstr1 = cstr2 &
+            cstr1 = cstr2 &&
             for_all2
               (fun ty1 ty2 ->
                 Ctype.equal env decl1.type_params ty1 decl2.type_params ty2)
@@ -7113,11 +7113,11 @@ let type_declarations env id decl1 decl2 =
     | (Type_record labels1, Type_record labels2) ->
         for_all2
           (fun (lbl1, mut1, ty1) (lbl2, mut2, ty2) ->
-            lbl1 = lbl2 & mut1 = mut2 &
+            lbl1 = lbl2 && mut1 = mut2 &&
             Ctype.equal env decl1.type_params ty1 decl2.type_params ty2)
           labels1 labels2
     | (_, _) -> false
-  end &
+  end &&
   begin match (decl1.type_manifest, decl2.type_manifest) with
       (_, None) -> true
     | (Some ty1, Some ty2) ->
@@ -7153,7 +7153,7 @@ let equal env params1 ty1 params2 ty2 =
           fatal_error "Ctype.equal"
         end
     | (Tarrow(t1, u1), Tarrow(t2, u2)) ->
-        eqtype t1 t2 & eqtype u1 u2
+        eqtype t1 t2 && eqtype u1 u2
     | (Ttuple tl1, Ttuple tl2) ->
         eqtype_list tl1 tl2
     | (Tconstr(p1, tl1), Tconstr(p2, tl2)) ->
@@ -7185,7 +7185,7 @@ let equal env params1 ty1 params2 ty2 =
   and eqtype_list tl1 tl2 =
     match (tl1, tl2) with
       ([], []) -> true
-    | (t1::r1, t2::r2) -> eqtype t1 t2 & eqtype_list r1 r2
+    | (t1::r1, t2::r2) -> eqtype t1 t2 && eqtype_list r1 r2
     | (_, _) -> false
   in
     eqtype ty1 ty2
@@ -7401,7 +7401,7 @@ let check_modtype_inclusion =
 
 let check_modtype_inclusion env mty1 mty2 =
   try
-    modtypes env mty1 mty2; ()
+    ignore (modtypes env mty1 mty2)
   with Error reasons ->
     raise Not_found
 @
@@ -7530,8 +7530,8 @@ let constructor_descrs ty_res cstrs =
   let num_consts = ref 0 in
   let num_nonconsts = ref 0 in
   cstrs |> List.iter (function 
-    | (name, []) -> incr num_consts
-    | (name, _)  -> incr num_nonconsts
+    | (_name, []) -> incr num_consts
+    | (_name, _)  -> incr num_nonconsts
   );
   let rec describe_constructors idx_const idx_nonconst = function
       [] -> []
@@ -7575,7 +7575,7 @@ let dummy_label =
 (* Cannot call ctype.repres here *)
 
 let rec is_float = function
-    Tvar{tvar_link = Some ty} -> is_float ty
+    Tvar {tvar_link = Some ty} -> is_float ty
   | Tconstr(p, _) -> Path.same p Predef.path_float
   | _ -> false
 @
@@ -7584,7 +7584,7 @@ let rec is_float = function
 let label_descrs ty_res lbls =
   let all_labels = Array.create (List.length lbls) dummy_label in
   let repres =
-    if List.for_all (fun (name, flag, ty) -> is_float ty) lbls
+    if List.for_all (fun (_name, _flag, ty) -> is_float ty) lbls
     then Record_float
     else Record_regular in
   let rec describe_labels num = function
@@ -9477,7 +9477,7 @@ let create_archive archive file_list =
       let r1 =
         command(Printf.sprintf "ar rc %s %s"
                                    archive (String.concat " " file_list)) in
-      if r1 <> 0 or String.length Config.ranlib = 0
+      if r1 <> 0 || String.length Config.ranlib = 0
       then r1
       else command(Config.ranlib ^ " " ^ archive)
 @
@@ -12263,7 +12263,7 @@ void debugger(enum event_kind event)
 
     let rec check_duplicates = function
       [] -> ()
-    | (lid, sarg) :: remainder ->
+    | (lid, _sarg) :: remainder ->
         if List.mem_assoc lid remainder
         then raise(Error(sexp.pexp_loc, Label_multiply_defined lid))
         else check_duplicates remainder 
@@ -12281,7 +12281,7 @@ void debugger(enum event_kind event)
 <<[[Typecore.is_nonexpansive()]] extra cases>>=
 | Texp_record_with (exp, lbl_exp_list) ->
     lbl_exp_list |> List.for_all (fun (lbl, exp) -> 
-      lbl.lbl_mut = Immutable & is_nonexpansive exp
+      lbl.lbl_mut = Immutable && is_nonexpansive exp
      ) &&
     is_nonexpansive exp
 @      
@@ -13003,7 +13003,7 @@ let rec skip_phrase lexbuf =
 <<function [[Parse.maybe_skip_phrase]]>>=
 let maybe_skip_phrase lexbuf =
   if Parsing.is_current_lookahead Parser.SEMISEMI
-  or Parsing.is_current_lookahead Parser.EOF
+  || Parsing.is_current_lookahead Parser.EOF
   then ()
   else skip_phrase lexbuf
 @
@@ -15031,7 +15031,7 @@ let rec map_end f l1 l2 =
 let rec for_all2 pred l1 l2 =
   match (l1, l2) with
     ([], []) -> true
-  | (hd1::tl1, hd2::tl2) -> pred hd1 hd2 & for_all2 pred tl1 tl2
+  | (hd1::tl1, hd2::tl2) -> pred hd1 hd2 && for_all2 pred tl1 tl2
   | (_, _) -> false
 @
 
@@ -15061,7 +15061,7 @@ val mem_assq: 'a -> ('a * 'b) list -> bool
 <<function [[Misc.mem_assq]]>>=
 let rec mem_assq x = function
     [] -> false
-  | (a,b)::l -> a == x or mem_assq x l
+  | (a,_b)::l -> a == x || mem_assq x l
 @
 
 \section{Hashes}
@@ -15126,7 +15126,7 @@ let find_in_path path name =
 let remove_file filename =
   try
     Sys.remove filename
-  with Sys_error msg ->
+  with Sys_error _msg ->
     ()
 @
 
