@@ -3,6 +3,11 @@
  (wrapped false)
  ; -nopervasives -nostdlib
  (flags (:standard -unsafe-string))
+ (modules
+   stack set
+   lexing parsing
+ )
+
  (libraries
 
 

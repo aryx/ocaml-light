@@ -3,8 +3,7 @@
  (wrapped false)
  (flags (:standard -unsafe-string))
  (libraries
-    ;stdcompat
-
+   stdlib
    parsing
   )
  (preprocess (pps ppx_deriving.show))
