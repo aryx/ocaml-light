@@ -2,6 +2,10 @@
 
 * TODO
 
+** dev infra
+- semgrep.yml
+- merlin working on the whole codebase
+
 ** test infra
 
 ** devops
@@ -26,11 +30,29 @@
 - compile byterun/ for plan9 so I can run ocaml (light) bytecode programs
   under my fork of plan9
 
-* Alpha (2015) (fork of OCaml 1.07 but remove OO and functors)
+* Alpha (2015) (fork of OCaml 1.07 without OO and functors, native ARM)
 # see also pad.txt history section
 
+** compiler
 - remove support for classes and objects (OO) as it complicated a lot the
   typechecking code for a controversial features; typeclasses or
-  implicits are IMHO better. See also REMOVE_OBJ.patch
+  implicits are IMHO better. See also REMOVE_OBJ.patch.
+  Note that I didn't need to remove the use of objects in the compiler itself
+  because they didn't even like the oo extensions and so didn't use it :) 
 - remove functors, again to simplify the code as ocaml light is meant
-  for educational purpose (part of my principia softwarica project)
+  for educational purpose (part of my principia softwarica project).
+  This meant slightly refactor the asmcomp/ code that was the only user
+  of functors (and maybe set and map)
+- removed some native targets: alpha, hppa, m68k, power, and sparc,
+   mips (just kept i386) and I backported the ARM port from ocaml 2.01!
+- backport a few features from recent OCaml to ocaml-light:
+    * backtrace?
+    * record with (see diff_with_record)
+
+** stdlib
+- backported a few modules or functions from recent OCaml
+  (see pad.txt changes section)
+
+** devops
+- a working configure that can work on recent Mac or Linux
+- remove support for old macOS and Windows NT, to remove ugly cruft.
