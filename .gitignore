@@ -1,6 +1,7 @@
 # OCaml object files
 *.cm*
 *.byte
+*.byt
 *.opt
 *.annot
 
@@ -67,6 +68,11 @@ asmrun/*.c
 /tools/debugger/ocamldebug
 /tools/debugger/parser.ml
 /tools/debugger/parser.mli
+
+/test/Lex/grammar.ml
+/test/Lex/grammar.mli
+/test/Lex/scanner.ml
+/test/Lex/testscanner.ml
 
 # generated OCaml code
 /bytecomp/opcodes.ml
