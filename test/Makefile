@@ -17,9 +17,11 @@ CODE_EXE=$(BYTE_EXE:.byt=.out)
 
 default:
 	make all
-	make codetest bytetest
+	make bytetest
+#TORESTORE: codetest
 
-all: $(BYTE_EXE) $(CODE_EXE)
+all: $(BYTE_EXE)
+#TORESTORE: $(CODE_EXE)
 
 # Nucleic
 

@@ -29,3 +29,6 @@ RUN make install
 RUN which ocaml
 RUN ocamlc -v
 RUN echo '1+1;;' | ocaml
+
+# Regression tests
+RUN cd test; make
