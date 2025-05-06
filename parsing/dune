@@ -1,6 +1,8 @@
 (library
  (name parsing)
  (wrapped false)
+ ; -nostdlib -nopervasives
+ (flags (:standard -unsafe-string))
  (libraries
     stdlib
     utils
