@@ -190,7 +190,7 @@ val remove: 'a -> ('a,  'b) t -> ('a, 'b) t
 @
 
 <<signature [[Tbl.iter]]>>=
-val iter: ('a -> 'b -> 'c) -> ('a, 'b) t -> unit
+val iter: ('a -> 'b -> unit) -> ('a, 'b) t -> unit
 @
 
 <<signature [[Tbl.print]]>>=
@@ -270,7 +270,7 @@ let bal l x d r =
 let rec add x data = function
     Empty ->
       Node(Empty, x, data, Empty, 1)
-  | Node(l, v, d, r, h) as t ->
+  | Node(l, v, d, r, h) ->
       let c = compare x v in
       if c = 0 then
         Node(l, x, data, r, h)
@@ -295,7 +295,7 @@ let rec merge t1 t2 =
   match (t1, t2) with
     (Empty, t) -> t
   | (t, Empty) -> t
-  | (Node(l1, v1, d1, r1, h1), Node(l2, v2, d2, r2, h2)) ->
+  | (Node(l1, v1, d1, r1, _h1), Node(l2, v2, d2, r2, _h2)) ->
       bal l1 v1 d1 (bal (merge r1 l2) v2 d2 r2)
 @
 
@@ -303,7 +303,7 @@ let rec merge t1 t2 =
 let rec remove x = function
     Empty ->
       Empty
-  | Node(l, v, d, r, h) as t ->
+  | Node(l, v, d, r, _h) ->
       let c = compare x v in
       if c = 0 then
         merge l r
@@ -1391,7 +1391,6 @@ type t
 
 (* Substitutions *)
 
-open Misc
 open Path
 open Types
 
@@ -1507,7 +1506,6 @@ open Types
 (* Compute constructor and label descriptions from type declarations,
    determining their representation. *)
 
-open Misc
 open Asttypes
 open Types
 
@@ -1795,11 +1793,11 @@ let rec bound_idents pat =
     Tpat_any -> ()
   | Tpat_var id -> idents := id :: !idents
   | Tpat_alias(p, id) -> bound_idents p; idents := id :: !idents
-  | Tpat_constant cst -> ()
+  | Tpat_constant _cst -> ()
   | Tpat_tuple patl -> List.iter bound_idents patl
-  | Tpat_construct(cstr, patl) -> List.iter bound_idents patl
+  | Tpat_construct(_cstr, patl) -> List.iter bound_idents patl
   | Tpat_record lbl_pat_list ->
-      List.iter (fun (lbl, pat) -> bound_idents pat) lbl_pat_list
+      List.iter (fun (_lbl, pat) -> bound_idents pat) lbl_pat_list
   | Tpat_or(p1, p2) -> bound_idents p1; bound_idents p2
 @
 
@@ -1811,7 +1809,7 @@ let pat_bound_idents pat =
 <<function [[Typedtree.rev_let_bound_idents]]>>=
 let rev_let_bound_idents pat_expr_list =
   idents := [];
-  List.iter (fun (pat, expr) -> bound_idents pat) pat_expr_list;
+  List.iter (fun (pat, _expr) -> bound_idents pat) pat_expr_list;
   let res = !idents in idents := []; res
 @
 
@@ -1828,7 +1826,6 @@ let let_bound_idents pat_expr_list =
 
 (* Abstract syntax tree after typing *)
 
-open Misc
 open Asttypes
 open Types
 
@@ -1967,7 +1964,7 @@ val isfree: Ident.t -> t -> bool
 <<function [[Path.isfree]]>>=
 let rec isfree id = function
     Pident id' -> Ident.same id id'
-  | Pdot(p, s, pos) -> isfree id p
+  | Pdot(p, _s, _pos) -> isfree id p
 @
 
 <<function [[Ctype.nondep_type]]>>=
@@ -1975,7 +1972,7 @@ let rec isfree id = function
 
 let rec nondep_type env id ty =
   match repr ty with
-    Tvar v as tvar -> tvar
+    Tvar _v as tvar -> tvar
   | Tarrow(t1, t2) ->
       Tarrow(nondep_type env id t1, nondep_type env id t2)
   | Ttuple tl ->
@@ -1999,9 +1996,9 @@ let rec nondep_type env id ty =
 let rec closed_schema ty =
   match repr ty with
     Tvar v -> v.tvar_level = generic_level
-  | Tarrow(t1, t2) -> closed_schema t1 & closed_schema t2
+  | Tarrow(t1, t2) -> closed_schema t1 && closed_schema t2
   | Ttuple tl -> List.for_all closed_schema tl
-  | Tconstr(p, tl) -> List.for_all closed_schema tl
+  | Tconstr(_p, tl) -> List.for_all closed_schema tl
 @
 
 <<function [[Ctype.is_generic]]>>=
@@ -2014,7 +2011,7 @@ let is_generic ty =
 <<function [[Ctype.arity]]>>=
 let rec arity ty =
   match repr ty with
-    Tarrow(t1, t2) -> 1 + arity t2
+    Tarrow(_t1, t2) -> 1 + arity t2
   | _ -> 0
 @
 
@@ -2190,9 +2187,9 @@ open Types
 \subsection*{[[typing/mtype.ml]]}
 
 <<function [[Mtype.scrape]]>>=
-let rec scrape env mty =
+let scrape _env mty =
   match mty with
-    Tmty_ident p ->
+    Tmty_ident _p ->
       failwith "Mtype.scrape:TODO"
 (*
       begin try
@@ -2303,7 +2300,7 @@ let rec strengthen env mty p =
 and strengthen_sig env sg p =
   match sg with
     [] -> []
-  | (Tsig_value(id, desc) as sigelt) :: rem ->
+  | (Tsig_value(_id, _desc) as sigelt) :: rem ->
       sigelt :: strengthen_sig env rem p
   | Tsig_type(id, decl) :: rem ->
       let newdecl =
@@ -2316,7 +2313,7 @@ and strengthen_sig env sg p =
                                                 decl.type_params)) }
         | _ -> decl in
       Tsig_type(id, newdecl) :: strengthen_sig env rem p
-  | (Tsig_exception(id, d) as sigelt) :: rem ->
+  | (Tsig_exception(_id, _d) as sigelt) :: rem ->
       sigelt :: strengthen_sig env rem p
   | Tsig_module(id, mty) :: rem ->
       Tsig_module(id, strengthen env mty (Pdot(p, Ident.name id, nopos))) ::
@@ -2354,7 +2351,6 @@ val signature_item: signature_item -> unit
 
 (* Printing functions *)
 open Types
-open Typedtree
 
 <<signature [[Printtyp.longident]]>>
 <<signature [[Printtyp.ident]]>>
@@ -2386,7 +2382,6 @@ open Longident
 open Path
 open Asttypes
 open Types
-open Typedtree
 
 
 <<function [[Printtyp.longident]]>>
@@ -2435,7 +2430,6 @@ open Typedtree
 
 (* Detection of partial matches and unused match cases. *)
 
-open Typedtree
 
 <<signature [[Parmatch.check_partial]]>>
 <<signature [[Parmatch.check_unused]]>>
@@ -2496,14 +2490,14 @@ let simple_match p1 p2 =
 
 let record_labels p =
   match p.pat_desc with
-    Tpat_record((lbl1, pat1) :: rem) -> Array.to_list lbl1.lbl_all
+    Tpat_record((lbl1, _pat1) :: _rem) -> Array.to_list lbl1.lbl_all
   | _ -> fatal_error "Parmatch.record_labels"
 @
 
 <<function [[Parmatch.record_num_fields]]>>=
 let record_num_fields p =
   match p.pat_desc with
-    Tpat_record((lbl1, pat1) :: rem) -> Array.length lbl1.lbl_all
+    Tpat_record((lbl1, _pat1) :: _rem) -> Array.length lbl1.lbl_all
   | _ -> fatal_error "Parmatch.record_num_fields"
 @
 
@@ -2520,7 +2514,7 @@ let set_fields size l =
 <<function [[Parmatch.simple_match_args]]>>=
 let simple_match_args p1 p2 =
   match p2.pat_desc with
-    Tpat_construct(cstr, args) -> args
+    Tpat_construct(_cstr, args) -> args
   | Tpat_tuple(args)  -> args
   | Tpat_record(args) ->  set_fields (record_num_fields p1) args
   | (Tpat_any | Tpat_var(_)) ->
@@ -2549,7 +2543,7 @@ let rec simple_pat q pss = match pss with
         simple_pat q pss
   | (({pat_desc = Tpat_tuple(args)} as p)::_)::_ ->
         make_pat (Tpat_tuple(omega_list args)) p.pat_type
-  | (({pat_desc = Tpat_record(args)} as p)::_)::pss ->
+  | (({pat_desc = Tpat_record(_args)} as p)::_)::_pss ->
         make_pat (Tpat_record (List.map (fun lbl -> (lbl,omega)) (record_labels p)))
                  p.pat_type
   | _ -> q
@@ -2656,7 +2650,7 @@ let rec satisfiable pss qs =
     match qs with
       [] -> false
     | {pat_desc = Tpat_or(q1,q2)}::qs ->
-        satisfiable pss (q1::qs) or satisfiable pss (q2::qs)
+        satisfiable pss (q1::qs) || satisfiable pss (q2::qs)
     | {pat_desc = Tpat_alias(q,_)}::qs ->
         satisfiable pss (q::qs)
     | {pat_desc = (Tpat_any | Tpat_var(_))}::qs ->
@@ -2669,7 +2663,7 @@ let rec satisfiable pss qs =
               satisfiable pss (simple_match_args p omega @ qs)  in
             if full_match constrs
             then List.exists try_non_omega constrs
-            else satisfiable (filter_extra pss) qs or
+            else satisfiable (filter_extra pss) qs ||
                  List.exists try_non_omega constrs
         end
     | q::qs ->
@@ -2716,7 +2710,7 @@ let location_of_clause = function
 let check_unused casel =
   let prefs =   
     List.fold_right
-      (fun (pat,act as clause) r ->
+      (fun (pat,act as _clause) r ->
          if has_guard act
          then ([], ([pat], act)) :: r
          else ([], ([pat], act)) :: 
@@ -2796,11 +2790,11 @@ let rec le_pat p q =
     (Tpat_var _ | Tpat_any), _ -> true
   | Tpat_alias(p,_), _ -> le_pat p q
   | _, Tpat_alias(q,_) -> le_pat p q
-  | Tpat_or(p1,p2), _ -> le_pat p1 q or le_pat p2 q
-  | _, Tpat_or(q1,q2) -> le_pat p q1 & le_pat p q2
+  | Tpat_or(p1,p2), _ -> le_pat p1 q || le_pat p2 q
+  | _, Tpat_or(q1,q2) -> le_pat p q1 && le_pat p q2
   | Tpat_constant(c1), Tpat_constant(c2) -> c1 = c2
   | Tpat_construct(c1,ps), Tpat_construct(c2,qs) ->
-      c1.cstr_tag = c2.cstr_tag & le_pats ps qs
+      c1.cstr_tag = c2.cstr_tag && le_pats ps qs
   | Tpat_tuple(ps), Tpat_tuple(qs) -> le_pats ps qs
   | Tpat_record(l1), Tpat_record(l2) ->
      let size = record_num_fields p in
@@ -2809,7 +2803,7 @@ let rec le_pat p q =
 
 and le_pats ps qs =
   match ps,qs with
-    p::ps, q::qs -> le_pat p q & le_pats ps qs
+    p::ps, q::qs -> le_pat p q && le_pats ps qs
   | _, _         -> true
 @
 
@@ -2954,7 +2948,7 @@ let simplify_structure_coercion cc =
   try
     List.iter
       (fun (n, c) ->
-        if n <> !pos or c <> Tcoerce_none then raise Exit;
+        if n <> !pos || c <> Tcoerce_none then raise Exit;
         incr pos)
       cc;
     Tcoerce_none
@@ -3074,7 +3068,6 @@ and try_modtypes env mty1 mty2 =
 (* Typing of type definitions and primitive definitions *)
 
 open Types
-open Typedtree
 
 <<signature [[Typedecl.transl_type_decl]]>>
 <<signature [[Typedecl.transl_exception]]>>
@@ -3180,7 +3173,7 @@ let pattern_variables = ref ([]: (Ident.t * type_expr) list)
 
 <<function [[Typecore.enter_variable]]>>=
 let enter_variable loc name ty =
-  if List.exists (fun (id, ty) -> Ident.name id = name) !pattern_variables
+  if List.exists (fun (id, _ty) -> Ident.name id = name) !pattern_variables
   then raise(Error(loc, Multiply_bound_variable));
   let id = Ident.create name in
   pattern_variables := (id, ty) :: !pattern_variables;
@@ -3435,7 +3428,7 @@ exception Not_a_path
 @
 
 <<function [[Typemod.path_of_module]]>>=
-let rec path_of_module mexp =
+let path_of_module mexp =
   match mexp.mod_desc with
     Tmod_ident p -> p
   | _ -> raise Not_a_path
@@ -7039,7 +7032,7 @@ let num_of_prim name =
 
 <<function [[Symtable.require_primitive]]>>=
 let require_primitive name =
-  if name.[0] <> '%' then begin num_of_prim name; () end
+  if name.[0] <> '%' then begin ignore (num_of_prim name) end
 @
 
 <<function [[Symtable.all_primitives]]>>=
@@ -7084,7 +7077,7 @@ let init () =
       literal_table := (c, cst) :: !literal_table)
     Runtimedef.builtin_exceptions;
   (* Enter the known C primitives *)
-  Array.iter (fun x -> enter_numtable c_prim_table x; ())
+  Array.iter (fun x -> ignore (enter_numtable c_prim_table x))
              Runtimedef.builtin_primitives
 @
 
@@ -7168,7 +7161,7 @@ let init_toplevel () =
   global_table := (input_value ic : Ident.t numtable);
   close_in ic;
   (* Enter the known C primitives *)
-  Array.iter (fun x -> enter_numtable c_prim_table x; ())
+  Array.iter (fun x -> ignore (enter_numtable c_prim_table x))
              (Meta.available_primitives())
 @
 
