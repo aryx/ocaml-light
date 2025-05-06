@@ -31,4 +31,4 @@ RUN ocamlc -v
 RUN echo '1+1;;' | ocaml
 
 # Regression tests
-RUN cd test; make
+RUN make test
