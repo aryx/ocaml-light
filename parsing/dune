@@ -1,16 +1,13 @@
 (library
  (name parsing)
  (wrapped false)
- ; -nostdlib -nopervasives
- (flags (:standard -unsafe-string))
  (libraries
     stdlib
     utils
   )
  (modules_without_implementation asttypes parsetree)
-; TODO lexer.ml and linenum.ml generation
-
  (preprocess (pps ppx_deriving.show))
 )
 
 ; (ocamllex lexer)
+; (ocamllex linenum)
