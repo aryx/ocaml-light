@@ -4,12 +4,12 @@
  ; -nopervasives -nostdlib
  (flags (:standard -unsafe-string))
  (modules
-   stack set
+   set map
+   stack sort
    lexing parsing
  )
 
  (libraries
-
 
   )
  
