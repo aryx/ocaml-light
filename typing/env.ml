@@ -104,9 +104,9 @@ let imported_units = ref ([] : (string * Digest.t) list)
 let read_pers_struct modname filename =
   let ic = open_in filename in
   try
-    let buffer = String.create (String.length cmi_magic_number) in
+    let buffer = Bytes.create (String.length cmi_magic_number) in
     really_input ic buffer 0 (String.length cmi_magic_number);
-    if buffer <> cmi_magic_number then begin
+    if Bytes.to_string buffer <> cmi_magic_number then begin
       close_in ic;
       raise(Error(Not_an_interface filename))
     end;

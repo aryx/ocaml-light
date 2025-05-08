@@ -123,7 +123,7 @@ let from_string s =
 (*s: function Lexing.lexeme *)
 let lexeme (lexbuf : lexbuf) : string =
   let len = lexbuf.lex_curr_pos - lexbuf.lex_start_pos in
-  let s = String.create len in
+  let s = Bytes.create len in
   String.unsafe_blit (Bytes.to_string lexbuf.lex_buffer) lexbuf.lex_start_pos s 0 len;
   Bytes.to_string s
 (*e: function Lexing.lexeme *)
