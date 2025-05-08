@@ -14,6 +14,7 @@ let (|>) o f =
   f o
 let ignore _ = () (* %ignore normally *)
 type bytes = string
+type ('a,'b) result = Ok of 'a | Error of 'b
 
 (* $Id: pervasives.ml,v 1.9 1997/08/29 15:05:48 xleroy Exp $ *)
 

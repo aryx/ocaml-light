@@ -4,55 +4,59 @@
 
 ** dev infra
 - semgrep.yml
-- merlin working on the whole codebase
 
 ** test infra
-
-** devops
 - shell.nix and nix.yml macOS and Linux GHA CI checks
 
-* 0.1 (Q2 2025) (Dockerfile, Github Actions CI checks (devops), dune, tests)
+* 0.1 (Q2 2025) (Dockerfile, Github Actions CI checks, dune, tests)
+
+** stdlib
+- frontport option.ml from 4.08
+- frontport result.ml from 4.08 and result pervasive type from ??
 
 ** test infra
+- add Dockerfile and docker.yml GHA (Github Action) CI
 - add back the test/ and testasmcomp/ (but not testobjects/) from
   the OCaml github repo at the 1.07 time (commit a234a77991)
+  and run them in the Dockerfile and in CI
+  => minimum regression test infra!
 
 ** dev infra
-- compile ocaml light also with dune! so get better warnings,
+- compile ocaml light code also with dune! so get better warnings,
   faster build, and the production of .cmt in _build/ allowing
-  merlin to work correctly for file navigation and type info!
-
-** devops
-- add Dockerfile and docker.yml GHA (Github Action) CI
+  merlin (and efuns) to work correctly for file navigation and type info!
 
 * Beta (2018) (plan9 support)
 
+** os
 - compile byterun/ for plan9 so I can run ocaml (light) bytecode programs
   under my fork of plan9
 
-* Alpha (2015) (fork of OCaml 1.07 without OO and functors, native ARM)
+* Alpha (2015) (fork of OCaml 1.07 without OO and functors + native ARM)
 # see also pad.txt history section
 
 ** compiler
 - remove support for classes and objects (OO) as it complicated a lot the
-  typechecking code for a controversial features; typeclasses or
-  implicits are IMHO better. See also REMOVE_OBJ.patch.
+  typechecking code for a controversial features (typeclasses or
+  implicits are IMHO better). See also REMOVE_OBJ.patch.
   Note that I didn't need to remove the use of objects in the compiler itself
-  because they didn't even like the oo extensions and so didn't use it :) 
+  because they didn't even like the oo extensions and so didn't use it :)
 - remove functors, again to simplify the code as ocaml light is meant
   for educational purpose (part of my principia softwarica project).
   This meant slightly refactor the asmcomp/ code that was the only user
   of functors (and maybe set and map)
 - removed some native targets: alpha, hppa, m68k, power, and sparc,
-   mips (just kept i386) and I backported the ARM port from ocaml 2.01!
-- backport a few features from recent OCaml to ocaml-light:
+  mips. I just kept i386 and later backported the ARM port from ocaml 2.01!
+- backport (frontport?) a few features from recent OCaml to ocaml-light:
     * backtrace?
-    * record with (see diff_with_record)
+    * record 'with' (see diff_with_record)
 
 ** stdlib
 - backported a few modules or functions from recent OCaml
   (see pad.txt changes section)
 
-** devops
+** build infra
 - a working configure that can work on recent Mac or Linux
+
+** os
 - remove support for old macOS and Windows NT, to remove ugly cruft.
