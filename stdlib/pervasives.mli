@@ -9,6 +9,37 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* adapted from ocaml 4.02 *)
+type bytes = string
+
+(* ported from ocaml 4.02.2 *)
+
+type ('a,'b) result = Ok of 'a | Error of 'b
+
+(* ported from ocaml 4.0 *)
+
+val ( |> ) : 'a -> ('a -> 'b) -> 'b
+(** Reverse-application operator: [x |> f |> g] is exactly equivalent
+ to [g (f (x))].
+   @since 4.01
+*)
+
+(* ported from ocaml 3.12 *)
+
+val ignore : 'a -> unit (*= "%ignore"*)
+(** Discard the value of its argument and return [()].
+   For instance, [ignore(f x)] discards the result of
+   the side-effecting function [f].  It is equivalent to
+   [f x; ()], except that the latter may generate a
+   compiler warning; writing [ignore(f x)] instead
+   avoids the warning. *)
+
+(* pad: for upward compatibility *)
+(*
+type ('a, 'b, 'c, 'd) format4 = ('a, 'b, 'c, 'c, 'c, 'd) format6
+type ('a, 'b, 'c) format = ('a, 'b, 'c, 'c) format4
+*)
+
 (* $Id: pervasives.mli,v 1.35 1997/07/02 18:16:12 xleroy Exp $ *)
 
 (* Module [Pervasives]: the initially opened module *)
@@ -543,12 +574,6 @@ external decr : int ref -> unit = "%decr"
            Could be defined as [fun r -> r := pred !r]. *)
 
 
-(* pad: for upward compatibility *)
-(*
-type ('a, 'b, 'c, 'd) format4 = ('a, 'b, 'c, 'c, 'c, 'd) format6
-type ('a, 'b, 'c) format = ('a, 'b, 'c, 'c) format4
-*)
-
 (*** Program termination *)
 
 val exit : int -> 'a
@@ -573,31 +598,6 @@ val at_exit: (unit -> unit) -> unit
 val unsafe_really_input : in_channel -> string -> int -> int -> unit
 
 val do_at_exit: unit -> unit
-
-(* adapted from ocaml 4.02 *)
-type bytes = string
-
-(* ported from ocaml 4.02.2 *)
-
-type ('a,'b) result = Ok of 'a | Error of 'b
-
-(* ported from ocaml 4.0 *)
-
-val ( |> ) : 'a -> ('a -> 'b) -> 'b
-(** Reverse-application operator: [x |> f |> g] is exactly equivalent
- to [g (f (x))].
-   @since 4.01
-*)
-
-(* ported from ocaml 3.12 *)
-
-val ignore : 'a -> unit (*= "%ignore"*)
-(** Discard the value of its argument and return [()].
-   For instance, [ignore(f x)] discards the result of
-   the side-effecting function [f].  It is equivalent to
-   [f x; ()], except that the latter may generate a
-   compiler warning; writing [ignore(f x)] instead
-   avoids the warning. *)
 
 external float_of_int : int -> float = "%floatofint"
 (** Convert an integer to floating-point. *)
