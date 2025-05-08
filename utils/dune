@@ -2,7 +2,6 @@
  (name utils)
  (wrapped false)
  (libraries
-    ;stdcompat
 
   )
  ;(modules_without_implementation config)
