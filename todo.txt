@@ -1,5 +1,54 @@
 -*- org -*-
 
+* Last (was in xix/todo.txt)
+
+** ocaml in ocaml (ocaml light)
+
+*** library
+would be good to port to latest convention so caml_xxx 
+so at least easy to get library from recent ocaml versions
+working also under ocaml 1.07
+
+**** Arg.align
+
+**** List.iteri
+
+*** support for qualifier just for first field that propagates to
+other fields so can do
+
+{ Xxx.foo = 1; bar = 2; ... } without having to repeat Xxx (which helps
+to avoid some open)
+
+just cherry pick the patch that did that in original ocaml
+
+*** "Some labels are undefined" error
+well nice, which one! Improve error message, give at least one label name.
+or better, give all of them
+
+*** missing errors!
+
+failwith "Unix error: %s while executing %s with %s"
+      (Unix.error_message err) cmd arg
+
+  I forgot 'spf' but ocaml light says nothing
+
+Unix1.openfile "/dev/cons" [Unix1.O_RDONLY];
+
+  I forgot the perm parameter, but ocaml light said nothing
+
+*** -annot!
+
+*** unused variable check 
+and the _xxx prefix to invalidate it
+
+*** check result ignored
+see in lib_graphics/input/keyboard.ml
+I was doing    Event.send ctl.chan buf.[i];
+but this is not unit!
+
+*** support { x; y } when x and y are locals
+
+
 * Test infra
 
 ** add testsuite from ocaml git and past ocaml distribs
