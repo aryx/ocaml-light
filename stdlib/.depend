@@ -70,3 +70,5 @@ int.cmo: int.cmi
 int.cmx: int.cmi
 bool.cmo: bool.cmi
 bool.cmx: bool.cmi
+float.cmo: float.cmi
+float.cmx: float.cmi
