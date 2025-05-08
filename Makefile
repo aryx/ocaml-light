@@ -96,7 +96,7 @@ EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
 
 PERVASIVES=arg array callback char digest filename format gc hashtbl \
   lexing list map obj parsing pervasives printexc printf queue random \
-  set sort stack string stream sys genlex topdirs toploop weak lazy \
+  set sort stack string bytes stream sys genlex topdirs toploop weak lazy \
   marshal \
   buffer
 
@@ -597,11 +597,17 @@ test:
 visual:
 	codemap -screen_size 3 -efuns_client efuns_client -emacs_client /dev/null .
 
+# The goal here is not so much to deploy via Docker ocaml light but more
+# to regression tests in CI (and locally) easily.
 #pad: see also .github/workflows/docker.yml for the check in CI!
 build-docker:
 	docker build -t "ocaml-light" .
 
-# currently need to call make to generate some .ml (e.g., parser.ml, config.ml)
+# Note that the goal here is not to build an actual ocamlc executable; the
+# goal is just to compile code and generate a _build/ so that tools like
+# merlin can work correctly and provide code navigation. It is also useful
+# for faster feedback-loop as dune compiles faster than boot/ocamlc
+# TODO: currently need to call make to generate some .ml (e.g., parser.ml, config.ml)
 build-dune:
 	make
 	rm -f stdlib/stdlib.cma

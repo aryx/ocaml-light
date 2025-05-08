@@ -22,7 +22,7 @@
 type lexbuf =
   { refill_buff : lexbuf -> unit;
 
-    mutable lex_buffer : string;
+    mutable lex_buffer : bytes;
     mutable lex_buffer_len : int;
 
     mutable lex_abs_pos : int;
@@ -56,9 +56,9 @@ type lex_tables =
 
 
 (*s: function Lexing.lex_refill *)
-let lex_refill read_fun aux_buffer lexbuf =
+let lex_refill read_fun (aux_buffer : bytes) lexbuf =
   let read =
-    read_fun aux_buffer (String.length aux_buffer) in
+    read_fun aux_buffer (Bytes.length aux_buffer) in
   let n =
     if read > 0
     then read
@@ -66,8 +66,8 @@ let lex_refill read_fun aux_buffer lexbuf =
   if lexbuf.lex_start_pos < n then begin
     let oldlen = lexbuf.lex_buffer_len in
     let newlen = oldlen * 2 in
-    let newbuf = String.create newlen in
-    String.unsafe_blit lexbuf.lex_buffer 0 newbuf oldlen oldlen;
+    let newbuf = Bytes.create newlen in
+    String.unsafe_blit (Bytes.to_string lexbuf.lex_buffer) 0 newbuf oldlen oldlen;
     lexbuf.lex_buffer <- newbuf;
     lexbuf.lex_buffer_len <- newlen;
     lexbuf.lex_abs_pos <- lexbuf.lex_abs_pos - oldlen;
@@ -75,10 +75,10 @@ let lex_refill read_fun aux_buffer lexbuf =
     lexbuf.lex_start_pos <- lexbuf.lex_start_pos + oldlen;
     lexbuf.lex_last_pos <- lexbuf.lex_last_pos + oldlen
   end;
-  String.unsafe_blit lexbuf.lex_buffer n
+  String.unsafe_blit (Bytes.to_string lexbuf.lex_buffer) n
                      lexbuf.lex_buffer 0 
                      (lexbuf.lex_buffer_len - n);
-  String.unsafe_blit aux_buffer 0
+  String.unsafe_blit (Bytes.to_string aux_buffer) 0
                      lexbuf.lex_buffer (lexbuf.lex_buffer_len - n)
                      n;
   lexbuf.lex_abs_pos <- lexbuf.lex_abs_pos + n;
@@ -89,8 +89,8 @@ let lex_refill read_fun aux_buffer lexbuf =
 
 (*s: function Lexing.from_function *)
 let from_function f =
-  { refill_buff = lex_refill f (String.create 512);
-    lex_buffer = String.create 1024;
+  { refill_buff = lex_refill f (Bytes.create 512);
+    lex_buffer = Bytes.create 1024;
     lex_buffer_len = 1024;
     lex_abs_pos = - 1024;
     lex_start_pos = 1024;
@@ -109,7 +109,7 @@ let from_channel ic =
 (*s: function Lexing.from_string *)
 let from_string s =
   { refill_buff = (fun lexbuf -> lexbuf.lex_eof_reached <- true);
-    lex_buffer = s ^ "";
+    lex_buffer = Bytes.of_string s;
     lex_buffer_len = String.length s;
     lex_abs_pos = 0;
     lex_start_pos = 0;
@@ -121,16 +121,16 @@ let from_string s =
 (*e: function Lexing.from_string *)
 
 (*s: function Lexing.lexeme *)
-let lexeme lexbuf =
+let lexeme (lexbuf : lexbuf) : string =
   let len = lexbuf.lex_curr_pos - lexbuf.lex_start_pos in
   let s = String.create len in
-  String.unsafe_blit lexbuf.lex_buffer lexbuf.lex_start_pos s 0 len;
-  s
+  String.unsafe_blit (Bytes.to_string lexbuf.lex_buffer) lexbuf.lex_start_pos s 0 len;
+  Bytes.to_string s
 (*e: function Lexing.lexeme *)
 
 (*s: function Lexing.lexeme_char *)
 let lexeme_char lexbuf i =
-  String.get lexbuf.lex_buffer (lexbuf.lex_start_pos + i)
+  Bytes.get lexbuf.lex_buffer (lexbuf.lex_start_pos + i)
 (*e: function Lexing.lexeme_char *)
 
 (*s: function Lexing.lexeme_start *)
@@ -159,13 +159,13 @@ external engine: lex_tables -> int -> lexbuf -> int = "lex_engine"
 let get_next_char lexbuf =
   let p = lexbuf.lex_curr_pos in
   if p < lexbuf.lex_buffer_len then begin
-    let c = String.unsafe_get lexbuf.lex_buffer p in
+    let c = Bytes.unsafe_get lexbuf.lex_buffer p in
     lexbuf.lex_curr_pos <- p + 1;
     c
   end else begin
     lexbuf.refill_buff lexbuf;
     let p = lexbuf.lex_curr_pos in
-    let c = String.unsafe_get lexbuf.lex_buffer p in
+    let c = Bytes.unsafe_get lexbuf.lex_buffer p in
     lexbuf.lex_curr_pos <- p + 1;
     c
   end

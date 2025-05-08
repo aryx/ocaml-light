@@ -574,6 +574,9 @@ val unsafe_really_input : in_channel -> string -> int -> int -> unit
 
 val do_at_exit: unit -> unit
 
+(* adapted from ocaml 4.02 *)
+type bytes = string
+
 (* ported from ocaml 4.0 *)
 
 val ( |> ) : 'a -> ('a -> 'b) -> 'b

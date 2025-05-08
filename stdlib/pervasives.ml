@@ -9,6 +9,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* coupling: if you add functions here, you will probably need to
+ * modify also otherlibs/threads/
+ *)
+
 (* ported from ocaml 4.00 *)
 
 let (|>) o f =
@@ -18,6 +22,10 @@ let (|>) o f =
 
 (*external ignore : 'a -> unit = "%ignore"*)
 let ignore _ = ()
+
+(* adapted from ocaml 4.02 *)
+type bytes = string
+
 
 (* $Id: pervasives.ml,v 1.24 1997/08/29 15:37:21 xleroy Exp $ *)
 

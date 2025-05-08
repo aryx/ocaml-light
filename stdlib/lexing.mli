@@ -24,7 +24,7 @@
 type lexbuf =
   { refill_buff : lexbuf -> unit;
 
-    mutable lex_buffer : string;
+    mutable lex_buffer : bytes;
     mutable lex_buffer_len : int;
 
     mutable lex_abs_pos : int;
@@ -55,7 +55,7 @@ val from_string : string -> lexbuf
            end of the string is reached. *)
 (*e: signature Lexing.from_string *)
 (*s: signature Lexing.from_function *)
-val from_function : (string -> int -> int) -> lexbuf
+val from_function : (bytes -> int -> int) -> lexbuf
         (* Create a lexer buffer with the given function as its reading method.
            When the scanner needs more characters, it will call the given
            function, giving it a character string [s] and a character
