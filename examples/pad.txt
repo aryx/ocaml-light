@@ -3,3 +3,6 @@ at https://caml.inria.fr/pub/old_caml_site/Examples/eng.html
 which is itself contains code derived from the book ``Le langage Caml'', by
 Pierre Weis and Xavier Leroy (InterEditions, 1993 && 1999).
 
+alt: https://github.com/ghuysmans/le-langage-caml/
+which is more recent and uses even dune but does not contain
+all the examples of ocaml-examples-3.08.tgz
