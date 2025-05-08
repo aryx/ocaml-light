@@ -26,6 +26,9 @@ let ignore _ = ()
 (* adapted from ocaml 4.02 *)
 type bytes = string
 
+(* ported from ocaml 4.02.2 *)
+
+type ('a,'b) result = Ok of 'a | Error of 'b
 
 (* $Id: pervasives.ml,v 1.24 1997/08/29 15:37:21 xleroy Exp $ *)
 

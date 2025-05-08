@@ -62,3 +62,5 @@ weak.cmo: obj.cmi weak.cmi
 weak.cmx: obj.cmx weak.cmi 
 option.cmo: option.cmi
 option.cmx: option.cmi
+result.cmo: result.cmi
+result.cmx: result.cmi
