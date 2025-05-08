@@ -68,3 +68,5 @@ uchar.cmo: uchar.cmi
 uchar.cmx: uchar.cmi
 int.cmo: int.cmi
 int.cmx: int.cmi
+bool.cmo: bool.cmi
+bool.cmx: bool.cmi
