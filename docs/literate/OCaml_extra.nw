@@ -650,8 +650,8 @@ let rec highlight_locations loc1 loc2 =
           if pos0 < 0 then false else begin
             (* Count number of lines in phrase *)
             let lines = ref !num_loc_lines in
-            for i = pos0 to String.length lb.lex_buffer - 1 do
-              if lb.lex_buffer.[i] = '\n' then incr lines
+            for i = pos0 to Bytes.length lb.lex_buffer - 1 do
+              if Bytes.get lb.lex_buffer i = '\n' then incr lines
             done;
             (* If too many lines, give up *)
             if !lines >= !num_lines - 2 then false else begin
@@ -662,13 +662,13 @@ let rec highlight_locations loc1 loc2 =
               (* Print the input, switching to standout for the location *)
               let bol = ref false in
           print_string "# ";
-              for pos = 0 to String.length lb.lex_buffer - pos0 - 1 do
+              for pos = 0 to Bytes.length lb.lex_buffer - pos0 - 1 do
                 if !bol then (print_string "  "; bol := false);
                 if pos = loc1.loc_start || pos = loc2.loc_start then
                   Terminfo.puts stdout !start_standout 1;
                 if pos = loc1.loc_end || pos = loc2.loc_end then
                   Terminfo.puts stdout !end_standout 1;
-                let c = lb.lex_buffer.[pos + pos0] in
+                let c = Bytes.get lb.lex_buffer (pos + pos0) in
                 print_char c;
                 bol := (c = '\n')
               done;
@@ -3920,7 +3920,7 @@ type closure = unit -> Obj.t
 
 external global_data : unit -> Obj.t array = "get_global_data"
 external realloc_global_data : int -> unit = "realloc_global"
-external static_alloc : int -> string = "static_alloc"
+external static_alloc : int -> bytes = "static_alloc"
 external static_free : string -> unit = "static_free"
 <<type [[Meta.closure]]>>
 external reify_bytecode : string -> int -> closure = "reify_bytecode"
@@ -3942,7 +3942,7 @@ type closure = unit -> Obj.t
 
 external global_data : unit -> Obj.t array = "get_global_data"
 external realloc_global_data : int -> unit = "realloc_global"
-external static_alloc : int -> string = "static_alloc"
+external static_alloc : int -> bytes = "static_alloc"
 external static_free : string -> unit = "static_free"
 <<type Meta.closure (./bytecomp/meta.ml)>>
 external reify_bytecode : string -> int -> closure = "reify_bytecode"
@@ -4606,12 +4606,12 @@ let make_switch_or_test_sequence arg const_lambda_list int_lambda_list =
 
 <<function [[Matching.make_bitvect_check]]>>=
 let make_bitvect_check arg int_lambda_list =
-  let bv = String.make 32 '\000' in
+  let bv = Bytes.of_string (String.make 32 '\000') in
   List.iter
     (fun (n, l) ->
-      bv.[n lsr 3] <- Char.chr(Char.code bv.[n lsr 3] lor (1 lsl (n land 7))))
+      bv.[n lsr 3] <- Char.chr(Char.code (Bytes.get bv (n lsr 3)) lor (1 lsl (n land 7))))
     int_lambda_list;
-  Lifthenelse(Lprim(Pbittest, [Lconst(Const_base(Const_string bv)); arg]),
+  Lifthenelse(Lprim(Pbittest, [Lconst(Const_base(Const_string (Bytes.to_string bv))); arg]),
               lambda_unit, Lstaticfail)
 @
 
@@ -6424,7 +6424,7 @@ and transl_structure fields cc = function
 
 <<signature [[Emitcode.to_memory]]>>=
 val to_memory: instruction list -> instruction list ->
-                    string * int * (reloc_info * int) list
+                    bytes * int * (reloc_info * int) list
         (* Arguments:
              initialization code (terminated by STOP)
              function code
@@ -6462,10 +6462,10 @@ open Instruct
 <<function [[Emitcode.out_word]]>>=
 let out_word b1 b2 b3 b4 =
   let p = !out_position in
-  if p >= String.length !out_buffer then begin
-    let len = String.length !out_buffer in
-    let new_buffer = String.create (2 * len) in
-    String.blit !out_buffer 0 new_buffer 0 len;
+  if p >= Bytes.length !out_buffer then begin
+    let len = Bytes.length !out_buffer in
+    let new_buffer = Bytes.create (2 * len) in
+    String.blit (Bytes.to_string !out_buffer) 0 new_buffer 0 len;
     out_buffer := new_buffer
   end;
   String.unsafe_set !out_buffer p (Char.unsafe_chr b1);
@@ -6701,7 +6701,7 @@ let to_memory init_code fun_code =
   emit init_code;
   emit fun_code;
   let code = Meta.static_alloc !out_position in
-  String.unsafe_blit !out_buffer 0 code 0 !out_position;
+  String.unsafe_blit (Bytes.to_string !out_buffer) 0 code 0 !out_position;
   let reloc = List.rev !reloc_info
   and code_size = !out_position in
   init();
@@ -6736,7 +6736,7 @@ open Opcodes
 
 (* Buffering of bytecode *)
 
-let out_buffer = ref(String.create 1024)
+let out_buffer = ref(Bytes.create 1024)
 and out_position = ref 0
 
 <<function [[Emitcode.out_word]]>>
@@ -6856,7 +6856,7 @@ val init: unit -> unit
 @
 
 <<signature [[Symtable.patch_object]]>>=
-val patch_object: string -> (reloc_info * int) list -> unit
+val patch_object: bytes -> (reloc_info * int) list -> unit
 @
 
 <<signature [[Symtable.require_primitive]]>>=
