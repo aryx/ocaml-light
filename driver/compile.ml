@@ -82,10 +82,10 @@ let parse_file inputfile parse_fun ast_magic =
   (*s: [[Compile.parse_file()]] let [[is_ast_file]] *)
   let is_ast_file =
     try
-      let buffer = String.create (String.length ast_magic) in
+      let buffer = Bytes.create (String.length ast_magic) in
       really_input ic buffer 0 (String.length ast_magic);
-      if buffer = ast_magic then true
-      else if String.sub buffer 0 9 = String.sub ast_magic 0 9 then
+      if Bytes.to_string buffer = ast_magic then true
+      else if String.sub (Bytes.to_string buffer) 0 9 = String.sub ast_magic 0 9 then
         raise Outdated_version
       else false
     with
@@ -131,7 +131,7 @@ let interface sourcefile =
   if !Clflags.print_types 
   then (Printtyp.signature sg; print_newline());
 
-  Env.save_signature sg modulename (prefixname ^ ".cmi");
+  Env.save_signature sg modulename (prefixname ^ ".cmi") |> ignore;
   remove_preprocessed inputfile
 (*e: function [[Compile.interface]] *)
 
