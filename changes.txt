@@ -11,9 +11,10 @@
 * 0.1 (Q2 2025) (Dockerfile, Github Actions CI checks, dune, tests)
 
 ** stdlib
-- frontport option.ml from 4.08
-- frontport result.ml from 4.08 and result pervasive type from ??
 - frontport uchar.ml from 4.03
+- frontport int.ml and float.ml from 4.08
+- frontport option.ml and result from 4.08
+  and result pervasive type from
 
 ** test infra
 - add Dockerfile and docker.yml GHA (Github Action) CI
