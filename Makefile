@@ -602,7 +602,7 @@ build-docker:
 	docker build -t "ocaml-light" .
 
 # currently need to call make to generate some .ml (e.g., parser.ml, config.ml)
-dune-build:
+build-dune:
 	make
 	rm -f stdlib/stdlib.cma
 	#rm -f lex/lexer.ml lex/parser.ml lex/parser.mli
