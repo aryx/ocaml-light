@@ -605,5 +605,5 @@ build-docker:
 dune-build:
 	make
 	rm -f stdlib/stdlib.cma
-	rm -f lex/lexer.ml lex/parser.ml lex/parser.mli
+	#rm -f lex/lexer.ml lex/parser.ml lex/parser.mli
 	dune build
