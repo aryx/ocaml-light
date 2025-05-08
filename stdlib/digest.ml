@@ -36,6 +36,6 @@ let output chan digest =
   output chan digest 0 16
 
 let input chan =
-  let digest = String.create 16 in
+  let digest = Bytes.create 16 in
   really_input chan digest 0 16;
   digest
