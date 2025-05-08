@@ -22,7 +22,7 @@ OBJS=pervasives.cmo list.cmo char.cmo string.cmo bytes.cmo array.cmo sys.cmo \
   lazy.cmo \
   lexing.cmo parsing.cmo \
   buffer.cmo printexc.cmo \
-  option.cmo result.cmo uchar.cmo int.cmo
+  option.cmo result.cmo uchar.cmo int.cmo bool.cmo
 
 all: stdlib.cma std_exit.cmo camlheader
 
