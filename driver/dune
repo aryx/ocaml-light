@@ -1,0 +1,13 @@
+(library
+ (name driver_byte)
+ (wrapped false)
+ (modules
+    compile errors main
+ )
+ (libraries
+    parsing typing bytecomp
+  )
+ (preprocess (pps ppx_deriving.show))
+)
+
+; TODO: driver_opt
