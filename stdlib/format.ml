@@ -443,7 +443,7 @@ let pp_print_bool state b = pp_print_string state (string_of_bool b);;
 
 (* To format a char *)
 let pp_print_char state c =
-  let s = String.create 1 in s.[0] <- c; pp_print_as state 1 s;;
+  let s = Bytes.create 1 in s.[0] <- c; pp_print_as state 1 s;;
 
 (* Opening boxes *)
 let pp_open_hbox state () = pp_open_box_gen state 0 Pp_hbox

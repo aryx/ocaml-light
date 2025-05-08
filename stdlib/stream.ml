@@ -139,7 +139,7 @@ let of_string s =
 
 let of_channel ic =
   {count = 0;
-   data = Sbuffio {ic = ic; buff = String.create 4096; len = 0; ind = 0}}
+   data = Sbuffio {ic = ic; buff = Bytes.create 4096; len = 0; ind = 0}}
 ;;
 
 (* Stream expressions builders *)

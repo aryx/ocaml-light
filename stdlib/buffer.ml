@@ -24,7 +24,7 @@ type t =
 let create n =
  let n = if n < 1 then 1 else n in
  let n = if n > Sys.max_string_length then Sys.max_string_length else n in
- let s = String.create n in
+ let s = Bytes.create n in
  {buffer = s; position = 0; length = n; initial_buffer = s}
 
 let contents b = String.sub b.buffer 0 b.position
@@ -33,7 +33,7 @@ let sub b ofs len =
   if ofs < 0 || len < 0 || ofs > b.position - len
   then invalid_arg "Buffer.sub"
   else begin
-    let r = String.create len in
+    let r = Bytes.create len in
     String.blit b.buffer ofs r 0 len;
     r
   end
@@ -70,7 +70,7 @@ let resize b more =
     then new_len := Sys.max_string_length
     else failwith "Buffer.add: cannot grow buffer"
   end;
-  let new_buffer = String.create !new_len in
+  let new_buffer = Bytes.create !new_len in
   String.blit b.buffer 0 new_buffer 0 b.position;
   b.buffer <- new_buffer;
   b.length <- !new_len

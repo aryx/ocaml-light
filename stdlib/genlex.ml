@@ -22,7 +22,7 @@ type token =
 
 (* The string buffering machinery *)
 
-let initial_buffer = String.create 32
+let initial_buffer = Bytes.create 32
 
 let buffer = ref initial_buffer
 let bufpos = ref 0
@@ -33,7 +33,7 @@ let reset_buffer () =
 
 let store c =
   if !bufpos >= String.length !buffer then begin
-    let newbuffer = String.create (2 * !bufpos) in
+    let newbuffer = Bytes.create (2 * !bufpos) in
     String.blit !buffer 0 newbuffer 0 !bufpos;
     buffer := newbuffer
   end;

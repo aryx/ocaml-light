@@ -23,7 +23,7 @@ exception Lexical_error of string
 (*s: Lexer helper functions and globals *)
 let comment_depth = ref 0
 (*x: Lexer helper functions and globals *)
-let initial_string_buffer = String.create 256
+let initial_string_buffer = Bytes.create 256
 let string_buff = ref initial_string_buffer
 let string_index = ref 0
 (*x: Lexer helper functions and globals *)
@@ -36,7 +36,7 @@ let get_stored_string () =
 (*x: Lexer helper functions and globals *)
 let store_string_char c =
   if !string_index >= String.length !string_buff then begin
-    let new_buff = String.create (String.length !string_buff * 2) in
+    let new_buff = Bytes.create (String.length !string_buff * 2) in
     String.blit !string_buff 0 new_buff 0 (String.length !string_buff);
     string_buff := new_buff
   end;

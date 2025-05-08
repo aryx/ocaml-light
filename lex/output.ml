@@ -21,7 +21,7 @@ open Compact
 (*s: constant Output.copy_buffer *)
 (* To copy the ML code fragments *)
 
-let copy_buffer = String.create 1024
+let copy_buffer = Bytes.create 1024
 (*e: constant Output.copy_buffer *)
 
 (*s: function Output.copy_chunk *)
