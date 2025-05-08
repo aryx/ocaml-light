@@ -9,7 +9,7 @@ COMPFLAGS=-g
 OPTCOMPILER=../ocamlopt
 CAMLOPT=$(RUNTIME) $(OPTCOMPILER)
 OPTCOMPFLAGS=
-CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
+CAMLDEP=../boot/ocamlrun ../tools/dependencies/ocamldep
 
 #coupling: modify also otherlibs/threads/Makefile
 #pad: now there is an order, parsing depends on stack, printexc depends
