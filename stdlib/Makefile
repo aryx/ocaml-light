@@ -14,7 +14,7 @@ CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
 #coupling: modify also otherlibs/threads/Makefile
 #pad: now there is an order, parsing depends on stack, printexc depends
 # on buffer, etc.
-OBJS=pervasives.cmo list.cmo char.cmo string.cmo array.cmo sys.cmo \
+OBJS=pervasives.cmo list.cmo char.cmo string.cmo bytes.cmo array.cmo sys.cmo \
   hashtbl.cmo sort.cmo filename.cmo marshal.cmo obj.cmo \
   set.cmo map.cmo stack.cmo queue.cmo stream.cmo \
   printf.cmo format.cmo arg.cmo gc.cmo \

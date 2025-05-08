@@ -9,6 +9,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* coupling: pervasives.ml *)
+let (|>) o f =
+  f o
+let ignore _ = () (* %ignore normally *)
+type bytes = string
+
 (* $Id: pervasives.ml,v 1.9 1997/08/29 15:05:48 xleroy Exp $ *)
 
 (* Same as ../../stdlib/pervasives.ml, except that I/O functions have
@@ -388,13 +394,6 @@ let do_at_exit () = (!exit_function) ()
 let exit retcode =
   do_at_exit ();
   sys_exit retcode
-
-(* ported from ocaml 4.00 *)
-let (|>) o f =
-  f o
-
-(* ported from ocaml 3.12 *)
-let ignore _ = () (* %ignore normally *)
 
 external float_of_int : int -> float = "%floatofint"
 external int_of_float : float -> int = "%intoffloat"

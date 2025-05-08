@@ -2,7 +2,7 @@
  (name stdlib)
  (wrapped false)
  ; -nopervasives -nostdlib
- (flags (:standard -unsafe-string))
+ ;(flags (:standard -unsafe-string))
  (modules
    set map
    stack sort
