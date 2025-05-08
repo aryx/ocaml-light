@@ -64,3 +64,5 @@ option.cmo: option.cmi
 option.cmx: option.cmi
 result.cmo: result.cmi
 result.cmx: result.cmi
+uchar.cmo: uchar.cmi
+uchar.cmx: uchar.cmi
