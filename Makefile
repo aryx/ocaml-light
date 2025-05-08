@@ -98,7 +98,8 @@ PERVASIVES=arg array callback char digest filename format gc hashtbl \
   lexing list map obj parsing pervasives printexc printf queue random \
   set sort stack string bytes stream sys genlex topdirs toploop weak lazy \
   marshal \
-  buffer
+  buffer \
+  option
 
 ##############################################################################
 # Main rule

@@ -21,7 +21,8 @@ OBJS=pervasives.cmo list.cmo char.cmo string.cmo bytes.cmo array.cmo sys.cmo \
   digest.cmo random.cmo genlex.cmo callback.cmo weak.cmo \
   lazy.cmo \
   lexing.cmo parsing.cmo \
-  buffer.cmo printexc.cmo 
+  buffer.cmo printexc.cmo \
+  option.cmo
 
 all: stdlib.cma std_exit.cmo camlheader
 
