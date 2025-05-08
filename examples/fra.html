@@ -1,0 +1,165 @@
+<!--#include virtual="doctype" -->
+<HTML>
+
+<HEAD>
+<TITLE>Foire aux questions au sujet de Caml</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF">
+
+<!--#include virtual="hautdepage-fra.html" -->
+
+<P>Dernière modification le 7 juillet 2004.
+
+<P>
+<H1 ALIGN=CENTER><IMG SRC="JoeCaml.gif" ALT=""> Exemples de programmes
+Objective Camld</H1>
+
+<P>Ce répertoire contient des exemples de programmes Objective Caml.
+
+<P>Les exemples peuvent soit être compilés et exécutés comme des
+programmes indépendants (taper <CODE>make</CODE> dans le
+sous-répertoire); si la vitesse de calcul importe, vous pouvez aussi
+taper <CODE>make opt</CODE> pour obtenir un exécutable produit par le
+compilateur optimisant. Vous pouvez enfin les exécuter directement dans le
+système interactif <CODE>ocaml</CODE>. Après avoir lancé le système
+interactif, taper
+
+<PRE>
+                #use "loadall.ml";;
+</PRE>
+dans le répertoire approprié.
+
+<P>Remarquez que les programmes graphiques doivent être exécutés avec
+un système interactif qui contienne la librairie graphique, ce que l'on
+obtient très facilement en fabriquant la commande <CODE>ocamlgraph</CODE>
+par l'appel de <CODE>ocamlmktop -custom -o ocamlgraph graphics.cma</CODE>.
+
+<P>Les exemples marqués d'une astérisque <CODE>(*)</CODE> sont issus du
+livre ``Le langage Caml'', de Pierre Weis et Xavier Leroy (Dunod,
+1999). Les messages et les identificateurs sont alors en français et
+contiennent des lettres accentuées (codage ISO 8859-1). Vous devez
+donc disposer d'un système supportant les caractères 8 bits pour lire ces
+exemples.<BR>
+
+Les exemples marqués (G) supposent que la librairie graphique (contenue
+dans le répertoire <CODE>contrib/libgraph</CODE> de la distribution) a
+été installée.
+
+<H2 ALIGN=LEFT>Exemples en un fichier</H2>
+
+<P>Les sous-répertoires sont les suivants:
+
+<UL>
+
+<LI>basics:<BR>
+        Un ensemble d'exemples simples à légèrement avancés.
+        Voir  <A HREF="basics/fra.html">le fichier fra.html</A> du répertoire.
+        Outre des programmes de quelques lignes genre <CODE>Hello
+        World!</CODE>, le répertoire contient des exemples de
+        programmation fonctionnelle (fibonacci, le crible d'Eratosthène)
+        et de programmation impérative (par exemple l'utilitaire Unix
+        <CODE>wc</CODE>).
+
+<LI>colwheel: (G)<BR>
+        La roue des couleurs (l'espace des couleurs en coordonnées HSV).
+        Il faut au moins 256 coleurs pour que l'effet soit joli.
+
+<LI>spirals: (G)<BR>
+        Exploration d'une famille de courbes amusantes. (Utilisez spir
+        sur un écran couleur et spir-bw sur un écran noir et blanc.)
+
+<LI>showsort: (G)<BR>
+        Animation graphique d'algorithmes de tri.
+
+<LI>hanoi: (*)(G)<BR>
+        Les tours de Hanoi animées. Utilise les listes et les chaînes.
+
+<LI>doctor: (*)<BR>
+        A (English-speaking) clone of Eliza.
+
+<LI>docteur: (*)<BR>
+        Un clone d'Eliza.
+
+</UL>
+
+<H2 ALIGN=LEFT>Interface graphique</H2>
+
+<P>Nous présentons des exemples variés d'interfaces utilisateur
+utilisant les outils de Caml/Tk (basé sur TCL/TK).
+
+<UL>
+
+<LI><A HREF="camltk/eng.html">camltk</A>: (*) <BR>
+        Un ensemble de programmes pour apprendre à utiliser
+        l'interface graphique Caml/Tk (GUI). Depuis les programmes
+        très simples («Bonjour tout le monde!»), jusqu'au jeu tétris
+        interactif complet. Certains exemples proviennent du livre ``Le
+        langage Caml'', par Pierre Weis et Xavier Leroy
+        (InterEditions, 1999). Voir le fichier <A
+        HREF="camltk/eng.html">eng.html</A> dans le répertoire. 
+</UL>
+
+<H2 ALIGN=LEFT>Programmes modulaires</H2>
+
+<P>Ces programmes sont dans les répertoires correspondants. Ce sont
+des applications complètement indépendantes, munies d'un Makefile qui
+gère leur recompilation automatique. Ces exemples peuvent être
+difficiles à appréhender.
+
+<UL>
+
+<LI>calc:<BR>
+        Un calculateur de bureau simplifié qui illustre l'utilisation
+        d'un analyseur syntaxique écrit à l'aide de camllex et camlyacc.
+
+<LI>picomach: (*)<BR>
+        Un assembleur et simulateur de la <I>picomachine</I>, un
+        processeur RISC simplifié.
+
+<LI>grep: (*)<BR>
+        Expressions régulières et automates.
+
+<LI>compress: (*)<BR>
+        Compression et décompression de fichiers par la méthode
+        de Huffman.
+
+<LI>demonstr: (*)<BR>
+        Un vérificateur de tautologies.
+
+<LI>minicaml: (*)<BR>
+        Un interpréte et contrôleur de types pour un sous-ensemble
+        de Caml.
+
+<LI>asl:<BR>
+        Implémentation d'un petit langage de programmation
+        fonctionnelle <I>A Small Language</I>, décrit dans la
+        partie 3 du livre ``Functional Programming using Caml Light'',
+        par Michel Mauny et Guy Cousineau.
+
+<LI>minilogo: (*) (G)<BR>
+        Un interpréte pour un petit langage avec une tortue graphique.
+
+<LI>pascal: (*)<BR>
+        Un interprète et compilateur pour un sous-ensemble de Pascal.
+        Le compilateur génère du code pour la <I>picomachine</I>
+        décrite par le programe suivant.
+
+<LI>kb:<BR>
+        La procédure de complétion de Knuth-Bendix pour les systèmes
+        de réécriture de termes.
+        Issu des notes de cours de Gérard Huet.
+
+</UL>
+
+<P>Le répertoire <CODE>config</CODE> ne contient pas d'exemples mais
+les fichiers de configuration qui engendrent les
+<CODE>Makefiles</CODE> des différents répertoire..
+
+<P>
+Fichier créé le 20 mai 2002.
+
+<!--#include virtual="basdepage-fra.html" -->
+
+</BODY>
+</HTML>

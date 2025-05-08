@@ -1,0 +1,138 @@
+<!--#include virtual="doctype" -->
+<HTML>
+
+<HEAD>
+<TITLE>Frequently asked Questions about Caml</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF">
+
+<H1 ALIGN=CENTER><IMG SRC="JoeCaml.gif" ALT=""> Caml program examples</H1>
+
+<P>This directory contains some examples of Objective Caml programs.
+
+<P>The examples can either be compiled and executed as standalone
+programs (just type <CODE>make</CODE> in the subdirectory), if speed
+is important you can use the optimizing compiler by typing
+<CODE>make opt</CODE>, or else run interactively the examples under
+<CODE>ocaml</CODE>, by executing 
+
+<PRE>
+                #use "loadall.ml";;
+</PRE>
+
+in the appropriate directory. (The graphics programs must
+be run under a specialized interactive system, <CODE>ocamlgraph</CODE>
+that you can create using <CODE>ocamlmktop -custom -o ocamlgraph
+graphics.cma</CODE>.)
+
+<P>Examples marked (*) are taken from the book ``Le langage Caml'', by
+Pierre Weis and Xavier Leroy (InterEditions, 1993 && 1999). Messages and
+identifiers may be in French and may contain accented letters (ISO 8859-1
+encoding). You'll need an 8-bit clean system to read them.<BR>
+
+Examples marked (G) assume installed the portable graphics library
+(as found in the <CODE>otherlib/graph</CODE> directory of the
+Objective Caml distribution).
+
+<H2 ALIGN=LEFT>One file programs</H2>
+
+<UL>
+
+<LI>basics:<BR>
+        A set of simple, basic, and slightly advanced programs.
+        See the <A HREF="basics/eng.html">eng.html</A> file.
+        Contains also the three all-time favorites: Fibonacci,
+        Eratosthene's sieve, and the Unix <CODE>wc</CODE> utility.
+
+<LI>colwheel: (G)<BR>
+        The "color wheel" (color space in HSV coordinates).
+        Needs at least 256 colors to look good.
+
+<LI>spirals: (G)<BR>
+        Explore a family of flashy curves. (Use spir on a color screen
+        and spir-bw on a black and white screen.)
+
+<LI>showsort: (G)<BR>
+        Graphic animation of sorting algorithms.
+
+<LI>hanoi: (*)(G)<BR>
+        Animated towers of Hanoi. Uses lists and strings.
+
+<LI>doctor: (*)<BR>
+        A (English-speaking) clone of Eliza.
+
+<LI>docteur: (*)<BR>
+        A (French-speaking) clone of Eliza.
+        If you can translate this
+        program in any other language than english, please contact
+        Pierre.Weis@inria.fr.
+
+</UL>
+
+<H2 ALIGN=LEFT>Graphical User Interface</H2>
+
+<UL>
+
+<LI><A HREF="camltk/eng.html">camltk</A>: (*) <BR>
+       A set of programs to learn using the Caml/Tk graphical user
+       interface (GUI). From simple «hello world» programs to an
+       advanced tetris game. Some examples are from the book ``Le
+       langage Caml'', by Pierre Weis and Xavier Leroy
+       (InterEditions, 1999). See the <A
+       HREF="camltk/eng.html">eng.html</A> file in the directory. 
+</UL>
+
+<H2 ALIGN=LEFT>Modular programs</H2>
+
+<P>Those programs are in the corresponding directories. They are
+complete independant applications that have a Makefile to handle
+their recompilation. Those examples can be quite involved.
+
+<UL>
+
+<LI>calc:<BR>
+        This is a simple desk calculator that illustrates the use of camllex 
+        and camlyacc.
+
+<LI>picomach: (*)<BR>
+        An assembler and simulator for a RISC processor.
+
+<LI>grep: (*)<BR>
+        Regular expressions and automata.
+
+<LI>compress: (*)<BR>
+        File compression and decompression (Huffman).
+
+<LI>demonstr: (*)<BR>
+        Tautology checker.
+
+<LI>minicaml: (*)<BR>
+        An interpreter and typechecker for a subset of Caml.
+
+<LI>asl:<BR>
+        This is the implementation of A Small Language, as described in
+        part 3 of ``Functional Programming using Caml Light'', by
+        Michel Mauny.
+
+<LI>minilogo: (*) (G)<BR>
+        An interpreter for a small language with turtle graphics.
+
+<LI>pascal: (*)<BR>
+        An interpreter and compiler for a subset of Pascal.
+        The compiler generates code for the <CODE>picomach</CODE> program.
+
+<LI>kb:<BR>
+        The Knuth-Bendix completion procedure for rewriting systems.
+        Taken from some course notes by Gerard Huet.
+
+</UL>
+
+<P>
+The <CODE>config</CODE> directory does not contain examples, but configuration
+files used to generate the Makefiles.
+
+<!--#include virtual="basdepage-eng.html" -->
+
+</BODY>
+</HTML>
