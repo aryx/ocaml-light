@@ -285,12 +285,12 @@ let make_switch_or_test_sequence arg const_lambda_list int_lambda_list =
 
 (*s: function [[Matching.make_bitvect_check]] *)
 let make_bitvect_check arg int_lambda_list =
-  let bv = String.make 32 '\000' in
+  let bv = Bytes.of_string (String.make 32 '\000') in
   List.iter
     (fun (n, l) ->
-      bv.[n lsr 3] <- Char.chr(Char.code bv.[n lsr 3] lor (1 lsl (n land 7))))
+      bv.[n lsr 3] <- Char.chr(Char.code (Bytes.get bv (n lsr 3)) lor (1 lsl (n land 7))))
     int_lambda_list;
-  Lifthenelse(Lprim(Pbittest, [Lconst(Const_base(Const_string bv)); arg]),
+  Lifthenelse(Lprim(Pbittest, [Lconst(Const_base(Const_string (Bytes.to_string bv))); arg]),
               lambda_unit, Lstaticfail)
 (*e: function [[Matching.make_bitvect_check]] *)
 

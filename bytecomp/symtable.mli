@@ -22,7 +22,7 @@ open Emitcode
 val init: unit -> unit
 (*e: signature [[Symtable.init]] *)
 (*s: signature [[Symtable.patch_object]] *)
-val patch_object: string -> (reloc_info * int) list -> unit
+val patch_object: bytes -> (reloc_info * int) list -> unit
 (*e: signature [[Symtable.patch_object]] *)
 (*s: signature [[Symtable.require_primitive]] *)
 val require_primitive: string -> unit

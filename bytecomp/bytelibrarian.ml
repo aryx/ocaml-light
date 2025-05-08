@@ -52,9 +52,9 @@ let copy_object_file oc name =
       raise(Error(File_not_found name)) in
   let ic = open_in file_name in
   try
-    let buffer = String.create (String.length cmo_magic_number) in
+    let buffer = Bytes.create (String.length cmo_magic_number) in
     really_input ic buffer 0 (String.length cmo_magic_number);
-    if buffer = cmo_magic_number then begin
+    if Bytes.to_string buffer = cmo_magic_number then begin
       let compunit_pos = input_binary_int ic in
       seek_in ic compunit_pos;
       let compunit = (input_value ic : compilation_unit) in
@@ -62,7 +62,7 @@ let copy_object_file oc name =
       close_in ic;
       [compunit]
     end else
-    if buffer = cma_magic_number then begin
+    if Bytes.to_string buffer = cma_magic_number then begin
       let toc_pos = input_binary_int ic in
       seek_in ic toc_pos;
       let toc = (input_value ic : compilation_unit list) in
