@@ -98,8 +98,8 @@ let rec highlight_locations loc1 loc2 =
           if pos0 < 0 then false else begin
             (* Count number of lines in phrase *)
             let lines = ref !num_loc_lines in
-            for i = pos0 to String.length lb.lex_buffer - 1 do
-              if lb.lex_buffer.[i] = '\n' then incr lines
+            for i = pos0 to Bytes.length lb.lex_buffer - 1 do
+              if Bytes.get lb.lex_buffer i = '\n' then incr lines
             done;
             (* If too many lines, give up *)
             if !lines >= !num_lines - 2 then false else begin
@@ -110,13 +110,13 @@ let rec highlight_locations loc1 loc2 =
               (* Print the input, switching to standout for the location *)
               let bol = ref false in
           print_string "# ";
-              for pos = 0 to String.length lb.lex_buffer - pos0 - 1 do
+              for pos = 0 to Bytes.length lb.lex_buffer - pos0 - 1 do
                 if !bol then (print_string "  "; bol := false);
                 if pos = loc1.loc_start || pos = loc2.loc_start then
                   Terminfo.puts stdout !start_standout 1;
                 if pos = loc1.loc_end || pos = loc2.loc_end then
                   Terminfo.puts stdout !end_standout 1;
-                let c = lb.lex_buffer.[pos + pos0] in
+                let c = Bytes.get lb.lex_buffer (pos + pos0) in
                 print_char c;
                 bol := (c = '\n')
               done;
