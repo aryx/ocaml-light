@@ -58,16 +58,16 @@ type compilation_unit =
 
 (* Buffering of bytecode *)
 
-let out_buffer = ref(String.create 1024)
+let out_buffer = ref(Bytes.create 1024)
 and out_position = ref 0
 
 (*s: function [[Emitcode.out_word]] *)
 let out_word b1 b2 b3 b4 =
   let p = !out_position in
-  if p >= String.length !out_buffer then begin
-    let len = String.length !out_buffer in
-    let new_buffer = String.create (2 * len) in
-    String.blit !out_buffer 0 new_buffer 0 len;
+  if p >= Bytes.length !out_buffer then begin
+    let len = Bytes.length !out_buffer in
+    let new_buffer = Bytes.create (2 * len) in
+    String.blit (Bytes.to_string !out_buffer) 0 new_buffer 0 len;
     out_buffer := new_buffer
   end;
   String.unsafe_set !out_buffer p (Char.unsafe_chr b1);
@@ -382,7 +382,7 @@ let to_memory init_code fun_code =
   emit init_code;
   emit fun_code;
   let code = Meta.static_alloc !out_position in
-  String.unsafe_blit !out_buffer 0 code 0 !out_position;
+  String.unsafe_blit (Bytes.to_string !out_buffer) 0 code 0 !out_position;
   let reloc = List.rev !reloc_info
   and code_size = !out_position in
   init();

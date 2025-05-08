@@ -83,10 +83,10 @@ let scan_file obj_name tolink =
       raise(Error(File_not_found obj_name)) in
   let ic = open_in file_name in
   try
-    let buffer = String.create (String.length Config.cmo_magic_number) in
+    let buffer = Bytes.create (String.length Config.cmo_magic_number) in
     really_input ic buffer 0 (String.length Config.cmo_magic_number);
     match buffer with
-    | _ when buffer = Config.cmo_magic_number ->
+    | _ when Bytes.to_string buffer = Config.cmo_magic_number ->
       (* This is a .cmo file. It must be linked in any case.
          Read the relocation information to see which modules it
          requires. *)
@@ -97,7 +97,7 @@ let scan_file obj_name tolink =
       List.iter add_required compunit.cu_reloc;
       Link_object(file_name, compunit) :: tolink
 
-    | _ when buffer = cma_magic_number ->
+    | _ when Bytes.to_string buffer = cma_magic_number ->
       (* This is an archive file. Each unit contained in it will be linked
          in only if needed. *)
       let pos_toc = input_binary_int ic in    (* Go to table of contents *)
@@ -162,21 +162,21 @@ let check_consistency file_name cu =
 
 (*s: function [[Bytelink.link_compunit]] *)
 (* Link in a compilation unit *)
-
-let link_compunit output_fun currpos_fun inchan file_name compunit =
+(* pad: todo? was bytes -> unit in original 4.02 code *)
+let link_compunit (output_fun : string -> unit) currpos_fun inchan file_name compunit =
   check_consistency file_name compunit;
   seek_in inchan compunit.cu_pos;
-  let code_block = String.create compunit.cu_codesize in
+  let code_block = Bytes.create compunit.cu_codesize in
   really_input inchan code_block 0 compunit.cu_codesize;
   Symtable.patch_object code_block compunit.cu_reloc;
 
   if !Clflags.debug && compunit.cu_debug > 0 then begin
     seek_in inchan compunit.cu_debug;
-    let buffer = String.create compunit.cu_debugsize in
+    let buffer = Bytes.create compunit.cu_debugsize in
     really_input inchan buffer 0 compunit.cu_debugsize;
-    debug_info := (currpos_fun(), buffer) :: !debug_info
+    debug_info := (currpos_fun(), Bytes.to_string buffer) :: !debug_info
   end;
-  output_fun code_block;
+  output_fun (Bytes.to_string code_block);
   (*s: [[Bytelink.link_compunit()]] if link everything require primitives *)
   if !Clflags.link_everything 
   then compunit.cu_primitives |> List.iter Symtable.require_primitive
