@@ -18,9 +18,8 @@ CAMLDEP=ocamldep.cmo
 ocamldep: $(CAMLDEP)
 	$(CAMLC) $(LINKFLAGS) -o ocamldep misc.cmo $(CAMLDEP)
 
-#pad: better not deleting it
-#clean::
-#	rm -f ocamldep
+clean::
+	rm -f ocamldep
 
 ocamldep.ml: ocamldep.mll
 	$(CAMLLEX) ocamldep.mll
