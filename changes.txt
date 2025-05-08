@@ -13,6 +13,7 @@
 ** stdlib
 - frontport option.ml from 4.08
 - frontport result.ml from 4.08 and result pervasive type from ??
+- frontport uchar.ml from 4.03
 
 ** test infra
 - add Dockerfile and docker.yml GHA (Github Action) CI
