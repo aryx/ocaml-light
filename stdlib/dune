@@ -1,17 +1,13 @@
 (library
  (name stdlib)
  (wrapped false)
- ; -nopervasives -nostdlib
- ;(flags (:standard -unsafe-string))
+ ; need? (flags (:standard -nopervasives -nostdlib))
  (modules
    set map
    stack sort
    lexing parsing
  )
-
  (libraries
-
   )
- 
  (preprocess (pps ppx_deriving.show))
 )
