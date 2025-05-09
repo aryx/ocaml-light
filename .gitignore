@@ -3,7 +3,6 @@
 *.byte
 *.byt
 *.opt
-*.annot
 
 # C object files
 *.o
@@ -50,14 +49,14 @@ asmrun/*.c
 *.blg
 
 # patch -p1 < ...
-*.rej
+# *.rej
 
 # ocamllex/ocamlyacc generated files
 
 /lex/lexer.ml
-/lex/ocamllex
 /lex/parser.ml
 /lex/parser.mli
+/lex/ocamllex
 
 /parsing/lexer.ml
 /parsing/linenum.ml
@@ -65,9 +64,9 @@ asmrun/*.c
 /parsing/parser.mli
 
 /tools/debugger/lexer.ml
-/tools/debugger/ocamldebug
 /tools/debugger/parser.ml
 /tools/debugger/parser.mli
+/tools/debugger/ocamldebug
 
 /test/Lex/grammar.ml
 /test/Lex/grammar.mli
@@ -78,7 +77,7 @@ asmrun/*.c
 /bytecomp/opcodes.ml
 /bytecomp/runtimedef.ml
 
-# boot/
+# /boot
 
 boot/Saved
 
@@ -87,9 +86,36 @@ boot/Saved
 /boot/ocamlrun
 /boot/ocamlyacc
 
-# other
+# project root
+
+/ocaml
+/ocamlc
+/expunge
+
+# /tools
+/tools/dependencies/ocamldep
+/tools/dependencies/ocamldep.ml
+/tools/dumper/dumpobj
+/tools/dumper/objinfo
+/tools/dumper/opnames.ml
+/tools/profiler/ocamlprof
+
+# /config
 
 /config/Makefile
+/config/m.h
+/config/s.h
+
+# /tests
+
+/tests/a.out
+/tests/hello.byte
+/tests/calc/lexer.ml
+/tests/calc/parser.ml
+/tests/calc/parser.mli
+/tests/yacc/arith.ml
+
+# other
 
 /byterun/jumptbl.h
 /byterun/ocamlrun
@@ -98,14 +124,6 @@ boot/Saved
 /byterun/primitives
 /byterun/prims.c
 
-/config/m.h
-/config/s.h
-
-/ocaml
-/ocamlc
-
-/expunge
-
 /otherlibs/dynlink/extract_crc
 /otherlibs/str/regex-0.12/Makefile
 /otherlibs/str/regex-0.12/config.status
@@ -113,32 +131,8 @@ boot/Saved
 
 /stdlib/camlheader
 
-/tools/ocamldep
-/tools/ocamldep.ml
-/tools/ocamlprof
-
 /utils/config.ml
 
 /yacc/ocamlyacc
 
-/tools/misc/ocamldep
-/tools/misc/ocamldep.ml
-/tools/misc/ocamlprof
-
-/tests/a.out
-/tests/hello.byte
-
-/tests/calc/lexer.ml
-/tests/calc/parser.ml
-/tests/calc/parser.mli
-
-/tests/yacc/arith.ml
-
-/tools/dependencies/ocamldep
-/tools/dependencies/ocamldep.ml
-
-/tools/dumper/dumpobj
-/tools/dumper/objinfo
-/tools/dumper/opnames.ml
-
-/tools/profiler/ocamlprof
+# LAST

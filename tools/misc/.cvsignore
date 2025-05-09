@@ -1,9 +1,0 @@
-ocamldep
-ocamldep.ml
-ocamlprof
-opnames.ml
-dumpobj
-dumpapprox
-objinfo
-cvt_emit
-cvt_emit.ml
