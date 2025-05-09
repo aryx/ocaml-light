@@ -9,13 +9,6 @@ CAMLDEP=../boot/ocamlrun ../tools/ocamldep
 CAMLRUN=../byterun/ocamlrun
 CODERUNPARAMS=CAMLRUNPARAM='o=100'
 
-#coupling: .github/workflows/nix.yml which has a subset of
-# those tests because some don't work yet in Nix CI (weird)
-# TODO:
-# - boyer.byt "double free or corruption" when run in CI, weird
-# - nucleic.byt "munmap_chunk(): invalid pointer"
-# - sieve.byt "free(): invalid pointer, cmp: EOF on - which is empty" at runtime
-
 BYTE_EXE ?= fib.byt takc.byt taku.byt sieve.byt quicksort.byt quicksort.fast.byt \
   fft.byt fft.fast.byt soli.byt soli.fast.byt boyer.byt kb.byt \
   nucleic.byt genlex.byt bdd.byt

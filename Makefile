@@ -592,6 +592,16 @@ test:
 	$(MAKE)
 	cd test; $(MAKE);
 
+# TODO: Some weird memory error for boyer.byt nucleic.byt sieve.byt
+# so I've removed them
+# - boyer.byt "double free or corruption" when run in CI, weird
+# - nucleic.byt "munmap_chunk(): invalid pointer"
+# - sieve.byt "free(): invalid pointer, cmp: EOF on - which is empty" at runtime
+#coupling: test/Makefile BYTE_EXE variable
+nix-test:
+	$(MAKE)
+	cd test; BYTE_EXE="fib.byt takc.byt taku.byt quicksort.byt quicksort.fast.byt fft.byt fft.fast.byt soli.byt soli.fast.byt kb.byt genlex.byt bdd.byt" make
+
 # The goal here is not so much to deploy via Docker ocaml light but more
 # to regression tests in CI (and locally) easily.
 #pad: see also .github/workflows/docker.yml for the check in CI!
