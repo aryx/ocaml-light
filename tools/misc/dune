@@ -1,0 +1,15 @@
+; (executable ... )
+
+(library
+ (name dumper)
+ (wrapped false)
+ ; TODO: not cvt_emil.ml at some point
+ (modules ocamlmktop)
+ ;(flags (:standard -w -21))
+ (libraries
+    ;stdlib utils
+    ;parsing
+    ;bytecomp
+  )
+ (preprocess (pps ppx_deriving.show))
+)
