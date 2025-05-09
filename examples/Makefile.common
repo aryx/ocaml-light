@@ -1,0 +1,28 @@
+# Including this file assumes you are also including Makefile.config
+# and setting a few targets especially 'all'
+
+##############################################################################
+# Main rules
+##############################################################################
+
+default:
+	$(MAKE) all
+	$(MAKE) test
+
+##############################################################################
+# Common rules
+##############################################################################
+
+%.byt: %.ml
+	$(OCAMLC) $^ -o $@
+
+%.cmo: %.ml
+	$(OCAMLC) -c $^
+
+#alt: -I /usr/local/lib/ocaml
+%.o: %.c
+	gcc -g -I $(TOP)/byterun -c $^
+
+clean:
+	rm -f *.cm* *.o
+	rm -f *.byt *.opt 
