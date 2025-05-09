@@ -195,9 +195,9 @@ let use_file name =
     let ic = open_in filename in
     let lb = Lexing.from_channel ic in
     (* Skip initial #! line if any *)
-    let buffer = String.create 2 in
-    if input ic buffer 0 2 = 2 && buffer = "#!"
-    then begin input_line ic; () end
+    let buffer = Bytes.create 2 in
+    if input ic buffer 0 2 = 2 && Bytes.to_string buffer = "#!"
+    then input_line ic |> ignore
     else seek_in ic 0;
     let success =
       protect Location.input_name filename (fun () ->
@@ -246,7 +246,7 @@ let refill_lexbuf buffer len =
 (* Discard everything already in a lexer buffer *)
 
 let empty_lexbuf lb =
-  let l = String.length lb.lex_buffer in
+  let l = Bytes.length lb.lex_buffer in
   lb.lex_abs_pos <- (-l);
   lb.lex_curr_pos <- l
 
@@ -277,14 +277,14 @@ let loop() =
   Location.input_name := "";
   Location.input_lexbuf := Some lb;
   Sys.catch_break true;
-  if Sys.file_exists ".ocamlinit" then begin use_silently ".ocamlinit"; () end;
+  if Sys.file_exists ".ocamlinit" then use_silently ".ocamlinit" |> ignore;
   while true do
     try
       empty_lexbuf lb;
       Location.reset();
       first_line := true;
       let phr = try !parse_toplevel_phrase lb with Exit -> raise PPerror in
-      execute_phrase true phr; ()
+      execute_phrase true phr |> ignore
     with
       End_of_file -> exit 0
     | Sys.Break ->

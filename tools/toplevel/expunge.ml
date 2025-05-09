@@ -44,9 +44,9 @@ let main () =
   let data_size = input_binary_int ic in
   let symbol_size = input_binary_int ic in
   let debug_size = input_binary_int ic in
-  let header = String.create(String.length Config.exec_magic_number) in
+  let header = Bytes.create (String.length Config.exec_magic_number) in
   really_input ic header 0 (String.length Config.exec_magic_number);
-  if header <> Config.exec_magic_number then begin
+  if Bytes.to_string header <> Config.exec_magic_number then begin
     prerr_endline "Wrong magic number"; exit 2
   end;
   if Sys.os_type = "MacOS" then begin

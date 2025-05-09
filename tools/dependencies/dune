@@ -1,0 +1,15 @@
+; (executable ... )
+
+(library
+ (name ocamldep)
+ (wrapped false)
+ (modules
+   ocamldep       
+ )
+ (libraries
+    stdlib utils
+  )
+ (preprocess (pps ppx_deriving.show))
+)
+
+; (ocamllex ocamldep)
