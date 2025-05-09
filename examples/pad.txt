@@ -6,3 +6,10 @@ Pierre Weis and Xavier Leroy (InterEditions, 1993 && 1999).
 alt: https://github.com/ghuysmans/le-langage-caml/
 which is more recent and uses even dune but does not contain
 all the examples of ocaml-examples-3.08.tgz
+
+modifications to the original:
+ - TODO remove the Imakefile
+ - TODO remove the loadall
+ - TODO fix codemap, remove some accents?
+ - 
+

@@ -32,7 +32,7 @@ let rec eval_path = function
 
 (* To quit *)
 
-let dir_quit () = exit 0; ()
+let dir_quit () = exit 0
 
 let _ = Hashtbl.add directive_table "quit" (Directive_none dir_quit)
 
@@ -68,7 +68,7 @@ let load_compunit ic filename compunit =
   Symtable.patch_object code compunit.cu_reloc;
   Symtable.update_global_table();
   begin try
-    (Meta.reify_bytecode code code_size) (); ()
+    (Meta.reify_bytecode code code_size) () |> ignore
   with exn ->
     Symtable.restore_state initial_symtable;
     print_exception_outcome exn;
@@ -79,15 +79,15 @@ let dir_load name =
   try
     let filename = find_in_path !Config.load_path name in
     let ic = open_in filename in
-    let buffer = String.create (String.length Config.cmo_magic_number) in
+    let buffer = Bytes.create (String.length Config.cmo_magic_number) in
     really_input ic buffer 0 (String.length Config.cmo_magic_number);
     begin try
-      if buffer = Config.cmo_magic_number then begin
+      if Bytes.to_string buffer = Config.cmo_magic_number then begin
         let compunit_pos = input_binary_int ic in  (* Go to descriptor *)
         seek_in ic compunit_pos;
         load_compunit ic filename (input_value ic : compilation_unit)
       end else
-      if buffer = Config.cma_magic_number then begin
+      if Bytes.to_string buffer = Config.cma_magic_number then begin
         let toc_pos = input_binary_int ic in  (* Go to table of contents *)
         seek_in ic toc_pos;
         List.iter (load_compunit ic filename)
@@ -106,7 +106,7 @@ let _ = Hashtbl.add directive_table "load" (Directive_string dir_load)
 
 (* Load commands from a file *)
 
-let dir_use name = Toploop.use_file name; ()
+let dir_use name = Toploop.use_file name |> ignore
 
 let _ = Hashtbl.add directive_table "use" (Directive_string dir_use)
 

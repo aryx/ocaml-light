@@ -15,10 +15,10 @@
 external global_data : unit -> Obj.t array = "get_global_data"
 external realloc_global_data : int -> unit = "realloc_global"
 external static_alloc : int -> bytes = "static_alloc"
-external static_free : string -> unit = "static_free"
+external static_free : bytes -> unit = "static_free"
 (*s: type Meta.closure (./bytecomp/meta.ml) *)
 type closure = unit -> Obj.t
 (*e: type Meta.closure (./bytecomp/meta.ml) *)
-external reify_bytecode : string -> int -> closure = "reify_bytecode"
+external reify_bytecode : bytes -> int -> closure = "reify_bytecode"
 external available_primitives : unit -> string array = "available_primitives"
 (*e: bytecomp/meta.ml *)
