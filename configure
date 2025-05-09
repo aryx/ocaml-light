@@ -142,7 +142,8 @@ bytecclinkopts=""
 
 case "$bytecc,$host" in
   gcc,*-*-darwin*)
-    bytecccompopts="$gcc_warnings";;
+      #TODO: alt: fix the implicit declaration instead
+      bytecccompopts="-Wno-implicit-function-declaration";;
   gcc*)
     bytecccompopts="-fno-defer-pop -Wall";;
 esac
