@@ -1,0 +1,11 @@
+(library
+ (name otherlibs_systhreads)
+ (wrapped false)
+ ; not pervasives.ml
+ (modules thread condition event mutex threadUnix)
+ (flags (:standard -w -21))
+ (libraries
+   ;stdlib
+  )
+ (preprocess (pps ppx_deriving.show))
+)
