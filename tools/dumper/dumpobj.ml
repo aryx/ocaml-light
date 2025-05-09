@@ -141,7 +141,7 @@ let print_getglobal_name ic =
     with Not_found ->
       print_string "<no reloc>"
     end;
-    inputu ic; ()
+    inputu ic |> ignore
   end
   else begin
     let n = inputu ic in
@@ -162,7 +162,7 @@ let print_setglobal_name ic =
     with Not_found ->
       print_string "<no reloc>"
     end;
-    inputu ic; ()
+    inputu ic |> ignore
   end
   else begin
     let n = inputu ic in
@@ -182,7 +182,7 @@ let print_primitive ic =
     with Not_found ->
       print_string "<no reloc>"
     end;
-    inputu ic; ()
+    inputu ic |> ignore
   end
   else begin
     let n = inputu ic in
@@ -280,9 +280,9 @@ let print_reloc (info, pos) =
 (* Print a .cmo file *)
 
 let dump_obj filename ic =
-  let buffer = String.create (String.length cmo_magic_number) in
+  let buffer = Bytes.create (String.length cmo_magic_number) in
   really_input ic buffer 0 (String.length cmo_magic_number);
-  if buffer <> cmo_magic_number then begin
+  if Bytes.to_string buffer <> cmo_magic_number then begin
     prerr_endline "Not an object file"; 
     exit 2
   end;
@@ -296,12 +296,12 @@ let dump_obj filename ic =
 (* Read the primitive table from an executable *)
 
 let read_primitive_table ic len =
-  let p = String.create len in
+  let p = Bytes.create len in
   really_input ic p 0 len;
   let rec split beg cur =
     if cur >= len then []
-    else if p.[cur] = '\000' then
-      String.sub p beg (cur - beg) :: split (cur + 1) (cur + 1)
+    else if Bytes.get p cur = '\000' then
+      String.sub (Bytes.to_string p) beg (cur - beg) :: split (cur + 1) (cur + 1)
     else
       split beg (cur + 1) in
   Array.of_list(split 0 0)
@@ -312,7 +312,7 @@ exception Not_exec
 
 let dump_exe ic =
   seek_in ic (in_channel_length ic - 12);
-  if (let buff = String.create 12 in input ic buff 0 12; buff)
+  if (let buff = Bytes.create 12 in input ic buff 0 12 |> ignore; Bytes.to_string buff)
      <> exec_magic_number
   then raise Not_exec;
   let trailer_pos = in_channel_length ic - 32 in
