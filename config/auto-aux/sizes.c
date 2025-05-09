@@ -11,6 +11,8 @@
 
 /* $Id: sizes.c,v 1.4 1997/09/02 12:54:20 xleroy Exp $ */
 
+#include <stdio.h>
+
 int main(int argc, char **argv)
 {
   printf("%d %d %d\n", sizeof(int), sizeof(long), sizeof(long *));
