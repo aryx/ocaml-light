@@ -71,8 +71,8 @@ let select readfds writefds exceptfds delay =
     Resumed_select(r, w, e) -> (r, w, e)
   | _ -> ([], [], [])
 
-let wait_read fd = select_aux([fd], [], [], -1.0); ()
-let wait_write fd = select_aux([], [fd], [], -1.0); ()
+let wait_read fd = select_aux([fd], [], [], -1.0) |> ignore
+let wait_write fd = select_aux([], [fd], [], -1.0) |> ignore
   
 let wait_timed_read fd delay =
   match select_aux([fd], [], [], delay) with
@@ -109,5 +109,5 @@ let preempt signal =
 (* Initialization of the scheduler *)
 
 let _ =
-  Sys.signal Sys.sigvtalrm (Sys.Signal_handle preempt);
+  Sys.signal Sys.sigvtalrm (Sys.Signal_handle preempt) |> ignore;
   thread_initialize()

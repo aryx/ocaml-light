@@ -18,7 +18,8 @@ type t
 
 (** Thread creation and termination *)
 
-val create : ('a -> 'b) -> 'a -> t
+(* pad: was '('a -> 'b) -> 'a -> t' before but ocaml 4.09 says it's unit *)
+val create : ('a -> unit) -> 'a -> t
         (* [Thread.create funct arg] creates a new thread of control,
            in which the function application [funct arg]
            is executed concurrently with the other threads of the program.

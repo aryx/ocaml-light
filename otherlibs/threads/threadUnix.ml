@@ -22,17 +22,17 @@ open Unix
    Make sure we're not preempted just after disabling the timer... *)
 let execv proc args =
   Thread.critical_section := true;
-  Unix.setitimer ITIMER_VIRTUAL {it_interval = 0.0; it_value = 0.0};
+  Unix.setitimer ITIMER_VIRTUAL {it_interval = 0.0; it_value = 0.0} |> ignore;
   Unix.execv proc args
 
 let execve proc args env =
   Thread.critical_section := true;
-  Unix.setitimer ITIMER_VIRTUAL {it_interval = 0.0; it_value = 0.0};
+  Unix.setitimer ITIMER_VIRTUAL {it_interval = 0.0; it_value = 0.0} |> ignore;
   Unix.execve proc args env
 
 let execvp proc args =
   Thread.critical_section := true;
-  Unix.setitimer ITIMER_VIRTUAL {it_interval = 0.0; it_value = 0.0};
+  Unix.setitimer ITIMER_VIRTUAL {it_interval = 0.0; it_value = 0.0} |> ignore;
   Unix.execvp proc args
 
 let wait () =
@@ -116,8 +116,7 @@ let connect s addr =
   with Unix_error((EINPROGRESS | EWOULDBLOCK | EAGAIN), _, _) ->
     Thread.wait_write s;
     (* Check if it really worked *)
-    Unix.getpeername s;
-    ()
+    Unix.getpeername s |> ignore
 
 let recv fd buf ofs len flags =
   Thread.wait_read fd; Unix.recv fd buf ofs len flags
@@ -155,6 +154,6 @@ let establish_server server_fun sockaddr =
             close_in inchan;
             close_out outchan;
             exit 0
-    | id -> close s; waitpid [] id (* Reclaim the son *); ()
+    | id -> close s; waitpid [] id (* Reclaim the son *) |> ignore
   done
 
