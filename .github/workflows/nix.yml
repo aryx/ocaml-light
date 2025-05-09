@@ -1,0 +1,40 @@
+# Build ocaml-light via Nix on Linux and MacOS
+# See also shell.nix at the root of the project.
+
+name: nix
+
+on:
+  workflow_dispatch: null
+  pull_request_target: {}
+  push:
+    branches: [master]
+
+jobs:
+  job:
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - name: Cache Nix
+        uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Build Nix shell
+        run: make shell
+      - name: Build XiX using Nix
+        run: |
+          #coupling: Dockerfile
+          nix-shell --run '
+            ./configure
+            make coldstart
+            make world
+            make test
+            make install
+          '
