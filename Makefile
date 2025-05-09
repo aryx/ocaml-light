@@ -584,7 +584,7 @@ alldepend:: depend
 include .depend
 
 ##############################################################################
-# Pad's new targets
+# Test infra
 ##############################################################################
 
 .PHONY: test
@@ -592,18 +592,22 @@ test:
 	$(MAKE)
 	cd test; $(MAKE);
 
+# The goal here is not so much to deploy via Docker ocaml light but more
+# to regression tests in CI (and locally) easily.
+#pad: see also .github/workflows/docker.yml for the check in CI!
+build-docker:
+	docker build -t "ocaml-light" .
+
+# see also .github/workflows/nix.yml for the check in CI!
+shell:
+	nix-shell --pure
+
 ##############################################################################
 # Developer's targets
 ##############################################################################
 # -filter semgrep
 visual:
 	codemap -screen_size 3 -efuns_client efuns_client -emacs_client /dev/null .
-
-# The goal here is not so much to deploy via Docker ocaml light but more
-# to regression tests in CI (and locally) easily.
-#pad: see also .github/workflows/docker.yml for the check in CI!
-build-docker:
-	docker build -t "ocaml-light" .
 
 # Note that the goal here is not to build an actual ocamlc executable; the
 # goal is just to compile code and generate a _build/ so that tools like
