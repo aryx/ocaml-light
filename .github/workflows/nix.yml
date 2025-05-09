@@ -18,7 +18,12 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - macos-latest
+          #TODO: does not work yet
+          # "This architecture seems to be neither 32 bits nor 64 bits.
+          #   Objective Caml won't run on this architecture.
+          #   Makefile:6: config/Makefile: No such file or directory
+          # "
+          #- macos-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
