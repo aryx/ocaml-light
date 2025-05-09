@@ -141,27 +141,10 @@ bytecccompopts=""
 bytecclinkopts=""
 
 case "$bytecc,$host" in
-  cc,*-*-nextstep*)
-    # GNU C extensions disabled, but __GNUC__ still defined!
-    bytecccompopts="-fno-defer-pop -Wall -U__GNUC__ -posix"
-    bytecclinkopts="-posix";;
-  gcc,alpha-*-osf*)
-    bytecccompopts="-fno-defer-pop -Wall"
-    # -taso puts code in lower 4GB
-    bytecclinkopts="-Xlinker -taso";;
   gcc,*-*-darwin*)
     bytecccompopts="$gcc_warnings";;
   gcc*)
     bytecccompopts="-fno-defer-pop -Wall";;
-  cc,mips-*-irix6*)
-    # Add -32 flag to ensure compatibility with native-code compiler
-    bytecccompopts="-32"
-    # Turn off warning "unused library"
-    bytecclinkopts="-32 -Wl,-woff,84";;
-  cc*,mips-*-irix6*)
-    # (For those who want to force "cc -64")
-    # Turn off warning "unused library"
-    bytecclinkopts="-Wl,-woff,84";;
 esac
 
 echo "BYTECC=$bytecc" >> Makefile
@@ -255,25 +238,10 @@ model=default
 system=unknown
 
 case "$host" in
-  alpha-*-osf*)                 arch=alpha; system=digital;;
-  alpha-*-linux*)               arch=alpha; system=linux;;
-  sparc-*-sunos4.*)             arch=sparc; system=sunos;;
-  sparc-*-solaris2.*)           arch=sparc; system=solaris;;
-  sparc-*-*bsd*)                arch=sparc; system=bsd;;
   i[3456]86-*-linuxaout)        arch=i386; system=linux_aout;;
   i[3456]86-*-linuxoldld)       arch=i386; system=linux_aout;;
   i[3456]86-*-linux)            arch=i386; system=linux_elf;;
   i[3456]86-*-*bsd*)            arch=i386; system=bsd;;
-  i[3456]86-*-nextstep*)        arch=i386; system=nextstep;;
-  i[3456]86-*-solaris*)         arch=i386; system=solaris;;
-  mips-*-irix6*)                arch=mips; system=irix;;
-  mips-*-ultrix*)               arch=mips; system=ultrix;;
-  hppa1.1-*-hpux*)              arch=hppa; system=hpux;;
-  hppa1.1-*-nextstep*)          arch=hppa; system=nextstep;;
-  rs6000-*-aix*)                arch=power; model=rs6000; system=aix;;
-  powerpc-*-aix*)               arch=power; model=ppc; system=aix;;
-  powerpc-*-linux*)             arch=power; model=ppc; system=elf;;
-  m68k-*-sunos*)                arch=m68k; system=sunos;;
 esac
 
 case "$arch,$system,$cc" in
@@ -287,11 +255,6 @@ nativecclinkopts=''
 
 case "$arch,$nativecc,$system" in
   alpha,cc*,digital) nativecccompopts=-std1;;
-  mips,cc*,irix)     nativecccompopts=-32
-                     nativecclinkopts="-32 -Wl,-woff,84";;
-  mips,cc*,ultrix)   nativecccompopts=-std;;
-  *,*,nextstep)      nativecccompopts="-Wall -U__GNUC__ -posix"
-                     nativecclinkopts="-posix";;
   *,gcc*,*)          nativecccompopts=-Wall;;
 esac
 
@@ -300,18 +263,9 @@ aspp='$(AS)'
 asppflags=''
 
 case "$arch,$model,$system" in
-  alpha,*,digital)  asflags='-O2'; asppflags='-O2 -DSYS_$(SYSTEM)';;
   alpha,*,linux)    aspp='gcc'; asppflags='-c -DSYS_$(SYSTEM)';;
-  mips,*,irix)      asflags='-32 -O2'; asppflags="$asflags";;
-  mips,*,ultrix)    asflags='-O2'; asppflags="$asflags";;
-  sparc,*,bsd)      aspp='gcc'; asppflags='-c -DSYS_$(SYSTEM)';;
-  sparc,*,*)        asppflags='-P -DSYS_$(SYSTEM)';;
   i386,*,solaris)   asppflags='-P -DSYS_$(SYSTEM)';;
   i386,*,*)         aspp='gcc'; asppflags='-c -DSYS_$(SYSTEM)';;
-  hppa,*,*)         aspp="$cc"; asppflags='-c -DSYS_$(SYSTEM)';;
-  power,rs6000,aix) asflags='-u -m pwr -w'; asppflags="$asflags";;
-  power,ppc,aix)    asflags='-u -m ppc -w'; asppflags="$asflags";;
-  power,*,elf)      aspp='gcc'; asppflags='-c';;
 esac
 
 echo "ARCH=$arch" >> Makefile
@@ -586,13 +540,7 @@ fi
 # Determine the target architecture for the "num" library
 
 case "$host" in
-  mips-*-ultrix*) bignum_arch=mips;;
-  alpha-*-osf*) bignum_arch=alpha;;
   i[3456]86-*-linux) bignum_arch=x86;;
-  sparc-*-sunos*) bignum_arch=supersparc;;
-  sparc-*-solaris*) bignum_arch=supersparc-solaris;;
-  sparc-*-*bsd*) bignum_arch=sparc;;
-  m68k-*-sunos*) bignum_arch=68K;;
   *) bignum_arch=C
 esac
 

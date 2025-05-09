@@ -27,6 +27,9 @@
   faster build, and the production of .cmt in _build/ allowing
   merlin (and efuns) to work correctly for file navigation and type info!
 
+** internals
+- remove files and support for old arch and OSes (alpha, mips, sparc, vax, etc.)
+  
 * Beta (2018) (plan9 support)
 
 ** os
