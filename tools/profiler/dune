@@ -1,0 +1,11 @@
+; (executable ... )
+
+(library
+ (name profiler)
+ (wrapped false)
+ (libraries
+    stdlib utils
+    parsing
+  )
+ (preprocess (pps ppx_deriving.show))
+)
