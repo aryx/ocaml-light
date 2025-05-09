@@ -1,0 +1,15 @@
+; (executable ... )
+
+(library
+ (name dumper)
+ (wrapped false)
+ ; TODO: not dumpapprox yet cos depends on asmcomp/
+ (modules dumpobj objinfo opnames)
+ (flags (:standard -w -21))
+ (libraries
+    stdlib utils
+    parsing
+    bytecomp
+  )
+ (preprocess (pps ppx_deriving.show))
+)

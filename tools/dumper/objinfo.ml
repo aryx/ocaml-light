@@ -43,16 +43,16 @@ let print_info cu =
 let dump_obj filename =
   print_string "File "; print_string filename; print_newline();
   let ic = open_in filename in
-  let buffer = String.create (String.length cmo_magic_number) in
+  let buffer = Bytes.create (String.length cmo_magic_number) in
   really_input ic buffer 0 (String.length cmo_magic_number);
-  if buffer = cmo_magic_number then begin
+  if Bytes.to_string buffer = cmo_magic_number then begin
     let cu_pos = input_binary_int ic in
     seek_in ic cu_pos;
     let cu = (input_value ic : compilation_unit) in
     close_in ic;
     print_info cu
   end else
-  if buffer = cma_magic_number then begin
+  if Bytes.to_string buffer = cma_magic_number then begin
     let toc_pos = input_binary_int ic in
     seek_in ic toc_pos;
     let toc = (input_value ic : compilation_unit list) in
