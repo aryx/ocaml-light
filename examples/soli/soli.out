@@ -1,0 +1,116 @@
+500 trials
+1000 trials
+1500 trials
+2000 trials
+2500 trials
+3000 trials
+3500 trials
+4000 trials
+4500 trials
+5000 trials
+5500 trials
+6000 trials
+6500 trials
+7000 trials
+7500 trials
+8000 trials
+8500 trials
+9000 trials
+9500 trials
+10000 trials
+10500 trials
+11000 trials
+11500 trials
+12000 trials
+12500 trials
+13000 trials
+13500 trials
+14000 trials
+14500 trials
+15000 trials
+15500 trials
+16000 trials
+16500 trials
+17000 trials
+17500 trials
+18000 trials
+18500 trials
+19000 trials
+19500 trials
+20000 trials
+
+Only one pin left!
+Final position
+.........
+...   ...
+...   ...
+.       .
+.   $   .
+.       .
+...   ...
+...   ...
+.........
+
+The Game has been solved using the following successive steps
+Move the pin at 2, 4 to position 4, 4
+    (removing the pin at 3, 4)
+Move the pin at 3, 2 to position 3, 4
+    (removing the pin at 3, 3)
+Move the pin at 1, 3 to position 3, 3
+    (removing the pin at 2, 3)
+Move the pin at 1, 5 to position 1, 3
+    (removing the pin at 1, 4)
+Move the pin at 3, 4 to position 3, 2
+    (removing the pin at 3, 3)
+Move the pin at 3, 1 to position 3, 3
+    (removing the pin at 3, 2)
+Move the pin at 3, 5 to position 1, 5
+    (removing the pin at 2, 5)
+Move the pin at 3, 7 to position 3, 5
+    (removing the pin at 3, 6)
+Move the pin at 4, 3 to position 2, 3
+    (removing the pin at 3, 3)
+Move the pin at 1, 3 to position 3, 3
+    (removing the pin at 2, 3)
+Move the pin at 4, 1 to position 4, 3
+    (removing the pin at 4, 2)
+Move the pin at 4, 3 to position 2, 3
+    (removing the pin at 3, 3)
+Move the pin at 4, 5 to position 4, 3
+    (removing the pin at 4, 4)
+Move the pin at 4, 7 to position 4, 5
+    (removing the pin at 4, 6)
+Move the pin at 4, 5 to position 2, 5
+    (removing the pin at 3, 5)
+Move the pin at 1, 5 to position 3, 5
+    (removing the pin at 2, 5)
+Move the pin at 5, 3 to position 3, 3
+    (removing the pin at 4, 3)
+Move the pin at 2, 3 to position 4, 3
+    (removing the pin at 3, 3)
+Move the pin at 5, 1 to position 5, 3
+    (removing the pin at 5, 2)
+Move the pin at 5, 4 to position 5, 2
+    (removing the pin at 5, 3)
+Move the pin at 6, 5 to position 4, 5
+    (removing the pin at 5, 5)
+Move the pin at 5, 7 to position 5, 5
+    (removing the pin at 5, 6)
+Move the pin at 7, 3 to position 5, 3
+    (removing the pin at 6, 3)
+Move the pin at 4, 3 to position 6, 3
+    (removing the pin at 5, 3)
+Move the pin at 7, 5 to position 7, 3
+    (removing the pin at 7, 4)
+Move the pin at 7, 3 to position 5, 3
+    (removing the pin at 6, 3)
+Move the pin at 5, 2 to position 5, 4
+    (removing the pin at 5, 3)
+Move the pin at 5, 4 to position 5, 6
+    (removing the pin at 5, 5)
+Move the pin at 3, 5 to position 5, 5
+    (removing the pin at 4, 5)
+Move the pin at 5, 6 to position 5, 4
+    (removing the pin at 5, 5)
+Move the pin at 6, 4 to position 4, 4
+    (removing the pin at 5, 4)

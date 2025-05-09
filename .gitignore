@@ -38,12 +38,13 @@ asmrun/*.c
 /docs/literate/OCaml-3.pdf
 /docs/literate/defs_and_uses.list
 /docs/literate/lineage.pdf
+/docs/literate/OCaml.out
 
 # latex object files
 *.aux
 *.brf
 *.log
-*.out
+#*.out # commented because .out is used for tests expect results
 *.toc
 *.bbl
 *.blg
