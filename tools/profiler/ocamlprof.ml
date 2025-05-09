@@ -39,10 +39,10 @@ exception Inversion of int * int
 
 let copy next =
   seek_in !inchan !cur_point;
-  let buf = try String.create (next - !cur_point)
+  let buf = try Bytes.create (next - !cur_point)
             with Invalid_argument _ -> raise (Inversion (!cur_point,next))
   in really_input !inchan buf 0 (next - !cur_point);
-     output_string !outchan buf; 
+     output_string !outchan (Bytes.to_string buf); 
      cur_point := next
 
 let profile_counter = ref 0
