@@ -142,7 +142,8 @@ bytecclinkopts=""
 
 case "$bytecc,$host" in
   gcc,*-*-darwin*)
-      #TODO: alt: fix the implicit declaration instead
+      #TODO: alt: fix the warnings instead of using -Wno in config/auto-aux/*.c
+      bytecclinkopts="-Wno-implicit-function-declaration -Wno-implicit-int -Wno-format"
       bytecccompopts="-Wno-implicit-function-declaration";;
   gcc*)
     bytecccompopts="-fno-defer-pop -Wall";;
