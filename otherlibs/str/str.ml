@@ -25,16 +25,16 @@ let last_chars s n = String.sub s (String.length s - n) n
 
 module Charset =
   struct
-    type t = string (* of length 32 *)
+    type t = bytes (* of length 32 *)
 
-    let empty = String.make 32 '\000'
-    let full = String.make 32 '\255'
+    let empty = String.make 32 '\000' |> Bytes.of_string
+    let full = String.make 32 '\255' |> Bytes.of_string
 
-    let make_empty () = String.make 32 '\000'
+    let make_empty () = String.make 32 '\000' |> Bytes.of_string
 
     let add s c =
       let i = Char.code c in
-      s.[i lsr 3] <- Char.chr(Char.code s.[i lsr 3] lor (1 lsl (i land 7)))
+      s.[i lsr 3] <- Char.chr(Char.code (Bytes.get s (i lsr 3)) lor (1 lsl (i land 7)))
 
     let add_range s c1 c2 =
       for i = Char.code c1 to Char.code c2 do add s (Char.chr i) done
@@ -45,32 +45,33 @@ module Charset =
     let range c1 c2 =
       let s = make_empty () in add_range s c1 c2; s
 
-    let complement s =
-      let r = String.create 32 in
+    let complement (s : t) : t =
+      let r = Bytes.create 32 in
       for i = 0 to 31 do
-        r.[i] <- Char.chr(Char.code s.[i] lxor 0xFF)
+        r.[i] <- Char.chr(Char.code (Bytes.get s i) lxor 0xFF)
       done;
       r
 
-    let union s1 s2 =
-      let r = String.create 32 in
+    let union (s1 : t) (s2 : t) : t =
+      let r = Bytes.create 32 in
       for i = 0 to 31 do
-        r.[i] <- Char.chr(Char.code s1.[i] lor Char.code s2.[i])
+        r.[i] <- Char.chr(Char.code (Bytes.get s1 i) lor Char.code (Bytes.get s2 i))
       done;
       r
 
-    let disjoint s1 s2 =
+    let disjoint (s1 : t) (s2 : t) : bool =
       try
         for i = 0 to 31 do
-          if Char.code s1.[i] land Char.code s2.[i] <> 0 then raise Exit
+          if Char.code (Bytes.get s1 i) land Char.code (Bytes.get s2 i) <> 0
+          then raise Exit
         done;
         true
       with Exit ->
         false
 
-    let iter fn s =
+    let iter fn (s : t) =
       for i = 0 to 31 do
-        let c = Char.code s.[i] in
+        let c = Char.code (Bytes.get s i) in
         if c <> 0 then
           for j = 0 to 7 do
             if c land (1 lsl j) <> 0 then fn (Char.chr ((i lsl 3) + j))
@@ -78,11 +79,11 @@ module Charset =
       done
 
     let expand s =
-      let r = String.make 256 '\000' in
+      let r = String.make 256 '\000' |> Bytes.of_string in
       iter (fun c -> r.[Char.code c] <- '\001') s;
       r
 
-    let fold_case s =
+    let fold_case (s : t) : t =
       let r = make_empty() in
       iter (fun c -> add r (Char.lowercase c); add r (Char.uppercase c)) s;
       r
@@ -149,8 +150,9 @@ let displ dest from = dest - from - 1
 (* first r returns a set of characters C such that:
      for all string s, s matches r => the first character of s is in C *)
 
-let rec first = function
-    Char c -> Charset.singleton c
+let rec first (r : re_syntax) : bytes =
+  match r with
+  | Char c -> Charset.singleton c
   | String s -> if s = "" then Charset.full else Charset.singleton s.[0]
   | CharClass cl -> cl
   | Seq rl -> first_seq rl
@@ -173,20 +175,20 @@ and first_seq = function
 
 (* Transform a Char or CharClass regexp into a character class *)
 
-let charclass_of_regexp fold_case re =
+let charclass_of_regexp (fold_case : bool) (re :  re_syntax) : string =
   let cl =
     match re with
       Char c -> Charset.singleton c
     | CharClass cl -> cl
     | _ -> assert false in
-  if fold_case then Charset.fold_case cl else cl
+  (if fold_case then Charset.fold_case cl else cl) |> Bytes.to_string
 
 (* The case fold table: maps characters to their lowercase equivalent *)
 
 let fold_case_table =
-  let t = String.create 256 in
+  let t = Bytes.create 256 in
   for i = 0 to 255 do t.[i] <- Char.lowercase(Char.chr i) done;
-  t
+  Bytes.to_string t
 
 module StringMap = Map
 (* .Make(struct type t = string let compare = compare end) *)
@@ -257,7 +259,7 @@ let compile fold_case re =
       end
   | CharClass cl ->
       let cl' = if fold_case then Charset.fold_case cl else cl in
-      emit_instr op_CHARCLASS (cpool_index cl')
+      emit_instr op_CHARCLASS (cpool_index (Bytes.to_string cl'))
   | Seq rl ->
       emit_seq_code rl
   | Alt(r1, r2) ->
@@ -355,7 +357,7 @@ let compile fold_case re =
   let start_pos =
     if start = Charset.full
     then -1
-    else cpool_index (Charset.expand start') in
+    else cpool_index (Bytes.to_string (Charset.expand start')) in
   let constantpool = Array.make !cpoolpos "" in
   StringMap.iter (fun str idx -> constantpool.(idx) <- str) !cpool;
   { prog = Array.sub !prog 0 !progpos;
@@ -494,7 +496,7 @@ let regexp_case_fold e = compile true (parse e)
 
 let quote s =
   let len = String.length s in
-  let buf = String.create (2 * len) in
+  let buf = Bytes.create (2 * len) in
   let pos = ref 0 in
   for i = 0 to len - 1 do
     match s.[i] with
@@ -503,7 +505,7 @@ let quote s =
     | c ->
         buf.[!pos] <- c; pos := !pos + 1
   done;
-  String.sub buf 0 !pos
+  String.sub (Bytes.to_string buf) 0 !pos
 
 let regexp_string s = compile false (String s) 
 
