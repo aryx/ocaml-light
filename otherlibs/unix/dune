@@ -1,0 +1,8 @@
+(library
+ (name otherlibs_unix)
+ (wrapped false)
+ (libraries
+   stdlib
+  )
+ (preprocess (pps ppx_deriving.show))
+)
