@@ -587,10 +587,13 @@ include .depend
 # Test infra
 ##############################################################################
 
+#TODO: testasmcomp examples
+TESTDIRS=tests test
+
 .PHONY: test
 test:
 	$(MAKE)
-	cd test; $(MAKE);
+	set -e; for i in $(TESTDIRS); do (cd $$i; $(MAKE)); done
 
 # TODO: Some weird memory error for boyer.byt nucleic.byt sieve.byt
 # so I've removed them
@@ -599,8 +602,7 @@ test:
 # - sieve.byt "free(): invalid pointer, cmp: EOF on - which is empty" at runtime
 #coupling: test/Makefile BYTE_EXE variable
 nix-test:
-	$(MAKE)
-	cd test; BYTE_EXE="fib.byt takc.byt taku.byt quicksort.byt quicksort.fast.byt fft.byt fft.fast.byt soli.byt soli.fast.byt kb.byt genlex.byt bdd.byt" make
+	BYTE_EXE="fib.byt takc.byt taku.byt quicksort.byt quicksort.fast.byt fft.byt fft.fast.byt soli.byt soli.fast.byt kb.byt genlex.byt bdd.byt" $(MAKE) test
 
 # The goal here is not so much to deploy via Docker ocaml light but more
 # to regression tests in CI (and locally) easily.

@@ -1,8 +1,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <caml/mlvalues.h>
-#include <caml/memory.h>
+// should be caml/mlvalues.h, caml/memory.h
+// but with intree compilation we use -I ../byterun hence the code below
+#include <mlvalues.h>
+#include <memory.h>
 
 void caml_test_foreign(value x, value y) {
   CAMLparam2(x, y);
