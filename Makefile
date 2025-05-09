@@ -587,8 +587,8 @@ include .depend
 # Test infra
 ##############################################################################
 
-#TODO: testasmcomp examples
-TESTDIRS=tests test
+#TODO: testasmcomp
+TESTDIRS=tests examples test
 
 .PHONY: test
 test:

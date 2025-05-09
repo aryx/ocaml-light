@@ -8,8 +8,11 @@ which is more recent and uses even dune but does not contain
 all the examples of ocaml-examples-3.08.tgz
 
 modifications to the original:
- - TODO remove the Imakefile
+ - SEMI remove the Imakefile, replaced by regular Makefiles
  - TODO remove the loadall
  - TODO fix codemap, remove some accents?
- - 
 
+original TODO from Pierre Weis:
+ - revoir basics/adress_book.ml
+ - revoir tous les readme
+ - traduire en anglais ?

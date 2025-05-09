@@ -54,9 +54,9 @@ let moves = Array.create 31 {x1 = 0; y1 = 0; x2 = 0; y2 = 0};;
 
 let print_moves () =
  let print_move { x1 = x1; y1 = y1; x2 = x2; y2 = y2 } =
-   Printf.printf "Move the pin at %i, %i to position %i, %i\n"
+   Printf.printf "Move the pin at %d, %d to position %d, %d\n"
      x1 y1 x2 y2;
-   Printf.printf "    (removing the pin at %i, %i)\n"
+   Printf.printf "    (removing the pin at %d, %d)\n"
     (x1 + (x2 - x1) / 2) (y1 + (y2 - y1) / 2) in
  for i = 0 to 31 - 1 do
   print_move moves.(i)
