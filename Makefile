@@ -527,12 +527,13 @@ ocamlyacc:
 clean::
 	cd yacc; $(MAKE) clean
 
-TOOLS=tools/debugger tools/profiler tools/dependencies tools/dumper tools/misc
+#TODO: fix tools/debugger
+TOOLS=tools/profiler tools/dependencies tools/dumper tools/misc
 
 # Other tools
 
 ocamltools::
-	for i in $(TOOLS); do (cd $$i; $(MAKE) all); done
+	set -e; for i in $(TOOLS); do (cd $$i; $(MAKE) all); done
 partialclean::
 	for i in $(TOOLS); do (cd $$i; $(MAKE) clean); done
 alldepend::

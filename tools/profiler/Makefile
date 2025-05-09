@@ -44,7 +44,9 @@ clean::
 clean::
 	rm -f *.cmo *.cmi
 
+beforedepend:
+
 depend: beforedepend
-	$(CAMLRUN) ./ocamldep $(INCLUDES) *.mli *.ml > .depend
+	$(CAMLRUN) ../dependencies/ocamldep $(INCLUDES) *.mli *.ml > .depend
 
 include .depend
