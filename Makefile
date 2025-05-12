@@ -240,6 +240,15 @@ installopt:
 	if test -f ocamlc.opt; then cp ocamlc.opt $(BINDIR)/ocamlc.opt; else :; fi
 	if test -f ocamlopt.opt; then cp ocamlopt.opt $(BINDIR)/ocamlopt.opt; else :; fi
 
+uninstall:
+	rm -f $(BINDIR)/ocaml*
+	rm -f $(MANDIR)/ocaml*
+	rm -f $(LIBDIR)/threads/*
+	rm -f $(LIBDIR)/caml/*
+	rmdir $(LIBDIR)/threads
+	rmdir $(LIBDIR)/caml
+	rm -f $(LIBDIR)/*
+	rmdir $(LIBDIR)
 
 ##############################################################################
 # The binaries
@@ -609,6 +618,13 @@ nix-test:
 #pad: see also .github/workflows/docker.yml for the check in CI!
 build-docker:
 	docker build -t "ocaml-light" .
+
+# need 'docker login -u padator' first with credentials of
+# https://hub.docker.com/r/padator/ stored in ~/.docker/config.json
+push-docker:
+	docker tag "ocaml-light" padator/ocaml-light:latest
+	docker push padator/ocaml-light:latest
+
 
 # see also .github/workflows/nix.yml for the check in CI!
 shell:
