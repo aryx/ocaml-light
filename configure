@@ -120,7 +120,7 @@ bytecclinkopts=""
 
 case "$bytecc,$host" in
   gcc,*-*-darwin*)
-    bytecccompopts="Wno-format $gcc_warnings";;
+    bytecccompopts="-Wno-format $gcc_warnings";;
   gcc*)
     bytecccompopts="-fno-defer-pop $gcc_warnings";;
 esac
