@@ -1,11 +1,11 @@
 START cf37b950bede21f249c8c78fa9f5e7fe977f49e5: 1.07 release (Dec 1997)
-SEMI b7bf7cf69d: autodetection arm (Oct 1998)
+SEMI b7bf7cf69d483d856bba307ebd299d6ccc2cffd3: autodetection ARM (Oct 1998)
 
      bae0f5d56edcab997a3a9ae0b89cff53f1db8f6c: chercher les infos sur Foo dans Foo.{cmi,cmx} et foo.{cmi,cmx} (June 2002)
      0d78a5601564de349d3a3cd2cea94f36bf6d02c4: permettre de placer les sources dans Foo.ml (Mar 2003))
 
      152255e5129d94325f3017bc93623dde2fa1cfb1: add attributes (a.k.a. extension points) in AST but old syntax (Feb 2013)
-SEMI 70bc46ef0cb4f29d67838df3662266ce4ea61ff6: new syntax for attributes (Mar 2013)
+SEMI 70bc46ef0cb4f29d67838df3662266ce4ea61ff6: new syntax for attributes [@@ (Mar 2013)
 
 
 SEMI 5b8df637d2b722aa397ab53200a733bae238e9fe: merge safe-string (Apr 2014)

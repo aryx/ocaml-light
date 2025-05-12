@@ -298,6 +298,7 @@ rule token = parse
   (*x: [[Lexer.token()]] operator cases *)
   | ";;" { SEMISEMI }
   (*e: [[Lexer.token()]] operator cases *)
+  | "[@@" { LBRACKETATAT }
   | eof { EOF }
   | _
       { raise (Error(Illegal_character,
