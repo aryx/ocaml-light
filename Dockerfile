@@ -1,4 +1,4 @@
-# Build and test ocaml light on Ubuntu Linux.
+# Build and test ocaml-light on Ubuntu Linux.
 
 FROM ubuntu:22.04
 #alt: alpine:3.21
