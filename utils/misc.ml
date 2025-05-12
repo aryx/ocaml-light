@@ -79,6 +79,20 @@ let find_in_path path name =
   end
 (*e: function [[Misc.find_in_path]] *)
 
+let find_in_path_uncap path name =
+  let uname = String.uncapitalize name in
+  let rec try_dir = function
+    [] -> raise Not_found
+  | dir::rem ->
+      let fullname = Filename.concat dir name in
+      let ufullname = Filename.concat dir uname in
+      (* search first uncapitalized *)
+      if Sys.file_exists ufullname then ufullname
+      else if Sys.file_exists fullname then fullname
+      else try_dir rem
+  in try_dir path
+
+
 (*s: function [[Misc.remove_file]] *)
 let remove_file filename =
   try
