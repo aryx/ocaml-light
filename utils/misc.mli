@@ -45,6 +45,11 @@ val replicate_list: 'a -> int -> 'a list
 val find_in_path: string list -> string -> string
         (* Search a file in a list of directories. *)
 (*e: signature [[Misc.find_in_path]] *)
+val find_in_path_uncap: string list -> string -> string
+        (* Same, but search also for uncapitalized name, i.e.
+           if name is Foo.ml, allow /path/Foo.ml and /path/foo.ml
+           to match. *)
+
 (*s: signature [[Misc.remove_file]] *)
 val remove_file: string -> unit
         (* Delete the given file if it exists. Never raise an error. *)

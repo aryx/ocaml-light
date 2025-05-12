@@ -68,7 +68,7 @@ let add_available_units units =
 (* Read the CRC of an interface from its .cmi file *)
 
 let digest_interface unit loadpath =
-  let filename = Misc.find_in_path loadpath (String.uncapitalize unit ^ ".cmi") in
+  let filename = Misc.find_in_path_uncap loadpath (unit ^ ".cmi") in
   let ic = open_in filename in
   try
     let buffer = String.create (String.length Config.cmi_magic_number) in
