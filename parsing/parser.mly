@@ -165,6 +165,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token LBRACE RBRACE
 %token LBRACKET RBRACKET
 %token LBRACKETBAR BARRBRACKET
+%token LBRACKETATAT
 
 %token AMPERSAND
 %token BAR
@@ -217,6 +218,8 @@ let unclosed opening_name opening_num closing_name closing_num =
 %right AMPERSAND AMPERAMPER             /* && */
 %left  INFIXOP0 EQUAL LESS GREATER      /* = < > etc */
 %right INFIXOP1                         /* @ ^ etc */
+%nonassoc below_LBRACKETAT
+%nonassoc LBRACKETATAT
 %right COLONCOLON                       /* :: */
 %left  INFIXOP2 SUBTRACTIVE             /* + - */
 %left  INFIXOP3 STAR                    /* * / */
@@ -302,14 +305,14 @@ structure_tail:
 ;
 /*(*x: structure rules *)*/
 structure_item:
-    LET rec_flag let_bindings
+    LET rec_flag let_bindings           opt_with_attributes
       { match $3 with
           [{ppat_desc = Ppat_any}, exp] -> mkstr(Pstr_eval exp)
         | _ -> mkstr(Pstr_value($2, List.rev $3)) }
   | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
       { mkstr(Pstr_primitive($2, {pval_type = $4; pval_prim = $6})) }
 
-  | TYPE type_declarations
+  | TYPE type_declarations              opt_with_attributes
       { mkstr(Pstr_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
@@ -363,7 +366,7 @@ signature_item:
   | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
       { mksig(Psig_value($2, {pval_type = $4; pval_prim = $6})) }
 
-  | TYPE type_declarations
+  | TYPE type_declarations                 opt_with_attributes
       { mksig(Psig_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
       { mksig(Psig_exception($2, $3)) }
@@ -969,6 +972,20 @@ pattern_semi_list:
   | pattern_semi_list SEMI pattern              { $3 :: $1 }
 ;
 /*(*e: ebnf rules *)*/
+
+
+/* Attributes */
+/* pad: partial support, just enough to parse the code */
+opt_with_attributes:
+      { [] }
+  | LBRACKETATAT LIDENT opt_expr RBRACKET opt_with_attributes
+    { ($2, $3) :: $5 }
+;
+opt_expr:
+    expr { () }
+  |      { () }
+;
+
 /*(*e: grammar *)*/
 %%
 
