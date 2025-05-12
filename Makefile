@@ -99,7 +99,7 @@ PERVASIVES=arg array callback char digest filename format gc hashtbl \
   set sort stack string bytes stream sys genlex topdirs toploop weak lazy \
   marshal \
   buffer \
-  option result uchar int bool float
+  option result uchar int bool float stdcompat
 
 ##############################################################################
 # Main rule
