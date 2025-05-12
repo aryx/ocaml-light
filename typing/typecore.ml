@@ -42,6 +42,8 @@ type error =
   | Label_not_mutable of Longident.t
 
   | Bad_format of string
+
+  | Too_many_arguments
 (*e: type [[Typecore.error]] *)
 
 (*s: exception [[Typecore.Error]] *)
@@ -605,6 +607,26 @@ and type_expect env sexp ty_expected =
       unify_exp env exp ty_expected;
       exp
   (*e: [[Typecode.type_expect()]] match cases *)
+  | Pexp_function caselist ->
+      let (ty_arg, ty_res) =
+        try filter_arrow env ty_expected with Unify ->
+          raise(Error(sexp.pexp_loc, Too_many_arguments))
+      in
+      let cases =
+        List.map
+          (fun (spat, sexp) ->
+             let (pat, ext_env) = type_pattern env spat in
+             unify_pat env pat ty_arg;
+             let exp = type_expect ext_env sexp ty_res in
+             (pat, exp))
+          caselist
+      in
+      Parmatch.check_unused cases;
+      Parmatch.check_partial sexp.pexp_loc cases;
+      { exp_desc = Texp_function cases;
+        exp_loc = sexp.pexp_loc;
+        exp_type = Tarrow(ty_arg, ty_res);
+      }
   | _ ->
       let exp = type_exp env sexp in
       unify_exp env exp ty_expected;
@@ -781,5 +803,7 @@ let report_error = function
       print_string " is not mutable"
   | Bad_format s ->
       print_string "Bad format `"; print_string s; print_string "'"
+  | Too_many_arguments ->
+      print_string "This function has too many arguments"
 (*e: function [[Typecore.report_error]] *)
 (*e: typing/typecore.ml *)

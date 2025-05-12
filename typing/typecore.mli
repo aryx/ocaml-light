@@ -49,6 +49,8 @@ type error =
   | Label_not_mutable of Longident.t
 
   | Bad_format of string
+
+  | Too_many_arguments
 (*e: type [[Typecore.error]] *)
 
 (*s: exception [[Typecore.Error]] *)

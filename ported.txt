@@ -4,10 +4,14 @@ SEMI b7bf7cf69d483d856bba307ebd299d6ccc2cffd3: autodetection ARM (Oct 1998)
 DONE bae0f5d56edcab997a3a9ae0b89cff53f1db8f6c: chercher les infos sur Foo dans Foo.{cmi,cmx} et foo.{cmi,cmx} (June 2002)
 SEMI 0d78a5601564de349d3a3cd2cea94f36bf6d02c4: permettre de placer les sources dans Foo.ml (Mar 2003))
 DONE 6000e08ee6eabc5e9e726f86b3d9799cd885224a: last fix on find_in_path_uncap (Mar 2003)
-SEMI 363427a872eec69f5f0c9d866e30912be40ddc4d: contains modif to typing/env.ml with call to find_in_path_uncap
+SEMI 363427a872eec69f5f0c9d866e30912be40ddc4d: contains modif to typing/env.ml with call to find_in_path_uncap (Apr 2003)
+
+NOPE 0bca05af096eacc483038545252d4209644dd85a expand type abbrevs for string or format (Jan 2003)
+SEMI 87b17301f4a408109a0f00f7a297b02c79724bc1: nouvelle syntax des classes who also added a case for type_expect Pexp_function useful to type logs expressions (Apr 1996)
 
      152255e5129d94325f3017bc93623dde2fa1cfb1: add attributes (a.k.a. extension points) in AST but old syntax (Feb 2013)
 SEMI 70bc46ef0cb4f29d67838df3662266ce4ea61ff6: new syntax for attributes [@@ (Mar 2013)
+
 
 
 SEMI 5b8df637d2b722aa397ab53200a733bae238e9fe: merge safe-string (Apr 2014)
