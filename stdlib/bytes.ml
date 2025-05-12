@@ -1,4 +1,7 @@
-(* partial port of 4.02 bytes.ml just enough to compile ocaml-light *)
+(* partial port of 4.02 bytes.ml just enough to compile some of ocaml-light with
+ * dune and a recent OCaml (as well as xix)
+ *)
+type t = string
 
 let length x = String.length x
 
