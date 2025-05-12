@@ -18,9 +18,6 @@ CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
 
-#pad: if you want to test things
-#CAMLC=/home/pad/.opam/4.01.0/bin/ocamlc -bin-annot -I boot
-
 ##############################################################################
 # The files and directories
 ##############################################################################
@@ -28,7 +25,8 @@ MKDIR=mkdir -p
 INCLUDES=-I utils -I parsing -I typing -I bytecomp -I asmcomp -I driver -I tools/toplevel
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
-  utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo
+  utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo \
+  utils/logs.cmo
 
 OPTUTILS=$(UTILS) utils/nativeint.cmo
 
@@ -87,12 +85,6 @@ TOPLIB=$(UTILS) $(PARSING) $(TYPING) $(COMP) $(BYTECOMP) $(TOPLEVEL)
 TOPOBJS=$(TOPLIB) $(TOPLEVELMAIN)
 
 OPTOBJS=$(OPTUTILS) $(PARSING) $(TYPING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
-
-EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
-  utils/config.cmo utils/clflags.cmo \
-  typing/ident.cmo typing/predef.cmo \
-  bytecomp/runtimedef.cmo bytecomp/symtable.cmo \
-  tools/toplevel/expunge.cmo
 
 PERVASIVES=arg array callback char digest filename format gc hashtbl \
   lexing list map obj parsing pervasives printexc printf queue random \
@@ -551,6 +543,12 @@ alldepend::
 
 
 # The "expunge" utility
+
+EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
+  utils/config.cmo utils/clflags.cmo \
+  typing/ident.cmo typing/predef.cmo \
+  bytecomp/runtimedef.cmo bytecomp/symtable.cmo \
+  tools/toplevel/expunge.cmo
 
 expunge: $(EXPUNGEOBJS)
 	$(CAMLC) $(LINKFLAGS) -o expunge $(EXPUNGEOBJS)

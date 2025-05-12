@@ -7,6 +7,8 @@ utils/clflags.cmx: utils/config.cmx
 utils/config.cmo: utils/config.cmi 
 utils/config.cmx: utils/config.cmi 
 utils/misc.cmo: utils/misc.cmi 
+utils/logs.cmx: utils/logs.cmi 
+utils/logs.cmo: utils/logs.cmi 
 utils/misc.cmx: utils/misc.cmi 
 utils/nativeint.cmo: utils/nativeint.cmi 
 utils/nativeint.cmx: utils/nativeint.cmi 

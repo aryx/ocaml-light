@@ -28,6 +28,7 @@ let process_implementation_file name =
 
 (*s: function [[Main.process_file]] *)
 let process_file name =
+  Logs.info (fun m -> m "processing %s" name);
   match () with
   | _ when Filename.check_suffix name ".ml" ->
       Compile.implementation name;
@@ -127,7 +128,17 @@ let main () =
        "-pp", Arg.String(fun s -> preprocessor := Some s),
              "<command>  Pipe sources through preprocessor <command>";
        (*x: [[Main.main()]] command line options *)
-       "-verbose", Arg.Set verbose, " Print calls to external commands";
+       "-verbose", Arg.Unit (fun () ->
+                       verbose := true;
+                       Logs.set_level (Some Logs.Info)
+                     ),
+       " Print calls to external commands and info level for logs";
+       (* new: *)
+       "-debug", Arg.Unit (fun () ->
+                       verbose := true;
+                       Logs.set_level (Some Logs.Debug)
+                     ),
+       " debug level for logs";
        (*x: [[Main.main()]] command line options *)
        "-dlambda", Arg.Set dump_lambda, " (undocumented)";
        "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
