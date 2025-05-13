@@ -7,6 +7,8 @@ let empty = ""
 
 let sub x n1 n2 = String.sub x n1 n2
 
+let sub_string x n1 n2 = String.sub x n1 n2
+
 let length x = String.length x
 
 let create x = String.create x
