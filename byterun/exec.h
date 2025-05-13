@@ -51,7 +51,7 @@ struct exec_trailer {
 
 /*s: constant [[EXEC_MAGIC]] */
 /* Magic number for this release */
-
+//XXX
 #define EXEC_MAGIC "Caml1999X002"
 /*e: constant [[EXEC_MAGIC]] */
 

@@ -283,6 +283,7 @@ let emit_instr = function
   | Kintcomp Cgt -> out opGTINT      | Kintcomp Cge -> out opGEINT
   | Koffsetint n -> out opOFFSETINT; out_int n
   | Koffsetref n -> out opOFFSETREF; out_int n
+  | Kisint -> out opISINT
   | Kevent ev -> record_event ev
   | Kstop -> out opSTOP
 (*e: constant [[Emitcode.emit_instr]] *)

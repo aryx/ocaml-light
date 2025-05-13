@@ -964,7 +964,11 @@ value interprete(code_t prog, asize_t prog_size)
           accu = Val_unit;
           Next;
     /*e: [[interpreter()]] string cases */
-    /*s: [[interpreter()]] debugger cases */
+       Instruct(ISINT):
+           accu = Val_long(accu & 1);
+           Next;
+
+/*s: [[interpreter()]] debugger cases */
     /* Debugging and machine control */
 
         Instruct(STOP):

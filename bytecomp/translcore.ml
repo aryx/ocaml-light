@@ -152,7 +152,8 @@ let primitives_table = create_hashtable 31 [
   "%array_unsafe_set", Parraysetu Pgenarray;
   "%obj_size", Parraylength Paddrarray;
   "%obj_field", Parrayrefu Paddrarray;
-  "%obj_set_field", Parraysetu Paddrarray
+  "%obj_set_field", Parraysetu Paddrarray;
+  "%obj_is_int", Pisint;
 ]
 (*e: constant [[Translcore.primitives_table]] *)
 
