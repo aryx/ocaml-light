@@ -21,11 +21,19 @@ type spec =
 
 exception Bad of string
 
+exception Help of string
+(** Raised by [Arg.parse_argv] when the user asks for help. *)
+
 type error =
   | Unknown of string
   | Wrong of string * string * string  (* option, actual, expected *)
   | Missing of string
   | Message of string
+
+type key = string
+type doc = string
+type usage_msg = string
+type anon_fun = (string -> unit)
 
 open Printf
 
@@ -98,10 +106,10 @@ let parse speclist anonfun errmsg =
       incr current;
     end;
   done;
+  ()
 
-
-type key = string
-type doc = string
 
 (* TODO *)
 let align xs = xs
+let parse_argv _argv speclist anonfun errmsg =
+  parse speclist anonfun errmsg

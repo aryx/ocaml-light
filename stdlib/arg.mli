@@ -45,6 +45,15 @@ type spec =
         (* The concrete type describing the behavior associated
            with a keyword. *)
 
+
+(** The concrete type describing the behavior associated
+   with a keyword. *)
+
+type key = string
+type doc = string
+type usage_msg = string
+type anon_fun = (string -> unit)
+
 val parse : (string * spec * string) list -> (string -> unit) -> string -> unit
 (*
     [parse speclist anonfun usage_msg] parses the command line.
@@ -73,6 +82,11 @@ val parse : (string * spec * string) list -> (string -> unit) -> string -> unit
 *)
 
 exception Bad of string
+
+exception Help of string
+(** Raised by [Arg.parse_argv] when the user asks for help. *)
+
+
 (*
      Functions in [spec] or [anonfun] can raise [Bad] with an error
      message to reject invalid arguments.
@@ -91,9 +105,6 @@ val current: int ref
     change this value, e.g. to force [parse] to skip some arguments.
 *)
 
-type key = string
-type doc = string
-
 val align: (key * spec * doc) list -> (key * spec * doc) list
 (** Align the documentation strings by inserting spaces at the first alignment
     separator (tab or, if tab is not found, space), according to the length of
@@ -102,3 +113,16 @@ val align: (key * spec * doc) list -> (key * spec * doc) list
     to [Symbol] arguments are aligned on the next line.
     @param limit options with keyword and message longer than [limit] will not
     be used to compute the alignment. *)
+
+val parse_argv : string array ->
+  (key * spec * doc) list -> anon_fun -> usage_msg -> unit
+(** [Arg.parse_argv ~current args speclist anon_fun usage_msg] parses
+  the array [args] as if it were the command line.  It uses and updates
+  the value of [~current] (if given), or {!Arg.current}.  You must set
+  it before calling [parse_argv].  The initial value of [current]
+  is the index of the program name (argument 0) in the array.
+  If an error occurs, [Arg.parse_argv] raises {!Arg.Bad} with
+  the error message as argument.  If option [-help] or [--help] is
+  given, [Arg.parse_argv] raises {!Arg.Help} with the help message
+  as argument.
+*)
