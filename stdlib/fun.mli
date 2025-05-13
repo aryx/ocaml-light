@@ -17,7 +17,7 @@
 
     @since 4.08 *)
 
-(* external id : 'a -> 'a = "%identity" *)
+external id : 'a -> 'a = "%identity"
 (** [id] is the identity function. For any argument [x], [id x] is [x]. *)
 
 val const : 'a -> ('b (* was _ *) -> 'a)
