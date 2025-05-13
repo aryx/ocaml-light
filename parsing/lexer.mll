@@ -185,6 +185,15 @@ rule token = parse
   (*s: [[Lexer.token()]] underscore case *)
   | "_"  { UNDERSCORE }
   (*e: [[Lexer.token()]] underscore case *)
+
+  (* pad: partial support just enough to parse xix code *)
+  | "~" ['a'-'z'  '_'] (['A'-'Z' 'a'-'z' '_' '\'' '0'-'9' ]) * ':'
+      { 
+        let s = Lexing.lexeme lexbuf in
+	Logs.warn (fun m -> m "use of label %s (skipping it)" s);
+	token lexbuf
+      }
+
   (*s: [[Lexer.token()]] identifier or keyword cases *)
   | ['a'-'z'  '_'] (['A'-'Z' 'a'-'z' '_' '\'' '0'-'9' ]) *
       { let s = Lexing.lexeme lexbuf in

@@ -16,7 +16,7 @@ all: ocamlprof
 CSLPROF=ocamlprof.cmo
 CSLPROF_IMPORTS=misc.cmo config.cmo clflags.cmo terminfo.cmo \
   linenum.cmo location.cmo longident.cmo \
-  syntaxerr.cmo parser.cmo lexer.cmo parse.cmo
+  syntaxerr.cmo parser.cmo logs.cmo lexer.cmo parse.cmo
 
 ocamlprof: $(CSLPROF) profiling.cmo
 	$(CAMLC) $(LINKFLAGS) -o ocamlprof $(CSLPROF_IMPORTS) $(CSLPROF)
