@@ -16,11 +16,11 @@ LIB_OBJS=pervasives.cmo \
   $(LIB)/filename.cmo $(LIB)/marshal.cmo $(LIB)/obj.cmo \
   $(LIB)/lexing.cmo $(LIB)/parsing.cmo \
   $(LIB)/set.cmo $(LIB)/map.cmo $(LIB)/stack.cmo $(LIB)/queue.cmo \
-  $(LIB)/stream.cmo $(LIB)/printf.cmo $(LIB)/format.cmo $(LIB)/arg.cmo \
+  $(LIB)/stream.cmo $(LIB)/buffer.cmo $(LIB)/printf.cmo $(LIB)/format.cmo $(LIB)/arg.cmo \
   $(LIB)/gc.cmo $(LIB)/digest.cmo $(LIB)/random.cmo \
   $(LIB)/genlex.cmo $(LIB)/callback.cmo $(LIB)/weak.cmo \
   $(LIB)/lazy.cmo \
-  $(LIB)/buffer.cmo $(LIB)/printexc.cmo
+  $(LIB)/printexc.cmo
 
 all: libthreads.a threads.cma stdlib.cma
 

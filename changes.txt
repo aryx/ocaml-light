@@ -9,16 +9,18 @@
 - shell.nix and nix.yml macOS and Linux GHA CI checks
 
 * 0.1 (Q2 2025) (Dockerfile, Github Actions CI checks, dune, tests)
+#TODO: ported enough features so can compile some of xix via bootstrap-mk.sh
 
 ** stdlib
+- frontport Obj.is_int and Obj.xxx_tag from 2.02
+- frontport Printf.kprintf and ksprintf from 3.08
 - frontport uchar.ml from 4.03
 - frontport bool.ml, int.ml, and float.ml from 4.08
 - frontport option.ml and result from 4.08 and also the result pervasive type
-- frontport Obj.is_int and Obj.xxx_tag from 2.02
 
 ** language
 - partial support for attributes ([@@...]) and object types (<Cap.exec; ..>)
-  just enough so can parse more recent code
+  just enough so can parse more recent code in xix
 
 ** typechecker
 - frontport ability to type string-format in higher order functions like
@@ -35,9 +37,11 @@
 - compile ocaml light code also with dune! so get better warnings,
   faster build, and the production of .cmt in _build/ allowing
   merlin (and efuns) to work correctly for file navigation and type info!
+- started to use poor's man Logs (needed typechecker improvement too)
 
 ** internals
-- remove files and support for old arch and OSes (alpha, mips, sparc, vax, etc.)
+- remove files and support for old arch (alpha, mips, sparc, vax, etc.)
+  and OSes (macOS, windows NT, Solaris)
 
 ** misc  
 - fix configure to work with recent gcc/clang (add some
