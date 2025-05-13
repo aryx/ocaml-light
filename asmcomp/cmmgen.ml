@@ -42,7 +42,9 @@ let bind name arg fn =
        252: string
        253: float
        254: float array
-       255: finalized *)
+       255: finalized
+  coupling: byterun/mlvalues.h, stdlib/obj.ml
+*)
 
 let float_tag = Cconst_int 253
 (*e: constant [[Cmmgen.float_tag]] *)
