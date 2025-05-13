@@ -10,9 +10,13 @@ DONE 45a18236df62dba31d5365c60bf6548883291689: adjout de Pisint (Dec 1999)
 DONE 555c7f80221e29f9bfbcd9d21ed0629f92b778c6: ajout de obj_is_int (Dec 1999)
 
 
-
      9e206909f48d5d2579b6ec17764d3273df23ff08: introduction of Custom blocs (Feb 2000)
      34a71202962072f30f27882498cb7e745b5dafd7: add Int32.t and Int64.t first step (Feb 2000)
+
+SEMI 11113cbc091c43e1e7024a20b6cd2cbb697c0369: ajout int32, int64... format and factorize scan_formats (Oct 2001)
+DONE 818a4463bd40584244a60dc0f192bad84d8e97a2: add Printf.kprintf (Mar 2002)
+     4e87d1239dcd2b9382e19e59bcf7ac6599e5708c: factorization sprintf/kprintf (Mar 2002)
+SEMI 32e84c0515cdfa87c58f1a73e7a40b3bedb81fab: add Printf.ksprintf and deprecate kprintf (Jul 2005)
     
 DONE bae0f5d56edcab997a3a9ae0b89cff53f1db8f6c: chercher les infos sur Foo dans Foo.{cmi,cmx} et foo.{cmi,cmx} (June 2002)
 SEMI 0d78a5601564de349d3a3cd2cea94f36bf6d02c4: permettre de placer les sources dans Foo.ml (Mar 2003))
@@ -26,11 +30,6 @@ SEMI 363427a872eec69f5f0c9d866e30912be40ddc4d: contains modif to typing/env.ml w
      9e6895aded929b8f0f5d82190e2f1ccc87569ab2: add support for %! to flush in printf (Apr 2003)
 
 
-     11113cbc091c43e1e7024a20b6cd2cbb697c0369: ajout int32, int64... format and factorize scan_formats (Oct 2001)
-
-DONE 818a4463bd40584244a60dc0f192bad84d8e97a2: add Printf.kprintf (Mar 2002)
-     4e87d1239dcd2b9382e19e59bcf7ac6599e5708c: factorization sprintf/kprintf (Mar 2002)
-SEMI 32e84c0515cdfa87c58f1a73e7a40b3bedb81fab: add Printf.ksprintf and deprecate kprintf (Jul 2005)
 
 NOPE 152255e5129d94325f3017bc93623dde2fa1cfb1: add attributes (a.k.a. extension points) in AST but old syntax (Feb 2013)
 SEMI 70bc46ef0cb4f29d67838df3662266ce4ea61ff6: new syntax for attributes [@@ (Mar 2013)
