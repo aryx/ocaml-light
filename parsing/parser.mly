@@ -775,6 +775,9 @@ simple_core_type:
 
   | LPAREN core_type RPAREN
       { $2 }
+  /* pad: partial support, just enough to parse the code */
+  | LESS meth_list GREATER
+      { mktyp(Ptyp_constr(Lident("unit"), [])) }
 ;
 core_type_tuple:
     simple_core_type STAR simple_core_type      { [$3; $1] }
@@ -975,7 +978,7 @@ pattern_semi_list:
 
 
 /* Attributes */
-/* pad: partial support, just enough to parse the code */
+/* pad: partial support, just enough to parse xix code */
 opt_with_attributes:
       { [] }
   | LBRACKETATAT LIDENT opt_expr RBRACKET opt_with_attributes
@@ -984,6 +987,21 @@ opt_with_attributes:
 opt_expr:
     expr { () }
   |      { () }
+;
+
+/* OO */
+/* pad: partial support, just enough to parse xix code */
+meth_list:
+    field SEMI meth_list                        { () }
+  | field opt_semi                              { () }
+  | DOTDOT                                      { () }
+;
+field:
+    label COLON core_type                       { () }
+  | type_longident { () }
+;
+label:
+    LIDENT                                      { () }
 ;
 
 /*(*e: grammar *)*/
