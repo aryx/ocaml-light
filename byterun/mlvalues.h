@@ -260,6 +260,7 @@ bits  63    10 9     8 7   0
 
 /*s: constant [[No_scan_tag]] */
 /* The lowest tag for blocks containing no value. */
+// coupling: asmcomp/cmmgen.ml, stdlib/obj.ml
 #define No_scan_tag 251
 /*e: constant [[No_scan_tag]] */
 

@@ -4,6 +4,8 @@ SEMI 87b17301f4a408109a0f00f7a297b02c79724bc1: nouvelle syntax des classes (whic
 
 SEMI b7bf7cf69d483d856bba307ebd299d6ccc2cffd3: autodetection ARM (Oct 1998)
 
+DONE 67971438eea22040f18045b765bcc60fe41f1955: symbolic names for tags (e.g., Obj.string_tag) (Oct 1998)
+
 DONE 45a18236df62dba31d5365c60bf6548883291689: adjout de Pisint (Dec 1999)
      555c7f80221e29f9bfbcd9d21ed0629f92b778c6: ajout de obj_is_int (Dec 1999)
 

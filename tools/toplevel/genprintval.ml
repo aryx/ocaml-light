@@ -34,11 +34,11 @@ let print_exception_args obj start_offset =
       let arg = Obj.field obj i in
       if not (Obj.is_block arg) then
         print_int(Obj.obj arg : int)  (* Note: this could be a char! *)
-      else if Obj.tag arg = 252 then begin
+      else if Obj.tag arg = Obj.string_tag then begin
         print_string "\"";
         print_string (String.escaped (Obj.obj arg : string));
         print_string "\""
-      end else if Obj.tag arg = 253 then
+      end else if Obj.tag arg = Obj.double_tag then
         print_float (Obj.obj arg : float)
       else
         print_string "_"
