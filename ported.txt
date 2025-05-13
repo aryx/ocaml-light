@@ -27,7 +27,10 @@ SEMI 363427a872eec69f5f0c9d866e30912be40ddc4d: contains modif to typing/env.ml w
      
      c417b82d9e0c2cd3d451ce1030502efed946d516: nouveau ocamllex supporting 'as'
 
-     9e6895aded929b8f0f5d82190e2f1ccc87569ab2: add support for %! to flush in printf (Apr 2003)
+
+DONE b5d0102c0510ceba7d593d02fffd20ff4fea7957 : add support for %$ (become %! after) (Feb 2003)
+SEMI e132cd1f7a07a41dc7dbddea7453a86e6ebb5ea4 : Documenting %$ (Feb 2003)
+SEMI 9e6895aded929b8f0f5d82190e2f1ccc87569ab2 : add support for %! to flush in printf (Apr 2003)
 
 
 

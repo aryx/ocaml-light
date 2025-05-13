@@ -85,7 +85,7 @@ let extract_format fmt start stop widths =
    caught by the [_ -> bad_format] clauses below.
    Don't do this at home, kids. *) 
 
-let scan_format fmt pos cont_s cont_a cont_t =
+let scan_format fmt pos cont_s cont_a cont_t cont_f =
   let rec scan_flags widths i =
     match String.unsafe_get fmt i with
     | '*' ->
@@ -151,6 +151,8 @@ let scan_format fmt pos cont_s cont_a cont_t =
             bad_format fmt pos
         end
 *)	
+    | '!' ->
+        Obj.magic (cont_f (succ i))
     | _ ->
         bad_format fmt pos
   in scan_flags [] (pos + 1)
@@ -163,7 +165,7 @@ let fprintf chan fmt =
   let rec doprn i =
     if i >= len then Obj.magic () else
     match String.unsafe_get fmt i with
-    | '%' -> scan_format fmt i cont_s cont_a cont_t
+    | '%' -> scan_format fmt i cont_s cont_a cont_t cont_f
     |  c  -> output_char chan c; doprn (succ i)
   and cont_s s i =
     output_string chan s; doprn i
@@ -171,6 +173,8 @@ let fprintf chan fmt =
     printer chan arg; doprn i
   and cont_t printer i =
     printer chan; doprn i
+  and cont_f i =
+    flush chan; doprn i
   in doprn 0
 
 let printf fmt = fprintf stdout fmt
@@ -187,7 +191,7 @@ let ksprintf kont fmt =
       Obj.magic (kont res)
     end else
     match String.unsafe_get fmt i with
-    | '%' -> scan_format fmt i cont_s cont_a cont_t
+    | '%' -> scan_format fmt i cont_s cont_a cont_t cont_f
     |  c  -> Buffer.add_char dest c; doprn (succ i)
   and cont_s s i =
     Buffer.add_string dest s; doprn i
@@ -195,6 +199,7 @@ let ksprintf kont fmt =
     Buffer.add_string dest (printer () arg); doprn i
   and cont_t printer i =
     Buffer.add_string dest (printer ()); doprn i
+  and cont_f i = doprn i
   in doprn 0
 
 let sprintf fmt =
@@ -208,7 +213,7 @@ let sprintf fmt =
       Obj.magic res
     end else
     match String.unsafe_get fmt i with
-    | '%' -> scan_format fmt i cont_s cont_a cont_t
+    | '%' -> scan_format fmt i cont_s cont_a cont_t cont_f
     |  c  -> Buffer.add_char dest c; doprn (succ i)
   and cont_s s i =
     Buffer.add_string dest s; doprn i
@@ -216,6 +221,7 @@ let sprintf fmt =
     Buffer.add_string dest (printer () arg); doprn i
   and cont_t printer i =
     Buffer.add_string dest (printer ()); doprn i
+  and cont_f i = doprn i
   in doprn 0
 
 let bprintf dest fmt =
@@ -224,7 +230,7 @@ let bprintf dest fmt =
   let rec doprn i =
     if i >= len then Obj.magic () else
     match String.unsafe_get fmt i with
-    | '%' -> scan_format fmt i cont_s cont_a cont_t
+    | '%' -> scan_format fmt i cont_s cont_a cont_t cont_f
     |  c  -> Buffer.add_char dest c; doprn (succ i)
   and cont_s s i =
     Buffer.add_string dest s; doprn i
@@ -232,6 +238,7 @@ let bprintf dest fmt =
     printer dest arg; doprn i
   and cont_t printer i =
     printer dest; doprn i
+  and cont_f i = doprn i
   in doprn 0
 
 

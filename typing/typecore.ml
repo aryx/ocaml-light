@@ -253,7 +253,7 @@ let type_format loc fmt =
         (match String.unsafe_get fmt j with
         (* We're using unsafe_get here so that if j = String.length fmt,
            we'll fall in the catch-all case of the match *)
-          '%' ->
+          '%' | '!' ->
             scan_format (j+1)
         | 's' ->
             Tarrow(Predef.type_string, scan_format (j+1))
