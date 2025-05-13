@@ -85,8 +85,20 @@ val usage: (string * spec * string) list -> string -> unit
     prints the same error message that [parse] prints in case of error.
 *)
 
-val current: int ref;;
+val current: int ref
 (*
     Position (in [Sys.argv]) of the argument being processed.  You can
     change this value, e.g. to force [parse] to skip some arguments.
 *)
+
+type key = string
+type doc = string
+
+val align: (key * spec * doc) list -> (key * spec * doc) list
+(** Align the documentation strings by inserting spaces at the first alignment
+    separator (tab or, if tab is not found, space), according to the length of
+    the keyword.  Use a alignment separator as the first character in a doc
+    string if you want to align the whole string.  The doc strings corresponding
+    to [Symbol] arguments are aligned on the next line.
+    @param limit options with keyword and message longer than [limit] will not
+    be used to compute the alignment. *)

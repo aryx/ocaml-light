@@ -34,14 +34,12 @@ let rec assoc3 x l =
   | [] -> raise Not_found
   | (y1, y2, y3)::t when y1 = x -> y2
   | _::t -> assoc3 x t
-;;
 
 let usage speclist errmsg =
   eprintf "%s\n" errmsg;
   List.iter (function (key, _, doc) -> eprintf "  %s %s\n" key doc) speclist
-;;
 
-let current = ref 0;;
+let current = ref 0
 
 let parse speclist anonfun errmsg =
   let initpos = !current in
@@ -100,4 +98,10 @@ let parse speclist anonfun errmsg =
       incr current;
     end;
   done;
-;;
+
+
+type key = string
+type doc = string
+
+(* TODO *)
+let align xs = xs
