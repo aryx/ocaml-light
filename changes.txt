@@ -17,9 +17,11 @@
 ** stdlib
 - frontport Obj.is_int and Obj.xxx_tag from 2.02
 - frontport Printf.kprintf and ksprintf and support for %! to flush from 3.08
+- partial port of bytes.ml from 4.02.0
 - frontport uchar.ml from 4.03
 - frontport bool.ml, int.ml, and float.ml from 4.08
 - frontport option.ml and result from 4.08 as well as the result pervasive type
+- frontport fun.ml (but without labels) from 4.07.2
 
 ** language
 - partial support for attributes ([@@...]) and object types (<Cap.exec; ..>)

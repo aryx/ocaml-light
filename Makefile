@@ -91,7 +91,7 @@ PERVASIVES=arg array callback char digest filename format gc hashtbl \
   lexing list map obj parsing pervasives printexc buffer printf queue random \
   set sort stack string bytes stream sys genlex topdirs toploop weak lazy \
   marshal \
-  option result uchar int bool float stdcompat
+  option result uchar int bool float stdcompat fun
 
 ##############################################################################
 # Main rule
