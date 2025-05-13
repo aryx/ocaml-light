@@ -160,3 +160,10 @@ val find : ('a -> bool) -> 'a list -> 'a
    that satisfies the predicate [p].
    Raise [Not_found] if there is no value that satisfies [p] in the
    list [l]. *)
+
+val filter_map : ('a -> 'b option) -> 'a list -> 'b list
+(** [filter_map f l] applies [f] to every element of [l], filters
+    out the [None] elements and returns the list of the arguments of
+    the [Some] elements.
+    @since 4.08
+ *)

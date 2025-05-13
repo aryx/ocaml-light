@@ -235,3 +235,10 @@ let partition p l =
   | [] -> (rev yes, rev no)
   | x :: l -> if p x then part (x :: yes) no l else part yes (x :: no) l in
   part [] [] l
+
+let rec filter_map f = function
+  | [] -> []
+  | x :: l ->
+      match f x with
+      | None -> filter_map f l
+      | Some v -> v :: filter_map f l
