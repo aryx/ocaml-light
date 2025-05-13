@@ -50,8 +50,8 @@ let rec associate_of_an_element_of list_of_keys association_list =
          associate_of_an_element_of rest association_list;;
 
 let lowercase_of ch =
-    if int_of_char ch >= 65 && int_of_char ch <= 90
-    then char_of_int (int_of_char ch + 32)
+    if Char.code ch >= 65 && Char.code ch <= 90
+    then Char.chr (Char.code ch + 32)
     else ch;; 
 
 let lowercase_all str =

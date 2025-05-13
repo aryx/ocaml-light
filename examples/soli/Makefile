@@ -5,4 +5,4 @@ include ../Makefile.common
 all: soli.byt
 
 test:
-	$(OCAMLRUN) soli.byt | cmp - soli.out
+	./soli.byt | cmp - soli.out
