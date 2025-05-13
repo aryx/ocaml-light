@@ -80,8 +80,8 @@
   mips. I just kept i386 and later backported the ARM port from ocaml 2.01!
 
 ** stdlib
-- backported a few modules or functions from recent OCaml
-  (see pad.txt changes section)
+# see also pad.txt changes section
+- frontport buffer.ml ? (from ?)
 
 ** build infra
 - a working configure that can work on recent Mac or Linux
