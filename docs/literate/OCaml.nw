@@ -1479,6 +1479,7 @@ let objfiles = ref ([] : string list)   (* .cmo and .cma files *)
 
 <<function [[Main.process_file]]>>=
 let process_file name =
+  Logs.info (fun m -> m "processing %s" name);
   match () with
   | _ when Filename.check_suffix name ".ml" ->
       Compile.implementation name;
@@ -1641,7 +1642,7 @@ let interface sourcefile =
   if !Clflags.print_types 
   then (Printtyp.signature sg; print_newline());
 
-  Env.save_signature sg modulename (prefixname ^ ".cmi");
+  Env.save_signature sg modulename (prefixname ^ ".cmi") |> ignore;
   remove_preprocessed inputfile
 @
 
@@ -1740,6 +1741,7 @@ rule token = parse
   <<[[Lexer.token()]] sharp case>>
 
   <<[[Lexer.token()]] operator cases>>
+  | "[@@" { LBRACKETATAT }
   | eof { EOF }
   | _
       { raise (Error(Illegal_character,
@@ -2179,7 +2181,7 @@ and string = parse
 % what about unicode?
 
 <<Lexer string related functions>>=
-let initial_string_buffer = String.create 256
+let initial_string_buffer = Bytes.create 256
 let string_buff = ref initial_string_buffer
 let string_index = ref 0
 
@@ -2188,16 +2190,16 @@ let reset_string_buffer () =
   string_index := 0
 
 let store_string_char c =
-  if !string_index >= String.length (!string_buff) then begin
-    let new_buff = String.create (String.length (!string_buff) * 2) in
-      String.blit (!string_buff) 0 new_buff 0 (String.length (!string_buff));
+  if !string_index >= Bytes.length (!string_buff) then begin
+    let new_buff = Bytes.create (Bytes.length (!string_buff) * 2) in
+      String.blit (Bytes.to_string !string_buff) 0 new_buff 0 (Bytes.length (!string_buff));
       string_buff := new_buff
   end;
   String.unsafe_set (!string_buff) (!string_index) c;
   incr string_index
 
 let get_stored_string () =
-  let s = String.sub (!string_buff) 0 (!string_index) in
+  let s = String.sub (Bytes.to_string !string_buff) 0 (!string_index) in
   string_buff := initial_string_buffer;
   s
 @
@@ -4907,7 +4909,7 @@ let find_pers_struct name =
   with Not_found ->
     let (ps, crc) =
       read_pers_struct name
-        (find_in_path !load_path (String.lowercase name ^ ".cmi")) in
+        (find_in_path_uncap !load_path (name ^ ".cmi")) in
     Hashtbl.add persistent_structures name ps;
     <<[[Env.find_pers_struct()]] hook when read Name.cmi and its crc>>
     ps
@@ -5256,6 +5258,26 @@ then
 and type_expect env sexp ty_expected =
   match sexp.pexp_desc with
   <<[[Typecode.type_expect()]] match cases>>
+  | Pexp_function caselist ->
+      let (ty_arg, ty_res) =
+        try filter_arrow env ty_expected with Unify ->
+          raise(Error(sexp.pexp_loc, Too_many_arguments))
+      in
+      let cases =
+        List.map
+          (fun (spat, sexp) ->
+             let (pat, ext_env) = type_pattern env spat in
+             unify_pat env pat ty_arg;
+             let exp = type_expect ext_env sexp ty_res in
+             (pat, exp))
+          caselist
+      in
+      Parmatch.check_unused cases;
+      Parmatch.check_partial sexp.pexp_loc cases;
+      { exp_desc = Texp_function cases;
+        exp_loc = sexp.pexp_loc;
+        exp_type = Tarrow(ty_arg, ty_res);
+      }
   | _ ->
       let exp = type_exp env sexp in
       unify_exp env exp ty_expected;
@@ -12881,10 +12903,10 @@ val ast_intf_magic_number: string
 <<[[Compile.parse_file()]] let [[is_ast_file]]>>=
 let is_ast_file =
   try
-    let buffer = String.create (String.length ast_magic) in
+    let buffer = Bytes.create (String.length ast_magic) in
     really_input ic buffer 0 (String.length ast_magic);
-    if buffer = ast_magic then true
-    else if String.sub buffer 0 9 = String.sub ast_magic 0 9 then
+    if Bytes.to_string buffer = ast_magic then true
+    else if String.sub (Bytes.to_string buffer) 0 9 = String.sub ast_magic 0 9 then
       raise Outdated_version
     else false
   with
@@ -13144,7 +13166,17 @@ if (prog == NULL) {           /* Interpreter is initializing */
 let verbose = ref false                 (* -verbose *)
 @
 <<[[Main.main()]] command line options>>=
-"-verbose", Arg.Set verbose, " Print calls to external commands";
+"-verbose", Arg.Unit (fun () ->
+                verbose := true;
+                Logs.set_level (Some Logs.Info)
+              ),
+" Print calls to external commands and info level for logs";
+(* new: *)
+"-debug", Arg.Unit (fun () ->
+                verbose := true;
+                Logs.set_level (Some Logs.Debug)
+              ),
+" debug level for logs";
 @
 
 % when compiling c stuff, calling linker, compiler, etc -> <>
@@ -14627,6 +14659,8 @@ type error =
   | Label_not_mutable of Longident.t
 
   | Bad_format of string
+
+  | Too_many_arguments
 @
 <<exception [[Typecore.Error]]>>=
 exception Error of Location.t * error
@@ -14695,6 +14729,8 @@ let report_error = function
       print_string " is not mutable"
   | Bad_format s ->
       print_string "Bad format `"; print_string s; print_string "'"
+  | Too_many_arguments ->
+      print_string "This function has too many arguments"
 @
 
 
@@ -15133,7 +15169,7 @@ let remove_file filename =
 
 <<function [[Misc.copy_file]]>>=
 let copy_file ic oc =
-  let buff = String.create 0x1000 in
+  let buff = Bytes.create 0x1000 in
   let rec copy () =
     let n = input ic buff 0 0x1000 in
     if n = 0 then () else (output oc buff 0 n; copy())
@@ -15142,7 +15178,7 @@ let copy_file ic oc =
 
 <<function [[Misc.copy_file_chunk]]>>=
 let copy_file_chunk ic oc len =
-  let buff = String.create 0x1000 in
+  let buff = Bytes.create 0x1000 in
   let rec copy n =
     if n <= 0 then () else begin
       let r = input ic buff 0 (min n 0x1000) in
