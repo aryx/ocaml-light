@@ -1,27 +1,38 @@
 START cf37b950bede21f249c8c78fa9f5e7fe977f49e5: 1.07 release (Dec 1997)
+
+SEMI 87b17301f4a408109a0f00f7a297b02c79724bc1: nouvelle syntax des classes (which also added a case for type_expect Pexp_function useful to type Logs expressions) (Apr 1998)
+
 SEMI b7bf7cf69d483d856bba307ebd299d6ccc2cffd3: autodetection ARM (Oct 1998)
+
+DONE 45a18236df62dba31d5365c60bf6548883291689: adjout de Pisint (Dec 1999)
+     555c7f80221e29f9bfbcd9d21ed0629f92b778c6: ajout de obj_is_int (Dec 1999)
 
 DONE bae0f5d56edcab997a3a9ae0b89cff53f1db8f6c: chercher les infos sur Foo dans Foo.{cmi,cmx} et foo.{cmi,cmx} (June 2002)
 SEMI 0d78a5601564de349d3a3cd2cea94f36bf6d02c4: permettre de placer les sources dans Foo.ml (Mar 2003))
 DONE 6000e08ee6eabc5e9e726f86b3d9799cd885224a: last fix on find_in_path_uncap (Mar 2003)
 SEMI 363427a872eec69f5f0c9d866e30912be40ddc4d: contains modif to typing/env.ml with call to find_in_path_uncap (Apr 2003)
 
-NOPE 0bca05af096eacc483038545252d4209644dd85a expand type abbrevs for string or format (Jan 2003)
-SEMI 87b17301f4a408109a0f00f7a297b02c79724bc1: nouvelle syntax des classes who also added a case for type_expect Pexp_function useful to type logs expressions (Apr 1996)
 
-     152255e5129d94325f3017bc93623dde2fa1cfb1: add attributes (a.k.a. extension points) in AST but old syntax (Feb 2013)
+     
+     c417b82d9e0c2cd3d451ce1030502efed946d516: nouveau ocamllex supporting 'as'
+
+     9e6895aded929b8f0f5d82190e2f1ccc87569ab2: add support for %! to flush in printf (Apr 2003)
+
+
+NOPE 152255e5129d94325f3017bc93623dde2fa1cfb1: add attributes (a.k.a. extension points) in AST but old syntax (Feb 2013)
 SEMI 70bc46ef0cb4f29d67838df3662266ce4ea61ff6: new syntax for attributes [@@ (Mar 2013)
 
 
-
 SEMI 5b8df637d2b722aa397ab53200a733bae238e9fe: merge safe-string (Apr 2014)
+
 DONE 19a5d5eb50fa5c5661a33343cded8ec1442703be: add result type (Apr 2015)
 DONE 940144f30487ead603d51ad4783542fe5410b821: add Uchar module (Nov 2015)
+
+DONE 7f6d059f0863f76d8ccd1f4a395646ab437440c6: add Float module (Feb 2018)
 DONE 1798999b6543dcabfe9567e827851b5787cbc65a: add Option module (Jul 2018)
 DONE b7affbb9ef6a3a3f7873f2e013ba42879fb81693: add Result module (Aug 2018)
 DONE 5846aecee6c0e170e673295f0540f2aa1b022e02: add Int module (Aug 2018)
 DONE fdba70136f4f5f29f188d09c8d19056988007d1f: add Bool module (Aug 2018)
-DONE 7f6d059f0863f76d8ccd1f4a395646ab437440c6: add Float module (Feb 2018)
 
 
      dae520ca1275d6d38e12f63ce508065cc0c5471a: Unicode character escape \u{X+} to OCaml string literals (Jul 2017)

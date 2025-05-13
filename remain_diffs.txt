@@ -1,0 +1,22 @@
+commit 45a18236df62dba31d5365c60bf6548883291689 (HEAD)
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Mon Dec 6 16:59:24 1999 +0000
+
+    Revu compilation du filtrage des variants.  Ajout de la primitive Pisint et de l'instruction bytecode ISINT.
+    
+    
+    git-svn-id: http://caml.inria.fr/svn/ocaml/trunk@2669 f963ae5c-01c2-4b8c-9fe0-0dff7051ff02
+
+diff --git a/asmcomp/closure.ml b/asmcomp/closure.ml
+index 9fa3b2518f..70795add17 100644
+--- a/asmcomp/closure.ml
++++ b/asmcomp/closure.ml
+@@ -212,6 +212,7 @@ let simplif_prim_pure p (args, approxs) =
+       begin match p with
+         Pidentity -> make_const_ptr x
+       | Pnot -> make_const_bool(x = 0)
++      | Pisint -> make_const_bool true
+       | _ -> (Uprim(p, args), Value_unknown)
+       end
+   | [Value_constptr x; Value_constptr y] ->
+

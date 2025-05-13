@@ -133,6 +133,7 @@ enum instructions {
   CLOSURE, 
   CLOSUREREC,
   /*e: misc opcodes */
+  ISINT,
   /*s: debugger opcodes */
   STOP, EVENT, BREAK
   /*e: debugger opcodes */

@@ -26,7 +26,5 @@ external field : t -> int -> t = "%obj_field"
 external set_field : t -> int -> t -> unit = "%obj_set_field"
 external new_block : int -> int -> t = "obj_block"
 
-(* from 3.12 *)
-(*
+(* from 3.0 *)
 external is_int : t -> bool = "%obj_is_int"
-*)

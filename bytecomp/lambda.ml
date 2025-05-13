@@ -75,6 +75,9 @@ type primitive =
   | Parraysets of array_kind
   (*e: [[Lambda.primitive]] array operations cases *)
 
+  (* Test if the argument is a block or an immediate integer *)
+  | Pisint
+
   (* Bitvect operations *)
   | Pbittest
 (*e: type [[Lambda.primitive]] *)

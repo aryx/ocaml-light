@@ -123,6 +123,8 @@ type instruction =
   | Koffsetint of int
   | Koffsetref of int
 
+  | Kisint
+
   | Kevent of debug_event
   | Kstop
 (*e: type [[Instruct.instruction]] *)
