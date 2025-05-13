@@ -31,7 +31,7 @@
 ** typechecker
 - frontport ability to type string-format in higher order functions like
   Logs.info (fun m -> m "%s" name) (extension to type_expect())
-  
+
 ** test infra
 - add Dockerfile and docker.yml GHA (Github Action) CI checks
 - add shell.nix and nix.yml GHA for macOS and Linux CI checks
@@ -82,6 +82,9 @@
 - removed some native targets: alpha, hppa, m68k, power, and sparc,
   mips. I just kept i386 and later backported the ARM port from ocaml 2.01!
 
+** tools
+- frontport named regexps in ocamllex (let name = regexp ...)
+  
 ** stdlib
 # see also pad.txt changes section
 - frontport buffer.ml ? (from ?)

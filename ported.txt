@@ -5,6 +5,8 @@ START cf37b950bede21f249c8c78fa9f5e7fe977f49e5: 1.07 release (Dec 1997)
 
 SEMI 87b17301f4a408109a0f00f7a297b02c79724bc1: nouvelle syntax des classes (which also added a case for type_expect Pexp_function useful to type Logs expressions) (Apr 1998)
 
+DONE 1147c3d20d9f56d48fec8a0bafa72682c18726f9 'let name = regexp' in ocamllex (Apr 1998)
+
 SEMI b7bf7cf69d483d856bba307ebd299d6ccc2cffd3: autodetection ARM (Oct 1998)
 
 DONE 67971438eea22040f18045b765bcc60fe41f1955: symbolic names for tags (e.g., Obj.string_tag) (Oct 1998)
