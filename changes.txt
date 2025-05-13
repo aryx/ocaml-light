@@ -24,8 +24,9 @@
 - frontport fun.ml (but without labels) from 4.07.2
 
 ** language
-- partial support for attributes ([@@...]) and object types (<Cap.exec; ..>)
-  just enough so can parse the code in xix (but discard the constructs)
+- partial support for attributes ([@@...]), object types (<Cap.exec; ..>),
+  and labels (~finally:) but just enough so that we can parse the code in xix
+  (but we discard the constructs)
 
 ** typechecker
 - frontport ability to type string-format in higher order functions like
