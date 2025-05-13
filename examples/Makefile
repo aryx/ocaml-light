@@ -15,3 +15,5 @@ all:
 	set -e; for i in $(SUBDIRS); do cd $$i; $(MAKE); done
 test:
 	set -e; for i in $(SUBDIRS); do cd $$i; $(MAKE) test; done
+clean:
+	set -e; for i in $(SUBDIRS); do cd $$i; $(MAKE) clean; done
