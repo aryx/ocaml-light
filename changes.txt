@@ -14,7 +14,16 @@
 - frontport uchar.ml from 4.03
 - frontport bool.ml, int.ml, and float.ml from 4.08
 - frontport option.ml and result from 4.08 and also the result pervasive type
+- frontport Obj.is_int and Obj.xxx_tag from 2.02
 
+** language
+- partial support for attributes ([@@...]) and object types (<Cap.exec; ..>)
+  just enough so can parse more recent code
+
+** typechecker
+- frontport ability to type string-format in higher order functions like
+  Logs.info (fun m -> m "%s" name) (extension to type_expect())
+  
 ** test infra
 - add Dockerfile and docker.yml GHA (Github Action) CI
 - add back the test/ and testasmcomp/ (but not testobjects/) from
@@ -29,6 +38,11 @@
 
 ** internals
 - remove files and support for old arch and OSes (alpha, mips, sparc, vax, etc.)
+
+** misc  
+- fix configure to work with recent gcc/clang (add some
+  -Wno-implicit-function-declaration and other flags)
+- frontport ability to store source in Foo.ml or foo.ml  
   
 * Beta (2018) (plan9 support)
 
