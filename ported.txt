@@ -9,6 +9,10 @@ SEMI b7bf7cf69d483d856bba307ebd299d6ccc2cffd3: autodetection ARM (Oct 1998)
 
 DONE 67971438eea22040f18045b765bcc60fe41f1955: symbolic names for tags (e.g., Obj.string_tag) (Oct 1998)
 
+     6c209fd054ec3a400d6162c123a79579811b9a45: ajout de Sys_blocked_io (Nov 1998)
+     88a9a6bb604afac3b54683065e4431e2e398093d: ajout de Sys_blocked_io part2 (Nov 1998)
+
+SEMI 73e446d376ef844f45deab1071b79fd048b0cd2d: add int_of_char and few other (Dec 1998)
 DONE 45a18236df62dba31d5365c60bf6548883291689: adjout de Pisint (Dec 1999)
 DONE 555c7f80221e29f9bfbcd9d21ed0629f92b778c6: ajout de obj_is_int (Dec 1999)
 
