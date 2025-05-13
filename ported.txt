@@ -51,8 +51,15 @@ DONE 1798999b6543dcabfe9567e827851b5787cbc65a: add Option module (Jul 2018)
 DONE b7affbb9ef6a3a3f7873f2e013ba42879fb81693: add Result module (Aug 2018)
 DONE 5846aecee6c0e170e673295f0540f2aa1b022e02: add Int module (Aug 2018)
 DONE fdba70136f4f5f29f188d09c8d19056988007d1f: add Bool module (Aug 2018)
-     89e48a38e94022ea94a18de4b39de7fbc719469f: add Fun module (Nov 2018)
-     f68692ebc229af3e41818b91ab50c667cd0677db: add Fun.protect (Nov 2018)
+
+
+     b28b11541faab4bcb9cdb591efddea6fc570db5f: fix try_finally in utils/misc.ml (Feb 2012)
+     da3f9f34f50cf8b77385d5b7a9504e77a73497cd: use reraise for try_finally (Dec 2015)
+     af9174ff52c30ceb74588e8671df59540405280e: move try_finally to Pervasives (Jul 2018)
+     8a90c6ff7758dc145d5e1e332aa34a2cbcf40d2d: update try_finally to new match/exn syntax (June 2018)
+     5c0b6f71bd1e3f6fcf3aec10e6c5778d83692968: rename try_finally to protect (Jul 2018)
+DONE 89e48a38e94022ea94a18de4b39de7fbc719469f: add Fun module (Nov 2018)
+     f68692ebc229af3e41818b91ab50c667cd0677db: move protect to Fun.ml (Nov 2018)
 
 
      dae520ca1275d6d38e12f63ce508065cc0c5471a: Unicode character escape \u{X+} to OCaml string literals (Jul 2017)

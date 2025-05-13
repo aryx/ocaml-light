@@ -11,7 +11,7 @@ CAMLOPT=$(RUNTIME) $(OPTCOMPILER)
 OPTCOMPFLAGS=
 CAMLDEP=../boot/ocamlrun ../tools/dependencies/ocamldep
 
-#coupling: modify also otherlibs/threads/Makefile
+#coupling: modify also ../Makefile PERVASIVES and otherlibs/threads/Makefile
 #pad: now there is an order, parsing depends on stack, printf/printexc depends
 # on buffer, etc.
 OBJS=pervasives.cmo list.cmo char.cmo string.cmo bytes.cmo array.cmo sys.cmo \
@@ -22,7 +22,7 @@ OBJS=pervasives.cmo list.cmo char.cmo string.cmo bytes.cmo array.cmo sys.cmo \
   lazy.cmo \
   lexing.cmo parsing.cmo \
   printexc.cmo \
-  option.cmo result.cmo uchar.cmo int.cmo bool.cmo float.cmo stdcompat.cmo
+  option.cmo result.cmo uchar.cmo int.cmo bool.cmo float.cmo stdcompat.cmo fun.cmo
 
 all: stdlib.cma std_exit.cmo camlheader
 
