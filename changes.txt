@@ -3,25 +3,25 @@
 * TODO
 
 ** compilers
-- restore asmcomp/ for x86 at least (and x86_64 later and Arm)
+- restore asmcomp/ for x86 at least (and x86_64 later and arm/arm64/riscv)
   
 ** dev infra
 - restore working semgrep.yml
 
 ** test infra
-- restore testasmcomp
+- restore testasmcomp/
 
 * 0.1 (Q2 2025) (Dockerfile, Nix, Github Actions CI checks, dune, tests)
-#TODO: ported enough features so can compile some of xix via bootstrap-mk.sh
+# ported enough features so I can compile some of xix via bootstrap-mk.sh and mk
 
 ** stdlib
 - frontport Obj.is_int and Obj.xxx_tag from 2.02
 - frontport Printf.kprintf and ksprintf and support for %! to flush from 3.08
 - partial port of bytes.ml from 4.02.0
 - frontport uchar.ml from 4.03
+- frontport fun.ml (but without labels) and Fun.protect from 4.07.2
 - frontport bool.ml, int.ml, and float.ml from 4.08
 - frontport option.ml and result from 4.08 as well as the result pervasive type
-- frontport fun.ml (but without labels) from 4.07.2
 
 ** language
 - partial support for attributes ([@@...]), object types (<Cap.exec; ..>),
@@ -39,11 +39,12 @@
   the OCaml github repo at the 1.07 time (commit a234a77991)
   and run them in the Dockerfile and in CI
   => minimum regression test infra!
+- add examples/ for more tests
 
 ** dev infra
 - compile ocaml light code also with dune! so get better warnings,
   faster build, and the production of .cmt in _build/ allowing
-  merlin (and efuns) to work correctly for file navigation and type info!
+  merlin (and efuns) to work correctly for file navigation and type info!!
 - started to use poor's man Logs (needed typechecker improvement too)
 
 ** internals
@@ -65,8 +66,8 @@
 # see also pad.txt history section
 
 ** language
-- remove support for classes and objects (OO) as it complicated a lot the
-  typechecking code for a controversial features (typeclasses or
+- remove support for classes and objects as it complicates a lot the
+  typechecking code for providing only a controversial feature (typeclasses or
   implicits are IMHO better). See also REMOVE_OBJ.patch.
   Note that I didn't need to remove the use of objects in the compiler itself
   because they didn't even like the oo extensions and so didn't use it :)
@@ -90,7 +91,7 @@
 - frontport buffer.ml ? (from ?)
 
 ** build infra
-- a working configure that can work on recent Mac or Linux
+- a working configure that can work on some recent Mac and Linux
 
 ** os
 - remove support for old macOS and Windows NT, to remove ugly cruft.
