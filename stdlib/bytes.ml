@@ -3,6 +3,10 @@
  *)
 type t = string
 
+let empty = ""
+
+let sub x n1 n2 = String.sub x n1 n2
+
 let length x = String.length x
 
 let create x = String.create x
@@ -14,3 +18,13 @@ let of_string x = x
 let get x n = String.get x n
 
 let unsafe_get x n = String.unsafe_get x n
+
+let unsafe_to_string x = x
+
+let unsafe_of_string x = x
+
+let blit src srcoff dst dstoff len =
+  String.blit src srcoff dst dstoff len
+
+let unsafe_blit src srcoff dst dstoff len =
+  String.unsafe_blit src srcoff dst dstoff len

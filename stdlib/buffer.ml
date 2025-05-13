@@ -29,6 +29,8 @@ let create n =
 
 let contents b = String.sub b.buffer 0 b.position
 
+let to_bytes b = contents b
+
 let sub b ofs len =
   if ofs < 0 || len < 0 || ofs > b.position - len
   then invalid_arg "Buffer.sub"
@@ -88,6 +90,9 @@ let add_substring b s offset len =
   if new_position > b.length then resize b len;
   String.blit s offset b.buffer b.position len;
   b.position <- new_position
+
+let add_subbytes b s offset len =
+  add_substring b s offset len
 
 let add_string b s =
   let len = String.length s in
