@@ -602,6 +602,9 @@ test:
 	$(MAKE)
 	set -e; for i in $(TESTDIRS); do (cd $$i; $(MAKE)); done
 
+clean::
+	set -e; for i in $(TESTDIRS); do (cd $$i; $(MAKE) clean); done
+
 # TODO: Some weird memory error for boyer.byt nucleic.byt sieve.byt
 # so I've removed them
 # - boyer.byt "double free or corruption" when run in CI, weird
