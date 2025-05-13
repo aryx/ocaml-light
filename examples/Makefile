@@ -3,7 +3,7 @@ SUBDIRSX= asl basics calc camltk colwheel compress demonstr docteur doctor grep 
   hanoi kb minicaml minilogo pascal picomach showsort soli spirals
 
 # TODO: basics
-SUBDIRS=soli
+SUBDIRS=soli doctor
 
 #TODO: add depend: target? and recurse? called from toplevel Makefile?
 
@@ -12,8 +12,8 @@ default:
 	$(MAKE) test
 
 all:
-	set -e; for i in $(SUBDIRS); do cd $$i; $(MAKE); done
+	set -e; for i in $(SUBDIRS); do (cd $$i; $(MAKE)); done
 test:
-	set -e; for i in $(SUBDIRS); do cd $$i; $(MAKE) test; done
+	set -e; for i in $(SUBDIRS); do (cd $$i; $(MAKE) test); done
 clean:
-	set -e; for i in $(SUBDIRS); do cd $$i; $(MAKE) clean; done
+	set -e; for i in $(SUBDIRS); do (cd $$i; $(MAKE) clean); done
