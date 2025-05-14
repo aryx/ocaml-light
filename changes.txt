@@ -56,7 +56,8 @@
 ** misc
 - fix configure to work with recent gcc/clang (add some
   -Wno-implicit-function-declaration and other flags)
-- backport ability to store source in Foo.ml or foo.ml  
+- backport ability to store source in Foo.ml or foo.ml
+- backport ocamlc -version
   
 * Beta (2018) (plan9 support)
 
