@@ -6729,7 +6729,9 @@ let bind name arg fn =
        252: string
        253: float
        254: float array
-       255: finalized *)
+       255: finalized
+  coupling: byterun/mlvalues.h, stdlib/obj.ml
+*)
 
 let float_tag = Cconst_int 253
 @
@@ -7922,6 +7924,10 @@ let rec transl = function
               Csequence(Cop(Ccheckbound, [float_array_length(header arr);idx]),
                         float_array_set arr idx (transl_unbox_float arg3))))
       end)
+
+  (* Test block / immediate int *)
+  | Uprim(Pisint, [arg]) ->
+      tag_int(Cop(Cand, [transl_arg; Cconst_int 1]))
 
   (* Operations on bitvects *)
   | Uprim(Pbittest, [arg1; arg2]) ->
