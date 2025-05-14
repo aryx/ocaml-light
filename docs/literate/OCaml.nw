@@ -503,6 +503,9 @@ let nopervasives = ref false            (* -nopervasives *)
 % 'make bootstrap' has beautiful comments!
 % (but can't use syncweb with Makefiles, but maybe can with mk!!)
 
+% see when I added byterun/sys.c sys_time /* ML */
+% new primitive (Camlprim) later; needed make bootstrap!
+% subtle dance
 
 % can you change instruct.h? if do so then can't run anymore
 % boot/ocamlc. But there is also boot/ocamlrun, so it should
@@ -11447,6 +11450,9 @@ void invalid_argument (char *msg)
 
 % important special comment ML below, used by sed in byterun/Makefile
 % value sys_time(value unit)            /* ML */
+
+% and then you need 'make bootstrap' otherwise does not work
+% subtle dance, see boostrap target for explanations
 
 %typedef value (*c_primitive)();
 %
