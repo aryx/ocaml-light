@@ -5908,6 +5908,7 @@ let rec comp_expr env exp sz cont =
         | Parraysets kind -> Kccall("array_set", 3)
         | Parrayrefu kind -> Kgetvectitem
         | Parraysetu kind -> Ksetvectitem
+        | Pisint -> Kisint
         | Pbittest -> Kccall("bitvect_test", 2)
         | _ -> fatal_error "Bytegen.comp_expr: prim" in
       comp_args env args sz (instr :: cont)
@@ -6659,6 +6660,7 @@ let emit_instr = function
   | Kintcomp Cgt -> out opGTINT      | Kintcomp Cge -> out opGEINT
   | Koffsetint n -> out opOFFSETINT; out_int n
   | Koffsetref n -> out opOFFSETREF; out_int n
+  | Kisint -> out opISINT
   | Kevent ev -> record_event ev
   | Kstop -> out opSTOP
 @

@@ -1729,6 +1729,15 @@ rule token = parse
   <<[[Lexer.token()]] comment case>>
 
   <<[[Lexer.token()]] underscore case>>
+
+  (* pad: partial support just enough to parse xix code *)
+  | "~" ['a'-'z'  '_'] (['A'-'Z' 'a'-'z' '_' '\'' '0'-'9' ]) * ':'
+      { 
+        let s = Lexing.lexeme lexbuf in
+        Logs.warn (fun m -> m "use of label %s (skipping it)" s);
+        token lexbuf
+      }
+
   <<[[Lexer.token()]] identifier or keyword cases>>
 
   <<[[Lexer.token()]] integer case>>
@@ -1741,7 +1750,9 @@ rule token = parse
   <<[[Lexer.token()]] sharp case>>
 
   <<[[Lexer.token()]] operator cases>>
+  (* pad: partial support just enough to parse xix code *)
   | "[@@" { LBRACKETATAT }
+  | ":>"  { COLONGREATER }
   | eof { EOF }
   | _
       { raise (Error(Illegal_character,
@@ -1964,6 +1975,9 @@ let keyword_table =
     "asr",  INFIXOP4("asr");
 
     <<[[Lexer.keyword_table]] elements>>
+    (* pad: partial support just enough to parse xix code *)
+    "object", OBJECT;
+    "method", METHOD;
 ]
 @
 %old: was sorted originally
@@ -6852,7 +6866,7 @@ let type_format loc fmt =
         (match String.unsafe_get fmt j with
         (* We're using unsafe_get here so that if j = String.length fmt,
            we'll fall in the catch-all case of the match *)
-          '%' ->
+          '%' | '!' ->
             scan_format (j+1)
         | 's' ->
             Tarrow(Predef.type_string, scan_format (j+1))
@@ -7750,6 +7764,9 @@ type primitive =
   (* Array operations *)
   <<[[Lambda.primitive]] array operations cases>>
 
+  (* Test if the argument is a block or an immediate integer *)
+  | Pisint
+
   (* Bitvect operations *)
   | Pbittest
 @
@@ -7838,7 +7855,8 @@ let primitives_table = create_hashtable 31 [
   "%array_unsafe_set", Parraysetu Pgenarray;
   "%obj_size", Parraylength Paddrarray;
   "%obj_field", Parrayrefu Paddrarray;
-  "%obj_set_field", Parraysetu Paddrarray
+  "%obj_set_field", Parraysetu Paddrarray;
+  "%obj_is_int", Pisint;
 ]
 @
 
@@ -8543,6 +8561,8 @@ type instruction =
 
   | Koffsetint of int
   | Koffsetref of int
+
+  | Kisint
 
   | Kevent of debug_event
   | Kstop
@@ -13823,6 +13843,7 @@ let primitive = function
   | Parraysetu _ -> print_string "array.unsafe_set"
   | Parrayrefs _ -> print_string "array.get"
   | Parraysets _ -> print_string "array.set"
+  | Pisint -> print_string "isint"
   | Pbittest -> print_string "testbit"
 @
 
@@ -13924,6 +13945,7 @@ let instruction = function
   | Kintcomp Cge -> print_string "\tgeint"
   | Koffsetint n -> print_string "\toffsetint "; print_int n
   | Koffsetref n -> print_string "\toffsetref "; print_int n
+  | Kisint -> print_string "\tisint"
   | Kstop -> print_string "\tstop"
   | Kevent ev -> print_string "\tevent "; print_int ev.ev_char
 @
