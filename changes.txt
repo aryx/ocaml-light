@@ -3,7 +3,7 @@
 * TODO
 
 ** compilers
-- restore asmcomp/ for x86 at least (and x86_64 later and arm/arm64/riscv)
+- restore asmcomp/ for x86 at least (and later x86_64/arm/arm64/riscv)
   
 ** dev infra
 - restore working semgrep.yml
@@ -25,8 +25,8 @@
 
 ** language
 - partial support for attributes ([@@...]), object types (<Cap.exec; ..>),
-  and labels (~finally:) but just enough so that we can parse the code in xix
-  (but we discard the constructs)
+  objet cast (foo :> Cap.exec), and labels (~finally:) but just enough so
+  that we can parse the code in xix (but we discard the constructs)
 
 ** typechecker
 - frontport ability to type string-format in higher order functions like
@@ -39,7 +39,7 @@
   the OCaml github repo at the 1.07 time (commit a234a77991)
   and run them in the Dockerfile and in CI
   => minimum regression test infra!
-- add examples/ for more tests
+- add examples/ for more tests taken from "Le language Caml"
 
 ** dev infra
 - compile ocaml light code also with dune! so get better warnings,
@@ -62,7 +62,7 @@
 - compile byterun/ for plan9 so I can run ocaml (light) bytecode programs
   under my fork of plan9
 
-* Alpha (2015) (fork of OCaml 1.07 without OO and functors + native ARM)
+* Alpha (2015) (fork of OCaml 1.07 - OO - functors + native ARM)
 # see also pad.txt history section
 
 ** language

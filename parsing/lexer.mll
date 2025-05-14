@@ -190,8 +190,8 @@ rule token = parse
   | "~" ['a'-'z'  '_'] (['A'-'Z' 'a'-'z' '_' '\'' '0'-'9' ]) * ':'
       { 
         let s = Lexing.lexeme lexbuf in
-	Logs.warn (fun m -> m "use of label %s (skipping it)" s);
-	token lexbuf
+        Logs.warn (fun m -> m "use of label %s (skipping it)" s);
+        token lexbuf
       }
 
   (*s: [[Lexer.token()]] identifier or keyword cases *)
@@ -307,7 +307,9 @@ rule token = parse
   (*x: [[Lexer.token()]] operator cases *)
   | ";;" { SEMISEMI }
   (*e: [[Lexer.token()]] operator cases *)
+  (* pad: partial support just enough to parse xix code *)
   | "[@@" { LBRACKETATAT }
+  | ":>"  { COLONGREATER }
   | eof { EOF }
   | _
       { raise (Error(Illegal_character,
