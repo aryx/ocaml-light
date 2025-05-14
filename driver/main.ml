@@ -82,6 +82,11 @@ let main () =
              "<file>  Set output file name to <file> (default a.out)";
        (*x: [[Main.main()]] command line options *)
        "-v", Arg.Unit print_version_number, " Print compiler version number";
+       "-version", Arg.Unit (fun () ->
+          print_string Config.version;
+          print_newline();
+          exit 0
+         ), "Print version and exit";
        (*x: [[Main.main()]] command line options *)
        "-", Arg.String process_file,
             "<file>  Treat <file> as a file name (even if it starts with `-')";
