@@ -25,7 +25,8 @@
 
 ** language
 - partial support for attributes ([@@...]), object types (<Cap.exec; ..>),
-  objet cast (foo :> Cap.exec), and labels (~finally:) but just enough so
+  objet cast (foo :> Cap.exec), object defs (object ... end),
+  and labels (~finally:) but just enough so
   that we can parse the code in xix (but we discard the constructs)
 
 ** typechecker

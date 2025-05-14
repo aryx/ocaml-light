@@ -96,6 +96,9 @@ let keyword_table =
     (*x: [[Lexer.keyword_table]] elements *)
     "lazy", LAZY;
     (*e: [[Lexer.keyword_table]] elements *)
+    (* pad: partial support just enough to parse xix code *)
+    "object", OBJECT;
+    "method", METHOD;
 ]
 (*e: constant [[Lexer.keyword_table]] *)
 
