@@ -193,7 +193,7 @@ value sys_system_command(value command)   /* ML */
 }
 /*e: function [[sys_system_command]] */
 
-value sys_time(value unit)            /* XXX */
+value sys_time(value unit)            /* ML */
 {
 #ifdef HAS_TIMES
 #ifndef CLK_TCK
