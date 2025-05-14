@@ -19,6 +19,10 @@ let of_string x = x
 
 let get x n = String.get x n
 
+let set s x c = String.set s x c
+
+let index_from s n c = String.index_from s n c
+
 let unsafe_get x n = String.unsafe_get x n
 
 let unsafe_to_string x = x

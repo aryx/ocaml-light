@@ -127,6 +127,9 @@ let map f s =
 let uppercase s = map Char.uppercase s
 let lowercase s = map Char.lowercase s
 
+let uppercase_ascii s = uppercase s
+let lowercase_ascii s = lowercase s
+
 let apply1 f s =
   if length s = 0 then s else begin
     let r = copy s in

@@ -106,3 +106,15 @@ external unsafe_blit : string -> int -> string -> int -> int -> unit
                      = "blit_string" "noalloc"
 external unsafe_fill : string -> int -> int -> char -> unit
                      = "fill_string" "noalloc"
+
+val uppercase_ascii : string -> string
+(** [uppercase_ascii s] is [s] with all lowercase letters
+    translated to uppercase, using the US-ASCII character set.
+
+    @since 4.03 (4.05 in StringLabels) *)
+
+val lowercase_ascii : string -> string
+(** [lowercase_ascii s] is [s] with all uppercase letters translated
+    to lowercase, using the US-ASCII character set.
+
+    @since 4.03 (4.05 in StringLabels) *)
