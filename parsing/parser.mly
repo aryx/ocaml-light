@@ -165,7 +165,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token LBRACE RBRACE
 %token LBRACKET RBRACKET
 %token LBRACKETBAR BARRBRACKET
-%token LBRACKETATAT
 
 %token AMPERSAND
 %token BAR
@@ -195,6 +194,9 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token <string> INFIXOP3
 %token <string> INFIXOP4
 %token <string> SUBTRACTIVE
+
+%token LBRACKETATAT
+%token COLONGREATER
 
 %token EOF
 
@@ -534,6 +536,8 @@ simple_expr:
   /*(*x: rule [[simple_expr]] cases *)*/
   | LPAREN seq_expr type_constraint RPAREN
       { mkexp(Pexp_constraint($2, $3)) }
+  /* pad: partial support, just enough to parse the code */
+  | LPAREN seq_expr COLONGREATER core_type RPAREN  { ($2) }
   /*(*x: rule [[simple_expr]] cases *)*/
   | LBRACE simple_expr WITH lbl_expr_list opt_semi RBRACE
       { mkexp(Pexp_record_with($2, List.rev $4)) }
@@ -600,7 +604,7 @@ fun_binding:
 ;
 /*(*x: expression rules *)*/
 type_constraint:
-    COLON core_type                             { ($2) }
+    COLON core_type                             { $2 }
   | COLON error                                 { syntax_error() }
 ;
 /*(*x: expression rules *)*/
