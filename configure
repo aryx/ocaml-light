@@ -326,6 +326,11 @@ fi
 
 # For the sys module
 
+if sh ./hasgot times; then
+  echo "times() found."
+  echo "#define HAS_TIMES" >> s.h
+fi
+
 # For the terminfo module
 
 for libs in "" "-lcurses" "-ltermcap" "-lcurses -ltermcap"; do

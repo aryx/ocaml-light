@@ -11440,6 +11440,14 @@ void invalid_argument (char *msg)
 
 \section{Primitives}
 
+% see when I added byterun/sys.c sys_time and got error
+% "mismatch ..."
+% first look byterun/Makefile and generation of prims.c
+% with its names_of_cprim
+
+% important special comment ML below, used by sed in byterun/Makefile
+% value sys_time(value unit)            /* ML */
+
 %typedef value (*c_primitive)();
 %
 %extern c_primitive cprim[];

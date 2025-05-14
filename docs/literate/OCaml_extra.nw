@@ -18157,6 +18157,8 @@ int attempt_open(char **name, struct exec_trailer *trail, int do_open_script)
 }
 @
 
+% very important, I once added sys_time in byterun/sys.c and suddently
+% got some errors!
 <<function [[check_primitives]]>>=
 /* Check the primitives used by the bytecode file against the table of
    primitives linked in this interpreter */
