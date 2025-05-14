@@ -53,8 +53,10 @@ type 'a log = 'a msgf -> unit
 
 let current_level = ref (Some Warning)
 
-let now () : float = 0.
-  (* TOPORT Unix.gettimeofday () *)
+(* alt: Unix.gettimeofday () but we don't want to depend
+ * on otherlibs/unix/ from utils/
+ *)
+let now () : float = Sys.time ()
 
 let time_program_start = now ()
 
