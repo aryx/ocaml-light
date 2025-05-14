@@ -1,2 +1,4 @@
 val with_open_in : 
-  < Cap.int ; ..> -> (Chan.i -> 'a) -> Fpath.t -> 'a
+  < Cap.int ; ..> -> (float -> 'a) -> int -> 'a
+
+type no_caps = < >

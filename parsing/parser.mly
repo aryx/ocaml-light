@@ -195,6 +195,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token <string> INFIXOP4
 %token <string> SUBTRACTIVE
 
+%token OBJECT METHOD
 %token LBRACKETATAT
 %token COLONGREATER
 
@@ -555,6 +556,10 @@ simple_expr:
       { mkexp(Pexp_apply(mkexp(Pexp_ident(array_function "String" "get")),
                          [$1; $4])) }
   /*(*e: rule [[simple_expr]] cases *)*/
+  | OBJECT class_structure END
+      { mkexp (Pexp_construct (Lident "()", None)) }
+  | OBJECT class_structure error
+      { unclosed "object" 1 "end" 3 }
   /*(*s: rule [[simple_expr]] error cases *)*/
   | LPAREN seq_expr error
       { unclosed "(" 1 ")" 3 }
@@ -782,6 +787,8 @@ simple_core_type:
   /* pad: partial support, just enough to parse the code */
   | LESS meth_list GREATER
       { mktyp(Ptyp_constr(Lident("unit"), [])) }
+  | LESS GREATER
+      { mktyp(Ptyp_constr(Lident("unit"), [])) }
 ;
 core_type_tuple:
     simple_core_type STAR simple_core_type      { [$3; $1] }
@@ -1006,6 +1013,15 @@ field:
 ;
 label:
     LIDENT                                      { () }
+;
+class_structure: /*class_self_pattern*/ class_fields { () }
+;
+class_fields:
+    /* empty */ { () }
+  | class_fields concrete_method { () }
+;
+concrete_method :
+    METHOD /*private_flag*/ label fun_binding { () }
 ;
 
 /*(*e: grammar *)*/
