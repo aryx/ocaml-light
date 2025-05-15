@@ -1450,6 +1450,11 @@ let exec_name = ref "a.out"             (* -o *)
 
 <<[[Main.main()]] command line options>>=
 "-v", Arg.Unit print_version_number, " Print compiler version number";
+"-version", Arg.Unit (fun () ->
+   print_string Config.version;
+   print_newline();
+   exit 0
+  ), "Print version and exit";
 @
 
 <<function [[Main.print_version_number]]>>=
