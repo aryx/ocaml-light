@@ -5,13 +5,13 @@
 ** compilers
 - restore asmcomp/ for x86 -m32 at least (and later x86_64/arm/arm64/riscv)
   
-** dev infra
-- restore working semgrep.yml
-
 ** test infra
 - restore testasmcomp/
 
-* 0.1 (Q2 2025) (Dockerfile, Nix, Github Actions CI checks, dune, tests)
+** dev infra
+- restore working semgrep.yml
+
+* 0.1 (Q2 2025) (Dockerfile, Nix, Github Actions CI checks, dune, tests, Xix)
 # ported enough features so I can compile some of xix via bootstrap-mk.sh and mk
 
 ** stdlib
@@ -23,6 +23,8 @@
 - backport fun.ml (but without labels) and Fun.protect (4.07.2)
 - backport bool.ml, int.ml, and float.ml (4.08)
 - backport option.ml and result (4.08) as well as the result pervasive type
+- backport removal of genlex.ml (4.14.0) and sort.ml, but kept stream.ml
+  (it is used by a few examples/)
   
 ** language
 - partial support for attributes ([@@...]), object types (<Cap.exec; ..>),

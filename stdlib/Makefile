@@ -18,7 +18,7 @@ OBJS=pervasives.cmo list.cmo char.cmo string.cmo bytes.cmo array.cmo sys.cmo \
   hashtbl.cmo sort.cmo filename.cmo marshal.cmo obj.cmo \
   set.cmo map.cmo stack.cmo queue.cmo stream.cmo \
   buffer.cmo printf.cmo format.cmo arg.cmo gc.cmo \
-  digest.cmo random.cmo genlex.cmo callback.cmo weak.cmo \
+  digest.cmo random.cmo callback.cmo weak.cmo \
   lazy.cmo \
   lexing.cmo parsing.cmo \
   printexc.cmo \
