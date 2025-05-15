@@ -63,6 +63,12 @@ val concat : string -> string list -> string
         (* [String.concat sep sl] catenates the list of strings [sl],
            inserting the separator string [sep] between each. *)
 
+val trim : string -> string
+(** Return a copy of the argument, without leading and trailing whitespace.
+   The characters regarded as whitespace are: [' '], ['\012'], ['\n'],
+   ['\r'], and ['\t'].  If there is no whitespace character in the argument,
+   return the original string itself, not a copy. *)
+
 val escaped: string -> string
         (* Return a copy of the argument, with special characters represented
            by escape sequences, following the lexical conventions of
