@@ -4,7 +4,7 @@
  ; need? (flags (:standard -nopervasives -nostdlib))
  (modules
    set map
-   stack sort
+   stack
    lexing parsing
  )
  (libraries
