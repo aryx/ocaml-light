@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ratio.mli,v 1.2 1996/04/30 14:47:10 xleroy Exp $ *)
 
 (* Module [Ratio]: operations on rational numbers *)
 

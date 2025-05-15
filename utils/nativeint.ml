@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: nativeint.ml,v 1.3 1997/07/30 01:12:38 xleroy Exp $ *)
 
 (* lsb is the least significant bit of the native int (0 <= lsb <= 1)
    msw is the remaining 31 or 63 most significant bits. *)

@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: symbols.ml,v 1.9 1997/06/16 13:34:34 vouillon Exp $ *)
 
 (* Handling of symbol tables (globals and events) *)
 

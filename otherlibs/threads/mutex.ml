@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: mutex.ml,v 1.6 1996/04/30 14:47:32 xleroy Exp $ *)
 
 type t = { mutable locked: bool; mutable waiting: Thread.t list }
 

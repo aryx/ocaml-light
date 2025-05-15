@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: arch.ml,v 1.1 1997/07/24 11:49:02 xleroy Exp $ *)
 
 (* Specific operations for the Intel 386 processor *)
 

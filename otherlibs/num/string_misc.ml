@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: string_misc.ml,v 1.2 1996/04/30 14:47:11 xleroy Exp $ *)
 
 let rec index_char str chr pos =
   if pos >= String.length str then -1

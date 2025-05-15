@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: threadUnix.ml,v 1.7 1997/08/29 15:05:49 xleroy Exp $ *)
 
 (* Module [ThreadUnix]: thread-compatible system calls *)
 

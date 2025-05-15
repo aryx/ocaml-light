@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: printval.mli,v 1.7 1997/03/24 20:13:48 vouillon Exp $ *)
 
 val max_printer_depth : int ref
 val max_printer_steps : int ref

@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: Exp *)
 
 (* The bipipe module to launch two programs connected via stdin/stdout. *)
 

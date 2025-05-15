@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: debugcom.mli,v 1.4 1997/03/22 20:16:50 vouillon Exp $ *)
 
 (* Low-level communication with the debuggee *)
 

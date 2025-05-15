@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: obj.ml,v 1.12 1997/11/21 13:47:38 xleroy Exp $ *)
 
 (* Operations on internal representations of values *)
 

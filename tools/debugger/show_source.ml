@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: show_source.ml,v 1.5 1997/10/21 11:08:04 vouillon Exp $ *)
 
 open Debugger_config
 open Parameters

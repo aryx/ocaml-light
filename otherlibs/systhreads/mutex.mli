@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: mutex.mli,v 1.3 1997/06/20 12:50:08 doligez Exp $ *)
 
 (* Module [Mutex]: locks for mutual exclusion *)
 

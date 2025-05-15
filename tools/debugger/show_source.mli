@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: show_source.mli,v 1.1 1996/11/29 16:55:07 xleroy Exp $ *)
 
 (* Print the line containing the point *)
 val show_point : string -> int -> bool -> bool -> unit;;

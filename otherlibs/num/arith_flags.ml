@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: arith_flags.ml,v 1.2 1996/04/30 14:46:58 xleroy Exp $ *)
 
 let error_when_null_denominator_flag = ref true;;
 

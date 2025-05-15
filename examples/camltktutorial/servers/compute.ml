@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: Exp *)
 
 (* A simple computation server: it receives messages from the GUI and
 treat them accordingly.

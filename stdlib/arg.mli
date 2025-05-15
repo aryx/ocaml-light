@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: arg.mli,v 1.12 1997/11/05 19:44:08 doligez Exp $ *)
 
 (* Module [Arg]: parsing of command line arguments *)
 

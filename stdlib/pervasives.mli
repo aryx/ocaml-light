@@ -40,7 +40,6 @@ type ('a, 'b, 'c, 'd) format4 = ('a, 'b, 'c, 'c, 'c, 'd) format6
 type ('a, 'b, 'c) format = ('a, 'b, 'c, 'c) format4
 *)
 
-(* $Id: pervasives.mli,v 1.35 1997/07/02 18:16:12 xleroy Exp $ *)
 
 (* Module [Pervasives]: the initially opened module *)
 

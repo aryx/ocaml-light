@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: condition.ml,v 1.4 1997/09/01 14:26:15 xleroy Exp $ *)
 
 type t
 external create: unit -> t = "caml_condition_new"

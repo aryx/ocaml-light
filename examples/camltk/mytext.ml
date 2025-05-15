@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: mytext.ml,v 1.2 2004/07/07 09:39:15 weis Exp $ *)
 
 (* A text widget with kill and yank capabilities ``à la'' Emacs. *)
 

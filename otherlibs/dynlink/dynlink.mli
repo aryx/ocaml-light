@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dynlink.mli,v 1.7 1997/05/14 14:31:11 vouillon Exp $ *)
 
 (* Module [Dynlink]: dynamic loading of bytecode object files *)
 
