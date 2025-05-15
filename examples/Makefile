@@ -3,7 +3,7 @@ SUBDIRSX= asl basics calc camltk colwheel compress demonstr docteur doctor grep 
   hanoi kb minicaml minilogo pascal picomach showsort soli spirals
 
 # TODO: basics
-SUBDIRS=soli doctor
+SUBDIRS=soli doctor docteur
 
 #TODO: add depend: target? and recurse? called from toplevel Makefile?
 

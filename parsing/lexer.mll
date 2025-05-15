@@ -171,6 +171,14 @@ let report_error = function
 (*e: function [[Lexer.report_error]] *)
 }
 
+(* the \223-xxx stuff are accents *)
+let lowercase = ['a'-'z' '_' '\223'-'\246' '\248'-'\255']
+let uppercase = ['A'-'Z'     '\192'-'\214' '\216'-'\222']
+let identchar = 
+  ['A'-'Z' 'a'-'z' '_' '\192'-'\214' '\216'-'\246' '\248'-'\255' '\'' '0'-'9']
+let symbolchar =
+  ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~']
+
 (*s: rule Lexer.token *)
 rule token = parse
   (*s: [[Lexer.token()]] space case *)
@@ -190,7 +198,7 @@ rule token = parse
   (*e: [[Lexer.token()]] underscore case *)
 
   (* pad: partial support just enough to parse xix code *)
-  | "~" ['a'-'z'  '_'] (['A'-'Z' 'a'-'z' '_' '\'' '0'-'9' ]) * ':'
+  | "~" lowercase identchar * ':'
       { 
         let s = Lexing.lexeme lexbuf in
         Logs.warn (fun m -> m "use of label %s (skipping it)" s);
@@ -198,14 +206,14 @@ rule token = parse
       }
 
   (*s: [[Lexer.token()]] identifier or keyword cases *)
-  | ['a'-'z'  '_'] (['A'-'Z' 'a'-'z' '_' '\'' '0'-'9' ]) *
+  | lowercase identchar *
       { let s = Lexing.lexeme lexbuf in
           try
             Hashtbl.find keyword_table s
           with Not_found ->
             LIDENT s 
        }
-  | ['A'-'Z'  ] (['A'-'Z' 'a'-'z' '_' '\'' '0'-'9' ]) *
+  | uppercase identchar *
       { UIDENT(Lexing.lexeme lexbuf) }       (* No capitalized keywords *)
   (*e: [[Lexer.token()]] identifier or keyword cases *)
 
@@ -284,25 +292,12 @@ rule token = parse
   | "-"  { SUBTRACTIVE "-" }
   | "-." { SUBTRACTIVE "-." }
   (*x: [[Lexer.token()]] operator cases *)
-  | ['!' '?' '~']
-    ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
-            { PREFIXOP(Lexing.lexeme lexbuf) }
-
-  | ['=' '<' '>' '|' '&' '$']
-    ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
-            { INFIXOP0(Lexing.lexeme lexbuf) }
-  | ['@' '^']
-    ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
-            { INFIXOP1(Lexing.lexeme lexbuf) }
-  | ['+' '-']
-    ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
-            { INFIXOP2(Lexing.lexeme lexbuf) }
-  | "**"
-    ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
-            { INFIXOP4(Lexing.lexeme lexbuf) }
-  | ['*' '/' '%']
-    ['!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '|' '~'] *
-            { INFIXOP3(Lexing.lexeme lexbuf) }
+  | ['!' '?' '~'] symbolchar  *             { PREFIXOP(Lexing.lexeme lexbuf) }
+  | ['=' '<' '>' '|' '&' '$'] symbolchar *  { INFIXOP0(Lexing.lexeme lexbuf) }
+  | ['@' '^'] symbolchar *                  { INFIXOP1(Lexing.lexeme lexbuf) }
+  | ['+' '-'] symbolchar *                  { INFIXOP2(Lexing.lexeme lexbuf) }
+  | "**" symbolchar *                       { INFIXOP4(Lexing.lexeme lexbuf) }
+  | ['*' '/' '%'] symbolchar *              { INFIXOP3(Lexing.lexeme lexbuf) }
   (*x: [[Lexer.token()]] operator cases *)
   | "[|" { LBRACKETBAR } | "|]" { BARRBRACKET }
   (*x: [[Lexer.token()]] operator cases *)
