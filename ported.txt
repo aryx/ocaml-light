@@ -75,3 +75,6 @@ DONE f68692ebc229af3e41818b91ab50c667cd0677db: move protect to Fun.ml (Nov 2018)
      dae520ca1275d6d38e12f63ce508065cc0c5471a: Unicode character escape \u{X+} to OCaml string literals (Jul 2017)
      62b946efae7fa2aa3859b81e9cd8922d3f0c4134: add Unix.realpath (Nov 2020)
      ??: add Unit module (??)
+
+
+SEMI ddd9ec2a91ebfbd5bb18e75d2d37efac5e3d3bfd: deprecate Genlex and Stream (Jul 2021)
