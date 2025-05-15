@@ -12,11 +12,15 @@
 
 type spec =
   | Unit of (unit -> unit)     (* Call the function with unit argument *)
+  | Bool of (bool -> unit)     (* Call the function with a bool argument *)
   | Set of bool ref            (* Set the reference to true *)
   | Clear of bool ref          (* Set the reference to false *)
   | String of (string -> unit) (* Call the function with a string argument *)
+  | Set_string of string ref   (* Set the reference to the string argument *)
   | Int of (int -> unit)       (* Call the function with an int argument *)
+  | Set_int of int ref         (* Set the reference to the int argument *)
   | Float of (float -> unit)   (* Call the function with a float argument *)
+  | Set_float of float ref     (* Set the reference to the float argument *)
 
 exception Bad of string
 
@@ -80,11 +84,21 @@ let parse speclist anonfun errmsg =
       begin try
         match action with
         | Unit f -> f ();
+        | Bool f ->
+            let arg = Sys.argv.(!current + 1) in
+            begin try f (bool_of_string arg)
+            with Invalid_argument "bool_of_string" ->
+                   stop (Wrong (s, arg, "a boolean"))
+            end;
+            incr current;
         | Set r -> r := true;
         | Clear r -> r := false;
         | String f when !current + 1 < l ->
             let arg = Sys.argv.(!current+1) in
             f arg;
+            incr current;
+        | Set_string r when !current + 1 < l ->
+            r := Sys.argv.(!current+1);
             incr current;
         | Int f when !current + 1 < l ->
             let arg = Sys.argv.(!current+1) in
@@ -92,9 +106,21 @@ let parse speclist anonfun errmsg =
             with Failure "int_of_string" -> stop (Wrong (s, arg, "an integer"))
             end;
             incr current;
+        | Set_int r when !current + 1 < l ->
+            let arg = Sys.argv.(!current+1) in
+            begin try r := (int_of_string arg)
+            with Failure "int_of_string" -> stop (Wrong (s, arg, "an integer"))
+            end;
+            incr current;
         | Float f when !current + 1 < l ->
             let arg = Sys.argv.(!current+1) in
             f (float_of_string arg);
+            incr current;
+        | Set_float r when !current + 1 < l ->
+            let arg = Sys.argv.(!current+1) in
+            begin try r := (float_of_string arg);
+            with Failure "float_of_string" -> stop (Wrong (s, arg, "a float"))
+            end;
             incr current;
         | _ -> stop (Missing s)
       with Bad m -> stop (Message m);

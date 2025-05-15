@@ -141,6 +141,10 @@ external format_float: string -> float -> string = "format_float"
 
 let string_of_bool b =
   if b then "true" else "false"
+let bool_of_string = function
+  | "true" -> true
+  | "false" -> false
+  | _ -> invalid_arg "bool_of_string"
 
 let string_of_int n =
   format_int "%d" n

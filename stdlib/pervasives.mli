@@ -318,7 +318,13 @@ val (^) : string -> string -> string
 (*** String conversion functions *)
 
 val string_of_bool : bool -> string
-        (* Return the string representation of a boolean. *)
+(* Return the string representation of a boolean. *)
+
+val bool_of_string : string -> bool
+(** Convert the given string to a boolean.
+   Raise [Invalid_argument "bool_of_string"] if the string is not
+   ["true"] or ["false"]. *)
+
 val string_of_int : int -> string
         (* Return the string representation of an integer, in decimal. *)
 external int_of_string : string -> int = "int_of_string"
