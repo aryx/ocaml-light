@@ -218,6 +218,7 @@ install:
 	cp tools/toplevel/topmain.cmo $(LIBDIR)
 	cp tools/toplevel/toploop.cmi tools/toplevel/topdirs.cmi $(LIBDIR)
 	cd tools/misc; $(MAKE) install
+	cd tools/dependencies; $(MAKE) install
 	cd docs/man; for i in *.m; do cp $$i $(MANDIR)/`basename $$i .m`.$(MANEXT); done
 	for i in $(OTHERLIBRARIES); do (cd otherlibs/$$i; $(MAKE) install); done
 	if test -f ocamlopt; then $(MAKE) installopt; else :; fi
