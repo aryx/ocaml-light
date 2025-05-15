@@ -12,10 +12,11 @@ OPTCOMPFLAGS=
 CAMLDEP=../boot/ocamlrun ../tools/dependencies/ocamldep
 
 #coupling: modify also ../Makefile PERVASIVES and otherlibs/threads/Makefile
+#  and maybe also tools/debugger/debugger_config.ml stdlib_units constants
 #pad: now there is an order, parsing depends on stack, printf/printexc depends
 # on buffer, etc.
 OBJS=pervasives.cmo list.cmo char.cmo string.cmo bytes.cmo array.cmo sys.cmo \
-  hashtbl.cmo sort.cmo filename.cmo marshal.cmo obj.cmo \
+  hashtbl.cmo filename.cmo marshal.cmo obj.cmo \
   set.cmo map.cmo stack.cmo queue.cmo stream.cmo \
   buffer.cmo printf.cmo format.cmo arg.cmo gc.cmo \
   digest.cmo random.cmo callback.cmo weak.cmo \

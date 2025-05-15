@@ -89,7 +89,7 @@ OPTOBJS=$(OPTUTILS) $(PARSING) $(TYPING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
 #pad: new buffer option result uchar int bool float stdcompat
 PERVASIVES=arg array callback char digest filename format gc hashtbl \
   lexing list map obj parsing pervasives printexc buffer printf queue random \
-  set sort stack string bytes stream sys topdirs toploop weak lazy \
+  set stack string bytes stream sys topdirs toploop weak lazy \
   marshal \
   option result uchar int bool float stdcompat fun
 

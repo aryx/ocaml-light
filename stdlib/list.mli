@@ -122,6 +122,20 @@ val combine : 'a list -> 'b list -> ('a * 'b) list
            have different lengths. *)
 
 
+(* DEPRECATED: was Sort.list before *)
+val sort_bool : ('a -> 'a -> bool) -> 'a list -> 'a list
+        (* Sort a list in increasing order according to an ordering predicate.
+           The predicate should return [true] if its first argument is
+           less than or equal to its second argument. *)
+
+(* DEPRECATED: was Sort.merge before *)
+val merge : ('a -> 'a -> bool) -> 'a list -> 'a list -> 'a list
+        (* Merge two lists according to the given predicate.
+           Assuming the two argument lists are sorted according to the
+           predicate, [merge] returns a sorted list containing the elements
+           from the two lists. The behavior is undefined if the two
+           argument lists were not sorted. *)
+
 (* ported from 3.12 *)
 val sort : ('a -> 'a -> int) -> 'a list -> 'a list
 (** Sort a list in increasing order according to a comparison

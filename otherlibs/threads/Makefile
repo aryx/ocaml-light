@@ -12,7 +12,7 @@ LIB=../../stdlib
 
 LIB_OBJS=pervasives.cmo \
   $(LIB)/list.cmo $(LIB)/char.cmo $(LIB)/string.cmo \
-  $(LIB)/array.cmo $(LIB)/sys.cmo $(LIB)/hashtbl.cmo $(LIB)/sort.cmo \
+  $(LIB)/array.cmo $(LIB)/sys.cmo $(LIB)/hashtbl.cmo \
   $(LIB)/filename.cmo $(LIB)/marshal.cmo $(LIB)/obj.cmo \
   $(LIB)/lexing.cmo $(LIB)/parsing.cmo \
   $(LIB)/set.cmo $(LIB)/map.cmo $(LIB)/stack.cmo $(LIB)/queue.cmo \
