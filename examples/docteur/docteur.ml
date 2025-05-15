@@ -46,8 +46,8 @@ let rec associé_d'un_élément_de liste_de_clés liste_d'association =
          associé_d'un_élément_de reste liste_d'association;;
 
 let minuscule_de car =
-    if int_of_char car >= 65 && int_of_char car <= 90
-    then char_of_int (int_of_char car + 32)
+    if Char.code car >= 65 && Char.code car <= 90
+    then Char.chr (Char.code car + 32)
     else car;; 
 
 let minuscules chaîne =
