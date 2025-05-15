@@ -49,6 +49,7 @@ SEMI 1d52692ccf904c61c3a893e2b289bdd88801d4f1: extend Arg.ml with Bool and more 
 NOPE 152255e5129d94325f3017bc93623dde2fa1cfb1: add attributes (a.k.a. extension points) in AST but old syntax (Feb 2013)
 SEMI 70bc46ef0cb4f29d67838df3662266ce4ea61ff6: new syntax for attributes [@@ (Mar 2013)
 
+SEMI 6c24f4f90b23e8c4536281d31461adfe5a15b739: add String.trim and many other stuff (Mar 2012)
 
 SEMI 5b8df637d2b722aa397ab53200a733bae238e9fe: merge safe-string (Apr 2014)
 
