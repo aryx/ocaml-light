@@ -43,7 +43,8 @@ DONE b5d0102c0510ceba7d593d02fffd20ff4fea7957 : add support for %$ (become %! af
 SEMI e132cd1f7a07a41dc7dbddea7453a86e6ebb5ea4 : Documenting %$ (Feb 2003)
 SEMI 9e6895aded929b8f0f5d82190e2f1ccc87569ab2 : add support for %! to flush in printf (Apr 2003)
 
-
+DONE d4bd2173aad4e3eb01a4ad332736adba827527c5: extend Arg.ml with Set_string (Nov 2002)
+SEMI 1d52692ccf904c61c3a893e2b289bdd88801d4f1: extend Arg.ml with Bool and more (Apr 2003)
 
 NOPE 152255e5129d94325f3017bc93623dde2fa1cfb1: add attributes (a.k.a. extension points) in AST but old syntax (Feb 2013)
 SEMI 70bc46ef0cb4f29d67838df3662266ce4ea61ff6: new syntax for attributes [@@ (Mar 2013)
