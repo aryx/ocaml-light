@@ -3,7 +3,7 @@
 * TODO
 
 ** compilers
-- restore asmcomp/ for x86 at least (and later x86_64/arm/arm64/riscv)
+- restore asmcomp/ for x86 -m32 at least (and later x86_64/arm/arm64/riscv)
   
 ** dev infra
 - restore working semgrep.yml
@@ -15,14 +15,14 @@
 # ported enough features so I can compile some of xix via bootstrap-mk.sh and mk
 
 ** stdlib
-- backport Obj.is_int and Obj.xxx_tag from 2.02
-- backport Printf.kprintf and ksprintf and support for %! to flush from 3.08
-- partial backport of bytes.ml from 4.02.0
-- backport uchar.ml from 4.03
-- partial backport of string.ml xxx_ascii functions from 4.03
-- backport fun.ml (but without labels) and Fun.protect from 4.07.2
-- backport bool.ml, int.ml, and float.ml from 4.08
-- backport option.ml and result from 4.08 as well as the result pervasive type
+- backport Obj.is_int and Obj.xxx_tag (2.02)
+- backport Printf.kprintf and ksprintf and support for %! to flush (3.08)
+- backport String.trim (4.00) and partial backport of xxx_ascii functions (4.03)
+- partial backport of bytes.ml (4.02.0)
+- backport uchar.ml (4.03)
+- backport fun.ml (but without labels) and Fun.protect (4.07.2)
+- backport bool.ml, int.ml, and float.ml (4.08)
+- backport option.ml and result (4.08) as well as the result pervasive type
   
 ** language
 - partial support for attributes ([@@...]), object types (<Cap.exec; ..>),
