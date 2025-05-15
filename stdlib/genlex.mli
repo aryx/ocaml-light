@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: genlex.mli,v 1.3 1997/10/24 15:54:07 xleroy Exp $ *)
 
 (* Module [Genlex]: a generic lexical analyzer *)
 

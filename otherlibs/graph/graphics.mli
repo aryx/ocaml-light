@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: graphics.mli,v 1.7 1996/04/30 14:46:44 xleroy Exp $ *)
 
 (* Module [Graphics]: machine-independent graphics primitives *)
 

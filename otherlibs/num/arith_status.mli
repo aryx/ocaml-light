@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: arith_status.mli,v 1.3 1996/04/30 14:47:00 xleroy Exp $ *)
 
 (* Module [Arith_status]: flags that control rational arithmetic *)
 

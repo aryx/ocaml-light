@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: Exp *)
 
 (* The GUI of the simple computation server.
    The GUI has two buttons to interact with the computation server:

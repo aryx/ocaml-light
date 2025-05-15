@@ -30,7 +30,6 @@ type bytes = string
 
 type ('a,'b) result = Ok of 'a | Error of 'b
 
-(* $Id: pervasives.ml,v 1.24 1997/08/29 15:37:21 xleroy Exp $ *)
 
 type 'a option = None | Some of 'a
 

@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: condition.mli,v 1.7 1996/04/30 14:47:29 xleroy Exp $ *)
 
 (* Module [Condition]: condition variables to synchronize between threads *)
 

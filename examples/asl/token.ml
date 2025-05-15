@@ -1,4 +1,3 @@
-(* $Id: token.ml,v 1.1.1.1 2002/05/28 15:59:16 weis Exp $ *)
 
 type token_type =
    | IDENT of string | INT of int | OP of string

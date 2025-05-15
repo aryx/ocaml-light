@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: big_int.mli,v 1.2 1996/04/30 14:47:02 xleroy Exp $ *)
 
 (* Module [Big_int]: operations on big integers *)
 

@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: envaux.mli,v 1.3 1997/03/25 15:29:39 vouillon Exp $ *)
 
 (* Convert environment summaries to environments *)
 

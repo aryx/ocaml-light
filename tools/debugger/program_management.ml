@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: program_management.ml,v 1.7 1997/06/15 20:53:10 vouillon Exp $ *)
 
 (* Manage the loading of the program *)
 

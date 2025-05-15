@@ -10,7 +10,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: Exp *)
 
 (* The biconnect program that connects two programs via stdin/stdout. *)
 

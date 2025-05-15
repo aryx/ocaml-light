@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ocamlcp.ml,v 1.5 1996/10/29 14:52:15 xleroy Exp $ *)
 
 let compargs = ref ([] : string list)
 let profargs = ref ([] : string list)
