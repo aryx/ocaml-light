@@ -1,6 +1,9 @@
 \documentclass[12pt]{report}
 %12pt, twocolumn, landscape
 
+%last:
+% - see latest min-caml with x86 support! see work/OCAML/mincaml-github
+
 %******************************************************************************
 % Prelude
 %******************************************************************************

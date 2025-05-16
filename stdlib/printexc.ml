@@ -111,3 +111,19 @@ let get_backtrace () =
                (Printf.sprintf "%s\n" (format_loc_info i a.(i)))
       done;
       Buffer.contents b
+
+
+(* original in 4.01 *)
+(*
+type raw_backtrace
+external get_raw_backtrace:
+  unit -> raw_backtrace = "caml_get_exception_raw_backtrace"
+ *)
+
+(* partial implem just so we can compile Exception.ml in xix with ocaml-light *)
+type raw_backtrace = string
+let get_raw_backtrace () = get_backtrace ()
+let raw_backtrace_to_string x = x
+let get_callstack _n = get_backtrace ()
+
+let raise_with_backtrace exn _backtrace = raise exn
