@@ -1,6 +1,8 @@
 The commit shas in this file refers to commits in the github ocaml
 repo at https://github.com/ocaml/ocaml
 
+TODO: __FILE__ and __LOC__ in OCaml itsef ?
+
 START cf37b950bede21f249c8c78fa9f5e7fe977f49e5: 1.07 release (Dec 1997)
 
 SEMI 87b17301f4a408109a0f00f7a297b02c79724bc1: nouvelle syntax des classes (which also added a case for type_expect Pexp_function useful to type Logs expressions) (Apr 1998)
@@ -51,6 +53,10 @@ SEMI 70bc46ef0cb4f29d67838df3662266ce4ea61ff6: new syntax for attributes [@@ (Ma
 
 SEMI 6c24f4f90b23e8c4536281d31461adfe5a15b739: add String.trim and many other stuff (Mar 2012)
 
+
+     725da3dcc94b23e31b385431aea485b9233e385c: raw_backtrace (Mar 2013)
+     ??? additional func for raw_backtrace like get_callstack
+     
 SEMI 5b8df637d2b722aa397ab53200a733bae238e9fe: merge safe-string (Apr 2014)
 
 DONE 19a5d5eb50fa5c5661a33343cded8ec1442703be: add result type (Apr 2015)
