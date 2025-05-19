@@ -118,7 +118,7 @@ let scan_file obj_name tolink =
   else if Filename.check_suffix file_name ".cmxa" then begin
     (* This is an archive file. Each unit contained in it will be linked
        in only if needed. *)
-    let ic = open_in_bin file_name in
+    let ic = open_in(*_bin*) file_name in
     let buffer = String.create (String.length cmxa_magic_number) in
     really_input ic buffer 0 (String.length cmxa_magic_number);
     if buffer <> cmxa_magic_number then

@@ -48,7 +48,7 @@ let read_info name =
 (*s: function [[Asmlibrarian.create_archive]] *)
 let create_archive file_list lib_name =
   let archive_name = Filename.chop_suffix lib_name ".cmxa" ^ ext_lib in
-  let outchan = open_out_bin lib_name in
+  let outchan = open_out(*_bin*) lib_name in
   try
     output_string outchan cmxa_magic_number;
     let (objfile_list, descr_list) =
