@@ -137,3 +137,6 @@ boot/Saved
 /yacc/ocamlyacc
 
 # LAST
+/tools/misc/cvt_emit
+/tools/misc/cvt_emit.ml
+/ocamlopt
