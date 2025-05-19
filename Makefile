@@ -24,9 +24,10 @@ MKDIR=mkdir -p
 
 INCLUDES=-I utils -I parsing -I typing -I bytecomp -I asmcomp -I driver -I tools/toplevel
 
-UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
-  utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo \
-  utils/logs.cmo
+UTILS=utils/logs.cmo \
+  utils/misc.cmo utils/tbl.cmo utils/config.cmo \
+  utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo
+
 
 OPTUTILS=$(UTILS) utils/nativeint.cmo
 

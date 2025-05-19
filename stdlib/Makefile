@@ -8,7 +8,7 @@ COMPFLAGS=-g
 #  -bin-annot
 OPTCOMPILER=../ocamlopt
 CAMLOPT=$(RUNTIME) $(OPTCOMPILER)
-OPTCOMPFLAGS=
+OPTCOMPFLAGS=-verbose
 CAMLDEP=../boot/ocamlrun ../tools/dependencies/ocamldep
 
 #coupling: modify also ../Makefile PERVASIVES and otherlibs/threads/Makefile

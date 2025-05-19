@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: cvt_emit.mll,v 1.2 1996/10/29 13:35:40 xleroy Exp $ *)
-
 {
 let first_item = ref false
 let command_beginning = ref 0
