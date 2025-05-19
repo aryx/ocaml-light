@@ -138,7 +138,8 @@ let pseudoregs_for_operation op arg res =
 
 let selector () = 
   let super = Selectgen.selector_generic () in
-  { 
+  {
+  instr_seq = dummy_instr;
   (* todo: super with feature needed ... *)
   select_condition = super.select_condition;
   emit_fundecl = super.emit_fundecl;
@@ -260,7 +261,7 @@ let selector () =
   try
     let (rsrc, rdst, move_res) = pseudoregs_for_operation op rs rd in
     self.insert_moves self rs rsrc;
-    self.insert (Iop op) rsrc rdst;
+    self.insert self (Iop op) rsrc rdst;
     if move_res then begin
       self.insert_moves self rdst rd;
       rd
@@ -293,7 +294,7 @@ let selector () =
       let ofs = emit_pushes el in
       let (op, arg) = self.select_push self e in
       let r = self.emit_expr self env arg in
-      self.insert (Iop op) r [||];
+      self.insert self (Iop op) r [||];
       ofs + Selectgen.size_expr env e
   in ([||], emit_pushes args)
  );

@@ -26,6 +26,9 @@ val size_expr : environment -> Cmm.expression -> int
 
 (*s: type [[Selectgen.selector]] *)
 type selector = {
+  (* old: nested private field *)
+  mutable instr_seq: Mach.instruction;
+    
   (* old: virtuals *)
 
   (* The following methods must or can be overriden by the processor
@@ -69,8 +72,10 @@ type selector = {
   (* The following methods should not be overriden.  They cannot be
      declared "private" in the current implementation because they
      are not always applied to "self", but ideally they should be private. *)
-  extract : Mach.instruction;
-  insert : Mach.instruction_desc -> Reg.t array -> Reg.t array -> unit;
+  extract : selector -> Mach.instruction;
+  insert :
+    selector ->
+    Mach.instruction_desc -> Reg.t array -> Reg.t array -> unit;
   insert_move : 
     selector ->
     Reg.t -> Reg.t -> unit;
@@ -131,7 +136,8 @@ type selector = {
     selector ->
     (Ident.t, Reg.t array) Tbl.t -> Cmm.expression list -> Reg.t array -> 
      Arch.addressing_mode -> unit;
-  emit_sequence: 
+  emit_sequence:
+    selector ->
     (Ident.t, Reg.t array) Tbl.t -> Cmm.expression -> 
      Reg.t array * selector;
 
