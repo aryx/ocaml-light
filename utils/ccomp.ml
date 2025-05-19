@@ -16,6 +16,7 @@
 
 (*s: function [[Ccomp.command]] *)
 let command cmdline =
+  Logs.info (fun m -> m "executing |%s|" cmdline);
   if !Clflags.verbose then begin
     prerr_string "+ ";
     prerr_string cmdline;

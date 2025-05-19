@@ -15,6 +15,7 @@
 # export verbose=yes and rerun ./configure
 
 ##############################################################################
+# Command line variables and their default values
 ##############################################################################
 
 bindir=/usr/local/bin
@@ -236,6 +237,8 @@ case "$host" in
   i[3456]86-*-linuxaout)        arch=i386; system=linux_aout;;
   i[3456]86-*-linux)            arch=i386; system=linux_elf;;
   i[3456]86-*-*bsd*)            arch=i386; system=bsd;;
+  #pad: new
+  x86_64-*-linux*)            arch=i386; system=linux_elf;;
 esac
 
 case "$arch,$system,$cc" in
@@ -248,8 +251,8 @@ nativecccompopts=''
 nativecclinkopts=''
 
 case "$arch,$nativecc,$system" in
-  alpha,cc*,digital) nativecccompopts=-std1;;
-  *,gcc*,*)          nativecccompopts=-Wall;;
+  alpha,cc*,digital) nativecccompopts='-std1';;
+  *,gcc*,*)          nativecccompopts='-m32 -Wall';nativecclinkopts='-m32';;
 esac
 
 asflags=''
@@ -258,7 +261,7 @@ asppflags=''
 
 case "$arch,$model,$system" in
   alpha,*,linux)    aspp='gcc'; asppflags='-c -DSYS_$(SYSTEM)';;
-  i386,*,*)         aspp='gcc'; asppflags='-c -DSYS_$(SYSTEM)';;
+  i386,*,*)         aspp='gcc'; asppflags='-m32 -c -DSYS_$(SYSTEM)';;
 esac
 
 echo "ARCH=$arch" >> Makefile

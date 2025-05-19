@@ -3,6 +3,10 @@ repo at https://github.com/ocaml/ocaml
 
 TODO: __FILE__ and __LOC__ in OCaml itsef ?
 
+     3be947947e3249a9b362fc790d377e43c4108a62 camlParam, CamlLocal, CamlReturn (needed by otherlibs/str that does not rely on regex-0.12) alloc_small (Oct 1998)
+
+     66ae9423a784fbc4d35b794906a4dee705afccf2: portage ARM add asmcomp/arm/ (Oct 1998)
+
 -------------------------------------------------------------------------------
 START cf37b950bede21f249c8c78fa9f5e7fe977f49e5: 1.07 release (Dec 1997)
 -------------------------------------------------------------------------------
@@ -14,6 +18,8 @@ SEMI 1147c3d20d9f56d48fec8a0bafa72682c18726f9 'let name = regexp' in ocamllex an
 
 SEMI b7bf7cf69d483d856bba307ebd299d6ccc2cffd3: autodetection ARM (Oct 1998)
 
+
+
 DONE 67971438eea22040f18045b765bcc60fe41f1955: symbolic names for tags (e.g., Obj.string_tag) (Oct 1998)
 
      6c209fd054ec3a400d6162c123a79579811b9a45: ajout de Sys_blocked_io (Nov 1998)
@@ -21,10 +27,13 @@ DONE 67971438eea22040f18045b765bcc60fe41f1955: symbolic names for tags (e.g., Ob
 
 SEMI 73e446d376ef844f45deab1071b79fd048b0cd2d: add int_of_char and few other (Dec 1998)
 DONE 45a18236df62dba31d5365c60bf6548883291689: adjout de Pisint (Dec 1999)
+DONE 221224ae94ed0da04e0d98a99415f0db38273d4d: fix typo in transl_arg for Pisint (Dec 1999)
 DONE 555c7f80221e29f9bfbcd9d21ed0629f92b778c6: ajout de obj_is_int (Dec 1999)
 
 
-     9e206909f48d5d2579b6ec17764d3273df23ff08: introduction of Custom blocs (Feb 2000)
+
+
+     9e206909f48d5d2579b6ec17764d3273df23ff08: (BIG) introduction of Custom blocs (Feb 2000)
      34a71202962072f30f27882498cb7e745b5dafd7: add Int32.t and Int64.t first step (Feb 2000)
 
 SEMI 11113cbc091c43e1e7024a20b6cd2cbb697c0369: ajout int32, int64... format and factorize scan_formats (Oct 2001)
@@ -50,16 +59,28 @@ SEMI 9e6895aded929b8f0f5d82190e2f1ccc87569ab2 : add support for %! to flush in p
 DONE d4bd2173aad4e3eb01a4ad332736adba827527c5: extend Arg.ml with Set_string (Nov 2002)
 SEMI 1d52692ccf904c61c3a893e2b289bdd88801d4f1: extend Arg.ml with Bool and more (Apr 2003)
 
-NOPE 152255e5129d94325f3017bc93623dde2fa1cfb1: add attributes (a.k.a. extension points) in AST but old syntax (Feb 2013)
+
+
+
+     4b5512c74cda289652ff53c01098c53a6c4b0c7a: (BIG) backtrace in native code (Jan 2007)
+SEMI 640b24249d8e284905f3db44899ffc06e006f028: Ability to print and capture exception backtraces (Mar 2008)
+
+
+
+
+NOPE 152255e5129d94325f3017bc93623dde2fa1cfb1: (BIG) add attributes (a.k.a. extension points) in AST but old syntax (Feb 2013)
 SEMI 70bc46ef0cb4f29d67838df3662266ce4ea61ff6: new syntax for attributes [@@ (Mar 2013)
 
 SEMI 6c24f4f90b23e8c4536281d31461adfe5a15b739: add String.trim and many other stuff (Mar 2012)
 
 
+
+
+
      725da3dcc94b23e31b385431aea485b9233e385c: raw_backtrace (Mar 2013)
      ??? additional func for raw_backtrace like get_callstack
      
-SEMI 5b8df637d2b722aa397ab53200a733bae238e9fe: merge safe-string (Apr 2014)
+SEMI 5b8df637d2b722aa397ab53200a733bae238e9fe: (BIG) merge safe-string (Apr 2014)
 
 DONE 19a5d5eb50fa5c5661a33343cded8ec1442703be: add result type (Apr 2015)
 DONE 940144f30487ead603d51ad4783542fe5410b821: add Uchar module (Nov 2015)
@@ -91,3 +112,5 @@ SEMI ddd9ec2a91ebfbd5bb18e75d2d37efac5e3d3bfd: deprecate Genlex and Stream (Jul 
 Do not port
 ----------------------------------
 cc3f70b705dd624b5f9ba1de92cc7f2afe5b94de: switch to autoconf (Nov 2018)
+
+119c8eeb67adf1929cb5c4e4bedd073df5a2a8f1: switch to objects for asmcomp/ (Jul 1997)
