@@ -28,6 +28,7 @@ let process_implementation_file name =
 
 (*s: function [[Optmain.process_file]] *)
 let process_file name =
+  Logs.info (fun m -> m "processing %s" name);
   if Filename.check_suffix name ".ml"
   or Filename.check_suffix name ".mlt" then begin
     Optcompile.implementation name;
@@ -100,7 +101,17 @@ let main () =
        "-unsafe", Arg.Set fast,
              " No bounds checking on array and string access";
        "-v", Arg.Unit print_version_number, " Print compiler version number";
-       "-verbose", Arg.Set verbose, " Print calls to external commands";
+       "-verbose", Arg.Unit (fun () ->
+                       verbose := true;
+                       Logs.set_level (Some Logs.Info)
+                       ),
+       " Print calls to external commands and info level for logs";
+       (* new: *)
+       "-debug", Arg.Unit (fun () ->
+                       verbose := true;
+                       Logs.set_level (Some Logs.Debug)
+                     ),
+       " debug level for logs";
 
        "-nopervasives", Arg.Set nopervasives, " (undocumented)";
        "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
