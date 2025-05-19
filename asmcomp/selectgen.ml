@@ -26,6 +26,9 @@ type environment = (Ident.t, Reg.t array) Tbl.t
 
 (*s: type [[Selectgen.selector]]([[(asmcomp/selectgen.ml)]]) *)
 type selector = {
+  (* TODO? could be in separate type? just used by insert_xxx and emit_seq... *)
+  mutable instr_seq : instruction;
+    
   (* The following methods must or can be overriden by the processor
      description *)
   is_immediate : (int -> bool);
@@ -65,8 +68,10 @@ type selector = {
   (* The following methods should not be overriden.  They cannot be
      declared "private" in the current implementation because they
      are not always applied to "self", but ideally they should be private. *)
-  extract : Mach.instruction;
-  insert : Mach.instruction_desc -> Reg.t array -> Reg.t array -> unit;
+  extract : selector -> Mach.instruction;
+  insert :
+      selector ->
+      Mach.instruction_desc -> Reg.t array -> Reg.t array -> unit;
   insert_move : 
     selector ->
     Reg.t -> Reg.t -> unit;
@@ -126,7 +131,8 @@ type selector = {
     selector ->
     (Ident.t, Reg.t array) Tbl.t -> Cmm.expression list -> Reg.t array -> 
      Arch.addressing_mode -> unit;
-  emit_sequence: 
+  emit_sequence:
+    selector ->
     (Ident.t, Reg.t array) Tbl.t -> Cmm.expression -> 
      Reg.t array * selector;
 
@@ -326,9 +332,9 @@ let join_array rs =
 (* The default instruction selection class *)
 
 let selector_generic () =
- let instr_seq = ref dummy_instr in
  {
-
+   instr_seq = dummy_instr;
+   
 (* Says whether an integer constant is a suitable immediate argument *)
 
  is_immediate = (fun _ -> 
@@ -473,23 +479,23 @@ let selector_generic () =
 (* Buffering of instruction sequences *)
 
 
- insert = (fun desc arg res ->
-  instr_seq := instr_cons desc arg res !instr_seq
+ insert = (fun self desc arg res ->
+  self.instr_seq <- instr_cons desc arg res self.instr_seq
  );
 
- extract = (
+ extract = (fun self ->
   let rec extract res i =
     if i == dummy_instr
     then res
     else extract (instr_cons i.desc i.arg i.res res) i.next in
-  extract (end_instr()) !instr_seq
+  extract (end_instr()) self.instr_seq
  );
 
 (* Insert a sequence of moves from one pseudoreg set to another. *)
 
  insert_move = (fun self src dst ->
   if src.stamp <> dst.stamp then
-    self.insert (Iop Imove) [|src|] [|dst|]
+    self.insert self (Iop Imove) [|src|] [|dst|]
  ); 
 
  insert_moves = (fun self src dst ->
@@ -501,12 +507,12 @@ let selector_generic () =
 (* Insert moves and stack offsets for function arguments and results *)
 
  insert_move_args = (fun self arg loc stacksize ->
-  if stacksize <> 0 then self.insert (Iop(Istackoffset stacksize)) [||] [||];
+  if stacksize <> 0 then self.insert self (Iop(Istackoffset stacksize)) [||] [||];
   self.insert_moves self arg loc
  );
 
  insert_move_results = (fun self loc res stacksize ->
-  if stacksize <> 0 then self.insert(Iop(Istackoffset(-stacksize))) [||] [||];
+  if stacksize <> 0 then self.insert self (Iop(Istackoffset(-stacksize))) [||] [||];
   self.insert_moves self loc res
  );
 
@@ -515,7 +521,7 @@ let selector_generic () =
    instructions, or instructions using dedicated registers. *)
 
  insert_op = (fun self op rs rd ->
-  self.insert (Iop op) rs rd;
+  self.insert self (Iop op) rs rd;
   rd
  );
 
@@ -572,8 +578,8 @@ let selector_generic () =
   | Cop(Craise, [arg]) ->
       let r1 = self.emit_expr self  env arg in
       let rd = [|Proc.loc_exn_bucket|] in
-      self.insert (Iop Imove) r1 rd;
-      self.insert Iraise rd [||];
+      self.insert self (Iop Imove) r1 rd;
+      self.insert self Iraise rd [||];
       [||]
   | Cop(Ccmpf comp, args) ->
       self.emit_expr self  env (Cifthenelse(exp, Cconst_int 1, Cconst_int 0))
@@ -590,7 +596,7 @@ let selector_generic () =
           let (loc_arg, stack_ofs) = Proc.loc_arguments rarg in
           let loc_res = Proc.loc_results rd in
           self.insert_move_args self rarg loc_arg stack_ofs;
-          self.insert (Iop Icall_ind)
+          self.insert self (Iop Icall_ind)
                       (Array.append [|r1.(0)|] loc_arg) loc_res;
           self.insert_move_results self loc_res rd stack_ofs;
           rd
@@ -601,7 +607,7 @@ let selector_generic () =
           let (loc_arg, stack_ofs) = Proc.loc_arguments r1 in
           let loc_res = Proc.loc_results rd in
           self.insert_move_args self r1 loc_arg stack_ofs;
-          self.insert (Iop(Icall_imm lbl)) loc_arg loc_res;
+          self.insert self (Iop(Icall_imm lbl)) loc_arg loc_res;
           self.insert_move_results self loc_res rd stack_ofs;
           rd
       | Iextcall(lbl, alloc) ->
@@ -609,14 +615,14 @@ let selector_generic () =
           let (loc_arg, stack_ofs) = self.emit_extcall_args self env new_args in
           let rd = Reg.createv ty in
           let loc_res = Proc.loc_external_results rd in
-          self.insert (Iop(Iextcall(lbl, alloc))) loc_arg loc_res;
+          self.insert self (Iop(Iextcall(lbl, alloc))) loc_arg loc_res;
           self.insert_move_results self loc_res rd stack_ofs;
           rd
       | Ialloc _ ->
           Proc.contains_calls := true;
           let rd = Reg.createv typ_addr in
           let size = size_expr env (Ctuple new_args) in
-          self.insert (Iop(Ialloc size)) [||] rd;
+          self.insert self (Iop(Ialloc size)) [||] rd;
           self.emit_stores self env new_args rd 
             (Arch.offset_addressing Arch.identity_addressing (-Arch.size_int));
           rd
@@ -631,50 +637,47 @@ let selector_generic () =
   | Cifthenelse(econd, eif, eelse) ->
       let (cond, earg) = self.select_condition self econd in
       let rarg = self.emit_expr self  env earg in
-      let (rif, sif) = self.emit_sequence env eif in
-      let (relse, selse) = self.emit_sequence env eelse in
+      let (rif, sif) = self.emit_sequence self env eif in
+      let (relse, selse) = self.emit_sequence self env eelse in
       let r = join rif sif relse selse in
-      self.insert (Iifthenelse(cond, sif.extract, selse.extract)) rarg [||];
+      self.insert self (Iifthenelse(cond, sif.extract sif, selse.extract selse)) rarg [||];
       r
   | Cswitch(esel, index, ecases) ->
       let rsel = self.emit_expr self  env esel in
-      let rscases = Array.map (self.emit_sequence env) ecases in
+      let rscases = Array.map (self.emit_sequence self env) ecases in
       let r = join_array rscases in
-      self.insert (Iswitch(index, Array.map (fun (r, s) -> s.extract) rscases))
+      self.insert self (Iswitch(index, Array.map (fun (r, s) -> s.extract s) rscases))
                   rsel [||];
       r
   | Cloop(ebody) ->
-      let (rarg, sbody) = self.emit_sequence env ebody in
-      self.insert (Iloop(sbody.extract)) [||] [||];
+      let (rarg, sbody) = self.emit_sequence self env ebody in
+      self.insert self (Iloop(sbody.extract sbody)) [||] [||];
       [||]
   | Ccatch(e1, e2) ->
-      let (r1, s1) = self.emit_sequence env e1 in
-      let (r2, s2) = self.emit_sequence env e2 in
+      let (r1, s1) = self.emit_sequence self env e1 in
+      let (r2, s2) = self.emit_sequence self env e2 in
       let r = join r1 s1 r2 s2 in
-      self.insert (Icatch(s1.extract, s2.extract)) [||] [||];
+      self.insert self (Icatch(s1.extract s1, s2.extract s2)) [||] [||];
       r
   | Cexit ->
-      self.insert Iexit [||] [||];
+      self.insert self Iexit [||] [||];
       [||]
   | Ctrywith(e1, v, e2) ->
       Proc.contains_calls := true;
-      let (r1, s1) = self.emit_sequence env e1 in
+      let (r1, s1) = self.emit_sequence self env e1 in
       let rv = Reg.createv typ_addr in
-      let (r2, s2) = self.emit_sequence (Tbl.add v rv env) e2 in
+      let (r2, s2) = self.emit_sequence self (Tbl.add v rv env) e2 in
       let r = join r1 s1 r2 s2 in
-      self.insert
-        (Itrywith(s1.extract,
+      self.insert self
+        (Itrywith(s1.extract s1,
                   instr_cons (Iop Imove) [|Proc.loc_exn_bucket|] rv
-                             s2.extract))
+                             (s2.extract s2)))
         [||] [||];
       r
  );
 
- emit_sequence = (fun env exp ->
-  let s =
-   (* {< instr_seq = dummy_instr >}  *)
-    failwith "Selectgen.emit_sequence:TODO"
-  in
+ emit_sequence = (fun self env exp ->
+  let s = { self with instr_seq = dummy_instr } in
   let r = s.emit_expr s env exp in
   (r, s)
  );
@@ -751,7 +754,7 @@ let selector_generic () =
     (fun e ->
       let (op, arg) = self.select_store !a e in
       let r = self.emit_expr self  env arg in
-      self.insert (Iop op) (Array.append r regs_addr) [||];
+      self.insert self (Iop op) (Array.append r regs_addr) [||];
       a := Arch.offset_addressing !a (size_expr env e))
     data
  );
@@ -762,7 +765,7 @@ let selector_generic () =
   let r = self.emit_expr self  env exp in
   let loc = Proc.loc_results r in
   self.insert_moves self r loc;
-  self.insert Ireturn loc [||]
+  self.insert self Ireturn loc [||]
  );
 
  emit_tail = (fun self env exp ->
@@ -779,83 +782,80 @@ let selector_generic () =
           let (loc_arg, stack_ofs) = Proc.loc_arguments rarg in
           if stack_ofs = 0 then begin
             self.insert_moves self rarg loc_arg;
-            self.insert (Iop Itailcall_ind)
+            self.insert self (Iop Itailcall_ind)
                         (Array.append [|r1.(0)|] loc_arg) [||]
           end else begin
             Proc.contains_calls := true;
             let rd = Reg.createv ty in
             let loc_res = Proc.loc_results rd in
             self.insert_move_args self rarg loc_arg stack_ofs;
-            self.insert (Iop Icall_ind)
+            self.insert self (Iop Icall_ind)
                         (Array.append [|r1.(0)|] loc_arg) loc_res;
-            self.insert(Iop(Istackoffset(-stack_ofs))) [||] [||];
-            self.insert Ireturn loc_res [||]
+            self.insert self (Iop(Istackoffset(-stack_ofs))) [||] [||];
+            self.insert self Ireturn loc_res [||]
           end
       | Icall_imm lbl ->
           let r1 = self.emit_tuple self env new_args in
           let (loc_arg, stack_ofs) = Proc.loc_arguments r1 in
           if stack_ofs = 0 then begin
             self.insert_moves self r1 loc_arg;
-            self.insert (Iop(Itailcall_imm lbl)) loc_arg [||]
+            self.insert self (Iop(Itailcall_imm lbl)) loc_arg [||]
           end else begin
             Proc.contains_calls := true;
             let rd = Reg.createv ty in
             let loc_res = Proc.loc_results rd in
             self.insert_move_args self r1 loc_arg stack_ofs;
-            self.insert (Iop(Icall_imm lbl)) loc_arg loc_res;
-            self.insert(Iop(Istackoffset(-stack_ofs))) [||] [||];
-            self.insert Ireturn loc_res [||]
+            self.insert self (Iop(Icall_imm lbl)) loc_arg loc_res;
+            self.insert self (Iop(Istackoffset(-stack_ofs))) [||] [||];
+            self.insert self Ireturn loc_res [||]
           end
       | _ -> fatal_error "Selection.emit_tail"
       end
   | Cop(Craise, [e1]) ->
       let r1 = self.emit_expr self  env e1 in
       let rd = [|Proc.loc_exn_bucket|] in
-      self.insert (Iop Imove) r1 rd;
-      self.insert Iraise rd [||]
+      self.insert self (Iop Imove) r1 rd;
+      self.insert self Iraise rd [||]
   | Csequence(e1, e2) ->
       self.emit_expr self env e1;
       self.emit_tail self env e2
   | Cifthenelse(econd, eif, eelse) ->
       let (cond, earg) = self.select_condition self econd in
       let rarg = self.emit_expr self  env earg in
-      self.insert (Iifthenelse(cond, self.emit_tail_sequence self env eif,
+      self.insert self (Iifthenelse(cond, self.emit_tail_sequence self env eif,
                                      self.emit_tail_sequence self env eelse))
                   rarg [||]
   | Cswitch(esel, index, ecases) ->
       let rsel = self.emit_expr self  env esel in
-      self.insert
+      self.insert self
         (Iswitch(index, Array.map (self.emit_tail_sequence self env) ecases))
         rsel [||]
   | Ccatch(e1, e2) ->
-      self.insert (Icatch(self.emit_tail_sequence self env e1,
+      self.insert self (Icatch(self.emit_tail_sequence self env e1,
                           self.emit_tail_sequence self env e2))
                   [||] [||]
   | Cexit ->
-      self.insert Iexit [||] [||]
+      self.insert self Iexit [||] [||]
   | Ctrywith(e1, v, e2) ->
       Proc.contains_calls := true;
-      let (r1, s1) = self.emit_sequence env e1 in
+      let (r1, s1) = self.emit_sequence self env e1 in
       let rv = Reg.createv typ_addr in
       let s2 = self.emit_tail_sequence self (Tbl.add v rv env) e2 in
       let loc = Proc.loc_results r1 in
-      self.insert
-        (Itrywith(s1.extract,
+      self.insert self
+        (Itrywith(s1.extract s1,
                   instr_cons (Iop Imove) [|Proc.loc_exn_bucket|] rv s2))
         [||] [||];
       self.insert_moves self r1 loc;
-      self.insert Ireturn loc [||]
+      self.insert self Ireturn loc [||]
   | _ ->
       self.emit_return self env exp
  );
 
  emit_tail_sequence = (fun self env exp ->
-  let s = 
-   (* {< instr_seq = dummy_instr >}  *)
-    failwith "emit_tail_sequence:TODO"
-  in
+  let s = { self with instr_seq = dummy_instr } in
   s.emit_tail s env exp;
-  s.extract
+  s.extract s
  );
 
 (* Sequentialization of a function definition *)
@@ -876,7 +876,7 @@ let selector_generic () =
   self.emit_tail self env f.Cmm.fun_body;
   { fun_name = f.Cmm.fun_name;
     fun_args = loc_arg;
-    fun_body = self.extract;
+    fun_body = self.extract self;
     fun_fast = f.Cmm.fun_fast }
  );
 
