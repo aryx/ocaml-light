@@ -84,7 +84,7 @@ let current_unit_name () =
 
 (*s: function [[Compilenv.read_unit_info]] *)
 let read_unit_info filename =
-  let ic = open_in_bin filename in
+  let ic = open_in(*_bin*) filename in
   try
     let buffer = String.create (String.length cmx_magic_number) in
     really_input ic buffer 0 (String.length cmx_magic_number);
@@ -156,7 +156,7 @@ let need_apply_fun n =
 
 let save_unit_info filename =
   current_unit.ui_imports_cmi <- Env.imported_units();
-  let oc = open_out_bin filename in
+  let oc = open_out(*_bin*) filename in
   output_string oc cmx_magic_number;
   output_value oc current_unit;
   flush oc;

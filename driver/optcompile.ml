@@ -79,7 +79,7 @@ exception Outdated_version
 
 (*s: function [[Optcompile.parse_file]] *)
 let parse_file inputfile parse_fun ast_magic =
-  let ic = open_in_bin inputfile in
+  let ic = open_in(*_bin*) inputfile in
   let is_ast_file =
     try
       let buffer = Bytes.create (String.length ast_magic) in
