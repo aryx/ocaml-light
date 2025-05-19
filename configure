@@ -14,6 +14,9 @@
 #pad: to debug errors in config/auto-aux/*.c you can
 # export verbose=yes and rerun ./configure
 
+##############################################################################
+##############################################################################
+
 bindir=/usr/local/bin
 libdir=/usr/local/lib/ocaml
 mandir=/usr/local/man/man1
@@ -25,10 +28,12 @@ x11_include_dir=''
 x11_lib_dir=''
 posix_threads=no
 
-# TODO? frontport -Wno-unused?
+# TODO? -Wno-unused?
 gcc_warnings="-Wall"
 
+##############################################################################
 # Parse command-line arguments
+##############################################################################
 
 while : ; do
   case "$1" in
@@ -73,7 +78,9 @@ case "$mandir" in
    *) echo "The -mandir directory must be absolute." 1>&2; exit 2;;
 esac
 
+##############################################################################
 # Generate the files
+##############################################################################
 
 cd config/auto-aux
 rm -f s.h m.h Makefile
@@ -86,7 +93,9 @@ echo "LIBDIR=$libdir" >> Makefile
 echo "MANDIR=$mandir" >> Makefile
 echo "MANEXT=$manext" >> Makefile
 
+##############################################################################
 # Determine the system type
+##############################################################################
 
 if test "$host_type" = "unknown"; then
   if host_type=`./config.guess`; then :; else
@@ -112,7 +121,9 @@ if test -z "$cc"; then
   fi
 fi
 
+##############################################################################
 # Configure the bytecode compiler
+##############################################################################
 
 bytecc="$cc"
 bytecccompopts=""
@@ -213,7 +224,9 @@ case $? in
      echo "#define ARCH_ALIGN_DOUBLE" >> m.h;;
 esac
 
+##############################################################################
 # Configure the native-code compiler
+##############################################################################
 
 arch=none
 model=default
@@ -342,7 +355,9 @@ for libs in "" "-lcurses" "-ltermcap" "-lcurses -ltermcap"; do
   fi
 done
 
+##############################################################################
 # Configuration for the libraries
+##############################################################################
 
 otherlibraries="unix str num dynlink"
 
@@ -616,7 +631,9 @@ else
   echo "NDBM not found, the \"dbm\" library will not be supported."
 fi
 
+##############################################################################
 # Finish generated files
+##############################################################################
 
 cclibs="$cclibs -lm"
 echo "CCLIBS=$cclibs" >> Makefile
@@ -627,7 +644,9 @@ rm -f tst hasgot.c
 rm -f ../m.h ../s.h ../Makefile
 mv m.h s.h Makefile ..
 
+##############################################################################
 # Print a summary
+##############################################################################
 
 echo
 echo "** Configuration summary **"
