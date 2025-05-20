@@ -169,5 +169,8 @@ let contains_calls = ref false
 (* Calling the assembler *)
 
 let assemble_file infile outfile =
-  Ccomp.command ("as --32 -o " ^ outfile ^ " " ^ infile)
+  (* TODO? the --32 should be a configurable parameter set in config.ml
+   * by configure
+   *)
+  Ccomp.command ("as --32 -g -o " ^ outfile ^ " " ^ infile)
 
