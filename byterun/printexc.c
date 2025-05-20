@@ -99,8 +99,10 @@ void fatal_uncaught_exception(value exn)
   }
   *buf.ptr = 0;              /* Terminate string */
   errprintf("Fatal error: uncaught exception %s\n", buf.data);
+  //TODO: restore backtrace and native code!!  
+#ifndef NATIVE_CODE  
   if (backtrace_active && !debugger_in_use) print_exception_backtrace();
-
+#endif
   exit(2);
 }
 /*e: function [[fatal_uncaught_exception]] */
