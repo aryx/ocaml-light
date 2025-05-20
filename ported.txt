@@ -5,7 +5,22 @@ TODO: __FILE__ and __LOC__ in OCaml itsef ?
 
      3be947947e3249a9b362fc790d377e43c4108a62 camlParam, CamlLocal, CamlReturn (needed by otherlibs/str that does not rely on regex-0.12) alloc_small (Oct 1998)
 
+
      66ae9423a784fbc4d35b794906a4dee705afccf2: portage ARM add asmcomp/arm/ (Oct 1998)
+     fca1be1fddcd0d7a80a16f2282b6595e484556ae: portage arm (Oct 1998)
+     57c704d7390c4d92dfce5666c76f263ed414a687: start portage arm (Oct 1998)
+
+
+
+     bc333918980b97a2c81031ec33e72a417f854376 portage amd64!! (Jun 2003)
+     afe9198187905e640d0594b6327b93864f797461 profiling for amd64 (May 2004)
+
+
+     055d5c0379e42b4f561cb1fc5159659d8e9a7b6f: portage arm64 (Jul 2013)
+     3f3599f0eeeac291d3bf0aae5160f11cc64299cb: support raise arm64 (Oct 2013)
+
+
+     8f3833c4d0ef656c826359f4137c1eb3d46ea0ef: riscv (Apr 2020)
 
 -------------------------------------------------------------------------------
 START cf37b950bede21f249c8c78fa9f5e7fe977f49e5: 1.07 release (Dec 1997)
