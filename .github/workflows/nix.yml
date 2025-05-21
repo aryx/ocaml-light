@@ -37,6 +37,23 @@ jobs:
             ./configure
             make coldstart
             make world
-            make opt
             #make nix-test
           '
+
+  ubuntu-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix-shell --pure
+      - name: Build XiX using Nix
+        run: |
+          #coupling: Dockerfile
+          nix-shell --run '
+            ./configure
+            make coldstart
+            make world
+            #make nix-test
+          '
+          
