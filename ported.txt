@@ -22,6 +22,8 @@ TODO: __FILE__ and __LOC__ in OCaml itsef ?
 
      8f3833c4d0ef656c826359f4137c1eb3d46ea0ef: riscv (Apr 2020)
 
+     55da58ca6c9144331c7fa56a5d0083cb97b50925: switch to exn for Thread.Exit (Jan 2022), useful for efuns?
+
 -------------------------------------------------------------------------------
 START cf37b950bede21f249c8c78fa9f5e7fe977f49e5: 1.07 release (Dec 1997)
 -------------------------------------------------------------------------------

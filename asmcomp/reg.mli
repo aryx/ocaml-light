@@ -16,8 +16,8 @@
 
 (*s: type [[Reg.t]] *)
 type t =
-  { mutable name: string;               (* Name (for printing) *)
-    stamp: int;                         (* Unique stamp *)
+  { stamp: int;                         (* Unique stamp *)
+    mutable name: string;               (* Name (for printing) *)
     typ: Cmm.machtype_component;        (* Type of contents *)
     mutable loc: location;              (* Actual location *)
     mutable spill: bool;                (* "true" to force stack allocation  *)

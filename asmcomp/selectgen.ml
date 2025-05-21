@@ -298,7 +298,12 @@ let join r1 seq1 r2 seq2 =
       end else begin
         r.(i) <- Reg.create r1.(i).typ;
         seq1.insert_move seq1 r1.(i) r.(i);
-        seq2.insert_move seq1 r2.(i) r.(i)
+        (* pad: bugfix: I did a mistake when switching from oo to record
+         * and wrote seq2.insert_move seq1 ... which led to some weird
+         * regressions in nucleid.out! and also some fatal_error
+         * in Liveness.fundecl.
+         *)
+        seq2.insert_move seq2 r2.(i) r.(i)
       end
     done;
     r

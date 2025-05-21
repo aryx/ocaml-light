@@ -34,6 +34,8 @@
 #include "sys.h"
 #include "backtrace.h"
 
+#ifndef NATIVE_CODE
+
 // bool
 int backtrace_active = 0;
 
@@ -62,7 +64,7 @@ void init_backtrace(void)
 
 /* Store the return addresses contained in the given stack fragment
    into the backtrace array */
-
+// used in interp.c
 void stash_backtrace(value exn, code_t pc, value * sp)
 {
   code_t end_code = (code_t) ((char *) start_code + code_size);
@@ -285,3 +287,9 @@ value caml_get_exception_backtrace(value unit) /* ML */
 #endif
 
 }
+#else
+value caml_get_exception_backtrace(value unit) /* ML */
+{
+  return 0;
+}
+#endif // NATIVE_CODE

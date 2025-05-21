@@ -14,10 +14,16 @@
 
 open Cmm
 
+(* pad: I reordered the field to put stamp first because RegOrder
+ * below is using this field for comparison and the default compare
+ * used in set.ml is I think using the order of the field for comparison.
+ * That way fib.s in ocaml-light and ocaml 1.07 is mostly identical and
+ * start with the same use of register
+ *)
 (*s: type [[Reg.t]]([[(asmcomp/reg.ml)]]) *)
 type t =
-  { mutable name: string;
-    stamp: int;
+  { stamp: int;
+    mutable name: string;
     typ: Cmm.machtype_component;
     mutable loc: location;
     mutable spill: bool;
