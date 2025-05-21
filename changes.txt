@@ -3,7 +3,7 @@
 * TODO
 
 ** compilers
-- restore asmcomp/ for x86 -m32 at least (and later x86_64/arm/arm64/riscv)
+- port more arch x86_64(amd64)/arm/arm64/riscv
   
 ** test infra
 - restore testasmcomp/
@@ -11,8 +11,8 @@
 ** dev infra
 - restore working semgrep.yml
 
-* 0.1 (Q2 2025) (Dockerfile, Nix, Github Actions CI checks, dune, tests, Xix)
-# ported enough features so I can compile some of xix via bootstrap-mk.sh and mk
+* 0.1 (Q2 2025) (Dockerfile, Nix, Github Actions CI checks, native, dune, tests, Xix)
+# ported enough features so I can compile some of xix via build-mk.sh and mk
 
 ** stdlib
 - backport Obj.is_int and Obj.xxx_tag (2.02)
@@ -35,6 +35,9 @@
 ** typechecker
 - backport ability to type string-format in higher order functions like
   Logs.info (fun m -> m "%s" name) (extension to type_expect())
+
+** compilers
+- restore asmcomp/ for x86 (using gcc -m32)
 
 ** test infra
 - add Dockerfile and docker.yml GHA (Github Action) CI checks
@@ -65,9 +68,9 @@
 
 ** os
 - compile byterun/ for plan9 so I can run ocaml (light) bytecode programs
-  under my fork of plan9
+  under my fork of plan9!
 
-* Alpha (2015) (fork of OCaml 1.07 - OO - functors + native ARM)
+* Alpha (2015) (fork of OCaml 1.07 - OO - functors)
 # see also pad.txt history section
 
 ** language
@@ -76,13 +79,14 @@
   implicits are IMHO better). See also REMOVE_OBJ.patch.
   Note that I didn't need to remove the use of objects in the compiler itself
   because they didn't even like the oo extensions and so didn't use it :)
+  (they actually just use it very lightly in asmcomp/ but the code could
+  be easily switch to plain records).
 - remove functors, again to simplify the code as ocaml light is meant
   for educational purpose (part of my principia softwarica project).
   This meant slightly refactor the asmcomp/ code that was the only user
   of functors (and maybe set and map)
 - backport a few features from recent OCaml to ocaml-light:
     * record 'with' (see diff_with_record)
-    * backtrace?
 
 ** compilers  
 - removed some native targets: alpha, hppa, m68k, power, and sparc,
@@ -94,6 +98,7 @@
 ** stdlib
 # see also pad.txt changes section
 - backport buffer.ml ? (from ?)
+- backport basic backtrace in printexc.ml
 
 ** build infra
 - a working configure that can work on some recent Mac and Linux
