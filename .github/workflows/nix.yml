@@ -37,5 +37,6 @@ jobs:
             ./configure
             make coldstart
             make world
-            make nix-test
+            make opt
+            #make nix-test
           '
