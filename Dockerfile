@@ -7,6 +7,8 @@ FROM ubuntu:22.04
 RUN apt-get update # needed otherwise can't find any package
 RUN apt-get install -y build-essential autoconf automake
 #alt: apk add build-base make bash git rsync curl
+# multilib is needed for gcc -m32
+RUN apt-get install -y gcc-multilib
 #alt: LATER: use kencc instead of gcc
 
 WORKDIR /src
@@ -14,21 +16,26 @@ WORKDIR /src
 # Now let's build from source
 COPY . .
 
-# Configure
+# configure
 RUN ./configure
 
-# Make
+# make
 RUN make clean
 RUN make coldstart
 RUN make world
+# this requires gcc-multilib
+RUN make opt
 
-# Install
+# make install
 RUN make install
+RUN make installopt
 
-# Basic tests
-RUN which ocaml
-RUN ocamlc -v
-RUN echo '1+1;;' | ocaml
-
-# Regression tests
+# make test
 RUN make test
+
+# basic tests
+RUN which ocaml
+RUN which ocamlopt
+RUN ocamlc -v
+RUN ocamlopt -v
+RUN echo '1+1;;' | ocaml
