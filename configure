@@ -40,6 +40,11 @@ gcc_warnings="-Wall"
 # Parse command-line arguments
 ##############################################################################
 
+#TODO: support -as, -aspp, -partialld so can run for example from INSTALL.adoc:
+#    * On a Linux x86-64 host, to build a 32-bit version of OCaml:
+#          ./configure -cc "gcc -m32" -as "as --32" -aspp "gcc -m32 -c" \
+#                -host i386-linux -partialld "ld -r -melf_i386"
+
 while : ; do
   case "$1" in
     "") break;;
@@ -150,7 +155,7 @@ echo "BYTECCLINKOPTS=$bytecclinkopts" >> Makefile
 #pad: recent compilers (gcc, clang) use new defaults that prevent to compile
 # the test code in config/auto-aux/*.c hence those -Wno-xxx below
 #alt: fix config/auto-aux/*.c to be compliant with the new C23 standard
-# by either include appropriate .h or just add prototypes of functions used
+# by either including appropriate .h or just add prototypes of used functions
 cc="$bytecc $bytecclinkopts -Wno-implicit-function-declaration -Wno-implicit-int"
 export cc cclibs
 
@@ -160,7 +165,7 @@ sh ./runtest ansi.c
 case $? in
   0) echo "The C compiler is ANSI-compliant.";;
   1) echo "The C compiler $cc is not ANSI-compliant."
-     echo "You need an ANSI C compiler to build Objective Caml."
+     echo "You need an ANSI C compiler to build OCaml light."
      exit 2;;
   *) echo "Unable to compiler the test program."
      echo "Make sure the C compiler $cc is properly installed."
@@ -175,23 +180,37 @@ case "$1,$2,$3" in
   4,4,4) echo "OK, this is a regular 32 bit architecture."
          echo "#undef ARCH_SIXTYFOUR" >> m.h;;
   4,8,8) echo "Wow! A 64 bit architecture!"
-         echo "#define ARCH_SIXTYFOUR" >> m.h
+         
          case "$bytecc,$host" in
-           gcc,alpha-*-osf*) echo "#define ARCH_CODE32" >> m.h;;
-           *)                echo "#undef ARCH_CODE32" >> m.h;;
+             gcc,alpha-*-osf*)
+		 echo "#define ARCH_SIXTYFOUR" >> m.h
+		 echo "#define ARCH_CODE32" >> m.h;;
+	     gcc,x86_64-*-linux*)
+		 #pad: this allows to compile ocamlrun in 64bit and asmrun
+		 # in 32bit.
+		 #alt: use -m32 for bytegcc too and undef ARCH_SIXTYFOUR
+		 # (but got weird problems with ocamlrun compiled with -m32) 
+		 echo "#if defined(__x86_64__) || defined(_M_X64) || \\" >> m.h
+		 echo "     defined(__aarch64__) || \\" >> m.h
+		 echo "     (defined(__riscv) && __riscv_xlen == 64)" >> m.h
+		 echo "#define ARCH_SIXTYFOUR" >> m.h
+		 echo "#endif" >> m.h;;
+             *)
+		 echo "#define ARCH_SIXTYFOUR" >> m.h
+		 echo "#undef ARCH_CODE32" >> m.h;;
          esac;;
   8,*,*) echo "Wow! A 64 bit architecture!"
-         echo "Unfortunately, Objective Caml does not handle the case"
+         echo "Unfortunately, OCaml light does not handle the case"
          echo "sizeof(int) = 8."
-         echo "Objective Caml won't run on this architecture."
+         echo "OCaml light won't run on this architecture."
          exit 2;;
   *,*,8) echo "Wow! A 64 bit architecture!"
-         echo "Unfortunately, Objective Caml cannot work in the case"
+         echo "Unfortunately, OCaml light cannot work in the case"
          echo "sizeof(long) != sizeof(long *)."
-         echo "Objective Caml won't run on this architecture."
+         echo "OCaml light won't run on this architecture."
          exit 2;;
   *,*,*) echo "This architecture seems to be neither 32 bits nor 64 bits."
-         echo "Objective Caml won't run on this architecture."
+         echo "OCaml light won't run on this architecture."
          exit 2;;
       *) echo "Unable to compile the test program."
          echo "Make sure the C compiler $cc is properly installed."
@@ -207,7 +226,7 @@ case $? in
   1) echo "This is a little-endian architecture."
      echo "#undef ARCH_BIG_ENDIAN" >> m.h;;
   2) echo "This architecture seems to be neither big endian nor little endian."
-     echo "Objective Caml won't run on this architecture."
+     echo "OCaml light won't run on this architecture."
      exit 2;;
   *) echo "Something went wrong during endianness determination."
      echo "You'll have to figure out endianness yourself"
@@ -224,7 +243,7 @@ case $? in
      echo "#define ARCH_ALIGN_DOUBLE" >> m.h;;
   *) echo "Something went wrong during alignment determination for doubles."
      echo "I'm going to assume this architecture has alignment constraints over doubles."
-     echo "That's a safe bet: Objective Caml will work even if"
+     echo "That's a safe bet: OCaml light will work even if"
      echo "this architecture has actually no alignment constraints."
      echo "#define ARCH_ALIGN_DOUBLE" >> m.h;;
 esac
@@ -238,10 +257,12 @@ model=default
 system=unknown
 
 case "$host" in
+  #TODO: support system=plan9 at some point?
   i[3456]86-*-linuxaout)        arch=i386; system=linux_aout;;
   i[3456]86-*-linux)            arch=i386; system=linux_elf;;
   i[3456]86-*-*bsd*)            arch=i386; system=bsd;;
-  #pad: new
+  #TODO: port amd64 so can compile with arch=amd64; system=linux_elf
+  # in the mean time we gonna "cross-compile" to i386 via gcc -m32
   x86_64-*-linux*)            arch=i386; system=linux_elf;;
 esac
 
@@ -254,18 +275,30 @@ esac
 nativecccompopts=''
 nativecclinkopts=''
 
+#TODO: could also case on $host here for crosscompiling settings
 case "$arch,$nativecc,$system" in
-  alpha,cc*,digital) nativecccompopts='-std1';;
-  *,gcc*,*)          nativecccompopts='-m32 -Wall';nativecclinkopts='-m32';;
+    alpha,cc*,digital)
+	nativecccompopts='-std1';;
+    #TODO: support amd64
+    i386,gcc*,*)
+	nativecccompopts='-m32 -Wall'
+	nativecclinkopts='-m32';;
 esac
 
+#TODO: define as='' at some point too
 asflags=''
 aspp='$(AS)'
 asppflags=''
 
 case "$arch,$model,$system" in
-  alpha,*,linux)    aspp='gcc'; asppflags='-c -DSYS_$(SYSTEM)';;
-  i386,*,*)         aspp='gcc'; asppflags='-m32 -c -DSYS_$(SYSTEM)';;
+    alpha,*,linux)
+	aspp='gcc'
+	asppflags='-c -DSYS_$(SYSTEM)';;
+    #TODO: support amd64
+    i386,*,*)
+        aspp='gcc'
+	asflags='--32'
+	asppflags='-m32 -c -DSYS_$(SYSTEM)';;
 esac
 
 echo "ARCH=$arch" >> Makefile
@@ -381,6 +414,10 @@ elif sh ./hasgot -lnsl -lsocket socket socketpair bind listen accept connect; th
   echo "#define HAS_SOCKETS" >> s.h
   has_sockets=yes
 fi
+
+#pad: I've removed some HAS_STRERROR test, to simplify code
+# so it's not tested/detected here anymore
+#TODO: should hasgot -i stdlib.h, seems more standard now
 
 if sh ./hasgot -i unistd.h; then
   echo "unistd.h found."
@@ -546,6 +583,7 @@ fi
 
 # Determine the target architecture for the "num" library
 
+#TODO? detect x86_64 and compile lib with -m32?
 case "$host" in
   i[3456]86-*-linux) bignum_arch=x86;;
   *) bignum_arch=C
@@ -569,6 +607,9 @@ else
 fi
 
 # Determine the location of X include files and libraries
+
+#TODO: could remove all of that as otherlibs/graphics/ got later
+# moved out of the ocaml repo
 
 x11_include="not found"
 x11_link="not found"
@@ -658,7 +699,7 @@ mv m.h s.h Makefile ..
 echo
 echo "** Configuration summary **"
 echo
-echo "Directories where Objective Caml will be installed:"
+echo "Directories where OCaml light will be installed:"
 echo "	binaries.................. $bindir"
 echo "	standard library.......... $libdir"
 echo "	manual pages.............. $mandir (with extension .$manext)"
@@ -683,6 +724,11 @@ else
   echo "	C compiler used........... $nativecc"
   echo "	options for compiling..... $nativecccompopts"
   echo "	options for linking....... $nativecclinkopts $cclibs"
+  # pad: \$(AS) because there is no configure -as ... yet nor a
+  # config/Makefile entry for AS=... We use gcc as a frontend for the
+  # assembler via ASPP in most of our Makefiles (we use 'as' directly though
+  # in the asmcomp/<arch>/proc.ml).
+  # The only direct use of the AS is in testsasmcomp/Makefile
   echo "        assembler ................ \$(AS) $asflags"
   echo "        preprocessed assembler ... $aspp $asppflags"
 fi
