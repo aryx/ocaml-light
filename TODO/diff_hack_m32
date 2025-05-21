@@ -1,0 +1,54 @@
+diff --git a/asmcomp/i386/proc.ml b/asmcomp/i386/proc.ml
+index 792be7a..130f621 100644
+--- a/asmcomp/i386/proc.ml
++++ b/asmcomp/i386/proc.ml
+@@ -169,5 +169,5 @@ let contains_calls = ref false
+ (* Calling the assembler *)
+ 
+ let assemble_file infile outfile =
+-  Ccomp.command ("as --32 -o " ^ outfile ^ " " ^ infile)
++  Ccomp.command ("as --32 -g -o " ^ outfile ^ " " ^ infile)
+ 
+diff --git a/asmcomp/liveness.ml b/asmcomp/liveness.ml
+index 84d87ab..5190414 100644
+--- a/asmcomp/liveness.ml
++++ b/asmcomp/liveness.ml
+@@ -116,7 +116,8 @@ let fundecl f =
+   let wrong_live = (*Reg.*)Set.diff initially_live (Reg.set_of_array f.fun_args) in
+   if not ((*Reg.*)Set.is_empty wrong_live) then begin
+     Printmach.regset wrong_live; Format.print_newline();
+-    Misc.fatal_error "Liveness.fundecl"
++    (* Misc.fatal_error "Liveness.fundecl" *)
++    Logs.err (fun m -> m "Liveness.fundecl");
+   end
+ (*e: function [[Liveness.fundecl]] *)
+ (*e: asmcomp/liveness.ml *)
+diff --git a/byterun/printexc.c b/byterun/printexc.c
+index 644971c..d17b48b 100644
+--- a/byterun/printexc.c
++++ b/byterun/printexc.c
+@@ -99,8 +99,9 @@ void fatal_uncaught_exception(value exn)
+   }
+   *buf.ptr = 0;              /* Terminate string */
+   errprintf("Fatal error: uncaught exception %s\n", buf.data);
++#ifndef NATIVE_CODE  
+   if (backtrace_active && !debugger_in_use) print_exception_backtrace();
+-
++#endif
+   exit(2);
+ }
+ /*e: function [[fatal_uncaught_exception]] */
+diff --git a/test/Makefile b/test/Makefile
+index a1177a5..aacf078 100644
+--- a/test/Makefile
++++ b/test/Makefile
+@@ -20,8 +20,7 @@ default:
+ 	$(MAKE) bytetest
+ #TORESTORE: codetest
+ 
+-all: $(BYTE_EXE)
+-#TORESTORE: $(CODE_EXE)
++all: $(BYTE_EXE) $(CODE_EXE)
+ 
+ # Nucleic
+ 
