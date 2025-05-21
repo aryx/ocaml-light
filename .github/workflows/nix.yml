@@ -37,7 +37,7 @@ jobs:
             ./configure
             make coldstart
             make world
-            #make nix-test
+            #TODO: make nix-test
           '
 
   ubuntu-only:
@@ -54,6 +54,7 @@ jobs:
             ./configure
             make coldstart
             make world
-            #make nix-test
+            make opt
+            #TODO: make nix-test
           '
           
