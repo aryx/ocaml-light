@@ -1,3 +1,8 @@
+# -*- sh -*-
+# ----------------------------------------------------------------------------
+# Patterns
+# ----------------------------------------------------------------------------
+
 # OCaml object files
 *.cm*
 *.byte
@@ -7,19 +12,34 @@
 # C object files
 *.o
 *.a
-asmrun/*.c
 
 # when compiling for plan9
 *.8
-8.out
 *.5
+8.out
 5.out
-
-# when compiling with dune
-/_build
 
 # syncweb object files
 .md5sum_*
+
+# latex object files
+*.aux
+*.brf
+*.log
+#*.out # commented because .out is used for tests expect results
+*.toc
+*.bbl
+*.blg
+
+# patch -p1 < ...
+# *.rej
+
+# ----------------------------------------------------------------------------
+# Specific files
+# ----------------------------------------------------------------------------
+
+# when compiling with dune
+/_build
 
 # codemap/codegraph
 /graph_code.marshall
@@ -40,17 +60,8 @@ asmrun/*.c
 /docs/literate/lineage.pdf
 /docs/literate/OCaml.out
 
-# latex object files
-*.aux
-*.brf
-*.log
-#*.out # commented because .out is used for tests expect results
-*.toc
-*.bbl
-*.blg
-
-# patch -p1 < ...
-# *.rej
+# most of those files are symlinked from byterun/ during make
+asmrun/*.c
 
 # ocamllex/ocamlyacc generated files
 
@@ -74,6 +85,14 @@ asmrun/*.c
 /test/Lex/scanner.ml
 /test/Lex/testscanner.ml
 
+# symlinked from asmcomp/<arch>/
+/asmcomp/arch.ml
+/asmcomp/emit.ml
+/asmcomp/proc.ml
+/asmcomp/reload.ml
+/asmcomp/scheduling.ml
+/asmcomp/selection.ml
+
 # generated OCaml code
 /bytecomp/opcodes.ml
 /bytecomp/runtimedef.ml
@@ -87,10 +106,11 @@ boot/Saved
 /boot/ocamlrun
 /boot/ocamlyacc
 
-# project root
+# project root binaries
 
 /ocaml
 /ocamlc
+/ocamlopt
 /expunge
 
 # /tools
@@ -100,6 +120,8 @@ boot/Saved
 /tools/dumper/objinfo
 /tools/dumper/opnames.ml
 /tools/profiler/ocamlprof
+/tools/misc/cvt_emit
+/tools/misc/cvt_emit.ml
 
 # /config
 
@@ -136,7 +158,5 @@ boot/Saved
 
 /yacc/ocamlyacc
 
+# ----------------------------------------------------------------------------
 # LAST
-/tools/misc/cvt_emit
-/tools/misc/cvt_emit.ml
-/ocamlopt
