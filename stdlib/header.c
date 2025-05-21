@@ -9,8 +9,6 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: header.c,v 1.9 1997/09/02 12:54:54 xleroy Exp $ */
-
 char runtime_name [] = RUNTIME_NAME;
 char errmsg [] = "Cannot exec ocamlrun.\n";
 
