@@ -386,14 +386,19 @@ fi
 
 # For the terminfo module
 
-for libs in "" "-lcurses" "-ltermcap" "-lcurses -ltermcap"; do
-  if sh ./hasgot $libs tgetent tgetstr tgetnum tputs; then
-    echo "termcap functions found (with libraries '$libs')"
-    echo "#define HAS_TERMCAP" >> s.h
-    cclibs="${cclibs}${libs}"
-    break
-  fi
-done
+#pad: ugly: disable ncurses for now because there is no /usr/lib32/libncurses.a
+# and that can cause issue with ocamlopt if we want to statically link
+# binaries. Anyway it is just used in parsing/location.ml to highlight
+# errors and is a optional.
+
+#for libs in "" "-lcurses" "-ltermcap" "-lcurses -ltermcap"; do
+#  if sh ./hasgot $libs tgetent tgetstr tgetnum tputs; then
+#    echo "termcap functions found (with libraries '$libs')"
+#    echo "#define HAS_TERMCAP" >> s.h
+#    cclibs="${cclibs}${libs}"
+#    break
+#  fi
+#done
 
 ##############################################################################
 # Configuration for the libraries
