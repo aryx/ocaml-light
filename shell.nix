@@ -10,15 +10,13 @@ let
    # fetch a specific nixos version for better reproducibility
    nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/tarball/nixos-24.05";
    pkgs = import nixpkgs { config = {}; overlays = []; };
+   isX86_64 = pkgs.stdenv.hostPlatform.system == "x86_64-linux";
  in
 
 pkgs.mkShell {
   packages = with pkgs; [
     # usually installed by default but does not hurt to add
     gcc
-    # for -m32
-    gcc_multi
-    glibc_multi
     binutils
     # Some Makefile relies on perl to fix some syncweb comments
     # alt: use sed
@@ -36,20 +34,26 @@ pkgs.mkShell {
     # - coreutils findutils diffutils file gnugrep gnused
     # - gnutar gzip bzip2 unzip xz brotli zlib zstd curl
     # - not really needed but here: ed gawk patch patchelf
-  ];
+  ] ++ (if isX86_64 then [
+    # for -m32
+    gcc_multi
+    glibc_multi
+  ] else []);    
   
   # Needed to let gcc know it's doing multilib
   hardeningDisable = [ "all" ];
   
   #coupling: Dockerfile
   shellHook = ''
-     echo "32-bit compilation enabled (use gcc -m32)"
+    echo "Shell initialized for ${pkgs.stdenv.hostPlatform.system}"
+    ${if isX86_64 then "echo '32-bit compilation supported (gcc -m32)'" else "echo '32-bit compilation not available on this architecture'"}
+
      echo "you can now run:"
      echo "    ./configure"
      echo "    make clean"
      echo "    make coldstart"
      echo "    make world"
-     echo "    make opt"
+     ${if isX86_64 then "echo '    make opt'" else ""}
      echo "    make test"
   '';
 }
