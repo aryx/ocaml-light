@@ -1,7 +1,7 @@
 include ../config/Makefile
 
 CAMLC=../boot/ocamlrun ../ocamlc -I ../stdlib -I KB -I Lex
-CAMLOPT=../boot/ocamlrun ../ocamlopt -I ../stdlib -I KB -I Lex -verbose
+CAMLOPT=../boot/ocamlrun ../ocamlopt -I ../stdlib -I KB -I Lex
 OPTFLAGS=-S
 CAMLYACC=../yacc/ocamlyacc
 CAMLLEX=../boot/ocamlrun ../lex/ocamllex
@@ -17,11 +17,9 @@ CODE_EXE=$(BYTE_EXE:.byt=.out)
 
 default:
 	$(MAKE) all
-	$(MAKE) bytetest
-#TORESTORE: codetest
+	$(MAKE) bytetest codetest
 
-all: $(BYTE_EXE)
-#TORESTORE: $(CODE_EXE)
+all: $(BYTE_EXE) $(CODE_EXE)
 
 # Nucleic
 

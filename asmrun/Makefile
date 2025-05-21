@@ -8,7 +8,7 @@ DFLAGS=$(FLAGS) -g -DDEBUG $(NATIVECCCOMPOPTS)
 COBJS=startup.o main.o fail.o roots.o signals.o \
   misc.o freelist.o major_gc.o minor_gc.o memory.o alloc.o compare.o ints.o \
   floats.o str.o array.o io.o extern.o intern.o hash.o sys.o parsing.o \
-  gc_ctrl.o terminfo.o md5.o obj.o lexing.o printexc.o callback.o weak.o \
+  gc_ctrl.o terminfo.o md5.o obj.o lexing.o printexc.o backtrace.o callback.o weak.o \
   compact.o
 
 ASMOBJS=$(ARCH).o
@@ -81,6 +81,8 @@ lexing.c: ../byterun/lexing.c
 	ln -s ../byterun/lexing.c lexing.c
 printexc.c: ../byterun/printexc.c
 	ln -s ../byterun/printexc.c printexc.c
+backtrace.c: ../byterun/backtrace.c
+	ln -s ../byterun/backtrace.c backtrace.c
 callback.c: ../byterun/callback.c
 	ln -s ../byterun/callback.c callback.c
 weak.c: ../byterun/weak.c

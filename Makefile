@@ -136,6 +136,7 @@ coldstart:
 ##############################################################################
 
 # Complete bootstrapping cycle
+# pad: see BOOTSTRAP.adoc in recent OCaml for more info
 bootstrap:
 # Save the original bootstrap compiler
 	$(MAKE) backup
