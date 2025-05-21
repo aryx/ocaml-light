@@ -1,2 +1,3 @@
 INRIA holds all ownership rights to Objective Caml.
-See license.txt
+See LICENSE
+
