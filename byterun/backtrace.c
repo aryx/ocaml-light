@@ -288,7 +288,8 @@ value caml_get_exception_backtrace(value unit) /* ML */
 
 }
 #else
-value caml_get_exception_backtrace(value unit) /* ML */
+//pad: do not add the ML special comment here
+value caml_get_exception_backtrace(value unit)
 {
   return 0;
 }
