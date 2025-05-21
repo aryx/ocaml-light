@@ -33,6 +33,10 @@ RUN make installopt
 # make test
 RUN make test
 
+# good self test
+RUN make ocamlc.opt
+RUN make ocamlopt.opt
+
 # basic tests
 RUN which ocaml
 RUN which ocamlopt
