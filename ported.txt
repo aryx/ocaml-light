@@ -32,7 +32,7 @@ TODO: __FILE__ and __LOC__ in OCaml itsef ?
      e6343bfb447c8fb170981d46b5debb7855d95e47: fichier de config LGPL (Dec 1999)
      02ef950033b81fe371759f024faa55f361ba83a6: add infamous special exn on linking for LGPL part (Dec 2001)
      2d26308ad4d34ea0c00e44db62c4c24c7031c78c: fix wrong clause in special exn section (Jan 2007) lol
-     7fc2d214c4ee8853615fc3e5649f45e11d85378d: switch to LGPL 2.1 for everything!! (May 2016)
+     7fc2d214c4ee8853615fc3e5649f45e11d85378d: switch to LGPL 2.1 for everything!! (May 2016) at OCaml 4.04.0
 
 -------------------------------------------------------------------------------
 START cf37b950bede21f249c8c78fa9f5e7fe977f49e5: 1.07 release (Dec 1997)
