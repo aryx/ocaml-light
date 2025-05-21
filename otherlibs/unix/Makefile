@@ -25,12 +25,25 @@ OBJS=accept.o access.o addrofstr.o alarm.o bind.o chdir.o chmod.o \
 
 all: libunix.a unix.cmi unix.cma
 
-allopt: libunix.a unix.cmi unix.cmxa
+#pad: libunixopt.a and OPTOBJS are a hack needed because on x86_64
+# we need to compile the C code in 2 different ways (with and without -m32)
+#alt: manage to compile also ocamlrun with -m32)
+allopt: libunix.a unix.cmi unix.cmxa libunixopt.a
 
 libunix.a: $(OBJS)
 	rm -f libunix.a
 	ar rc libunix.a $(OBJS)
 	$(RANLIB) libunix.a
+
+OPTOBJS=$(OBJS:.o=.ox)
+libunixopt.a: $(OPTOBJS)
+	rm -f libunixopt.a
+	ar rc libunixopt.a $(OPTOBJS)
+	$(RANLIB) libunixopt.a
+.SUFFIXES: .ox
+.c.ox:
+	$(NATIVECC) -I../../byterun $(NATIVECCCOMPOPTS) -c $< -o $@
+
 
 unix.cma: unix.cmo
 	$(CAMLC) -a -linkall -o unix.cma unix.cmo
@@ -44,15 +57,16 @@ partialclean:
 	rm -f *.cm*
 
 clean: partialclean
-	rm -f *.a *.o
+	rm -f *.a *.o *.ox
 
 install:
 	cp libunix.a $(LIBDIR)/libunix.a
 	cd $(LIBDIR); $(RANLIB) libunix.a
 	cp unix.cmi unix.cma unix.mli $(LIBDIR)
 
+#pad: who is producing this unix.a?
 installopt:
-	cp unix.cmx unix.cmxa unix.a $(LIBDIR)
+	cp unix.cmx unix.cmxa unix.a libunixopt.a $(LIBDIR)
 	cd $(LIBDIR); $(RANLIB) unix.a
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx

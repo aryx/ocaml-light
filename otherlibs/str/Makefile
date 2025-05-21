@@ -11,12 +11,22 @@ COBJS=strstubs.o
 
 all: libstr.a str.cmi str.cma
 
-allopt: libstr.a str.cmi str.cmxa
+#pad: see otherlibs/unix/Makefile for this libstropt.a hack
+allopt: libstr.a str.cmi str.cmxa libstropt.a
 
 libstr.a: $(COBJS)
 	rm -f libstr.a
 	ar rc libstr.a $(COBJS)
 	$(RANLIB) libstr.a
+
+OPTOBJS=$(COBJS:.o=.ox)
+libstropt.a: $(OPTOBJS)
+	rm -f libstropt.a
+	ar rc libstropt.a $(OPTOBJS)
+	$(RANLIB) libstropt.a
+.SUFFIXES: .ox
+.c.ox:
+	$(NATIVECC) -I../../byterun $(NATIVECCCOMPOPTS) -c $< -o $@
 
 str.cma: str.cmo
 	$(CAMLC) -a -o str.cma str.cmo
@@ -30,7 +40,7 @@ partialclean:
 	rm -f *.cm*
 
 clean: partialclean
-	rm -f *.a *.o
+	rm -f *.a *.o *.ox
 
 install:
 	cp libstr.a $(LIBDIR)/libstr.a
@@ -38,7 +48,7 @@ install:
 	cp str.cma str.cmi str.mli $(LIBDIR)
 
 installopt:
-	cp str.cmx str.cmxa str.a $(LIBDIR)
+	cp str.cmx str.cmxa str.a libstropt.a $(LIBDIR)
 	cd $(LIBDIR); $(RANLIB) str.a
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx

@@ -24,6 +24,7 @@ type spec =
 
 exception Bad of string
 
+(* TODO: use that *)
 exception Help of string
 (** Raised by [Arg.parse_argv] when the user asks for help. *)
 

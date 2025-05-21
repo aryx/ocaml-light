@@ -13,6 +13,7 @@
 
 * 0.1 (Q2 2025) (Dockerfile, Nix, Github Actions CI checks, native, dune, tests, Xix)
 # ported enough features so I can compile some of xix via build-mk.sh and mk
+# in bytecode and (static) native modes!
 
 ** stdlib
 - backport Obj.is_int and Obj.xxx_tag (2.02)
