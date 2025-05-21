@@ -14,28 +14,42 @@ let
 
 pkgs.mkShell {
   packages = with pkgs; [
-     # Some Makefile relies on perl to fix some syncweb comments
-     # alt: use sed
-     perl
-     # Compile-time external libs, ex: pcre
-     # alt: disable otherlibs/graph/
-     xorg.libX11
-     # Optional utilities for development/debugging, ex: which
-     # Implicit utilities and libs installed by default in nix
-     # (see "echo $PATH | sed -e 's/:/\n/g'" and "ldd ./bin/hello-world"):
-     # - gnumake bash
-     # - binutils gcc/clang glibc linux-headers gnu-config update-autotools
-     # - coreutils findutils diffutils file gnugrep gnused
-     # - gnutar gzip bzip2 unzip xz brotli zlib zstd curl
-     # - not really needed but here: ed gawk patch patchelf
-   ];
+    # usually installed by default but does not hurt to add
+    gcc
+    # for -m32
+    gcc_multi
+    glibc_multi
+    binutils
+    # Some Makefile relies on perl to fix some syncweb comments
+    # alt: use sed
+    perl
 
-   #coupling: Dockerfile
-   shellHook = ''
-     #./configure
-     #make clean
-     #make coldstart
-     #make world
-     #make test
+    # Compile-time external libs, ex: pcre
+    # alt: disable otherlibs/graph/
+    xorg.libX11
+    
+    # Optional utilities for development/debugging, ex: which
+    # Implicit utilities and libs installed by default in nix
+    # (see "echo $PATH | sed -e 's/:/\n/g'" and "ldd ./bin/hello-world"):
+    # - gnumake bash
+    # - binutils gcc/clang glibc linux-headers gnu-config update-autotools
+    # - coreutils findutils diffutils file gnugrep gnused
+    # - gnutar gzip bzip2 unzip xz brotli zlib zstd curl
+    # - not really needed but here: ed gawk patch patchelf
+  ];
+  
+  # Needed to let gcc know it's doing multilib
+  hardeningDisable = [ "all" ];
+  
+  #coupling: Dockerfile
+  shellHook = ''
+     echo "32-bit compilation enabled (use gcc -m32)"
+     echo "you can now run:"
+     echo "    ./configure"
+     echo "    make clean"
+     echo "    make coldstart"
+     echo "    make world"
+     echo "    make opt"
+     echo "    make test"
   '';
 }
