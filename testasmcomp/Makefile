@@ -12,7 +12,7 @@ CAMLRUN=../boot/ocamlrun
 
 CODEGEN=./codegen
 CC=$(NATIVECC)
-CFLAGS=$(NATIVECCCOMPOPTS) -g
+CFLAGS=$(NATIVECCCOMPOPTS) -g -Wno-implicit-function-declaration -Wno-builtin-declaration-mismatch -Wno-parentheses
 
 PROGS=fib.out tak.out quicksort.out quicksort2.out soli.out integr.out \
       arith.out checkbound.out
@@ -22,11 +22,11 @@ all: codegen $(PROGS)
 INCLUDES=-I ../utils -I ../typing -I ../asmcomp
 
 OTHEROBJS=../utils/misc.cmo ../utils/config.cmo ../utils/tbl.cmo \
-  ../utils/nativeint.cmo ../utils/clflags.cmo ../utils/ccomp.cmo \
-  ../utils/config.cmo ../utils/clflags.cmo \
+  ../utils/nativeint.cmo ../utils/clflags.cmo ../utils/logs.cmo ../utils/ccomp.cmo \
+  ../utils/config.cmo ../utils/clflags.cmo  \
   ../parsing/linenum.cmo ../parsing/location.cmo \
   ../typing/ident.cmo ../typing/path.cmo ../typing/types.cmo \
-  ../typing/btype.cmo ../typing/subst.cmo ../typing/primitive.cmo \
+  ../typing/subst.cmo ../typing/primitive.cmo \
   ../typing/predef.cmo ../typing/datarepr.cmo ../typing/env.cmo \
   ../bytecomp/lambda.cmo \
   ../asmcomp/arch.cmo ../asmcomp/cmm.cmo ../asmcomp/printcmm.cmo \

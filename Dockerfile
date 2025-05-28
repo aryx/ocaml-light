@@ -1,4 +1,4 @@
-# Build and test ocaml-light on Ubuntu Linux.
+# Build and test ocaml-light (bytecode and x86 native) on Ubuntu Linux.
 
 FROM ubuntu:22.04
 #alt: alpine:3.21
@@ -7,7 +7,7 @@ FROM ubuntu:22.04
 RUN apt-get update # needed otherwise can't find any package
 RUN apt-get install -y build-essential autoconf automake
 #alt: apk add build-base make bash git rsync curl
-# multilib is needed for gcc -m32
+# multilib is needed for gcc -m32; asmcomp currently supports only x86
 RUN apt-get install -y gcc-multilib
 #alt: LATER: use kencc instead of gcc
 
