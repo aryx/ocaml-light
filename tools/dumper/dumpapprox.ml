@@ -55,7 +55,7 @@ let print_name_crc (name, crc) =
 let print_infos (ui, crc) =
   print_string "Name: "; print_string ui.ui_name; print_newline();
   print_string "CRC of implementation: "; print_digest crc; print_newline();
-  print_string "CRC of interface: "; print_digest ui.ui_interface; print_newline();
+  (*  print_string "CRC of interface: "; print_digest ui.ui_interface; print_newline(); *)
   open_vbox 2;
   print_string "Interfaces imported:";
   List.iter print_name_crc ui.ui_imports_cmi;
@@ -81,7 +81,7 @@ let print_infos (ui, crc) =
   close_box(); print_newline()
 
 let print_unit_info filename =
-  let ic = open_in_bin filename in
+  let ic = open_in filename in
   try
     let buffer = String.create (String.length cmx_magic_number) in
     really_input ic buffer 0 (String.length cmx_magic_number);

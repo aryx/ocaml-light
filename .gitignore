@@ -121,6 +121,7 @@ boot/Saved
 /tools/dependencies/ocamldep.ml
 /tools/dumper/dumpobj
 /tools/dumper/objinfo
+/tools/dumper/dumpapprox
 /tools/dumper/opnames.ml
 /tools/profiler/ocamlprof
 /tools/misc/cvt_emit
