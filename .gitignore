@@ -13,6 +13,10 @@
 *.o
 *.a
 
+# testasmpcomp/ cmm object files and binaries
+/testasmcomp/*.s
+/testasmcomp/*.out
+
 # otherlibs/{unix,str} hack for libunixopt.a
 *.ox
 
