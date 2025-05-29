@@ -75,7 +75,31 @@ alt: produce a diff_testasmcomp_latest?
 
 **** LATER: codegraph on it! can't reduce cmm/codegen dependencies to less files in asmgen/?
 
+** ocamldep
+
+*** RELAX ocamldep does not handle correctly nested modules and
+make Cap.cmo to depend on Console.cmi and FS.cmi incorrectly.
+apparently only if the Console.ml file exist; it does not
+create a dep from Cap.cmo to Process.cmo
+
+and restore the Cap.Console and Cap.FS instead of _ suffix
+
+see b81eec604036157120e5d622e0e6410d49fbf61c nouveau ocamldep using parser (Jan 1999)
+
+** ocamllex
+
+*** LONG add support for 'as' in ocamllex, just port enough for as feature
+too complex? diff too big?
+and revert back the changes in mk and rc and more
+=> can hope to also compile the rest of xix with ocaml-light
+(macroprocessor, assembler, etc.)
+
+
+
 ** Debug tools
+
+*** backport Printexc.raw_backtrace so can get working Exception.ml
+
 
 *** include diffs that help the debuggability of ocaml
 
@@ -102,6 +126,9 @@ Date:   Mon Nov 8 17:02:14 1999 +0000
 * Infra
 
 ** Test infra
+
+*** build-dune.yml in CI?
+use setup-ocaml too? see hello-world-ocaml?
 
 *** less: testasmcomp/ fixing
 
@@ -208,7 +235,6 @@ xix/lex is supposed to be the same than lex
 
 *** LATER: try my xix/windows/ rio port to plan9 using ocaml-light compiled
 
-
 ** Ports
 
 *** finish portage arm
@@ -238,12 +264,6 @@ this was added recently; good test whether the code change that much
 backport which commit?
 
 a la Go?
-
-*** LONG add support for 'as' in ocamllex, just port enough for as feature
-too complex? diff too big?
-and revert back the changes in mk and rc and more
-=> can hope to also compile the rest of xix with ocaml-light
-(macroprocessor, assembler, etc.)
 
 ** remove stuff in OCaml to simplify
 
@@ -312,12 +332,14 @@ from parsedtree.mli to typedtree.mli, because very very similar
 
 * Backports
 
-** Archs
-
 ** Library
 would be good to port to latest convention so caml_xxx 
 so at least easy to get library from recent ocaml versions
 working also under ocaml 1.07
+
+*** Unix.realpath!
+hmm but primitives are hard! need to promote, so better wait we have a few of them
+
 
 *** less: add int32 and int64? used by IO.ml, OCaml.ml, etc. ?
 seems complicated, better now
@@ -344,13 +366,11 @@ just cherry pick the patch that did that in original ocaml
 
 *** support { x; y } when x and y are locals
 
-
 ** Compiler (checks and error messages)
 
 *** TODO warnings to backports
 
 Warning 26: unused variable t.
-
 
 *** improve error messages
 
