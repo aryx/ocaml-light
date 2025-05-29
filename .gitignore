@@ -4,14 +4,14 @@
 # ----------------------------------------------------------------------------
 
 # OCaml object files
-*.cm*
-*.byte
+*.cm[ioxa]
+*.cmxa
 *.byt
 *.opt
+*.byte
 
 # C object files
-*.o
-*.a
+*.[oa]
 
 # intermediate test object files and binaries
 /test/**/*.s
@@ -23,10 +23,8 @@
 *.ox
 
 # when compiling for plan9
-*.8
-*.5
-8.out
-5.out
+*.[58]
+[58].out
 
 # syncweb object files
 .md5sum_*
@@ -84,6 +82,10 @@ asmrun/*.c
 /parsing/parser.ml
 /parsing/parser.mli
 
+/cmm/lexcmm.ml
+/cmm/parsecmm.ml
+/cmm/parsecmm.mli
+
 /tools/debugger/lexer.ml
 /tools/debugger/parser.ml
 /tools/debugger/parser.mli
@@ -132,6 +134,7 @@ boot/Saved
 /tools/profiler/ocamlprof
 /tools/misc/cvt_emit
 /tools/misc/cvt_emit.ml
+/cmm/codegen
 
 # /config
 
