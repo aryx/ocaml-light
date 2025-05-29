@@ -86,9 +86,9 @@ let current_unit_name () =
 let read_unit_info filename =
   let ic = open_in(*_bin*) filename in
   try
-    let buffer = String.create (String.length cmx_magic_number) in
+    let buffer = Bytes.create (String.length cmx_magic_number) in
     really_input ic buffer 0 (String.length cmx_magic_number);
-    if buffer <> cmx_magic_number then begin
+    if Bytes.to_string buffer <> cmx_magic_number then begin
       close_in ic;
       raise(Error(Not_a_unit_info filename))
     end;

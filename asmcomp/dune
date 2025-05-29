@@ -1,0 +1,12 @@
+(library
+ (name asmcomp)
+ (wrapped false)
+ (libraries
+    stdlib
+    parsing
+    typing
+    bytecomp
+  )
+
+ (preprocess (pps ppx_deriving.show))
+)

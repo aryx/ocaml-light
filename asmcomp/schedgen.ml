@@ -336,7 +336,7 @@ let scheduler_generic () =
         | Lop(Icall_imm _ | Itailcall_imm _ | Iextcall(_, _)) -> [||]
         | Lreturn -> [||]
         | _ -> i.arg in
-      List.iter (fun x -> longest_path critical_outputs x; ()) ready_queue;
+      List.iter (fun x -> longest_path critical_outputs x |> ignore) ready_queue;
       self.reschedule self ready_queue 0 (schedule i)
     end in
 

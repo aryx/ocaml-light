@@ -203,7 +203,7 @@ let is_unboxed_float = function
 (*e: function [[Cmmgen.is_unboxed_float]] *)
 
 (*s: exception [[Cmmgen.Cannot_subst_float]] *)
-exception Cannot_subst_float
+(*exception Cannot_subst_float*)
 (*e: exception [[Cmmgen.Cannot_subst_float]] *)
 
 (*s: function [[Cmmgen.subst_boxed_float]] *)

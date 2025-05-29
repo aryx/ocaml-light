@@ -27,7 +27,7 @@ let build_graph fundecl =
 
   let num_regs = Reg.num_registers() in
   let mat =
-    String.make (((num_regs * (num_regs + 1)) lsr 1 + 7) lsr 3) '\000' in
+    Bytes.make (((num_regs * (num_regs + 1)) lsr 1 + 7) lsr 3) '\000' in
 
   (* Record an interference between two registers *)
   let add_interf ri rj =
@@ -35,7 +35,7 @@ let build_graph fundecl =
     if i = j then () else begin
       let n = if i < j then ((j * (j + 1)) lsr 1) + i
                        else ((i * (i + 1)) lsr 1) + j in
-      let b = Char.code(mat.[n lsr 3]) in
+      let b = Char.code(Bytes.get mat (n lsr 3)) in
       let msk = 1 lsl (n land 7) in
       if b land msk = 0 then begin
         mat.[n lsr 3] <- Char.unsafe_chr(b lor msk);
@@ -120,7 +120,7 @@ let build_graph fundecl =
           Unknown ->
             let n = if i < j then ((j * (j + 1)) lsr 1) + i
                              else ((i * (i + 1)) lsr 1) + j in
-            let b = Char.code(mat.[n lsr 3]) in
+            let b = Char.code(Bytes.get mat (n lsr 3)) in
             let msk = 1 lsl (n land 7) in
             if b land msk = 0 then r1.prefer <- (r2, weight) :: r1.prefer
         | _ -> ()

@@ -637,7 +637,7 @@ let selector_generic () =
           self.insert_op self op r1 rd
       end        
   | Csequence(e1, e2) ->
-      self.emit_expr self  env e1;
+      self.emit_expr self  env e1 |> ignore;
       self.emit_expr self  env e2
   | Cifthenelse(econd, eif, eelse) ->
       let (cond, earg) = self.select_condition self econd in
@@ -822,7 +822,7 @@ let selector_generic () =
       self.insert self (Iop Imove) r1 rd;
       self.insert self Iraise rd [||]
   | Csequence(e1, e2) ->
-      self.emit_expr self env e1;
+      self.emit_expr self env e1 |> ignore;
       self.emit_tail self env e2
   | Cifthenelse(econd, eif, eelse) ->
       let (cond, earg) = self.select_condition self econd in

@@ -119,9 +119,9 @@ let scan_file obj_name tolink =
     (* This is an archive file. Each unit contained in it will be linked
        in only if needed. *)
     let ic = open_in(*_bin*) file_name in
-    let buffer = String.create (String.length cmxa_magic_number) in
+    let buffer = Bytes.create (String.length cmxa_magic_number) in
     really_input ic buffer 0 (String.length cmxa_magic_number);
-    if buffer <> cmxa_magic_number then
+    if Bytes.to_string buffer <> cmxa_magic_number then
       raise(Error(Not_an_object_file file_name));
     let info_crc_list = (input_value ic : (unit_infos * Digest.t) list) in
     close_in ic;

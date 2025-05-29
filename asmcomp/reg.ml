@@ -49,7 +49,7 @@ and stack_location =
 (*e: type [[Reg.stack_location]]([[(asmcomp/reg.ml)]]) *)
 
 (*s: type [[Reg.reg]] *)
-type reg = t
+type _reg = t
 (*e: type [[Reg.reg]] *)
 
 (*s: constant [[Reg.dummy]] *)

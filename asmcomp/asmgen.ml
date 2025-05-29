@@ -53,14 +53,14 @@ let rec regalloc round fd =
   if round > 50 then
     fatal_error(fd.Mach.fun_name ^
                 ": function too complex, cannot complete register allocation");
-  dump_if dump_live "Liveness analysis" fd;
+  dump_if dump_live "Liveness analysis" fd |> ignore;
   Interf.build_graph fd;
   if !dump_interf then Printmach.interferences();
   if !dump_prefer then Printmach.preferences();
   Coloring.allocate_registers();
-  dump_if dump_regalloc "After register allocation" fd;
+  dump_if dump_regalloc "After register allocation" fd |> ignore;
   let (newfd, redo_regalloc) = Reload.fundecl fd in
-  dump_if dump_reload "After insertion of reloading code" newfd;
+  dump_if dump_reload "After insertion of reloading code" newfd |> ignore;
   if redo_regalloc 
   then begin Reg.reinit(); Liveness.fundecl newfd; regalloc (round+1) newfd end
   else newfd
