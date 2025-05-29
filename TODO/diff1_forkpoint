@@ -1,0 +1,144 @@
+diff -u -p -b -B -r -x .semantic.cache -x .depend -x CVS -x .hg -x .svn -x .git -x _darcs /home/pad/ocaml-light/byterun/extern.c /home/pad/repo-B/byterun/extern.c
+--- /home/pad/ocaml-light/byterun/extern.c	2025-05-29 09:05:15.088396661 +0200
++++ /home/pad/repo-B/byterun/extern.c	2025-05-29 08:56:10.648102082 +0200
+@@ -9,7 +9,7 @@
+ /*                                                                     */
+ /***********************************************************************/
+ 
+-/* $Id$ */
++/* $Id: extern.c,v 1.21 1997/12/11 20:53:06 xleroy Exp $ */
+ 
+ /* Structured output */
+ 
+@@ -400,9 +400,11 @@ void output_val(struct channel *chan, va
+ value output_value(value vchan, value v, value flags) /* ML */
+ {
+   struct channel * channel = Channel(vchan);
++  Begin_root(v)
+   Lock(channel);
+   output_val(channel, v, flags);
+   Unlock(channel);
++  End_roots();
+   return Val_unit;
+ }
+ 
+diff -u -p -b -B -r -x .semantic.cache -x .depend -x CVS -x .hg -x .svn -x .git -x _darcs /home/pad/ocaml-light/byterun/intern.c /home/pad/repo-B/byterun/intern.c
+--- /home/pad/ocaml-light/byterun/intern.c	2025-05-29 09:05:15.088396661 +0200
++++ /home/pad/repo-B/byterun/intern.c	2025-05-29 08:56:10.648102082 +0200
+@@ -9,7 +9,7 @@
+ /*                                                                     */
+ /***********************************************************************/
+ 
+-/* $Id$ */
++/* $Id: intern.c,v 1.22 1997/12/11 20:53:07 xleroy Exp $ */
+ 
+ /* Structured input, compact format */
+ 
+@@ -296,11 +296,13 @@ value input_val(struct channel *chan)
+ value input_value(value vchan)        /* ML */
+ {
+   struct channel * chan = Channel(vchan);
+-  value res;
++  value res = Val_unit;
+ 
++  Begin_root(res)
+   Lock(chan);
+   res = input_val(chan);
+   Unlock(chan);
++  End_roots();
+   return res;
+ }
+ 
+diff -u -p -b -B -r -x .semantic.cache -x .depend -x CVS -x .hg -x .svn -x .git -x _darcs /home/pad/ocaml-light/byterun/io.c /home/pad/repo-B/byterun/io.c
+--- /home/pad/ocaml-light/byterun/io.c	2025-05-29 09:05:15.091730016 +0200
++++ /home/pad/repo-B/byterun/io.c	2025-05-29 08:56:10.648102082 +0200
+@@ -9,7 +9,7 @@
+ /*                                                                     */
+ /***********************************************************************/
+ 
+-/* $Id$ */
++/* $Id: io.c,v 1.25 1997/12/11 20:48:46 xleroy Exp $ */
+ 
+ /* Buffered input/output. */
+ 
+@@ -434,9 +434,11 @@ value caml_output_partial(value vchannel
+ {
+   struct channel * channel = Channel(vchannel);
+   int res;
++  Begin_root(buff)
+   Lock(channel);
+   res = putblock(channel, &Byte(buff, Long_val(start)), Long_val(length));
+   Unlock(channel);
++  End_roots();
+   return Val_int(res);
+ }
+ 
+@@ -446,15 +448,15 @@ value caml_output(value vchannel, value
+   long pos = Long_val(start);
+   long len = Long_val(length);
+ 
+-  Lock(channel);
+   Begin_root(buff)
++    Lock(channel);
+     while (len > 0) {
+       int written = putblock(channel, &Byte(buff, pos), len);
+       pos += written;
+       len -= written;
+     }
+-  End_roots();
+   Unlock(channel);
++  End_roots();
+   return Val_unit;
+ }
+ 
+@@ -502,9 +504,11 @@ value caml_input(value vchannel, value b
+   struct channel * channel = Channel(vchannel);
+   long res;
+ 
++  Begin_root(buff)
+   Lock(channel);
+   res = getblock(channel, &Byte(buff, Long_val(start)), Long_val(length));
+   Unlock(channel);
++  End_roots();
+   return Val_long(res);
+ }
+ 
+diff -u -p -b -B -r -x .semantic.cache -x .depend -x CVS -x .hg -x .svn -x .git -x _darcs /home/pad/ocaml-light/byterun/sys.c /home/pad/repo-B/byterun/sys.c
+--- /home/pad/ocaml-light/byterun/sys.c	2025-05-29 09:17:25.166922114 +0200
++++ /home/pad/repo-B/byterun/sys.c	2025-05-29 08:56:10.651435441 +0200
+@@ -9,7 +9,7 @@
+ /*                                                                     */
+ /***********************************************************************/
+ 
+-/* $Id$ */
++/* $Id: sys.c,v 1.30 1997/12/10 14:56:28 xleroy Exp $ */
+ 
+ /* Basic system calls */
+ 
+@@ -324,10 +324,10 @@ int win32_system(char * cmdline)
+   if (len < 1000) {
+     return system(cmdline);
+   } else {
++    /* Skip initial blanks, if any */
++    for (i = 0; cmdline[i] != 0 && isspace(cmdline[i]); i++) /*nothing*/;
+     /* Copy command name to buffer, stop at first blank */
+-    for (i = 0, j = 0;
+-	 cmdline[i] != 0 && ! isspace(cmdline[i]);
+-	 i++) {
++    for (j = 0; cmdline[i] != 0 && ! isspace(cmdline[i]); i++) {
+       if (j < MAX_CMD_LENGTH) cmd[j++] = cmdline[i];
+     }
+     /* Save remainder of command line to temp file */
+
+diff -u -p -b -B -r -x .semantic.cache -x .depend -x CVS -x .hg -x .svn -x .git -x _darcs /home/pad/ocaml-light/otherlibs/systhreads/Makefile /home/pad/repo-B/otherlibs/systhreads/Makefile
+--- /home/pad/ocaml-light/otherlibs/systhreads/Makefile	2025-05-29 09:05:15.105063434 +0200
++++ /home/pad/repo-B/otherlibs/systhreads/Makefile	1997-12-10 15:42:52.000000000 +0100
+@@ -43,7 +43,7 @@ partialclean:
+ 	rm -f *.cm*
+ 
+ clean: partialclean
+-	rm -f libthreads.a *.o *.cm*
++	rm -f libthreads*.a *.o
+ 	rm -f $(GENFILES)
+ 
+ install:
