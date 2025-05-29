@@ -10,7 +10,8 @@ COMPFLAGS=$(INCLUDES)
 LINKFLAGS=$(INCLUDES)
 
 all: dumpobj objinfo
-#dumpapprox
+
+opt: dumpapprox
 
 # The bytecode disassembler
 

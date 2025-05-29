@@ -110,7 +110,7 @@ all: runtime ocamlc ocamllex ocamlyacc ocamltools library ocaml \
 world: coldstart all
 
 # Compile the native-code compiler
-opt: runtimeopt ocamlopt libraryopt otherlibrariesopt cmmopt
+opt: runtimeopt ocamlopt libraryopt otherlibrariesopt cmmopt ocamltoolsopt
 
 clean:: partialclean
 
@@ -542,6 +542,9 @@ partialclean::
 alldepend::
 	for i in $(TOOLS); do (cd $$i; $(MAKE) depend); done
 
+ocamltoolsopt:
+	cd tools/dumper; $(MAKE) opt
+
 cmmopt:
 	cd cmm; $(MAKE) all
 clean::
@@ -600,8 +603,7 @@ include .depend
 # Test infra
 ##############################################################################
 
-#TODO: testasmcomp
-TESTDIRS=tests examples test
+TESTDIRS=tests examples testasmcomp test
 
 .PHONY: test
 test:
