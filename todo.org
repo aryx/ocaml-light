@@ -1,155 +1,8 @@
 -*- org -*-
 
-* Last (was in xix/todo.txt)
-
-** ocaml in ocaml (ocaml light)
-
-*** library
-would be good to port to latest convention so caml_xxx 
-so at least easy to get library from recent ocaml versions
-working also under ocaml 1.07
-
-**** Arg.align
-
-**** List.iteri
-
-*** support for qualifier just for first field that propagates to
-other fields so can do
-
-{ Xxx.foo = 1; bar = 2; ... } without having to repeat Xxx (which helps
-to avoid some open)
-
-just cherry pick the patch that did that in original ocaml
-
-*** "Some labels are undefined" error
-well nice, which one! Improve error message, give at least one label name.
-or better, give all of them
-
-*** missing errors!
-
-failwith "Unix error: %s while executing %s with %s"
-      (Unix.error_message err) cmd arg
-
-  I forgot 'spf' but ocaml light says nothing
-
-Unix1.openfile "/dev/cons" [Unix1.O_RDONLY];
-
-  I forgot the perm parameter, but ocaml light said nothing
-
-*** -annot!
-
-*** unused variable check 
-and the _xxx prefix to invalidate it
-
-*** check result ignored
-see in lib_graphics/input/keyboard.ml
-I was doing    Event.send ctl.chan buf.[i];
-but this is not unit!
-
-*** support { x; y } when x and y are locals
-
-
-* Test infra
-
-** add testsuite from ocaml git and past ocaml distribs
-
-*** include testsuite in OCaml-1.07 in git repo that was not in the
-distributed tgz!
-
-*** -------------------------------------------------------------------
-
-*** TODO include tests/ from csl/ and ocaml examples from caml light
-(that have been updated to ocaml 3.08 by leroy on their distrib/contrib/
-I think)
-=> more tests
-
-see work/OCAML/ocaml-examples-3.08
-
-* Devops
-
-** GHA
-
-*** add GHA check, to at least './configure; make coldstart; make world'
-
-*** add GHA checks, build, test
-
-*** -------------------------------------------------------------------
-
-
-*** add semgrep.yml GHA
-
-* Later
-
-** an ocaml preprocessor! with unicode and mixfix a la Agda!
-need update also efuns and codemap
-see parsing mixfix paper in downloads.
-
-
 * Last
 
-** Last
-
-
-*** make sync_c
-pb with config.h and md5sum entries
-regenerate from scratch? just skip this file?
-
-*** is ocamldebug and the other tools/ working
-check in CI again!
-
-*** can it compile when boot/ocamlc CAMLC is the OCaml 4.02.3?
-then add this check also in CI! so upward compatible!
-
-*** add GHA check for arm, does ocamlopt actually work?
-
-*** find 32 bits for building ocaml-light on 32 bits arch in GHA
-need to use qemu in GHA? like for our docker arm?
-
-https://github.com/marketplace/actions/setup-alpine-linux-environment
-
-*** try use it for Xix?
-
-*** LATER: diff lex/ ~/xix/lex/
-xix/lex is supposed to be the same than lex
-
-*** LATER: backport cool features from recent OCaml to ocaml light
-
-*** LATER: add 64 amd generation? and arm64? riscv?
-this was added recently; good test whether the code change that much
-
-*** LATER: try compile again byterun/ for plan9! with kencc
-
-*** LATER: try my xix/windows/ rio port to plan9 using ocaml-light compiled
-
-
-** small but useful
-
-*** improve error messages
-
-File "asmcomp/selectgen.ml", line 297, characters 1-19293:
-Some labels are undefined
-with no explanations of the labels...
-
-File "typing/typecore.ml", line 246, characters 2-7965:
-Warning: this pattern-matching is not exhaustive
-with no explanations of the cases...
-
-error for .mly are reported for the .ml. Support #line?
-
 ** Internals
-
-*** remove stuff
-
-**** EASY less: remove or, and  infix operator (use || and &&)
-
-**** EASY less: get rid of type x = y = z
-it's confusing anyway
-
-**** less: remove tbl? just use map?
-
-**** remove terminfo
-
-**** remove stdlib/stream.ml?
 
 *** refactoring
 
@@ -179,10 +32,234 @@ ocaml 4.00 has 0 conflicts
 *** lots of boilerplate, how can factorize? all those enter_xxx, find_xxx,
 a bit ugly no? typeclass can help? deriving?
 
+** Still?
+
+**** less: study diff between old and new typechecker?
+
+ type type_expr =
+-    Tvar of type_variable
++  { mutable desc: type_desc; 
++    mutable level: int }
++
++and type_desc =
++    Tvar
+   | Tarrow of type_expr * type_expr
+   | Ttuple of type_expr list
+-  | Tconstr of Path.t * type_expr list
+-
+-and type_variable =
+-    { mutable tvar_level: int;
+-      mutable tvar_link: type_expr option }
++  | Tconstr of Path.t * type_expr list * (Path.t * type_expr) list ref
++  | Tnil
++  | Tlink of type_expr
+
++exception Cannot_expand
++exception Nonlinear_abbrev
++exception Recursive_abbrev
+
+
+**** strictopt?
+-type let_kind = Strict | Alias
++type let_kind = Strict | Alias | StrictOpt
+
+* Components
+
+** CMM:
+
+*** cmm: use and improve cmm (useful for tiger?)
+
+**** merge latest parsecmm stuff from ead8077daec521ef4d82697c10450087a1e74087^ ?
+a few changes
+alt: produce a diff_testasmcomp_latest?
+
+**** LATER: codegraph on it! can't reduce cmm/codegen dependencies to less files in asmgen/?
+
+** Debug tools
+
+*** include diffs that help the debuggability of ocaml
+
+commit a843096a997d0a2914b8cbabd952e4a230d07598
+Author: Damien Doligez <damien.doligez-inria.fr>
+Date:   Mon Apr 3 08:34:22 2000 +0000
+
+    codes pour faciliter le debug
+
+commit bad71c148081a820604b9901300a5b8e2b730a95
+Author: Damien Doligez <damien.doligez-inria.fr>
+Date:   Mon Nov 8 17:05:45 1999 +0000
+
+    ajout heap_check en mode debug
+
+commit 5674cf35c8d59cd19bb93a39542dfad1e7d9ac9e
+Author: Damien Doligez <damien.doligez-inria.fr>
+Date:   Mon Nov 8 17:02:14 1999 +0000
+
+    ajout heap_check
+
+
+
+* Infra
+
+** Test infra
+
+*** less: testasmcomp/ fixing
+
+**** actually run the testasmcomp/ stuff? feed with different integers the tests?
+
+**** test infra here? just test that compiles? no comparison to expected result?
+was just used when developing a new backend by Leroy?
+
+**** less: fix testasmcomp/arith.out ? infinite loop? CMM bug?
+
+**** look also latest testsuite/asmcomp/ and copy the Makefile
+that actually run the test?
+
+*** still? find 32 bits for building ocaml-light on 32 bits arch in GHA
+need to use qemu in GHA? like for our docker arm?
+
+https://github.com/marketplace/actions/setup-alpine-linux-environment
+
+*** use ocamlc.opt and ocamlopt.opt on everything? excellent test case!
+
+*** is ocamldebug and the other tools/ working
+check in CI again!
+
+*** run the benchmarks too in test/? not just the tests
+take the shootout benchmark? the programs pass with ocaml light?
+(see also mincaml/shootout)
+
+'make bench' in test/
+
+*** less: add test linking with str and unix, and check regression
+sys_errlist
+
+actually had another problem later when linking with ocamlopt so
+need test that use both ocamlc and ocamlopt linking to str and unix
+
+*** less: add test in make test in myocaml for -lstr and -lunix with ocamlopt
+and should show problem that I needed the -lunixopt trick
+
+*** WEIRD fix memory corruption errors in 'make test' when running under Nix!
+use valgrind locally? asan?
+try to reproduce locally by using -fsanitize=address ?
+find the CFLAGS used in Nix?
+
+*** what about tests/Moretest/?
+
+*** what about ocaml 3.01 tests/testinterp/ big list?
+or even 4.14 testsuite/lib/
+
+*** nix: restore nix-test for ubuntu/macos and full test for ubuntu-only
+
+*** add GHA check for arm, does ocamlopt actually work?
+
+*** include tests/ from csl/ and ocaml examples from caml light?
+(that have been updated to ocaml 3.08 by leroy on their distrib/contrib/
+I think)
+=> more tests
+
+** Build infra
+
+*** less: extend configure with -as -aspp
+so can configure for -m32 from the configure line
+
+*** less: fix the many warnings in byterun/ from gcc and clang
+
+*** can it compile when boot/ocamlc CAMLC is the OCaml 4.02.3?
+then add this check also in CI! so upward compatible!
+
+*** less: add -no-pie to remove some warnings
+
+*** less: 40 shift/reduce conflicts in ocaml-light/parsing/parser.mly?
+same with 1.07? 49 actually (maybe in OO code)
+
+*** WEIRD: why can't make byterun/ work with -m32?
+
+*** WEIRD: why nix-shell --pure can't build fib.out?
+-lgcc not found ???
+
+** Dev Infra
+
+*** less: resume semgrep.yml, need more recent ubuntu and can remove cron too
+
+** Devops
+
+*** less: optimize docker image size by using multi-stage built like in Semgrep
+otherwise takes forever to push (and I guess also to download)
+
+before: 258MB
+
+*** less: push docker automatically in CI after each master merge
+try generate token instead of using password
+add secrets in settings of project?
+
+** Bench infra
+
 *** bench: compare my ocaml 1.07 with ocaml 4.00? 
 try on syncweb? faster?
 
-** stuff not in ocaml 
+* Later
+
+** ocaml-light and xix
+
+*** LATER: diff lex/ ~/xix/lex/
+xix/lex is supposed to be the same than lex
+
+*** LATER: try my xix/windows/ rio port to plan9 using ocaml-light compiled
+
+
+** Ports
+
+*** finish portage arm
+
+commit 66ae9423a784fbc4d35b794906a4dee705afccf2
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Thu Oct 15 16:10:53 1998 +0000
+
+    Portage ARM
+
+05627e0de4a50067f36d1eca9dcc9ebd5736c3f8
+new ARM backend, backtrace, float, many stuff
+
+*** LATER: add arm tests too
+
+*** LATER: add amd64 generation? and arm64?
+this was added recently; good test whether the code change that much
+
+*** LATER: try compile again byterun/ for plan9! with kencc
+
+*** LATER backport riscv support! so can run on plan9-riscv
+
+
+** small features
+
+*** LATER: automatic -cclib -lunix when adding unix.cma
+backport which commit?
+
+a la Go?
+
+*** LONG add support for 'as' in ocamllex, just port enough for as feature
+too complex? diff too big?
+and revert back the changes in mk and rc and more
+=> can hope to also compile the rest of xix with ocaml-light
+(macroprocessor, assembler, etc.)
+
+** remove stuff in OCaml to simplify
+
+**** EASY less: remove or, and infix operator (use || and &&)
+
+**** EASY less: get rid of type x = y = z
+it's confusing anyway
+
+**** less: remove tbl? just use map?
+
+**** remove terminfo
+
+**** remove stdlib/stream.ml?
+
+
+** add stuff not in ocaml 
 
 *** FUN add typeclasses!
 or go directly to implicits?
@@ -201,6 +278,10 @@ duplicated names such as Subst.value_description and
 Subst.type_declaration, can have just Subst.subst 
 with different instances of Subst! overload!
 all those repeated names are useless.
+
+*** an ocaml preprocessor! with unicode and mixfix a la Agda!
+need update also efuns and codemap
+see parsing mixfix paper in downloads.
 
 *** FUN add deriving! or better, template haskell?
 at least deriving!
@@ -228,9 +309,87 @@ would be good to have delta programming, to express how to pass
 from parsedtree.mli to typedtree.mli, because very very similar
 (or just autogenerate via a script? :) )
 
-** later forwardport
 
-*** less: license
+* Backports
+
+** Archs
+
+** Library
+would be good to port to latest convention so caml_xxx 
+so at least easy to get library from recent ocaml versions
+working also under ocaml 1.07
+
+*** less: add int32 and int64? used by IO.ml, OCaml.ml, etc. ?
+seems complicated, better now
+
+*** less: still? backport int32 and int64? for ogit and read_real_i32 function?
+just that?
+or simpler to just move code in version_control/index.ml for now
+
+*** Arg.align
+
+*** List.iteri
+
+** Features
+
+*** support for qualifier just for first field that propagates to
+other fields so can do
+
+{ Xxx.foo = 1; bar = 2; ... } without having to repeat Xxx (which helps
+to avoid some open)
+
+just cherry pick the patch that did that in original ocaml
+
+*** -annot!
+
+*** support { x; y } when x and y are locals
+
+
+** Compiler (checks and error messages)
+
+*** TODO warnings to backports
+
+Warning 26: unused variable t.
+
+
+*** improve error messages
+
+File "asmcomp/selectgen.ml", line 297, characters 1-19293:
+Some labels are undefined
+with no explanations of the labels...
+
+File "typing/typecore.ml", line 246, characters 2-7965:
+Warning: this pattern-matching is not exhaustive
+with no explanations of the cases...
+
+error for .mly are reported for the .ml. Support #line?
+
+*** "Some labels are undefined" error
+well nice, which one! Improve error message, give at least one label name.
+or better, give all of them
+
+*** missing errors!
+
+failwith "Unix error: %s while executing %s with %s"
+      (Unix.error_message err) cmd arg
+
+  I forgot 'spf' but ocaml light says nothing
+
+Unix1.openfile "/dev/cons" [Unix1.O_RDONLY];
+
+  I forgot the perm parameter, but ocaml light said nothing
+
+*** unused variable check 
+and the _xxx prefix to invalidate it
+
+*** check result ignored
+see in lib_graphics/input/keyboard.ml
+I was doing    Event.send ctl.chan buf.[i];
+but this is not unit!
+
+** Misc
+
+*** license part1
 commit cc0f32b05439bb7018e8ad62a54d6371b01aab9f
 Author: Xavier Leroy <xavier.leroy@inria.fr>
 Date:   Wed Nov 17 18:59:06 1999 +0000
@@ -239,101 +398,7 @@ Date:   Wed Nov 17 18:59:06 1999 +0000
 
 LGPL for byterun/
 
-
-*** include diffs that help the debuggability of ocaml
-
-commit a843096a997d0a2914b8cbabd952e4a230d07598
-Author: Damien Doligez <damien.doligez-inria.fr>
-Date:   Mon Apr 3 08:34:22 2000 +0000
-
-    codes pour faciliter le debug
-
-commit bad71c148081a820604b9901300a5b8e2b730a95
-Author: Damien Doligez <damien.doligez-inria.fr>
-Date:   Mon Nov 8 17:05:45 1999 +0000
-
-    ajout heap_check en mode debug
-
-commit 5674cf35c8d59cd19bb93a39542dfad1e7d9ac9e
-Author: Damien Doligez <damien.doligez-inria.fr>
-Date:   Mon Nov 8 17:02:14 1999 +0000
-
-    ajout heap_check
-
-
 *** other
-
-commit ddd99c7e5d2f0f8e7364e8521fa7e8308999344e
-Author: Xavier Leroy <xavier.leroy@inria.fr>
-Date:   Tue Aug 28 14:47:48 2001 +0000
-
-    Chargement dynamique de primitives C
-?
-
-
-
-commit ddc93821b88710566a5816f6e3e712bcf8cc3c9d
-ajout assert pour eviter le bug d'alignement des racines
-also need diff that introduce compact.c?
-
-
-commit 66ae9423a784fbc4d35b794906a4dee705afccf2
-Author: Xavier Leroy <xavier.leroy@inria.fr>
-Date:   Thu Oct 15 16:10:53 1998 +0000
-
-    Portage ARM
-
-
-05627e0de4a50067f36d1eca9dcc9ebd5736c3f8
-new ARM backend, backtrace, float, many stuff
-
-
-commit 0f45531954cadaa9f19a73944e8f9574f5fc08ee
-Author: Damien Doligez <damien.doligez-inria.fr>
-Date:   Sun Oct 29 17:36:44 2000 +0000
-
-    passage a ANSI C -> suppression bcopy et memmov
-
-** Still?
-
-**** less: study diff between old and new typechecker?
-
- type type_expr =
--    Tvar of type_variable
-+  { mutable desc: type_desc; 
-+    mutable level: int }
-+
-+and type_desc =
-+    Tvar
-   | Tarrow of type_expr * type_expr
-   | Ttuple of type_expr list
--  | Tconstr of Path.t * type_expr list
--
--and type_variable =
--    { mutable tvar_level: int;
--      mutable tvar_link: type_expr option }
-+  | Tconstr of Path.t * type_expr list * (Path.t * type_expr) list ref
-+  | Tnil
-+  | Tlink of type_expr
-
-
-+exception Cannot_expand
-+exception Nonlinear_abbrev
-+exception Recursive_abbrev
-
-
-**** strictopt?
--type let_kind = Strict | Alias
-+type let_kind = Strict | Alias | StrictOpt
-
-
-* Backports
-
-*** TODO warnings to backports
-
-Warning 26: unused variable t.
-
-*** TODO backports
 
 c4fb76de04783aea39a97b9279ea7adf5fdacfa8
 Fix: bug dans le calcul de la longueur max d'une chaine.
@@ -344,3 +409,20 @@ OFFSETREF met () dans l'accu.
 3402009ef3e42d2977bbe0be6bb11841bd3445b8
 Faute d'orthographe sur un ident dans intern_from_string.
 
+
+commit ddd99c7e5d2f0f8e7364e8521fa7e8308999344e
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Tue Aug 28 14:47:48 2001 +0000
+
+    Chargement dynamique de primitives C
+?
+
+commit ddc93821b88710566a5816f6e3e712bcf8cc3c9d
+ajout assert pour eviter le bug d'alignement des racines
+also need diff that introduce compact.c?
+
+commit 0f45531954cadaa9f19a73944e8f9574f5fc08ee
+Author: Damien Doligez <damien.doligez-inria.fr>
+Date:   Sun Oct 29 17:36:44 2000 +0000
+
+    passage a ANSI C -> suppression bcopy et memmov
