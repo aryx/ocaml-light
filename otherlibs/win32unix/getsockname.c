@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: getsockname.c,v 1.2 1997/09/03 14:37:59 xleroy Exp $ */
 
 #include <mlvalues.h>
 #include "unixsupport.h"

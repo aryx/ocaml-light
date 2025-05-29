@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: getpeername.c,v 1.3 1997/09/04 13:45:43 xleroy Exp $ */
 
 #include <mlvalues.h>
 #include "unixsupport.h"

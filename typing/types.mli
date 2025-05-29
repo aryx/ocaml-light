@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: types.mli,v 1.6 1997/05/19 15:42:19 doligez Exp $ *)
 
 (* Representation of types and declarations *)
 

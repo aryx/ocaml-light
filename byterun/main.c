@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: main.c,v 1.23 1997/11/17 15:11:56 doligez Exp $ */
 
 /* Main entry point (can be overriden by a user-provided main()
    function that calls caml_main() later. */

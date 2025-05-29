@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: bytegen.mli,v 1.5 1997/02/19 16:08:03 xleroy Exp $ *)
 
 (* Generation of bytecode from lambda terms *)
 

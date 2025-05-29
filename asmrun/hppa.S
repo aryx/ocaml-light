@@ -9,7 +9,7 @@
 ;*                                                                   *
 ;*********************************************************************
 
-; $Id$
+; $Id: hppa.S,v 1.11 1997/12/01 12:35:46 xleroy Exp $
 
 ; Asm part of the runtime system for the HP PA-RISC processor.
 ; Must be preprocessed by cpp

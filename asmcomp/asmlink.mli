@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: asmlink.mli,v 1.4 1996/04/30 14:42:11 xleroy Exp $ *)
 
 (* Link a set of .cmx/.o files and produce an executable *)
 

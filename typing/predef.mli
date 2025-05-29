@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: predef.mli,v 1.6 1996/09/23 11:33:10 xleroy Exp $ *)
 
 (* Predefined type constructors (with special typing rules in typecore) *)
 

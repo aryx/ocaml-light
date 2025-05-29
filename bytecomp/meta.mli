@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: meta.mli,v 1.4 1996/05/28 12:40:09 xleroy Exp $ *)
 
 (* To control the runtime system and bytecode interpreter *)
 

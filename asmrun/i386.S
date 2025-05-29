@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: i386.S,v 1.25 1997/11/27 16:27:52 xleroy Exp $ */
 
 /* Asm part of the runtime system, Intel 386 processor */
 /* Must be preprocessed by cpp */

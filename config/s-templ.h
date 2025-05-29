@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: s-templ.h,v 1.10 1996/10/07 14:02:45 doligez Exp $ */
 
 /* Operating system and standard library dependencies. */
 

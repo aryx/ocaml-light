@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: translmod.ml,v 1.21 1997/05/19 15:41:37 doligez Exp $ *)
 
 (* Translation from typed abstract syntax to lambda terms,
    for the module language *)

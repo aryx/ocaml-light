@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: emit.mlp,v 1.2 1997/07/27 09:44:24 xleroy Exp $ *)
 
 (* Emission of Motorola 68020 assembly code (MIT syntax) *)
 

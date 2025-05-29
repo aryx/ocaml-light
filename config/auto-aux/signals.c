@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: signals.c,v 1.4 1997/09/02 12:54:19 xleroy Exp $ */
 
 /* To determine the semantics of signal handlers
    (System V: signal is reset to default behavior on entrance to the handler

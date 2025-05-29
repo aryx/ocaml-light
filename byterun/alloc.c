@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: alloc.c,v 1.9 1997/09/02 12:53:55 xleroy Exp $ */
 
 /* 1. Allocation functions doing the same work as the macros in the
       case where [Setup_for_gc] and [Restore_after_gc] are no-ops.

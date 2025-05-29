@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: bytelink.mli,v 1.4 1996/11/07 10:56:52 xleroy Exp $ *)
 
 (* Link .cmo files and produce a bytecode executable. *)
 

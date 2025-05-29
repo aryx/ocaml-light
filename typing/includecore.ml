@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: includecore.ml,v 1.18 1997/05/11 21:48:16 vouillon Exp $ *)
 
 (* Inclusion checks for the core language *)
 

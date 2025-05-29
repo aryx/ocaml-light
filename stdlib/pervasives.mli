@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: pervasives.mli,v 1.35 1997/07/02 18:16:12 xleroy Exp $ *)
 
 (* Module [Pervasives]: the initially opened module *)
 

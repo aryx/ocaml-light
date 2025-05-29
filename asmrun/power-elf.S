@@ -9,7 +9,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-/* $Id$ */
+/* $Id: power-elf.S,v 1.8 1997/12/05 16:23:28 xleroy Exp $ */
 
 #define Addrglobal(reg,glob) \
         addis   reg, 0, glob@ha; \

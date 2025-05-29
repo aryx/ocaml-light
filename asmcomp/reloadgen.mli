@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: reloadgen.mli,v 1.2 1997/11/13 10:57:09 xleroy Exp $ *)
 
 class reload_generic (unit) =
   method reload_operation :

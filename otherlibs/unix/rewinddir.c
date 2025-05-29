@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: rewinddir.c,v 1.7 1997/09/02 12:54:44 xleroy Exp $ */
 
 #include <mlvalues.h>
 #include "unixsupport.h"

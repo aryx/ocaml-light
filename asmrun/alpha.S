@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: alpha.S,v 1.15 1997/11/27 16:36:34 xleroy Exp $ */
 
 /* Asm part of the runtime system, Alpha processor */
 

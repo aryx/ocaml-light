@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: rotatecursor.h,v 1.2 1997/11/12 18:59:29 doligez Exp $ */
 
 /* Cursor rotation for MPW tools (ocamlrun and ocamlyacc) */
 

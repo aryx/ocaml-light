@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: extract_crc.ml,v 1.5 1996/10/24 14:16:54 doligez Exp $ *)
 
 (* Print the digests of unit interfaces *)
 

@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: output.mli,v 1.2 1996/04/30 14:46:11 xleroy Exp $ *)
 
 (* Output the DFA tables and its entry points *)
 

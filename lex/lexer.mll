@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: lexer.mll,v 1.10 1997/04/15 19:18:01 doligez Exp $ *)
 
 (* The lexical analyzer for lexer definitions. Bootstrapped! *)
 

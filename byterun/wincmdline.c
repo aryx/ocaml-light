@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: wincmdline.c,v 1.3 1997/09/02 12:54:12 xleroy Exp $ */
 
 /* Expansion of @responsefile and *? file patterns in the command line */
 

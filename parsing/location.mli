@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: location.mli,v 1.7 1997/11/12 12:32:52 xleroy Exp $ *)
 
 (* Source code locations, used in parsetree *)
 

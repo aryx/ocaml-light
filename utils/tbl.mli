@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: tbl.mli,v 1.4 1996/05/16 14:15:35 xleroy Exp $ *)
 
 (* Association tables from any ordered type to any type.
    We use the generic ordering to compare keys. *)

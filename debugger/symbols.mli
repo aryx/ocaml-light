@@ -10,7 +10,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: symbols.mli,v 1.4 1997/03/30 19:43:47 vouillon Exp $ *)
 
 (* Modules used by the program. *)
 val modules : string list ref

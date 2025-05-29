@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: callback.mli,v 1.1 1996/11/08 14:48:23 xleroy Exp $ *)
 
 (* Module [Callback]: registering Caml values with the C runtime *)
 

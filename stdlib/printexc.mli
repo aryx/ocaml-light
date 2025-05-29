@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: printexc.mli,v 1.6 1997/06/12 15:29:01 doligez Exp $ *)
 
 (* Module [Printexc]: a catch-all exception handler *)
 

@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: mach.mli,v 1.14 1997/03/04 10:19:50 xleroy Exp $ *)
 
 (* Representation of machine code by sequences of pseudoinstructions *)
 

@@ -10,7 +10,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: show_information.mli,v 1.1 1996/11/29 16:55:07 xleroy Exp $ *)
 
 (* Display information about the current event. *)
 val show_current_event : unit -> unit;;

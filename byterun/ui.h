@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: ui.h,v 1.2 1997/09/02 12:54:11 xleroy Exp $ */
 
 /* Function declarations for non-Unix user interfaces */
 

@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: printf.mli,v 1.7 1996/09/10 13:58:05 doligez Exp $ *)
 
 (* Module [Printf]: formatting printing functions *)
 

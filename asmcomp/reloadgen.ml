@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: reloadgen.ml,v 1.2 1997/11/13 10:57:09 xleroy Exp $ *)
 
 (* Insert load/stores for pseudoregs that got assigned to stack locations. *)
 

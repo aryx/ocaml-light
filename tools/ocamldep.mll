@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: ocamldep.mll,v 1.8 1996/11/07 11:00:46 xleroy Exp $ *)
 
 {
 (* Remember the possibly free structure identifiers *)

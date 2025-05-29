@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: str.mli,v 1.2 1996/04/30 14:47:25 xleroy Exp $ *)
 
 (* Module [Str]: regular expressions and high-level string processing *)
 

@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: parsetree.mli,v 1.19 1997/06/16 18:10:32 ddr Exp $ *)
 
 (* Abstract syntax tree produced by parsing *)
 

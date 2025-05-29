@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: runtimedef.mli,v 1.3 1996/04/30 14:44:18 xleroy Exp $ *)
 
 (* Values and functions known and/or provided by the runtime system *)
 

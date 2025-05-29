@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: parmatch.mli,v 1.3 1996/04/30 14:53:04 xleroy Exp $ *)
 
 (* Detection of partial matches and unused match cases. *)
 

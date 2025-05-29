@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: map.mli,v 1.11 1997/12/09 09:11:47 xleroy Exp $ *)
 
 (* Module [Map]: association tables over ordered types *)
 

@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: printmach.mli,v 1.4 1996/04/30 14:42:46 xleroy Exp $ *)
 
 (* Pretty-printing of pseudo machine code *)
 

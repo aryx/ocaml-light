@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: ccomp.mli,v 1.3 1997/06/23 14:36:30 doligez Exp $ *)
 
 (* Compiling C files and building C libraries *)
 

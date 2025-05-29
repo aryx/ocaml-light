@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: simplif.ml,v 1.8 1997/03/17 13:00:40 xleroy Exp $ *)
 
 (* Elimination of useless Llet(Alias) bindings.
    Also transform let-bound references into variables. *)

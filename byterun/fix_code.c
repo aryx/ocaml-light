@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: fix_code.c,v 1.17 1997/09/02 12:53:58 xleroy Exp $ */
 
 /* Handling of blocks of bytecode (endianness switch, threading). */
 

@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: interf.ml,v 1.8 1996/09/18 14:16:12 xleroy Exp $ *)
 
 (* Construction of the interference graph.
    Annotate pseudoregs with interference lists and preference lists. *)

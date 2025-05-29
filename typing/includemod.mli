@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: includemod.mli,v 1.9 1997/03/10 00:25:52 vouillon Exp $ *)
 
 (* Inclusion checks for the module language *)
 

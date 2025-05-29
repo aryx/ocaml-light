@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: translcore.mli,v 1.9 1996/09/23 11:30:26 xleroy Exp $ *)
 
 (* Translation from typed abstract syntax to lambda terms,
    for the core language *)

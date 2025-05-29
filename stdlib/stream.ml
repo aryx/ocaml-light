@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: stream.ml,v 1.9 1997/10/14 13:17:38 doligez Exp $ *)
 
 (* The fields of type t are not mutable to preserve polymorphism of
    the empty stream. This is type safe because the empty stream is never

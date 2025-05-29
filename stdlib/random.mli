@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: random.mli,v 1.4 1997/03/31 15:51:43 doligez Exp $ *)
 
 (* Module [Random]: pseudo-random number generator *)
 

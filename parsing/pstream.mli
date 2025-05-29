@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: pstream.mli,v 1.3 1996/04/30 14:49:47 xleroy Exp $ *)
 
 (* Conversion of streams and parsers into Objective Caml syntax *)
 

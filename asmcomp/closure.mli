@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: closure.mli,v 1.4 1996/04/30 14:42:14 xleroy Exp $ *)
 
 (* Introduction of closures, uncurrying, recognition of direct calls *)
 

@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: arg.ml,v 1.8 1997/09/11 15:10:19 doligez Exp $ *)
 
 type spec =
   | Unit of (unit -> unit)     (* Call the function with unit argument *)

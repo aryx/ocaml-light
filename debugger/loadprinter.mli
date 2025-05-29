@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: loadprinter.mli,v 1.1 1997/02/14 16:29:58 xleroy Exp $ *)
 
 (* Loading and installation of user-defined printer functions *)
 

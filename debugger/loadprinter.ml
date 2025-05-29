@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: loadprinter.ml,v 1.6 1997/06/15 12:21:15 vouillon Exp $ *)
 
 (* Loading and installation of user-defined printer functions *)
 

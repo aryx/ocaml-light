@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: compilenv.mli,v 1.8 1997/05/15 13:22:05 xleroy Exp $ *)
 
 (* Compilation environments for compilation units *)
 

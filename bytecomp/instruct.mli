@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: instruct.mli,v 1.12 1997/06/16 13:33:10 vouillon Exp $ *)
 
 (* The type of the instructions of the abstract machine *)
 

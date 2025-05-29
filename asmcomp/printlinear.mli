@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: printlinear.mli,v 1.3 1996/04/30 14:42:44 xleroy Exp $ *)
 
 (* Pretty-printing of linearized machine code *)
 

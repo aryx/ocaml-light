@@ -11,7 +11,7 @@
 
 /* Based on public-domain code from Berkeley Yacc */
 
-/* $Id$ */
+/* $Id: warshall.c,v 1.6 1997/09/02 12:55:01 xleroy Exp $ */
 
 #include "defs.h"
 

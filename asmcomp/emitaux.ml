@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: emitaux.ml,v 1.10 1997/07/30 12:27:44 xleroy Exp $ *)
 
 (* Common functions for emitting assembly code *)
 

@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: m-nt.h,v 1.3 1996/07/01 12:43:27 xleroy Exp $ */
 
 /* Machine configuration, Intel x86 processors, Windows NT */
 

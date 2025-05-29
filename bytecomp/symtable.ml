@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: symtable.ml,v 1.16 1997/10/31 12:58:12 doligez Exp $ *)
 
 (* To assign numbers to globals and primitives *)
 

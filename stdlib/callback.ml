@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: callback.ml,v 1.1 1996/11/08 14:48:22 xleroy Exp $ *)
 
 (* Registering Caml values with the C runtime for later callbacks *)
 

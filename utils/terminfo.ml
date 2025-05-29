@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: terminfo.ml,v 1.3 1996/04/30 14:53:40 xleroy Exp $ *)
 
 (* Basic interface to the terminfo database *)
 

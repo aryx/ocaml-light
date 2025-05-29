@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: printf.ml,v 1.5 1996/04/30 14:50:28 xleroy Exp $ *)
 
 external format_int: string -> int -> string = "format_int"
 external format_float: string -> float -> string = "format_float"

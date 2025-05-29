@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: s-nt.h,v 1.5 1996/10/07 14:02:44 doligez Exp $ */
 
 /* Operating system dependencies, Intel x86 processors, Windows NT */
 

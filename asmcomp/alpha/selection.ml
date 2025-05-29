@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: selection.ml,v 1.6 1997/10/15 09:20:44 xleroy Exp $ *)
 
 (* Instruction selection for the Alpha processor *)
 

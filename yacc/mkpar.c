@@ -11,7 +11,7 @@
 
 /* Based on public-domain code from Berkeley Yacc */
 
-/* $Id$ */
+/* $Id: mkpar.c,v 1.8 1997/09/02 12:55:00 xleroy Exp $ */
 
 
 #include "defs.h"

@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: selection.ml,v 1.2 1997/11/17 14:45:22 xleroy Exp $ *)
 
 (* Instruction selection for the HPPA processor *)
 

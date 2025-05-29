@@ -11,7 +11,7 @@
 
 /* Based on public-domain code from Berkeley Yacc */
 
-/* $Id$ */
+/* $Id: reader.c,v 1.13 1997/11/13 09:57:52 xleroy Exp $ */
 
 #include <string.h>
 #include "defs.h"

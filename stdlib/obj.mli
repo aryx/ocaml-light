@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: obj.mli,v 1.13 1997/10/28 13:17:10 xleroy Exp $ *)
 
 (* Module [Obj]: operations on internal representations of values *)
 

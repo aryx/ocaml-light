@@ -11,7 +11,7 @@
 
 /* Based on public-domain code from Berkeley Yacc */
 
-/* $Id$ */
+/* $Id: defs.h,v 1.11 1997/09/02 12:54:58 xleroy Exp $ */
 
 #include <assert.h>
 #include <ctype.h>

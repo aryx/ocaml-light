@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: typetexp.ml,v 1.18 1997/06/29 13:16:47 vouillon Exp $ *)
 
 (* Typechecking of type expressions for the core language *)
 

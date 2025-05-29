@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: roots.c,v 1.25 1997/11/27 16:33:08 xleroy Exp $ */
 
 /* To walk the memory roots for garbage collection */
 

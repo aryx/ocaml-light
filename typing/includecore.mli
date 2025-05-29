@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: includecore.mli,v 1.8 1997/05/19 15:42:16 doligez Exp $ *)
 
 (* Inclusion checks for the core language *)
 

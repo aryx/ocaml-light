@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: proc_nt.ml,v 1.1 1997/07/24 11:49:04 xleroy Exp $ *)
 
 (* Description of the Intel 386 processor, for Windows NT *)
 

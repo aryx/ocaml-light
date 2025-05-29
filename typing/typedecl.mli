@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: typedecl.mli,v 1.11 1997/05/13 14:07:00 xleroy Exp $ *)
 
 (* Typing of type definitions and primitive definitions *)
 

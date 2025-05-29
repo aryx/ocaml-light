@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: event.mli,v 1.2 1997/11/20 14:15:04 xleroy Exp $ *)
 
 (* Module [Event]: first-class synchronous communication *)
 

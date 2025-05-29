@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: simplif.mli,v 1.2 1996/04/30 14:44:20 xleroy Exp $ *)
 
 (* Elimination of useless Llet(Alias) bindings *)
 

@@ -9,7 +9,7 @@
 *                                                                     */
 ***********************************************************************/
 
-* $Id$ */
+* $Id: interp.a,v 1.9 1997/06/27 17:06:21 doligez Exp $ */
 
 * The bytecode interpreter in 68000 assembly language */
 

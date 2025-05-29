@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: clambda.mli,v 1.9 1997/02/16 17:20:08 xleroy Exp $ *)
 
 (* A variant of the "lambda" code with direct / indirect calls explicit
    and closures explicit too *)

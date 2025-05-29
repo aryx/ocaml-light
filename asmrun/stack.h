@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: stack.h,v 1.18 1997/11/27 16:27:54 xleroy Exp $ */
 
 /* Machine-dependent interface with the asm code */
 

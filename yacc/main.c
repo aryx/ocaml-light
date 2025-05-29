@@ -11,7 +11,7 @@
 
 /* Based on public-domain code from Berkeley Yacc */
 
-/* $Id$ */
+/* $Id: main.c,v 1.11 1997/09/02 12:54:59 xleroy Exp $ */
 
 #include <signal.h>
 #include <string.h>

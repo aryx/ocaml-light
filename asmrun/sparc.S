@@ -9,7 +9,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id$ */
+/* $Id: sparc.S,v 1.12 1997/11/27 17:01:18 xleroy Exp $ */
 
 /* Asm part of the runtime system for the Sparc processor.  */
 /* Must be preprocessed by cpp */

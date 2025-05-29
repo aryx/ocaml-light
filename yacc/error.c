@@ -11,7 +11,7 @@
 
 /* Based on public-domain code from Berkeley Yacc */
 
-/* $Id$ */
+/* $Id: error.c,v 1.7 1997/09/02 12:54:59 xleroy Exp $ */
 
 /* routines for printing error messages  */
 

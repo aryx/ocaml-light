@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: arch.ml,v 1.1 1997/07/24 11:49:01 xleroy Exp $ *)
 
 (* Specific operations for the HP PA-RISC processor *)
 

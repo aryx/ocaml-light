@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: selection.mli,v 1.5 1996/04/30 14:43:01 xleroy Exp $ *)
 
 (* Selection of pseudo-instructions, assignment of pseudo-registers,
    sequentialization. *)

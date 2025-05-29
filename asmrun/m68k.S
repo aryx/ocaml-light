@@ -9,7 +9,7 @@
 |*                                                                     *
 |***********************************************************************
 
-| $Id$
+| $Id: m68k.S,v 1.5 1997/12/01 13:04:05 xleroy Exp $
 
 | Asm part of the runtime system, Motorola 68k processor
 

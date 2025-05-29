@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: thread.mli,v 1.7 1997/11/25 15:21:56 xleroy Exp $ *)
 
 (* Module [Thread]: lightweight threads for Posix 1003.1c and Win32 *)
 

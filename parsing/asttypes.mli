@@ -9,7 +9,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+(* $Id: asttypes.mli,v 1.4 1996/04/30 14:49:34 xleroy Exp $ *)
 
 (* Auxiliary a.s.t. types used by parsetree and typedtree. *)
 
