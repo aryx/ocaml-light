@@ -11,7 +11,7 @@
 ** dev infra
 - restore working semgrep.yml
 
-* 0.1 (Q2 2025) (Dockerfile, Nix, Github Actions CI checks, native, dune, tests, Xix)
+* 0.1 (Q2 2025) (Dockerfile/Nix/GHA CI checks, native working, dune, tests infra, Xix)
 # ported enough features so I can compile some of xix via build-mk.sh and mk
 # in bytecode and (static) native modes!
 
@@ -56,7 +56,7 @@
 - started to use poor's man Logs (needed typechecker improvement too)
 
 ** internals
-- remove files and support for old arch (alpha, mips, sparc, vax, etc.)
+- remove files and support for old arch (alpha, sparc, vax, etc.)
   and OSes (macOS, windows NT, Solaris)
 
 ** misc
@@ -90,8 +90,8 @@
     * record 'with' (see diff_with_record)
 
 ** compilers  
-- removed some native targets: alpha, hppa, m68k, power, and sparc,
-  mips. I just kept i386 and later backported the ARM port from ocaml 2.01!
+- removed some native targets: alpha, hppa, m68k, power, and sparc.
+  I just kept i386, mips, and later backported the ARM port from ocaml 2.01!
 
 ** tools
 - backport named regexps in ocamllex (let name = regexp ...)
@@ -106,3 +106,18 @@
 
 ** os
 - remove support for old macOS and Windows NT, to remove ugly cruft.
+
+* OCaml-light pre-history
+
+** OCaml
+
+** Caml Special Light
+
+** Caml light
+
+* Caml and ML history
+
+** Caml
+
+** ML
+
