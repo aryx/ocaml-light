@@ -16,6 +16,8 @@ all: codegen
 
 INCLUDES=-I $(TOP)/utils -I $(TOP)/typing -I $(TOP)/asmcomp
 
+#TODO: use lib.a instead of big list of cmos
+#TODO: try reduce deps to asmcomp/ files? need all of them? use codegraph to reduce
 OTHEROBJS=\
   $(TOP)/utils/misc.cmo $(TOP)/utils/config.cmo $(TOP)/utils/tbl.cmo \
   $(TOP)/utils/nativeint.cmo $(TOP)/utils/clflags.cmo $(TOP)/utils/logs.cmo \

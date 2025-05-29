@@ -1,77 +1,16 @@
-include ../config/Makefile
+TOP=..
+include $(TOP)/config/Makefile
 
-CAMLC=../boot/ocamlrun ../boot/ocamlc -I ../boot
-COMPFLAGS=$(INCLUDES)
-LINKFLAGS=
-CAMLYACC=../boot/ocamlyacc
-YACCFLAGS=
-CAMLLEX=../boot/ocamlrun ../boot/ocamllex
-CAMLDEP=../boot/ocamlrun ../tools/ocamldep
-DEPFLAGS=$(INCLUDES)
-CAMLRUN=../boot/ocamlrun
-
-CODEGEN=./codegen
+CODEGEN=../cmm/codegen
 CC=$(NATIVECC)
 CFLAGS=$(NATIVECCCOMPOPTS) -g -Wno-implicit-function-declaration -Wno-builtin-declaration-mismatch -Wno-parentheses
 
 PROGS=fib.out tak.out quicksort.out quicksort2.out soli.out integr.out \
       arith.out checkbound.out
 
-all: codegen $(PROGS)
-
-INCLUDES=-I ../utils -I ../typing -I ../asmcomp
-
-OTHEROBJS=../utils/misc.cmo ../utils/config.cmo ../utils/tbl.cmo \
-  ../utils/nativeint.cmo ../utils/clflags.cmo ../utils/logs.cmo ../utils/ccomp.cmo \
-  ../utils/config.cmo ../utils/clflags.cmo  \
-  ../parsing/linenum.cmo ../parsing/location.cmo \
-  ../typing/ident.cmo ../typing/path.cmo ../typing/types.cmo \
-  ../typing/subst.cmo ../typing/primitive.cmo \
-  ../typing/predef.cmo ../typing/datarepr.cmo ../typing/env.cmo \
-  ../bytecomp/lambda.cmo \
-  ../asmcomp/arch.cmo ../asmcomp/cmm.cmo ../asmcomp/printcmm.cmo \
-  ../asmcomp/clambda.cmo ../asmcomp/compilenv.cmo \
-  ../asmcomp/reg.cmo ../asmcomp/mach.cmo ../asmcomp/proc.cmo \
-  ../asmcomp/closure.cmo ../asmcomp/cmmgen.cmo \
-  ../asmcomp/printmach.cmo \
-  ../asmcomp/selectgen.cmo ../asmcomp/selection.cmo \
-  ../asmcomp/liveness.cmo ../asmcomp/spill.cmo ../asmcomp/split.cmo \
-  ../asmcomp/interf.cmo ../asmcomp/coloring.cmo \
-  ../asmcomp/reloadgen.cmo ../asmcomp/reload.cmo \
-  ../asmcomp/linearize.cmo ../asmcomp/schedgen.cmo ../asmcomp/scheduling.cmo \
-  ../asmcomp/printlinear.cmo ../asmcomp/emitaux.cmo \
-  ../asmcomp/emit.cmo ../asmcomp/asmgen.cmo
-
-OBJS=parsecmmaux.cmo parsecmm.cmo lexcmm.cmo main.cmo
-
-codegen: $(OTHEROBJS) $(OBJS)
-	$(CAMLC) $(LINKFLAGS) -o codegen $(OTHEROBJS) $(OBJS)
-clean::
-	rm -f codegen
-
-# The parser
-
-parsecmm.mli parsecmm.ml: parsecmm.mly
-	$(CAMLYACC) $(YACCFLAGS) parsecmm.mly
-
-clean::
-	rm -f parsecmm.mli parsecmm.ml parsecmm.output
-
-beforedepend:: parsecmm.mli parsecmm.ml
-
-# The lexer
-
-lexcmm.ml: lexcmm.mll
-	$(CAMLLEX) lexcmm.mll
-
-clean::
-	rm -f lexcmm.ml
-
-beforedepend:: lexcmm.ml
+all: $(PROGS)
 
 # The test programs
-
-$(PROGS:.out=.o): codegen
 
 fib.out: main.c fib.o $(ARCH).o
 	$(CC) $(CFLAGS) -o fib.out -DINT_INT -DFUN=fib main.c fib.o $(ARCH).o
@@ -115,13 +54,7 @@ power.o: power-$(SYSTEM).o
 	cp power-$(SYSTEM).o power.o
 
 .SUFFIXES:
-.SUFFIXES: .cmm .c .o .S .ml .mli .cmo .cmi
-
-.ml.cmo:
-	$(CAMLC) $(COMPFLAGS) -c $<
-
-.mli.cmi:
-	$(CAMLC) $(COMPFLAGS) -c $<
+.SUFFIXES: .cmm .c .o .S
 
 .cmm.o:
 	$(CAMLRUN) $(CODEGEN) $*.cmm > $*.s
@@ -131,11 +64,4 @@ power.o: power-$(SYSTEM).o
 	$(ASPP) $(ASPPFLAGS) -o $*.o $*.S
 
 clean::
-	rm -f *.out *.cm[io] *.s *.o *~
-
-$(PROGS:.out=.o): $(CODEGEN)
-
-depend: beforedepend
-	$(CAMLDEP) $(DEPFLAGS) *.mli *.ml > .depend
-
-include .depend
+	rm -f *.out *.s *.o *~
