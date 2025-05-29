@@ -1,46 +1,47 @@
-include ../config/Makefile
+TOP=..
 
-CAMLC=../boot/ocamlrun ../boot/ocamlc -I ../boot
+include $(TOP)/config/Makefile
+
+CAMLC=$(TOP)/boot/ocamlrun $(TOP)/boot/ocamlc -I $(TOP)/boot
 COMPFLAGS=$(INCLUDES)
 LINKFLAGS=
-CAMLYACC=../boot/ocamlyacc
+CAMLYACC=$(TOP)/boot/ocamlyacc
 YACCFLAGS=
-CAMLLEX=../boot/ocamlrun ../boot/ocamllex
-CAMLDEP=../boot/ocamlrun ../tools/ocamldep
+CAMLLEX=$(TOP)/boot/ocamlrun $(TOP)/boot/ocamllex
+CAMLDEP=$(TOP)/boot/ocamlrun $(TOP)/tools/ocamldep
 DEPFLAGS=$(INCLUDES)
-CAMLRUN=../boot/ocamlrun
+CAMLRUN=$(TOP)/boot/ocamlrun
 
-CODEGEN=./codegen
-CC=$(NATIVECC)
-CFLAGS=$(NATIVECCCOMPOPTS) -g -Wno-implicit-function-declaration -Wno-builtin-declaration-mismatch -Wno-parentheses
+all: codegen
 
-PROGS=fib.out tak.out quicksort.out quicksort2.out soli.out integr.out \
-      arith.out checkbound.out
+INCLUDES=-I $(TOP)/utils -I $(TOP)/typing -I $(TOP)/asmcomp
 
-all: codegen $(PROGS)
-
-INCLUDES=-I ../utils -I ../typing -I ../asmcomp
-
-OTHEROBJS=../utils/misc.cmo ../utils/config.cmo ../utils/tbl.cmo \
-  ../utils/nativeint.cmo ../utils/clflags.cmo ../utils/logs.cmo ../utils/ccomp.cmo \
-  ../utils/config.cmo ../utils/clflags.cmo  \
-  ../parsing/linenum.cmo ../parsing/location.cmo \
-  ../typing/ident.cmo ../typing/path.cmo ../typing/types.cmo \
-  ../typing/subst.cmo ../typing/primitive.cmo \
-  ../typing/predef.cmo ../typing/datarepr.cmo ../typing/env.cmo \
-  ../bytecomp/lambda.cmo \
-  ../asmcomp/arch.cmo ../asmcomp/cmm.cmo ../asmcomp/printcmm.cmo \
-  ../asmcomp/clambda.cmo ../asmcomp/compilenv.cmo \
-  ../asmcomp/reg.cmo ../asmcomp/mach.cmo ../asmcomp/proc.cmo \
-  ../asmcomp/closure.cmo ../asmcomp/cmmgen.cmo \
-  ../asmcomp/printmach.cmo \
-  ../asmcomp/selectgen.cmo ../asmcomp/selection.cmo \
-  ../asmcomp/liveness.cmo ../asmcomp/spill.cmo ../asmcomp/split.cmo \
-  ../asmcomp/interf.cmo ../asmcomp/coloring.cmo \
-  ../asmcomp/reloadgen.cmo ../asmcomp/reload.cmo \
-  ../asmcomp/linearize.cmo ../asmcomp/schedgen.cmo ../asmcomp/scheduling.cmo \
-  ../asmcomp/printlinear.cmo ../asmcomp/emitaux.cmo \
-  ../asmcomp/emit.cmo ../asmcomp/asmgen.cmo
+OTHEROBJS=\
+  $(TOP)/utils/misc.cmo $(TOP)/utils/config.cmo $(TOP)/utils/tbl.cmo \
+  $(TOP)/utils/nativeint.cmo $(TOP)/utils/clflags.cmo $(TOP)/utils/logs.cmo \
+  $(TOP)/utils/ccomp.cmo $(TOP)/utils/config.cmo $(TOP)/utils/clflags.cmo \
+  \
+  $(TOP)/parsing/linenum.cmo $(TOP)/parsing/location.cmo \
+  \
+  $(TOP)/typing/ident.cmo $(TOP)/typing/path.cmo $(TOP)/typing/types.cmo \
+  $(TOP)/typing/subst.cmo $(TOP)/typing/primitive.cmo \
+  $(TOP)/typing/predef.cmo $(TOP)/typing/datarepr.cmo $(TOP)/typing/env.cmo \
+  \
+  $(TOP)/bytecomp/lambda.cmo \
+  \
+  $(TOP)/asmcomp/arch.cmo $(TOP)/asmcomp/cmm.cmo $(TOP)/asmcomp/printcmm.cmo \
+  $(TOP)/asmcomp/clambda.cmo $(TOP)/asmcomp/compilenv.cmo \
+  $(TOP)/asmcomp/reg.cmo $(TOP)/asmcomp/mach.cmo $(TOP)/asmcomp/proc.cmo \
+  $(TOP)/asmcomp/closure.cmo $(TOP)/asmcomp/cmmgen.cmo \
+  $(TOP)/asmcomp/printmach.cmo \
+  $(TOP)/asmcomp/selectgen.cmo $(TOP)/asmcomp/selection.cmo \
+  $(TOP)/asmcomp/liveness.cmo $(TOP)/asmcomp/spill.cmo $(TOP)/asmcomp/split.cmo \
+  $(TOP)/asmcomp/interf.cmo $(TOP)/asmcomp/coloring.cmo \
+  $(TOP)/asmcomp/reloadgen.cmo $(TOP)/asmcomp/reload.cmo \
+  $(TOP)/asmcomp/linearize.cmo $(TOP)/asmcomp/schedgen.cmo \
+  $(TOP)/asmcomp/scheduling.cmo \
+  $(TOP)/asmcomp/printlinear.cmo $(TOP)/asmcomp/emitaux.cmo \
+  $(TOP)/asmcomp/emit.cmo $(TOP)/asmcomp/asmgen.cmo
 
 OBJS=parsecmmaux.cmo parsecmm.cmo lexcmm.cmo main.cmo
 
@@ -69,50 +70,7 @@ clean::
 
 beforedepend:: lexcmm.ml
 
-# The test programs
 
-$(PROGS:.out=.o): codegen
-
-fib.out: main.c fib.o $(ARCH).o
-	$(CC) $(CFLAGS) -o fib.out -DINT_INT -DFUN=fib main.c fib.o $(ARCH).o
-
-tak.out: main.c tak.o $(ARCH).o
-	$(CC) $(CFLAGS) -o tak.out -DUNIT_INT -DFUN=takmain main.c tak.o $(ARCH).o
-
-quicksort.out: main.c quicksort.o $(ARCH).o
-	$(CC) $(CFLAGS) -o quicksort.out -DSORT -DFUN=quicksort main.c quicksort.o $(ARCH).o
-
-quicksort2.out: main.c quicksort2.o $(ARCH).o
-	$(CC) $(CFLAGS) -o quicksort2.out -DSORT -DFUN=quicksort main.c quicksort2.o $(ARCH).o
-
-soli.out: main.c soli.o $(ARCH).o
-	$(CC) $(CFLAGS) -o soli.out -DUNIT_INT -DFUN=solitaire main.c soli.o $(ARCH).o
-
-integr.out: main.c integr.o $(ARCH).o
-	$(CC) $(CFLAGS) -o integr.out -DINT_FLOAT -DFUN=test main.c integr.o $(ARCH).o
-
-tagged-fib.out: main.c tagged-fib.o $(ARCH).o
-	$(CC) $(CFLAGS) -o tagged-fib.out -DINT_INT -DFUN=fib main.c tagged-fib.o $(ARCH).o
-
-tagged-tak.out: main.c tagged-tak.o $(ARCH).o
-	$(CC) $(CFLAGS) -o tagged-tak.out -DUNIT_INT -DFUN=takmain main.c tagged-tak.o $(ARCH).o
-
-tagged-quicksort.out: main.c tagged-quicksort.o $(ARCH).o
-	$(CC) $(CFLAGS) -o tagged-quicksort.out -DSORT -DFUN=quicksort main.c tagged-quicksort.o $(ARCH).o
-
-tagged-integr.out: main.c tagged-integr.o $(ARCH).o
-	$(CC) $(CFLAGS) -o tagged-integr.out -DINT_FLOAT -DFUN=test main.c tagged-integr.o $(ARCH).o
-
-arith.out: mainarith.c arith.o $(ARCH).o
-	$(CC) $(CFLAGS) -o arith.out mainarith.c arith.o $(ARCH).o
-
-checkbound.out: main.c checkbound.o $(ARCH).o
-	$(CC) $(CFLAGS) -o checkbound.out -DCHECKBOUND main.c checkbound.o $(ARCH).o
-
-# The runtime environment
-
-power.o: power-$(SYSTEM).o
-	cp power-$(SYSTEM).o power.o
 
 .SUFFIXES:
 .SUFFIXES: .cmm .c .o .S .ml .mli .cmo .cmi
@@ -123,17 +81,8 @@ power.o: power-$(SYSTEM).o
 .mli.cmi:
 	$(CAMLC) $(COMPFLAGS) -c $<
 
-.cmm.o:
-	$(CAMLRUN) $(CODEGEN) $*.cmm > $*.s
-	$(AS) $(ASFLAGS) -o $*.o $*.s
-
-.S.o:
-	$(ASPP) $(ASPPFLAGS) -o $*.o $*.S
-
 clean::
 	rm -f *.out *.cm[io] *.s *.o *~
-
-$(PROGS:.out=.o): $(CODEGEN)
 
 depend: beforedepend
 	$(CAMLDEP) $(DEPFLAGS) *.mli *.ml > .depend
