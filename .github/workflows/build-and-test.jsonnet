@@ -99,12 +99,12 @@ local job = {
         'master',
       ],
     },
-    schedule: [
-      {
-        // every day at 12:59
-        cron: '59 12 * * *',
-      },
-    ],
+    //schedule: [
+    //  {
+    //    // every day at 12:59
+    //    cron: '59 12 * * *',
+    //  },
+    //],
   },
   jobs: {
     job: job,
