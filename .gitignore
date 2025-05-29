@@ -13,7 +13,9 @@
 *.o
 *.a
 
-# testasmpcomp/ cmm object files and binaries
+# intermediate test object files and binaries
+/test/**/*.s
+/test/**/*.out
 /testasmcomp/*.s
 /testasmcomp/*.out
 
