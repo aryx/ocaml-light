@@ -110,7 +110,7 @@ all: runtime ocamlc ocamllex ocamlyacc ocamltools library ocaml \
 world: coldstart all
 
 # Compile the native-code compiler
-opt: runtimeopt ocamlopt libraryopt otherlibrariesopt
+opt: runtimeopt ocamlopt libraryopt otherlibrariesopt cmmopt
 
 clean:: partialclean
 
@@ -542,6 +542,10 @@ partialclean::
 alldepend::
 	for i in $(TOOLS); do (cd $$i; $(MAKE) depend); done
 
+cmmopt:
+	cd cmm; $(MAKE) all
+clean::
+	cd cmm; $(MAKE) clean
 
 
 # The "expunge" utility
