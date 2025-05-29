@@ -10,4 +10,15 @@
  (preprocess (pps ppx_deriving.show))
 )
 
-; TODO: driver_opt
+(library
+ (name driver_opt)
+ (wrapped false)
+ (modules
+    optcompile opterrors optmain
+ )
+ (libraries
+    parsing typing bytecomp asmcomp
+  )
+ (preprocess (pps ppx_deriving.show))
+)
+
