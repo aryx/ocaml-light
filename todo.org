@@ -352,7 +352,12 @@ or simpler to just move code in version_control/index.ml for now
 
 *** List.iteri
 
-** Features
+** Typechecker
+
+*** leverage type annot to avoid having to qualify fields
+so let foo (x : Bar) =
+   x.fld
+without needing x.Bar.fld
 
 *** support for qualifier just for first field that propagates to
 other fields so can do
@@ -362,9 +367,8 @@ to avoid some open)
 
 just cherry pick the patch that did that in original ocaml
 
-*** -annot!
-
 *** support { x; y } when x and y are locals
+
 
 ** Compiler (checks and error messages)
 
