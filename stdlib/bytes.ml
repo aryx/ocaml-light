@@ -34,3 +34,5 @@ let blit src srcoff dst dstoff len =
 
 let unsafe_blit src srcoff dst dstoff len =
   String.unsafe_blit src srcoff dst dstoff len
+
+let make = String.make

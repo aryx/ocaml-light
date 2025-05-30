@@ -654,6 +654,6 @@ visual:
 # TODO: currently need to call make to generate some .ml (e.g., parser.ml, config.ml)
 build-dune:
 	make
-	rm -f stdlib/stdlib.cma
+	rm -f stdlib/stdlib.*
 	#rm -f lex/lexer.ml lex/parser.ml lex/parser.mli
 	dune build
