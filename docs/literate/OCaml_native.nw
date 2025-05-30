@@ -1471,9 +1471,9 @@ let current_unit_name () =
 let read_unit_info filename =
   let ic = open_in(*_bin*) filename in
   try
-    let buffer = String.create (String.length cmx_magic_number) in
+    let buffer = Bytes.create (String.length cmx_magic_number) in
     really_input ic buffer 0 (String.length cmx_magic_number);
-    if buffer <> cmx_magic_number then begin
+    if Bytes.to_string buffer <> cmx_magic_number then begin
       close_in ic;
       raise(Error(Not_a_unit_info filename))
     end;
@@ -1618,8 +1618,8 @@ open Format
 
 <<type [[Reg.t]]>>=
 type t =
-  { mutable name: string;               (* Name (for printing) *)
-    stamp: int;                         (* Unique stamp *)
+  { stamp: int;                         (* Unique stamp *)
+    mutable name: string;               (* Name (for printing) *)
     typ: Cmm.machtype_component;        (* Type of contents *)
     mutable loc: location;              (* Actual location *)
     mutable spill: bool;                (* "true" to force stack allocation  *)
@@ -1732,8 +1732,8 @@ val reinit: unit -> unit
 
 <<type [[Reg.t]]([[(asmcomp/reg.ml)]])>>=
 type t =
-  { mutable name: string;
-    stamp: int;
+  { stamp: int;
+    mutable name: string;
     typ: Cmm.machtype_component;
     mutable loc: location;
     mutable spill: bool;
@@ -1759,7 +1759,7 @@ and stack_location =
 @
 
 <<type [[Reg.reg]]>>=
-type reg = t
+type _reg = t
 @
 
 <<constant [[Reg.dummy]]>>=
@@ -1903,6 +1903,12 @@ let set_of_array v =
 
 open Cmm
 
+(* pad: I reordered the field to put stamp first because RegOrder
+ * below is using this field for comparison and the default compare
+ * used in set.ml is I think using the order of the field for comparison.
+ * That way fib.s in ocaml-light and ocaml 1.07 is mostly identical and
+ * start with the same use of register
+ *)
 <<type [[Reg.t]]([[(asmcomp/reg.ml)]])>>
 
 <<type [[Reg.location]]([[(asmcomp/reg.ml)]])>>
@@ -4081,7 +4087,7 @@ let build_graph fundecl =
 
   let num_regs = Reg.num_registers() in
   let mat =
-    String.make (((num_regs * (num_regs + 1)) lsr 1 + 7) lsr 3) '\000' in
+    Bytes.make (((num_regs * (num_regs + 1)) lsr 1 + 7) lsr 3) '\000' in
 
   (* Record an interference between two registers *)
   let add_interf ri rj =
@@ -4089,7 +4095,7 @@ let build_graph fundecl =
     if i = j then () else begin
       let n = if i < j then ((j * (j + 1)) lsr 1) + i
                        else ((i * (i + 1)) lsr 1) + j in
-      let b = Char.code(mat.[n lsr 3]) in
+      let b = Char.code(Bytes.get mat (n lsr 3)) in
       let msk = 1 lsl (n land 7) in
       if b land msk = 0 then begin
         mat.[n lsr 3] <- Char.unsafe_chr(b lor msk);
@@ -4174,7 +4180,7 @@ let build_graph fundecl =
           Unknown ->
             let n = if i < j then ((j * (j + 1)) lsr 1) + i
                              else ((i * (i + 1)) lsr 1) + j in
-            let b = Char.code(mat.[n lsr 3]) in
+            let b = Char.code(Bytes.get mat (n lsr 3)) in
             let msk = 1 lsl (n land 7) in
             if b land msk = 0 then r1.prefer <- (r2, weight) :: r1.prefer
         | _ -> ()
@@ -6026,7 +6032,12 @@ let join r1 seq1 r2 seq2 =
       end else begin
         r.(i) <- Reg.create r1.(i).typ;
         seq1.insert_move seq1 r1.(i) r.(i);
-        seq2.insert_move seq1 r2.(i) r.(i)
+        (* pad: bugfix: I did a mistake when switching from oo to record
+         * and wrote seq2.insert_move seq1 ... which led to some weird
+         * regressions in nucleid.out! and also some fatal_error
+         * in Liveness.fundecl.
+         *)
+        seq2.insert_move seq2 r2.(i) r.(i)
       end
     done;
     r
@@ -6360,7 +6371,7 @@ let selector_generic () =
           self.insert_op self op r1 rd
       end        
   | Csequence(e1, e2) ->
-      self.emit_expr self  env e1;
+      self.emit_expr self  env e1 |> ignore;
       self.emit_expr self  env e2
   | Cifthenelse(econd, eif, eelse) ->
       let (cond, earg) = self.select_condition self econd in
@@ -6545,7 +6556,7 @@ let selector_generic () =
       self.insert self (Iop Imove) r1 rd;
       self.insert self Iraise rd [||]
   | Csequence(e1, e2) ->
-      self.emit_expr self env e1;
+      self.emit_expr self env e1 |> ignore;
       self.emit_tail self env e2
   | Cifthenelse(econd, eif, eelse) ->
       let (cond, earg) = self.select_condition self econd in
@@ -6907,7 +6918,7 @@ let is_unboxed_float = function
 @
 
 <<exception [[Cmmgen.Cannot_subst_float]]>>=
-exception Cannot_subst_float
+(*exception Cannot_subst_float*)
 @
 
 <<function [[Cmmgen.subst_boxed_float]]>>=
@@ -8300,8 +8311,7 @@ let fundecl f =
   let wrong_live = (*Reg.*)Set.diff initially_live (Reg.set_of_array f.fun_args) in
   if not ((*Reg.*)Set.is_empty wrong_live) then begin
     Printmach.regset wrong_live; Format.print_newline();
-    (* Misc.fatal_error "Liveness.fundecl" *)
-    Logs.err (fun m -> m "Liveness.fundecl");
+    Misc.fatal_error "Liveness.fundecl"
   end
 @
 
@@ -8948,7 +8958,7 @@ let scheduler_generic () =
         | Lop(Icall_imm _ | Itailcall_imm _ | Iextcall(_, _)) -> [||]
         | Lreturn -> [||]
         | _ -> i.arg in
-      List.iter (fun x -> longest_path critical_outputs x; ()) ready_queue;
+      List.iter (fun x -> longest_path critical_outputs x |> ignore) ready_queue;
       self.reschedule self ready_queue 0 (schedule i)
     end in
 
@@ -9112,14 +9122,14 @@ let rec regalloc round fd =
   if round > 50 then
     fatal_error(fd.Mach.fun_name ^
                 ": function too complex, cannot complete register allocation");
-  dump_if dump_live "Liveness analysis" fd;
+  dump_if dump_live "Liveness analysis" fd |> ignore;
   Interf.build_graph fd;
   if !dump_interf then Printmach.interferences();
   if !dump_prefer then Printmach.preferences();
   Coloring.allocate_registers();
-  dump_if dump_regalloc "After register allocation" fd;
+  dump_if dump_regalloc "After register allocation" fd |> ignore;
   let (newfd, redo_regalloc) = Reload.fundecl fd in
-  dump_if dump_reload "After insertion of reloading code" newfd;
+  dump_if dump_reload "After insertion of reloading code" newfd |> ignore;
   if redo_regalloc 
   then begin Reg.reinit(); Liveness.fundecl newfd; regalloc (round+1) newfd end
   else newfd
@@ -9369,9 +9379,9 @@ let scan_file obj_name tolink =
     (* This is an archive file. Each unit contained in it will be linked
        in only if needed. *)
     let ic = open_in(*_bin*) file_name in
-    let buffer = String.create (String.length cmxa_magic_number) in
+    let buffer = Bytes.create (String.length cmxa_magic_number) in
     really_input ic buffer 0 (String.length cmxa_magic_number);
-    if buffer <> cmxa_magic_number then
+    if Bytes.to_string buffer <> cmxa_magic_number then
       raise(Error(Not_an_object_file file_name));
     let info_crc_list = (input_value ic : (unit_infos * Digest.t) list) in
     close_in ic;
@@ -9709,8 +9719,8 @@ let parse_file inputfile parse_fun ast_magic =
     try
       let buffer = Bytes.create (String.length ast_magic) in
       really_input ic buffer 0 (String.length ast_magic);
-      if buffer = ast_magic then true
-      else if String.sub buffer 0 9 = String.sub ast_magic 0 9 then
+      if Bytes.to_string buffer = ast_magic then true
+      else if Bytes.sub buffer 0 9 |> Bytes.to_string = String.sub ast_magic 0 9 then
         raise Outdated_version
       else false
     with
@@ -9744,7 +9754,7 @@ let interface sourcefile =
   let ast = parse_file inputfile Parse.interface ast_intf_magic_number in
   let sg = Typemod.transl_signature (initial_env()) ast in
   if !Clflags.print_types then (Printtyp.signature sg; print_newline());
-  Env.save_signature sg modulename (prefixname ^ ".cmi");
+  Env.save_signature sg modulename (prefixname ^ ".cmi") |> ignore;
   remove_preprocessed inputfile
 @
 
