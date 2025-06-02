@@ -1,4 +1,4 @@
-TOP=..
+TOP=../..
 
 SYNCFLAGS=-md5sum_in_auxfile -less_marks -lang ocaml
 SYNCFLAGS_FOR_C=-md5sum_in_auxfile -less_marks -lang C
@@ -174,9 +174,7 @@ SRC_ML= \
 # lex/* is synced with ../generator/CompilerGenerator.nw
 # as well as stdlib/lexing.ml
 
-OCAMLLIGHT=/home/pad/github/ocaml-light
-
-SRC_VIEWS=${SRC_ML:%=$OCAMLLIGHT/%}
+SRC_VIEWS=${SRC_ML:%=$TOP/%}
 
 <$TOP/docs/latex/mkcommon
 
@@ -250,7 +248,7 @@ SRC_C=\
   byterun/startup.c\
   byterun/main.c\
 
-SRC_VIEWS_C=${SRC_C:%=$OCAMLLIGHT/%}
+SRC_VIEWS_C=${SRC_C:%=$TOP/%}
 
 sync: sync_c sync_yacc
 
