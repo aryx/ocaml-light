@@ -124,3 +124,9 @@ val lowercase_ascii : string -> string
     to lowercase, using the US-ASCII character set.
 
     @since 4.03 (4.05 in StringLabels) *)
+
+val map : (char -> char) -> string -> string
+(** [map f s] is the string resulting from applying [f] to all the
+    characters of [s] in increasing order.
+
+    @since 4.00.0 *)

@@ -17,7 +17,8 @@
 ** stdlib
 - backport Obj.is_int and Obj.xxx_tag (2.02)
 - backport Printf.kprintf and ksprintf and support for %! to flush (3.08)
-- backport String.trim (4.00) and partial backport of xxx_ascii functions (4.03)
+- backport String.trim and String.map (4.00) and partial backport of xxx_ascii
+  functions (4.03)
 - partial backport of bytes.ml (4.02.0)
 - backport uchar.ml (4.03)
 - backport fun.ml (but without labels) and Fun.protect (4.07.2)
@@ -26,6 +27,7 @@
 - backport either.ml (4.12.0)
 - backport removal of genlex.ml (4.14.0) and sort.ml, but kept stream.ml
   (it is used by a few examples/)
+- backport of Arg.align and Arg.parse_argv
   
 ** language
 - partial support for attributes ([@@...]), object types (<Cap.exec; ..>),

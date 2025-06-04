@@ -86,6 +86,9 @@ val parse : (string * spec * string) list -> (string -> unit) -> string -> unit
 *)
 
 exception Bad of string
+(** Functions in [spec] or [anon_fun] can raise [Arg.Bad] with an error
+    message to reject invalid arguments.
+    [Arg.Bad] is also raised by {!Arg.parse_argv} in case of an error. *)
 
 exception Help of string
 (** Raised by [Arg.parse_argv] when the user asks for help. *)
