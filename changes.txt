@@ -3,10 +3,9 @@
 * TODO
 
 ** compilers
-- port more arch x86_64(amd64)/arm/arm64/riscv
+- port more arch x86_64(amd64)/arm/arm64/riscv/mips
   
 ** test infra
-- restore testasmcomp/
 
 ** dev infra
 - restore working semgrep.yml
@@ -24,6 +23,7 @@
 - backport fun.ml (but without labels) and Fun.protect (4.07.2)
 - backport bool.ml, int.ml, and float.ml (4.08)
 - backport option.ml and result (4.08) as well as the result pervasive type
+- backport either.ml (4.12.0)
 - backport removal of genlex.ml (4.14.0) and sort.ml, but kept stream.ml
   (it is used by a few examples/)
   
@@ -38,7 +38,7 @@
   Logs.info (fun m -> m "%s" name) (extension to type_expect())
 
 ** compilers
-- restore asmcomp/ for x86 (using gcc -m32)
+- restore asmcomp/ for x86 (using gcc -m32) and testasmcomp/ is building
 
 ** test infra
 - add Dockerfile and docker.yml GHA (Github Action) CI checks
