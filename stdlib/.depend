@@ -1,4 +1,3 @@
-genlex.cmi: stream.cmi 
 lexing.cmi: obj.cmi 
 parsing.cmi: lexing.cmi obj.cmi 
 printf.cmi: buffer.cmi 
@@ -18,6 +17,8 @@ char.cmo: char.cmi
 char.cmx: char.cmi 
 digest.cmo: bytes.cmo string.cmi digest.cmi 
 digest.cmx: bytes.cmx string.cmx digest.cmi 
+either.cmo: either.cmi 
+either.cmx: either.cmi 
 filename.cmo: string.cmi sys.cmi filename.cmi 
 filename.cmx: string.cmx sys.cmx filename.cmi 
 float.cmo: pervasives.cmi float.cmi 
@@ -28,8 +29,6 @@ fun.cmo: fun.cmi
 fun.cmx: fun.cmi 
 gc.cmo: printf.cmi gc.cmi 
 gc.cmx: printf.cmx gc.cmi 
-genlex.cmo: bytes.cmo hashtbl.cmi list.cmi stream.cmi string.cmi genlex.cmi 
-genlex.cmx: bytes.cmx hashtbl.cmx list.cmx stream.cmx string.cmx genlex.cmi 
 hashtbl.cmo: array.cmi hashtbl.cmi 
 hashtbl.cmx: array.cmx hashtbl.cmi 
 int.cmo: int.cmi 
@@ -66,8 +65,6 @@ result.cmo: result.cmi
 result.cmx: result.cmi 
 set.cmo: list.cmi pervasives.cmi set.cmi 
 set.cmx: list.cmx pervasives.cmx set.cmi 
-sort.cmo: sort.cmi 
-sort.cmx: sort.cmi 
 stack.cmo: list.cmi stack.cmi 
 stack.cmx: list.cmx stack.cmi 
 stdcompat.cmo: pervasives.cmi 
