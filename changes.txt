@@ -23,7 +23,7 @@
 - backport uchar.ml (4.03)
 - backport fun.ml (but without labels) and Fun.protect (4.07.2)
 - backport bool.ml, int.ml, and float.ml (4.08)
-- backport option.ml and result (4.08) as well as the result pervasive type
+- backport option.ml and result.ml (4.08) as well as the result pervasive type
 - backport either.ml (4.12.0)
 - backport removal of genlex.ml (4.14.0) and sort.ml, but kept stream.ml
   (it is used by a few examples/)
@@ -72,8 +72,9 @@
 ** os
 - compile byterun/ for plan9 so I can run ocaml (light) bytecode programs
   under my fork of plan9!
+  (might be in ~/github/ocaml-light-for-plan9-branch/)
 
-* Alpha (2015) (fork of OCaml 1.07 - OO - functors)
+* Alpha (2015) (fork of OCaml 1.07 without OO without functors)
 # see also pad.txt history section
 
 ** language
@@ -122,4 +123,3 @@
 ** Caml
 
 ** ML
-
