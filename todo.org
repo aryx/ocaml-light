@@ -2,6 +2,103 @@
 
 * Last
 
+** Last0
+
+*** read camlboot and other papers on remarkable
+
+*** implement { x; y } pattern matching and construction shortcut
+nice feature. Difficult to implement? simpler to backport?
+
+*** make sync
+
+*** make sync_c
+pb with config.h and md5sum entries
+regenerate from scratch? just skip this file?
+
+*** FUN read camlboot paper?
+
+*** RELAX add -version to optmain.ml too
+
+*** RELAX get tools/debugger/ to work! make does not even compile
+and regression tests? actually run and test it?
+
+Env.summary not found? because I've deleted the code before.
+Not sure why, maybe to simplify for OCaml.nw
+
+make sync first
+
+*** RELAX make dune file for tools/debugger/
+
+
+*** multi-arch: mips, arm and more later
+
+**** FUN try make native arm to work! how to test? qemu? raspberry pi?
+again good intermediate step towards fixing plan9 on raspberry pi?
+
+**** FUN Dockerfile.mips and configure
+alt: find a way to make it easy to cross compile and use wrapped true trick
+ or something but would require too much change. The poor's man functor
+ approach of symlink is maybe better (and fit more ocaml-light anyway)
+
+
+*** can actually link an ocaml(opt) via dune? can I make an executable section?
+in driver/dune?
+
+*** RELAX compile more ocaml-light/examples/
+#!!!good testbed to check if ocaml light expressive enough for those examples
+# whether we need OO, functors, labels, etc!
+# and good testbed towards getting also xix to compile with ocaml-light!!!
+
+**** can look at "Le langage Caml" book pour replonger dans ces programmes :)
+
+**** restore doctor and docteur test, weird diff in Docker vs local
+
+*** Multi-platform build of ocaml-light
+
+**** try run ocaml-light on both macs, pb on grey one?
+proof we don't need all those old Makefile.mac
+
+**** try compile ocaml-light on windows! with mingw!
+how to check this in CI? see build-windows.yml from semgrep?
+good to imitate?
+
+proof we don't need all those old Makefile.nt
+
+**** try compile ocaml-light on windows and macbook x86_64
+bonus: make also asmcomp/ and native programs run with -m32
+bonus: build/test in CI! macos-latest, windows-latest, ubuntu-latest
+
+start use jsonnet?
+
+*** RELAX handle the .c.rej of alloc_small in untracked files
+now that has good test infra, can start to do fearless refactoring/changes
+
+*** less: fix the weird failwith "select_floatarith"
++ );
++
++  select_floatarith = (fun _ ->  failwith "select_floatarith");
++  select_push = (fun _ -> failwith "select_floatarith");
++ }
+ 
+*** -------------------------------------------------------------
+
+*** LATER: make it work on plan9
+and then finish draw port so can then port ocaml-elm-playground to also
+work on plan9 and run ocaml games on plan9! like rolling moon on plan9 :)
+
+*** LATER: integrate zamcov in ocaml-light and its bytecode interpreter?
+can be nice intermediate step to byterun/ ? or an alternative complementary
+path to solidy byterun/ understanding?
+
+*** LATER: what about the paper that tried to reboostrap OCaml?
+can take code from there too?
+camlboot interp? same approach?
+
+*** LATER: add js_of_ocaml old simple version?
+
+*** LATER: add wasm_of_ocaml?
+
+
 ** Internals
 
 *** refactoring
@@ -95,11 +192,9 @@ and revert back the changes in mk and rc and more
 (macroprocessor, assembler, etc.)
 
 
-
 ** Debug tools
 
 *** backport Printexc.raw_backtrace so can get working Exception.ml
-
 
 *** include diffs that help the debuggability of ocaml
 
