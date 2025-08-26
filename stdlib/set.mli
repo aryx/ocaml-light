@@ -10,7 +10,11 @@
 (***********************************************************************)
 
 (* pad: this module relies on stdlib.compare and does not use functors
- * to parametrize the Set (because ocaml-light does not support functors)
+ * to parametrize the Set (because ocaml-light does not support functors).
+ *
+ * You should not use this module though in your code (e.g., in xix)
+ * because it will not be compatible with regular OCaml compilers.
+ * Copy instead this file in a Set_.ml (same for Map_.ml) and uses that.
  *)
 
 
