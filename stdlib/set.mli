@@ -9,6 +9,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* pad: this module relies on stdlib.compare and does not use functors
+ * to parametrize the Set (because ocaml-light does not support functors)
+ *)
+
 
 (* Module [Set]: sets over ordered types *)
 

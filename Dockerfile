@@ -7,7 +7,7 @@ RUN apt-get update # needed otherwise can't find any package
 RUN apt-get install -y build-essential autoconf automake
 # multilib is needed for gcc -m32; asmcomp currently supports only x86
 RUN apt-get install -y gcc-multilib
-#alt: LATER: use kencc instead of gcc
+#alt: LATER: use kencc or better goken instead of gcc
 
 WORKDIR /src
 

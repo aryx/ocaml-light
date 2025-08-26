@@ -9,6 +9,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* pad: this module relies on stdlib.compare and does not use functors
+ * to parametrize the Map (because ocaml-light does not support functors)
+ *)
 
 (* Module [Map]: association tables over ordered types *)
 

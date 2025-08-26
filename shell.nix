@@ -4,7 +4,7 @@
 # (TODO: on amd64 or arm64).
 # See also .github/workflows/nix.yml for its use in Github Actions (GHA).
 # See also Dockerfile.
-# See also xix/shell.nix for more info about Nix.
+# See also https://github.com/aryx/xix/blob/master/shell.nix for more info about Nix.
 
 let
    # fetch a specific nixos version for better reproducibility

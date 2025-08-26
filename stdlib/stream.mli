@@ -9,6 +9,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* pad: we should remove this module which was removed from recent OCaml,
+ * but it's used in a few examples/ so let's keep it for now
+ *)
+
 
 (* Module [Stream]: streams and parsers *)
 

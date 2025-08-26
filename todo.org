@@ -508,6 +508,12 @@ but this is not unit!
 
 ** Misc
 
+*** old C style proto
+
+https://github.com/ocaml/ocaml/pull/11764
+see also many fixes in https://ocaml.org/releases/4.14.2#runtime-system
+so 4.14 would compile with recent gcc that is stricter
+
 *** license part1
 commit cc0f32b05439bb7018e8ad62a54d6371b01aab9f
 Author: Xavier Leroy <xavier.leroy@inria.fr>
