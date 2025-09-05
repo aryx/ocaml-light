@@ -57,3 +57,9 @@ let uppercase c =
   || (c >= '\248' && c <= '\254')
   then unsafe_chr(code c - 32)
   else c
+
+
+type t = char
+
+let compare c1 c2 = code c1 - code c2
+let equal (c1: t) (c2: t) = compare c1 c2 = 0

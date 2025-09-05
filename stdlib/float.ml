@@ -96,4 +96,5 @@ type t = float
 (*
 external compare : float -> float -> int = "%compare"
  *)
+let compare : t -> t -> int = compare
 let equal x y = compare x y = 0

@@ -36,3 +36,7 @@ let unsafe_blit src srcoff dst dstoff len =
   String.unsafe_blit src srcoff dst dstoff len
 
 let make = String.make
+
+let equal = ( = )
+
+let compare = compare

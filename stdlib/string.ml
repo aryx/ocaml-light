@@ -185,3 +185,11 @@ let rindex_from s i c =
   then invalid_arg "String.rindex_from"
   else rindex_rec s i c
 
+
+type t = string
+
+let compare (x: t) (y: t) = compare x y
+
+(* external equal : string -> string -> bool = "caml_string_equal" [@@noalloc] *)
+let equal x y = compare x y = 0
+
