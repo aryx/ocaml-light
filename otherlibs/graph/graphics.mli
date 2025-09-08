@@ -36,6 +36,9 @@ external size_y : unit -> int = "gr_size_y"
            Drawings outside of this rectangle are clipped, without causing
            an error. The origin (0,0) is at the lower left corner. *)
 
+val set_window_title : string -> unit
+(** Set the title of the graphics window. *)
+
 (*** Colors *)
 
 type color = int
@@ -81,6 +84,17 @@ external moveto : int -> int -> unit = "gr_moveto"
         (* Position the current point. *)
 external current_point : unit -> int * int = "gr_current_point"
         (* Return the position of the current point. *)
+
+
+(*external current_x : unit -> int = "caml_gr_current_x" *)
+val current_x : unit -> int
+(** Return the abscissa of the current point. *)
+
+(* external current_y : unit -> int = "caml_gr_current_y" *)
+val current_y : unit -> int
+(** Return the ordinate of the current point. *)
+
+
 external lineto : int -> int -> unit = "gr_lineto"
         (* Draw a line with endpoints the current point and the given point,
            and move the current point to the given point. *)
@@ -200,6 +214,15 @@ external wait_next_event : event list -> status = "gr_wait_event"
            outside the range [0..size_x()-1, 0..size_y()-1]. Keypresses
            are queued, and dequeued one by one when the [Key_pressed]
            event is specified. *)
+
+
+val loop_at_exit : event list -> (status -> unit) -> unit
+(** Loop before exiting the program, the list given as argument is the
+    list of handlers and the events on which these handlers are called.
+    To exit cleanly the loop, the handler should raise Exit. Any other
+    exception will be propagated outside of the loop.
+    @since 4.01
+*)
 
 (*** Mouse and keyboard polling *)
 

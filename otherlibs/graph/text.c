@@ -15,8 +15,6 @@
 #include <alloc.h>
 #include <str.h>
 
-XFontStruct * grfont = NULL;
-
 static void gr_font(char *fontname)
 {
   XFontStruct * font = XLoadQueryFont(grdisplay, fontname);

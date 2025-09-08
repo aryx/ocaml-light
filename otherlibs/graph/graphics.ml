@@ -37,6 +37,11 @@ let (open_graph, close_graph) =
   | "MacOS" -> (raw_open_graph, raw_close_graph)
   | _ -> invalid_arg ("Graphics: unknown OS type: " ^ Sys.os_type)
 
+(* external set_window_title : string -> unit = "caml_gr_set_window_title" *)
+let set_window_title _str =
+  print_string "Graphics.set_window_title unimplemnted in ocaml-light\n";
+  ()
+
 external clear_graph : unit -> unit = "gr_clear_graph"
 external size_x : unit -> int = "gr_size_x"
 external size_y : unit -> int = "gr_size_y"
@@ -67,6 +72,10 @@ external plot : int -> int -> unit = "gr_plot"
 external point_color : int -> int -> color = "gr_point_color"
 external moveto : int -> int -> unit = "gr_moveto"
 external current_point : unit -> int * int = "gr_current_point"
+
+let current_x () = fst (current_point ())
+let current_y () = snd (current_point ())
+
 external lineto : int -> int -> unit = "gr_lineto"
 external draw_arc : int -> int -> int -> int -> int -> int -> unit
                = "gr_draw_arc" "gr_draw_arc_nat"
@@ -124,6 +133,9 @@ type event =
 
 external wait_next_event : event list -> status = "gr_wait_event"
 
+
+
+
 let mouse_pos () =
   let e = wait_next_event [Poll] in (e.mouse_x, e.mouse_y)
 
@@ -135,6 +147,22 @@ let read_key () =
 
 let key_pressed () =
   let e = wait_next_event [Poll] in e.keypressed
+
+
+
+let loop_at_exit events handler =
+  let events = List.filter (fun e -> e <> Poll) events in
+  at_exit (fun _ ->
+      try
+        while true do
+          let e = wait_next_event events in
+          handler e
+        done
+      with
+      | Exit -> close_graph ()
+      | e ->
+          close_graph ();
+          raise e)
 
 (*** Sound *)
 

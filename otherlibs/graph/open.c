@@ -27,6 +27,16 @@ int getpid(void);
 
 Display * grdisplay = NULL;
 
+// globals declared in libgraph.h
+int grscreen;                   /* The screen number */
+Colormap grcolormap;            /* The color map */
+struct canvas grwindow;         /* The graphics window */
+struct canvas grbstore;         /* The pixmap used for backing store */
+int grwhite, grblack;           /* Black and white pixels */
+int grx, gry;                   /* Coordinates of the current point */
+unsigned long grcolor;          /* Current drawing color */
+XFontStruct * grfont = NULL;    /* Current font */
+
 static Bool gr_initialized = False;
 
 static int gr_error_handler(Display *display, XErrorEvent *error);
