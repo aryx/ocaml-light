@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-
 open Cmm
 open Arch
 open Reg
@@ -26,14 +25,7 @@ let stackp r =
 
 let reload () =
   let super = Reloadgen.reload_generic () in
-  {
-  (* todo: super with feature needed ... *)
-
- fundecl = super.fundecl;
- makeregs = super.makeregs;
- makereg1 = super.makereg1;
- reload = super.reload;
-
+  { super with
 
   makereg = (fun r ->
   match r.typ with
@@ -77,6 +69,3 @@ let reload () =
 let fundecl f =
   let r = reload () in
   r.fundecl r f
-
-
-

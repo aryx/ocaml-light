@@ -78,34 +78,7 @@ let selector () =
 
  let super = Selectgen.selector_generic () in
  {
-
-  (* todo: super with feature needed ... *)
-  select_condition = super.select_condition;
-  select_store = super.select_store;
-  emit_extcall_args = super.emit_extcall_args;
-  emit_fundecl = super.emit_fundecl;
-  extract = super.extract;
-  insert = super.insert;
-  insert_move = super.insert_move;
-  insert_move_args = super.insert_move_args;
-  insert_move_results = super.insert_move_results;
-  insert_moves = super.insert_moves;
-  emit_expr = super.emit_expr;
-  emit_tail = super.emit_tail;
-  select_arith_comm = super.select_arith_comm;
-  select_arith = super.select_arith;
-  select_shift = super.select_shift;
-  select_arith_comp = super.select_arith_comp;
-  emit_let = super.emit_let;
-  emit_parts_list = super.emit_parts_list;
-  emit_parts = super.emit_parts;
-  emit_tuple = super.emit_tuple;
-  emit_stores = super.emit_stores;
-  emit_sequence = super.emit_sequence;
-  emit_return = super.emit_return;
-  emit_tail_sequence = super.emit_tail_sequence;
-  select_floatarith = super.select_floatarith;
-  select_push = super.select_push;
+  super with
 
  is_immediate = (fun n ->
   n land 0xFF = n || is_immed n 2
