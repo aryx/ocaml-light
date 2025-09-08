@@ -161,6 +161,10 @@ let apply1 f s =
 let capitalize s = apply1 Char.uppercase s
 let uncapitalize s = apply1 Char.lowercase s
 
+let capitalize_ascii = capitalize
+let uncapitalize_ascii = uncapitalize
+
+
 let rec index_rec s i c =
   if i >= length s then raise Not_found
   else if unsafe_get s i = c then i

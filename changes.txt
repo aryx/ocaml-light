@@ -14,6 +14,7 @@
 
 ** stdlib
 - backport String.{starts_with,ends_with} (but without labels) (4.13.0)
+  and capitalize_ascii (4.03)
 
 ** misc
 - add some --std=89 to be able to compile with recent gcc

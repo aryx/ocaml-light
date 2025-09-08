@@ -125,6 +125,19 @@ val lowercase_ascii : string -> string
 
     @since 4.03 (4.05 in StringLabels) *)
 
+
+val capitalize_ascii : string -> string
+(** [capitalize_ascii s] is [s] with the first character set to
+    uppercase, using the US-ASCII character set.
+
+    @since 4.03.0 (4.05.0 in StringLabels) *)
+
+val uncapitalize_ascii : string -> string
+(** [uncapitalize_ascii s] is [s] with the first character set to lowercase,
+    using the US-ASCII character set.
+
+    @since 4.03.0 (4.05.0 in StringLabels) *)
+
 val map : (char -> char) -> string -> string
 (** [map f s] is the string resulting from applying [f] to all the
     characters of [s] in increasing order.
