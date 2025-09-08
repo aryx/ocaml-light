@@ -216,6 +216,8 @@ let output oc s ofs len =
   then invalid_arg "output"
   else unsafe_output oc s ofs len
 
+let output_substring = output
+
 external output_byte : out_channel -> int -> unit = "caml_output_char"
 external output_binary_int : out_channel -> int -> unit = "caml_output_int"
 

@@ -242,6 +242,8 @@ let output oc s ofs len =
   then invalid_arg "output"
   else unsafe_output oc s ofs len
 
+let output_substring = output
+
 let output_byte oc b = wait_outchan oc 1; output_byte_blocking oc b
 
 let output_binary_int oc n =

@@ -35,6 +35,11 @@ let blit src srcoff dst dstoff len =
 let unsafe_blit src srcoff dst dstoff len =
   String.unsafe_blit src srcoff dst dstoff len
 
+let blit_string = blit
+
+let fill s start len c = String.fill s start len c
+
+
 let make = String.make
 
 let equal = ( = )

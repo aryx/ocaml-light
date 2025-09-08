@@ -459,6 +459,12 @@ val output : out_channel -> string -> int -> int -> unit
            [buff], starting at offset [ofs], to the output channel [chan].
            Raise [Invalid_argument "output"] if [ofs] and [len] do not
            designate a valid substring of [buff]. *)
+
+val output_substring : out_channel -> string -> int -> int -> unit
+(** Same as [output] but take a string as argument instead of
+   a byte sequence.
+   @since 4.02.0 *)
+
 val output_byte : out_channel -> int -> unit
         (* Write one 8-bit integer (as the single character with that code)
            on the given output channel. The given integer is taken modulo
