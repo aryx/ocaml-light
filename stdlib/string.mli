@@ -142,3 +142,16 @@ val equal : t -> t -> bool
 val compare : t -> t -> int
 (** [compare s0 s1] sorts [s0] and [s1] in lexicographical order. [compare]
     behaves like {!Stdlib.compare} on strings but may be more efficient. *)
+
+val starts_with :
+  (*prefix:*)string -> string -> bool
+(** [starts_with ][~prefix s] is [true] if and only if [s] starts with
+    [prefix].
+
+    @since 4.13.0 *)
+
+val ends_with :
+  (*suffix:*)string -> string -> bool
+(** [ends_with ][~suffix s] is [true] if and only if [s] ends with [suffix].
+
+    @since 4.13.0 *)

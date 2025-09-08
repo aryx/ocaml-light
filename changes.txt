@@ -10,6 +10,14 @@
 ** dev infra
 - restore working semgrep.yml
 
+* 0.2 (Q3 2025) ()
+
+** stdlib
+- backport String.{starts_with,ends_with} (but without labels) (4.13.0)
+
+** misc
+- add some --std=89 to be able to compile with recent gcc
+
 * 0.1 (Q2 2025) (Dockerfile/Nix/GHA CI checks, native working, dune, tests infra, Xix)
 # ported enough features so I can compile some of xix via build-mk.sh and mk
 # in bytecode and (static) native modes!
@@ -84,11 +92,11 @@
   Note that I didn't need to remove the use of objects in the compiler itself
   because they didn't even like the oo extensions and so didn't use it :)
   (they actually just use it very lightly in asmcomp/ but the code could
-  be easily switch to plain records).
+  be easily switched to plain records).
 - remove functors, again to simplify the code as ocaml light is meant
   for educational purpose (part of my principia softwarica project).
   This meant slightly refactor the asmcomp/ code that was the only user
-  of functors (and maybe set and map)
+  of functors (and set/map)
 - backport a few features from recent OCaml to ocaml-light:
     * record 'with' (see diff_with_record)
 
@@ -101,8 +109,8 @@
   
 ** stdlib
 # see also pad.txt changes section
-- backport buffer.ml ? (from ?)
-- backport basic backtrace in printexc.ml
+- backport buffer.ml (from 3.12.0)
+- backport basic backtrace in printexc.ml (from 3.10.2 and 4.01)
 
 ** build infra
 - a working configure that can work on some recent Mac and Linux

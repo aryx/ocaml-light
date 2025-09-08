@@ -193,3 +193,27 @@ let compare (x: t) (y: t) = compare x y
 (* external equal : string -> string -> bool = "caml_string_equal" [@@noalloc] *)
 let equal x y = compare x y = 0
 
+
+(** backported from 4.13.0 *)
+
+(* duplicated in bytes.ml *)
+let starts_with (*~*)prefix s =
+  let len_s = length s
+  and len_pre = length prefix in
+  let rec aux i =
+    if i = len_pre then true
+    else if unsafe_get s i <> unsafe_get prefix i then false
+    else aux (i + 1)
+  in len_s >= len_pre && aux 0
+
+(* duplicated in bytes.ml *)
+let ends_with (*~*)suffix s =
+  let len_s = length s
+  and len_suf = length suffix in
+  let diff = len_s - len_suf in
+  let rec aux i =
+    if i = len_suf then true
+    else if unsafe_get s (diff + i) <> unsafe_get suffix i then false
+    else aux (i + 1)
+  in diff >= 0 && aux 0
+

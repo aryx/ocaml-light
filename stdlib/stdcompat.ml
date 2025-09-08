@@ -7,3 +7,8 @@
 module Stdlib = struct
   let compare = Pervasives.compare
 end
+
+module String = struct
+ let starts_with = String.starts_with
+ let ends_with = String.ends_with
+end
