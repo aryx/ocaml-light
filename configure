@@ -34,7 +34,10 @@ x11_lib_dir=''
 posix_threads=no
 
 # TODO? -Wno-unused?
-gcc_warnings="-Wall"
+# need gnu89 otherwise gcc15 complains a lot about function with
+# wrong number of arguments (e.g. in interprete.c)
+# alt: could add the --std only when detect gcc > 15 
+gcc_warnings="-Wall --std=gnu89"
 
 ##############################################################################
 # Parse command-line arguments
@@ -281,7 +284,7 @@ case "$arch,$nativecc,$system" in
 	nativecccompopts='-std1';;
     #TODO: support amd64
     i386,gcc*,*)
-	nativecccompopts='-m32 -Wall'
+	nativecccompopts='-m32 -Wall --std=gnu89'
 	nativecclinkopts='-m32';;
 esac
 
