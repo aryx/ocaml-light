@@ -320,7 +320,7 @@ structure_item:
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
 
-  | MODULE UIDENT module_binding
+  | MODULE UIDENT module_binding        opt_with_attributes
       { mkstr(Pstr_module($2, $3)) }
   | OPEN mod_longident
       { mkstr(Pstr_open $2) }
