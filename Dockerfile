@@ -7,8 +7,12 @@ FROM ubuntu:22.04
 RUN apt-get update # needed otherwise can't find any package
 RUN apt-get install -y build-essential autoconf automake
 # multilib is needed for gcc -m32; asmcomp currently supports only x86
-RUN apt-get install -y gcc-multilib
 #alt: LATER: use kencc or even better goken! instead of gcc
+RUN apt-get install -y gcc-multilib
+# this in theory is for graphics.cma but unfortunately libx11-static
+# does not exist but ocaml-light can only link statically libs
+# so for now this docker image will not have graphics.cma
+#TODO: RUN apt-get install -y libx11-dev libx11-static
 
 WORKDIR /src
 
