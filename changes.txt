@@ -15,6 +15,11 @@
 ** stdlib
 - backport String.{starts_with,ends_with} (but without labels) (4.13.0)
   and capitalize_ascii (4.03)
+- backport Thread.Exit exn (4.14.0)
+- more backport of bytes vs strings functions (e.g., Pervasives.output_substring)
+
+** language
+- partial support for [@@] after module binding
 
 ** misc
 - add some --std=89 to be able to compile with recent gcc
