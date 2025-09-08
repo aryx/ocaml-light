@@ -10,8 +10,9 @@ CAML_OBJS=thread.cmo mutex.cmo condition.cmo event.cmo threadUnix.cmo
 
 LIB=../../stdlib
 
+#coupling: must match stdlib/Makefile OBJS
 LIB_OBJS=pervasives.cmo \
-  $(LIB)/list.cmo $(LIB)/char.cmo $(LIB)/string.cmo \
+  $(LIB)/list.cmo $(LIB)/char.cmo $(LIB)/string.cmo      $(LIB)/bytes.cmo \
   $(LIB)/array.cmo $(LIB)/sys.cmo $(LIB)/hashtbl.cmo \
   $(LIB)/filename.cmo $(LIB)/marshal.cmo $(LIB)/obj.cmo \
   $(LIB)/lexing.cmo $(LIB)/parsing.cmo \
@@ -20,7 +21,11 @@ LIB_OBJS=pervasives.cmo \
   $(LIB)/gc.cmo $(LIB)/digest.cmo $(LIB)/random.cmo \
   $(LIB)/callback.cmo $(LIB)/weak.cmo \
   $(LIB)/lazy.cmo \
-  $(LIB)/printexc.cmo
+  $(LIB)/printexc.cmo \
+  $(LIB)/option.cmo $(LIB)/result.cmo $(LIB)/either.cmo \
+  $(LIB)/uchar.cmo $(LIB)/int.cmo $(LIB)/bool.cmo $(LIB)/float.cmo \
+  $(LIB)/stdcompat.cmo $(LIB)/fun.cmo
+
 
 all: libthreads.a threads.cma stdlib.cma
 

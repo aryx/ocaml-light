@@ -60,8 +60,24 @@ let delay duration = thread_delay duration
 let join th = thread_join th
 let wakeup pid = thread_wakeup pid
 let self () = thread_self()
+
+
 let kill pid = thread_kill pid
+
+(* TODO: raise Thread.Exit instead *)
 let exit () = thread_kill(thread_self())
+
+exception Exit
+(** Exception that can be raised by user code to initiate termination
+    of the current thread.
+    Compared to calling the {!Thread.exit} function, raising the
+    {!Thread.Exit} exception will trigger {!Fun.finally} finalizers
+    and catch-all exception handlers.
+    It is the recommended way to terminate threads prematurely.
+
+    @since 4.14.0
+*)
+
 
 let select_aux arg = thread_select arg
 

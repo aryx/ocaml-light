@@ -36,8 +36,23 @@ external id : t -> int = "thread_id"
         (* Return the identifier of the given thread. A thread identifier
            is an integer that identifies uniquely the thread.
            It can be used to build data structures indexed by threads. *)
+
 val exit : unit -> unit
         (* Terminate prematurely the currently executing thread. *)
+
+
+exception Exit
+(** Exception that can be raised by user code to initiate termination
+    of the current thread.
+    Compared to calling the {!Thread.exit} function, raising the
+    {!Thread.Exit} exception will trigger {!Fun.finally} finalizers
+    and catch-all exception handlers.
+    It is the recommended way to terminate threads prematurely.
+
+    @since 4.14.0
+*)
+
+(* DEPRECATED: use 'stop : bool ref' idiom instead *)
 val kill : t -> unit
         (* Terminate prematurely the thread whose handle is given.
            This functionality is available only with bytecode-level threads. *)
