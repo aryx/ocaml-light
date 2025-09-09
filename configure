@@ -623,31 +623,34 @@ x11_include="not found"
 x11_link="not found"
 
 for dir in $x11_include_dir \
+  /usr/include /usr/local/include \
   /usr/X11R6/include /usr/X11R5/include /usr/X11R4/include \
   /usr/include/X11R6 /usr/include/X11R5 /usr/include/X11R4 \
   /usr/local/X11R6/include /usr/local/X11R5/include /usr/local/X11R4/include \
   /usr/local/include/X11R6 /usr/local/include/X11R5 /usr/local/include/X11R4 \
   /usr/X11/include /usr/include/X11 /usr/local/X11/include \
   /usr/local/include/X11 /usr/X386/include /usr/x386/include \
-  /usr/XFree86/include/X11 /usr/include /usr/local/include \
+  /usr/XFree86/include/X11 \
   /usr/unsupported/include /usr/athena/include /usr/local/x11r5/include \
   /usr/lpp/Xamples/include /usr/openwin/include /usr/openwin/share/include \
   /opt/X11R6/include /opt/X11R5/include
 do
   if test -f $dir/X11/X.h; then
+    echo "Found $dir/X11/X.h"
     x11_include=$dir
     break
   fi
 done
 
 for dir in $x11_lib_dir \
+  /usr/lib /usr/local/lib \
   /usr/X11R6/lib /usr/X11R5/lib /usr/X11R4/lib \
   /usr/lib/X11R6 /usr/lib/X11R5 /usr/lib/X11R4 \
   /usr/local/X11R6/lib /usr/local/X11R5/lib /usr/local/X11R4/lib \
   /usr/local/lib/X11R6 /usr/local/lib/X11R5 /usr/local/lib/X11R4 \
   /usr/X11/lib /usr/lib/X11 /usr/local/X11/lib \
   /usr/local/lib/X11 /usr/X386/lib /usr/x386/lib \
-  /usr/XFree86/lib/X11 /usr/lib /usr/local/lib \
+  /usr/XFree86/lib/X11 \
   /usr/unsupported/lib /usr/athena/lib /usr/local/x11r5/lib \
   /usr/lpp/Xamples/lib /usr/openwin/lib /usr/openwin/share/lib \
   /opt/X11R6/lib /opt/X11R5/lib
@@ -655,6 +658,7 @@ do
   if test -f $dir/libX11.a || \
      test -f $dir/libX11.so || \
      test -f $dir/libX11.sa; then
+    echo "Found $dir/libX11.a or $dir/libX11.so"
     x11_link="-cclib -L$dir -cclib -lX11"
     break
   fi

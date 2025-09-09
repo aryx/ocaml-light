@@ -23,6 +23,8 @@
 
 ** misc
 - add some --std=89 to be able to compile with recent gcc
+- add graphics.cma in docker image so can compile graphical programs
+  like efuns with ocaml-light
 
 * 0.1 (Q2 2025) (Dockerfile/Nix/GHA CI checks, native working, dune, tests infra, Xix)
 # ported enough features so I can compile some of xix via build-mk.sh and mk
