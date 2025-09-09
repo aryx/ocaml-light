@@ -127,13 +127,14 @@ let parse_argv argv speclist anonfun errmsg =
   let l = Array.length argv in
   incr current;
   while !current < l do
+   begin try
     let s = argv.(!current) in
     if String.length s >= 1 & String.get s 0 = '-' then begin
       let action =
         try assoc3 s speclist
         with Not_found -> raise (Stop (Unknown s))
       in
-      begin try
+      begin
         match action with
         | Unit f -> f ();
         | Bool f ->
@@ -175,15 +176,15 @@ let parse_argv argv speclist anonfun errmsg =
             end;
             incr current;
         | _ -> raise (Stop (Missing s))
-      with 
-      | Bad m -> raise (convert_error (Message m))
-      | Stop e -> raise (convert_error e)
       end;
-      incr current;
     end else begin
       (try anonfun s with Bad m -> raise (convert_error (Message m)));
-      incr current;
     end;
+   with 
+      | Bad m -> raise (convert_error (Message m))
+      | Stop e -> raise (convert_error e)
+   end;
+   incr current;
   done;
   ()
 
