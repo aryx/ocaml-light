@@ -10,11 +10,11 @@ RUN apt-get install -y build-essential autoconf automake
 #alt: LATER: use kencc or even better goken! instead of gcc
 RUN apt-get install -y gcc-multilib
 
-# This in theory is for graphics.cma but unfortunately libx11-static
-# does not exist but ocaml-light can only link statically libs
-# so for now this docker image will not have graphics.cma
-# or maybe libx11-dev should be enough but ocaml-light
-# configure failed to enable x11
+# The RUN below is for graphics.cma but unfortunately libx11-static
+# does not exist on Ubuntu (it exists on Alpine though) and ocaml-light
+# can only link statically libs so for now this docker image will not 
+# have graphics.cma (or maybe libx11-dev should be enough but ocaml-light
+# configure failed to enable x11?)
 #TODO: RUN apt-get install -y libx11-dev libx11-static
 
 WORKDIR /src
@@ -36,7 +36,7 @@ RUN make opt
 RUN make install
 RUN make installopt
 
-# make test
+# make test (it requires make install first)
 RUN make test
 
 # good self test
