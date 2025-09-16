@@ -632,8 +632,7 @@ build-docker-opt:
 # need 'docker login -u padator' first with credentials of
 # https://hub.docker.com/r/padator/ stored in ~/.docker/config.json
 push-docker:
-	docker tag "ocaml-light" padator/ocaml-light:latest
-	docker push padator/ocaml-light:latest
+	docker push "padator/ocaml-light:"`uname -m`
 
 
 # see also .github/workflows/nix.yml for the check in CI!
