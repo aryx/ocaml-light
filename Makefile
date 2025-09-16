@@ -610,14 +610,9 @@ test:
 clean::
 	set -e; for i in $(TESTDIRS); do (cd $$i; $(MAKE) clean); done
 
-# TODO: Some weird memory error for boyer.byt nucleic.byt sieve.byt
-# so I've removed them
-# - boyer.byt "double free or corruption" when run in CI, weird
-# - nucleic.byt "munmap_chunk(): invalid pointer"
-# - sieve.byt "free(): invalid pointer, cmp: EOF on - which is empty" at runtime
-#coupling: test/Makefile BYTE_EXE variable
-nix-test:
-	BYTE_EXE="fib.byt takc.byt taku.byt quicksort.byt quicksort.fast.byt fft.byt fft.fast.byt soli.byt soli.fast.byt kb.byt genlex.byt bdd.byt" $(MAKE) test
+##############################################################################
+# Docker/Nix
+##############################################################################
 
 # The goal here is not so much to deploy via Docker ocaml light but more
 # to regression tests in CI (and locally) easily.
@@ -634,6 +629,7 @@ build-docker-opt:
 # Assume also has run once:
 #  docker manifest create padator/ocaml-light:latest --amend padator/ocaml-light:x86_64 --amend padator/ocaml-light:aarch64
 #  docker manifest push padator/ocaml-light:latest
+#  See https://hub.docker.com/r/padator/ocaml-light/tags
 push-docker:
 	docker push "padator/ocaml-light:"`uname -m`
 
@@ -641,6 +637,15 @@ push-docker:
 # see also .github/workflows/nix.yml for the check in CI!
 shell:
 	nix-shell --pure
+
+# TODO: Some weird memory error for boyer.byt nucleic.byt sieve.byt
+# so I've removed them
+# - boyer.byt "double free or corruption" when run in CI, weird
+# - nucleic.byt "munmap_chunk(): invalid pointer"
+# - sieve.byt "free(): invalid pointer, cmp: EOF on - which is empty" at runtime
+#coupling: test/Makefile BYTE_EXE variable
+nix-test:
+	BYTE_EXE="fib.byt takc.byt taku.byt quicksort.byt quicksort.fast.byt fft.byt fft.fast.byt soli.byt soli.fast.byt kb.byt genlex.byt bdd.byt" $(MAKE) test
 
 ##############################################################################
 # Developer's targets
