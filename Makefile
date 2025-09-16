@@ -625,7 +625,7 @@ nix-test:
 # can compile correctly with ocaml-light in CI
 #pad: see also .github/workflows/docker.yml for the check in CI!
 build-docker:
-	docker build --tag "ocaml-light" --target "bytecode" .
+	docker build --tag "padator/ocaml-light:"`uname -m` --target "bytecode" .
 build-docker-opt:
 	docker build --tag "ocaml-light-opt" --target "native" .
 
