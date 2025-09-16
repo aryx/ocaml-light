@@ -644,6 +644,7 @@ done
 
 for dir in $x11_lib_dir \
   /usr/lib /usr/local/lib \
+  /usr/lib/x86_64-linux-gnu/ /usr/lib/aarch64-linux-gnu \
   /usr/X11R6/lib /usr/X11R5/lib /usr/X11R4/lib \
   /usr/lib/X11R6 /usr/lib/X11R5 /usr/lib/X11R4 \
   /usr/local/X11R6/lib /usr/local/X11R5/lib /usr/local/X11R4/lib \

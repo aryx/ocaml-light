@@ -19,7 +19,7 @@ WORKDIR /src
 COPY . .
 
 # configure
-RUN ./configure -x11lib /usr/lib/x86_64-linux-gnu/
+RUN ./configure
 
 # make
 RUN make clean
