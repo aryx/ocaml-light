@@ -81,6 +81,7 @@ let rec transl_modtype env smty =
       Tmty_signature(transl_signature env ssg)
       
 and transl_signature env sg =
+  Logs.debug (fun m -> m "Typemod.transl_signature");
   match sg with
     [] -> []
   | {psig_desc = Psig_value(name, sdesc)} :: srem ->
@@ -195,6 +196,7 @@ let rec type_module env smod =
         mod_loc = smod.pmod_loc }
 
 and type_structure env sstr =
+  Logs.debug (fun m -> m "Typemod.type_structure");
   check_unique_names sstr;
   type_struct env sstr
 

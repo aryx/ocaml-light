@@ -84,6 +84,7 @@ let path_match_failure = Pident ident_match_failure
 
 (*s: function [[Predef.build_initial_env]] *)
 let build_initial_env add_type add_exception empty_env =
+  Logs.debug (fun m -> m "Predef.build_initial_env");
   let newvar() =
     (* Cannot call the real newvar from ctype here
        because ctype imports predef via env *)

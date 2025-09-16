@@ -604,6 +604,7 @@ let comp_remainder cont =
 (**** Compilation of a lambda phrase ****)
 
 let compile_implementation modulename expr =
+  Logs.debug (fun m -> m "Bytegen.compile_implementation %s" modulename);
   Stack.clear functions_to_compile;
   label_counter := 0;
   lbl_staticfail := 0;
@@ -619,6 +620,7 @@ let compile_implementation modulename expr =
 
 (*s: function [[Bytegen.compile_phrase]] *)
 let compile_phrase expr =
+  Logs.debug (fun m -> m "Bytegen.compile_phrase");
   Stack.clear functions_to_compile;
   label_counter := 0;
   lbl_staticfail := 0;

@@ -39,6 +39,7 @@ let init_path () =
 (* Return the initial environment in which compilation proceeds. *)
 
 let initial_env () =
+  Logs.debug (fun m -> m "Compile.initial_env()");
   try
     if !Clflags.nopervasives
     then Env.initial
@@ -78,6 +79,7 @@ exception Outdated_version
 
 (*s: function [[Compile.parse_file]] *)
 let parse_file inputfile parse_fun ast_magic =
+  Logs.debug (fun m -> m "Compile.parse_file %s" inputfile);
   let ic = open_in inputfile in
   (*s: [[Compile.parse_file()]] let [[is_ast_file]] *)
   let is_ast_file =
@@ -117,6 +119,7 @@ let parse_file inputfile parse_fun ast_magic =
 (* Compile a .mli file *)
 
 let interface sourcefile =
+  Logs.debug (fun m -> m "Compile.interface %s" sourcefile);
   init_path();
   let prefixname = Filename.chop_extension sourcefile in
   let modulename = String.capitalize(Filename.basename prefixname) in
@@ -145,6 +148,7 @@ let print_if flag printer arg =
 
 (*s: function [[Compile.implementation]] *)
 let implementation sourcefile =
+  Logs.debug (fun m -> m "Compile.implementation %s" sourcefile);
   init_path();
   let prefixname = Filename.chop_extension sourcefile in
   let modulename = String.capitalize(Filename.basename prefixname) in

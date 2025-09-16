@@ -379,6 +379,7 @@ let to_file outchan unit_name code =
 (* Emission to a memory block *)
 
 let to_memory init_code fun_code =
+  Logs.debug (fun m -> m "Emitcode.to_memory");
   init();
   emit init_code;
   emit fun_code;

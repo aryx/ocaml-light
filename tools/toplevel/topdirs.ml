@@ -31,13 +31,16 @@ let rec eval_path = function
 
 (* To quit *)
 
-let dir_quit () = exit 0
+let dir_quit () = 
+  Logs.debug (fun m -> m "Topdirs.dir_quit ()");
+  exit 0
 
 let _ = Hashtbl.add directive_table "quit" (Directive_none dir_quit)
 
 (* To add a directory to the load path *)
 
 let dir_directory s =
+  Logs.debug (fun m -> m "Topdirs.dir_directory %s" s);
   Config.load_path := s :: !Config.load_path;
   Env.reset_cache()
 
@@ -46,6 +49,7 @@ let _ = Hashtbl.add directive_table "directory" (Directive_string dir_directory)
 (* To change the current directory *)
 
 let dir_cd s =
+  Logs.debug (fun m -> m "Topdirs.dir_cd %s" s);
   Sys.chdir s
 
 let _ = Hashtbl.add directive_table "cd" (Directive_string dir_cd)
@@ -55,6 +59,7 @@ let _ = Hashtbl.add directive_table "cd" (Directive_string dir_cd)
 exception Load_failed
 
 let load_compunit ic filename compunit =
+  Logs.debug (fun m -> m "Topdirs.load_compunit %s" filename);
   Bytelink.check_consistency filename compunit;
   seek_in ic compunit.cu_pos;
   let code_size = compunit.cu_codesize + 8 in
@@ -75,6 +80,7 @@ let load_compunit ic filename compunit =
   end
 
 let dir_load name =
+  Logs.debug (fun m -> m "Topdirs.dir_load %s" name);
   try
     let filename = find_in_path !Config.load_path name in
     let ic = open_in filename in
@@ -105,7 +111,9 @@ let _ = Hashtbl.add directive_table "load" (Directive_string dir_load)
 
 (* Load commands from a file *)
 
-let dir_use name = Toploop.use_file name |> ignore
+let dir_use name = 
+  Logs.debug (fun m -> m "Topdirs.dir_use %s" name);
+  Toploop.use_file name |> ignore
 
 let _ = Hashtbl.add directive_table "use" (Directive_string dir_use)
 

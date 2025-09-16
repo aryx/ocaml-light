@@ -131,6 +131,7 @@ and transl_structure fields cc = function
 (* Compile an implementation *)
 
 let transl_implementation module_name str cc =
+  Logs.debug (fun m -> m "Translmod.transl_implementation %s" module_name);
   reset_labels ();
   primitive_declarations := [];
   let module_id = Ident.create_persistent module_name in
@@ -295,6 +296,7 @@ let transl_toplevel_item = function
 
 (*s: function [[Translmod.transl_toplevel_definition]] *)
 let transl_toplevel_definition str =
+  Logs.debug (fun m -> m "Translmod.transl_toplevel_definition");
   reset_labels ();
   transl_label_init (make_sequence transl_toplevel_item str)
 (*e: function [[Translmod.transl_toplevel_definition]] *)

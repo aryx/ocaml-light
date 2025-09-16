@@ -550,7 +550,7 @@ clean::
 
 # The "expunge" utility
 
-EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
+EXPUNGEOBJS=utils/logs.cmo utils/misc.cmo utils/tbl.cmo \
   utils/config.cmo utils/clflags.cmo \
   typing/ident.cmo typing/predef.cmo \
   bytecomp/runtimedef.cmo bytecomp/symtable.cmo \

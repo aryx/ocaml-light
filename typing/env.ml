@@ -102,6 +102,8 @@ let imported_units = ref ([] : (string * Digest.t) list)
 
 (*s: function [[Env.read_pers_struct]] *)
 let read_pers_struct modname filename =
+  Logs.debug (fun m -> m "Env.read_pers_struct module %s from %s"
+              modname filename);
   let ic = open_in filename in
   try
     let buffer = Bytes.create (String.length cmi_magic_number) in
@@ -558,6 +560,7 @@ let open_signature root sg env =
 (* Open a signature from a file *)
 
 let open_pers_signature name env =
+  Logs.debug (fun m -> m "Env.open_pers_sig %s" name);
   let ps = find_pers_struct name in
   open_signature (Pident(Ident.create_persistent name)) ps.ps_sig env
 (*e: function [[Env.open_pers_signature]] *)
@@ -566,6 +569,8 @@ let open_pers_signature name env =
 (* Read a signature from a file *)
 
 let read_signature modname filename =
+  Logs.debug (fun m -> m "Env.read_signature module %s from %s" 
+                         modname filename);
   let (ps, crc) = read_pers_struct modname filename in 
   (ps.ps_sig, crc)
 (*e: function [[Env.read_signature]] *)

@@ -38,7 +38,9 @@ let maybe_skip_phrase lexbuf =
 (*e: function [[Parse.maybe_skip_phrase]] *)
 
 (*s: function [[Parse.wrap]] *)
-let wrap parsing_fun lexbuf =
+let wrap parsing_fun func_str = 
+ fun lexbuf ->
+  Logs.debug (fun m -> m "Parse.%s on '%s'" func_str !Location.input_name);
   try
     let ast = parsing_fun Lexer.token lexbuf in
     Parsing.clear_parser();
@@ -64,14 +66,14 @@ let wrap parsing_fun lexbuf =
 (*e: function [[Parse.wrap]] *)
 
 (*s: function [[Parse.implementation]] *)
-let implementation = wrap Parser.implementation
+let implementation = wrap Parser.implementation "implementation"
 (*e: function [[Parse.implementation]] *)
 (*s: function [[Parse.interface]] *)
-let interface = wrap Parser.interface
+let interface = wrap Parser.interface "interface"
 (*e: function [[Parse.interface]] *)
 
 (*s: function [[Parse.xxx]] *)
-let toplevel_phrase = wrap Parser.toplevel_phrase
-let use_file = wrap Parser.use_file
+let toplevel_phrase = wrap Parser.toplevel_phrase "toplevel_phrase"
+let use_file = wrap Parser.use_file "use_file"
 (*e: function [[Parse.xxx]] *)
 (*e: parsing/parse.ml *)

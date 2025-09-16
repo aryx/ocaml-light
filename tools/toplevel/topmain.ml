@@ -9,7 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-
 open Clflags
 
 let usage = "Usage: ocaml <options>\noptions are:"
@@ -24,7 +23,19 @@ let main () =
      "-unsafe", Arg.Set fast, " No bound checking on array and string access";
      "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
      "-dlambda", Arg.Set dump_lambda, " (undocumented)";
-     "-dinstr", Arg.Set dump_instr, " (undocumented)"
+     "-dinstr", Arg.Set dump_instr, " (undocumented)";
+
+     (* new: *)
+     "-verbose", Arg.Unit (fun () ->
+                       verbose := true;
+                       Logs.set_level (Some Logs.Info)
+                     ),
+     " Print calls to external commands and info level for logs";
+     "-debug", Arg.Unit (fun () ->
+                       verbose := true;
+                       Logs.set_level (Some Logs.Debug)
+                     ),
+     " debug level for logs";
     ] file_argument usage;
   Toploop.loop()
 

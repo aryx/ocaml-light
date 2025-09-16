@@ -38,6 +38,7 @@ let input_name = Location.input_name
 type evaluation_outcome = Result of Obj.t | Exception of exn
 
 let load_lambda lam =
+  Logs.debug (fun m -> m "Toploop.load_lambda");
   if !Clflags.dump_rawlambda then begin
     Printlambda.lambda lam; print_newline()
   end;
@@ -191,6 +192,7 @@ let use_print_results = ref true
 let use_file name =
   try
     let filename = find_in_path !Config.load_path name in
+    Logs.info (fun m -> m "Using %s" filename);
     let ic = open_in filename in
     let lb = Lexing.from_channel ic in
     (* Skip initial #! line if any *)
@@ -263,6 +265,7 @@ let _ =
 exception PPerror
 
 let loop() =
+  Logs.debug (fun m -> m "Toploop.loop ()");
   Sys.interactive := true;
   print_string "        Objective Caml version ";
   print_string Config.version;
