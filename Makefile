@@ -631,6 +631,9 @@ build-docker-opt:
 
 # need 'docker login -u padator' first with credentials of
 # https://hub.docker.com/r/padator/ stored in ~/.docker/config.json
+# Assume also has run once:
+#  docker manifest create padator/ocaml-light:latest --amend padator/ocaml-light:x86_64 --amend padator/ocaml-light:aarch64
+#  docker manifest push padator/ocaml-light:latest
 push-docker:
 	docker push "padator/ocaml-light:"`uname -m`
 
