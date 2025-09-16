@@ -621,10 +621,13 @@ nix-test:
 
 # The goal here is not so much to deploy via Docker ocaml light but more
 # to regression tests in CI (and locally) easily.
-# update: we also use the deploy part for checking xix in CI
+# update: we also use the deploy part now to check xix/efuns
+# can compile correctly with ocaml-light in CI
 #pad: see also .github/workflows/docker.yml for the check in CI!
 build-docker:
-	docker build -t "ocaml-light" .
+	docker build --tag "ocaml-light" --target "bytecode" .
+build-docker-opt:
+	docker build --tag "ocaml-light-opt" --target "native" .
 
 # need 'docker login -u padator' first with credentials of
 # https://hub.docker.com/r/padator/ stored in ~/.docker/config.json
