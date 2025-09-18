@@ -14,8 +14,10 @@ FROM ubuntu:22.04 AS build
 
 # Setup a basic C dev environment to *build* ocaml-light
 RUN apt-get update # needed otherwise can't find any package
-RUN apt-get install -y --no-install-recommends gcc make
-RUN apt-get install -y --no-install-recommends libx11-dev # This is for graphics.cma
+# alt: build-essential
+RUN apt-get install -y --no-install-recommends binutils gcc libc6-dev make
+# This is for graphics.cma
+RUN apt-get install -y --no-install-recommends libx11-dev
 
 WORKDIR /src
 
@@ -42,14 +44,20 @@ FROM ubuntu:22.04 AS bytecode
 
 # We also need a basic C dev environment to *use/run* ocaml-light
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends gcc make libx11-dev
+#TODO: gcc ?
+RUN apt-get install -y --no-install-recommends binutils make libx11-dev
 
 COPY --from=build /usr/local /usr/local
+
+WORKDIR /tmp
 
 # basic tests
 RUN which ocaml
 RUN ocamlc -v
 RUN echo '1+1;;' | ocaml
+RUN echo 'let _ = print_string "hello"' > foo.ml
+RUN ocamlc foo.ml
+RUN ./a.out
 
 ###############################################################################
 # Stage3: build also the native part
