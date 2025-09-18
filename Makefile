@@ -626,12 +626,14 @@ build-docker-opt:
 
 # need 'docker login -u padator' first with credentials of
 # https://hub.docker.com/r/padator/ stored in ~/.docker/config.json
-# Assume also has run once:
+# old: I did this once before, but didn't work when updating digests
+# hence the use of 'docker buildx ...' below instead
 #  docker manifest create padator/ocaml-light:latest --amend padator/ocaml-light:x86_64 --amend padator/ocaml-light:aarch64
 #  docker manifest push padator/ocaml-light:latest
 #  See https://hub.docker.com/r/padator/ocaml-light/tags
 push-docker:
 	docker push "padator/ocaml-light:"`uname -m`
+	docker buildx imagetools create --tag padator/ocaml-light:latest padator/ocaml-light:x86_64 padator/ocaml-light:aarch64
 
 
 # see also .github/workflows/nix.yml for the check in CI!
