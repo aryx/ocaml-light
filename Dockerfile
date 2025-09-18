@@ -43,9 +43,11 @@ RUN make install
 FROM ubuntu:22.04 AS bytecode
 
 # We also need a basic C dev environment to *use/run* ocaml-light
+# as ocamlc will occasionnally call gcc and link with libc (e.g.,
+# when using -custom and relying on C libs)
 RUN apt-get update
-#TODO: gcc ?
-RUN apt-get install -y --no-install-recommends binutils make libx11-dev
+RUN apt-get install -y --no-install-recommends binutils gcc libc6-dev make
+RUN apt-get install -y --no-install-recommends libx11-dev
 
 COPY --from=build /usr/local /usr/local
 
@@ -56,7 +58,7 @@ RUN which ocaml
 RUN ocamlc -v
 RUN echo '1+1;;' | ocaml
 RUN echo 'let _ = print_string "hello"' > foo.ml
-RUN ocamlc foo.ml
+RUN ocamlc -cclib -lunix -custom foo.ml
 RUN ./a.out
 
 ###############################################################################
