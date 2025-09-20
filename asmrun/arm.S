@@ -16,9 +16,11 @@
 trap_ptr	.req	r11
 alloc_ptr	.req	r8
 alloc_limit	.req	r9
-sp		.req	r13
-lr		.req	r14
-pc		.req	r15
+
+//old: forbidden with arm-linux-gnueabihf-as
+//sp		.req	r13
+//lr		.req	r14
+//pc		.req	r15
 
         .text
 
@@ -107,10 +109,24 @@ caml_alloc:
         ldr     r10, .Lcaml_gc_regs
         str     sp, [r10, #0]
     /* Save non-callee-save float registers */
-        stfd    f0, [sp, #-8]!
-        stfd    f1, [sp, #-8]!
-        stfd    f2, [sp, #-8]!
-        stfd    f3, [sp, #-8]!
+	//old: was using stfd f0, ... but actually not supported by
+        // arm-linux-gnueabihf-as so we used vstr.f64 and d0 as suggested
+        // by chatGPT.
+        //old: moreover the ! suffix "write-back-to-base-register" is not
+        // supported so had to transform in sub sp thing below
+        //old:
+        // stfd    f0, [sp, #-8]!
+        // stfd    f1, [sp, #-8]!
+        // stfd    f2, [sp, #-8]!
+        // stfd    f3, [sp, #-8]!
+        sub sp, sp, #8
+        vstr.f64    d0, [sp]
+        sub sp, sp, #8
+        vstr.f64    d1, [sp]
+        sub sp, sp, #8
+        vstr.f64    d2, [sp]
+        sub sp, sp, #8
+        vstr.f64    d3, [sp]
     /* Save current allocation pointer for debugging purposes */
         ldr     r10, .Lyoung_ptr
         str     alloc_ptr, [r10, #0]
@@ -120,10 +136,17 @@ caml_alloc:
     /* Call the garbage collector */
         bl      garbage_collection
     /* Restore the registers from the stack */        
-        ldfd    f4, [sp], #8
-        ldfd    f5, [sp], #8
-        ldfd    f6, [sp], #8
-        ldfd    f7, [sp], #8
+        //old: ldfd ... f4, ...
+        // ldfd   f4, [sp], #8
+        // ldfd   f5, [sp], #8
+        // ldfd   f6, [sp], #8
+        // ldfd   f7, [sp], #8
+	vldr.f64 d4, [sp]
+	vldr.f64 d5, [sp, #8]
+	vldr.f64 d6, [sp, #16]
+	vldr.f64 d7, [sp, #24]
+	add sp, sp, #32  // 4 doubles × 8 bytes
+
         ldmfd   sp!, {r0,r1,r2,r3,r4,r5,r6,r7,r10,r12}
     /* Reload return address */
         ldr     r10, .Lcaml_last_return_address
@@ -179,10 +202,19 @@ caml_start_program:
 .Ljump_to_caml:
     /* Save return address and callee-save registers */
         stmfd   sp!, {r4,r5,r6,r7,r8,r9,r11,lr}
-        stfd    f7, [sp, #-8]!
-        stfd    f6, [sp, #-8]!
-        stfd    f5, [sp, #-8]!
-        stfd    f4, [sp, #-8]!
+        //old: stfd ... f7 ...
+        //stfd    f7, [sp, #-8]!
+        //stfd    f6, [sp, #-8]!
+        //stfd    f5, [sp, #-8]!
+        //stfd    f4, [sp, #-8]!
+	sub sp, sp, #8
+	vstr.f64 d7, [sp]
+	sub sp, sp, #8
+	vstr.f64 d6, [sp]
+	sub sp, sp, #8
+	vstr.f64 d5, [sp]
+	sub sp, sp, #8
+	vstr.f64 d4, [sp]
     /* Setup a callback link on the stack */
         sub     sp, sp, #4*3
         ldr     r4, .Lcaml_bottom_of_stack
@@ -234,10 +266,17 @@ caml_start_program:
         ldr     r4, .Lyoung_ptr
         str     alloc_ptr, [r4, #0]
     /* Reload callee-save registers and return */
-        ldfd    f4, [sp], #8
-        ldfd    f5, [sp], #8
-        ldfd    f6, [sp], #8
-        ldfd    f7, [sp], #8
+        //old:
+        //ldfd    f4, [sp], #8
+        //ldfd    f5, [sp], #8
+        //ldfd    f6, [sp], #8
+        //ldfd    f7, [sp], #8
+	vldr.f64 d4, [sp]
+	vldr.f64 d5, [sp, #8]
+	vldr.f64 d6, [sp, #16]
+	vldr.f64 d7, [sp, #24]
+	add sp, sp, #32  // adjust SP after all loads
+
         ldmfd   sp!, {r4,r5,r6,r7,r8,r9,r11,pc}
 
     /* The trap handler */

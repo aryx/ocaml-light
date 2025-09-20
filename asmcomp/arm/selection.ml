@@ -145,7 +145,7 @@ let selector () =
 
  insert_op = (fun self op rs rd ->
   if op = Iintop(Imul) then begin
-    self.insert (Iop op) rs [| rd.(0); rs.(0) |]; rd
+    self.insert self (Iop op) rs [| rd.(0); rs.(0) |]; rd
   end else
     super.insert_op self op rs rd
  );

@@ -214,7 +214,9 @@ let call_linker file_list startup_file =
             !Clflags.object_name
             startup_file
             (String.concat " " (List.rev file_list))
-  in if Ccomp.command cmd <> 0 then raise(Error Linking_error)
+  in 
+  Logs.info (fun m -> m "executing %s" cmd);
+  if Ccomp.command cmd <> 0 then raise(Error Linking_error)
 (*e: function [[Asmlink.call_linker]] *)
 
 (*s: function [[Asmlink.object_file_name]] *)

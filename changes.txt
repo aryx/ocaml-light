@@ -3,14 +3,14 @@
 * TODO
 
 ** compilers
-- port more arch x86_64(amd64)/arm/arm64/riscv/mips
+- port more arch x86_64(amd64)/arm64/riscv/mips
   
 ** test infra
 
 ** dev infra
 - restore working semgrep.yml
 
-* 0.2 (Q3 2025) ()
+* 0.2 (Q3 2025) (working efuns and xix, arm progress)
 
 ** stdlib
 - backport String.{starts_with,ends_with} (but without labels) (4.13.0)

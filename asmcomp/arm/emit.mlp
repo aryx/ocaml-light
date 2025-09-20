@@ -157,14 +157,14 @@ let name_for_shift_int_operation = function
   | Ishiftsubrev -> "rsb"
 
 let name_for_float_operation = function
-    Inegf -> "mnfd"
-  | Iabsf -> "absd"
-  | Iaddf -> "adfd"
-  | Isubf -> "sufd"
-  | Imulf -> "mufd"
-  | Idivf -> "dvfd"
-  | Ifloatofint -> "fltd"
-  | Iintoffloat -> "fixz"
+  | Inegf -> "vneg.f64"
+  | Iabsf -> "vabs.f64"
+  | Iaddf -> "vadd.f64"
+  | Isubf -> "vsub.f64"
+  | Imulf -> "vmul.f64"
+  | Idivf -> "vdiv.f64"
+  | Ifloatofint -> "vcvt.f64.s32"
+  | Iintoffloat -> "vcvt.s32.f64"
   | _ -> assert false
 
 (* Recognize immediate operands *)
@@ -257,16 +257,16 @@ let emit_instr i =
           | {loc = Reg rs; typ = Float}, {loc = Reg rd; typ = Float} ->
               `	mvfd	{emit_reg dst}, {emit_reg src}\n`; 1
           | {loc = Reg rs; typ = Float}, {loc = Reg rd; typ = Int|Addr} ->
-              `	stfd    {emit_reg src}, [sp, #-8]!\n`;
+              `	vstr.f64    {emit_reg src}, [sp, #-8]!\n`;
               `	ldmfd   sp!, \{{emit_reg dst}, {emit_next_reg dst}}\n`; 2
           | {loc = Reg rs; typ = Int|Addr}, {loc = Stack sd} ->
               `	str	{emit_reg src}, {emit_stack dst}\n`; 1
           | {loc = Reg rs; typ = Float}, {loc = Stack sd} ->
-              `	stfd	{emit_reg src}, {emit_stack dst}\n`; 1
+              `	vstr.f64	{emit_reg src}, {emit_stack dst}\n`; 1
           | {loc = Stack ss; typ = Int|Addr}, {loc = Reg rd} ->
               `	ldr	{emit_reg dst}, {emit_stack src}\n`; 1
           | {loc = Stack ss; typ = Float}, {loc = Reg rd} ->
-              `	ldfd	{emit_reg dst}, {emit_stack src}\n`; 1
+              `	vldr.f64	{emit_reg dst}, {emit_stack src}\n`; 1
           | _ ->
               assert false
         end
@@ -285,7 +285,7 @@ let emit_instr i =
         else begin
           let lbl = label_constant float_constants s 2 in
 	  pending_float := true;
-          `	ldfd	{emit_reg i.res.(0)}, {emit_label lbl} @ {emit_string s}\n`
+          `	vldr.f64	{emit_reg i.res.(0)}, {emit_label lbl} @ {emit_string s}\n`
         end;
         1
     | Lop(Iconst_symbol s) ->
@@ -340,7 +340,7 @@ let emit_instr i =
           | Word ->
               begin match r.typ with
                 Int | Addr -> "ldr"
-              | Float -> "ldfd"
+              | Float -> "vldr.f64"
               end in
         `	{emit_string instr}	{emit_reg r}, {emit_addressing addr i.arg 0}\n`;
         1
@@ -353,7 +353,7 @@ let emit_instr i =
           | Word ->
               begin match r.typ with
                 Int | Addr -> "str"
-              | Float -> "stfd"
+              | Float -> "vstr.f64"
               end in
         `	{emit_string instr}	{emit_reg r}, {emit_addressing addr i.arg 1}\n`;
         1
@@ -423,9 +423,17 @@ let emit_instr i =
     | Lop(Iintop_imm(op, n)) ->
         let instr = name_for_int_operation op in
         `	{emit_string instr}	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, #{emit_int n}\n`; 1
-    | Lop(Inegf | Iabsf | Ifloatofint | Iintoffloat as op) ->
+    | Lop(Inegf | Iabsf  as op) ->
         let instr = name_for_float_operation op in
         `	{emit_string instr}	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}\n`; 1
+
+    | Lop(Ifloatofint as op) ->
+        let instr = name_for_float_operation op in
+        `       vmov s0, {emit_reg i.arg.(0)}\n`;
+        `	{emit_string instr}	{emit_reg i.res.(0)}, s0\n`; 2
+    | Lop(Iintoffloat as _op) ->
+       failwith "TODO: arm Iintoffloat"
+
     | Lop(Iaddf | Isubf | Imulf | Idivf as op) ->
         let instr = name_for_float_operation op in
         `	{emit_string instr}	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_reg i.arg.(1)}\n`; 1
@@ -610,9 +618,11 @@ let begin_assembly() =
   `trap_ptr	.req	r11\n`;
   `alloc_ptr	.req	r8\n`;
   `alloc_limit	.req	r9\n`;
+(*
   `sp		.req	r13\n`;
   `lr		.req	r14\n`;
   `pc		.req	r15\n`;
+*)
   let lbl_begin = Compilenv.current_unit_name() ^ "_data_begin" in
   `	.data\n`;
   `	.global	{emit_symbol lbl_begin}\n`;

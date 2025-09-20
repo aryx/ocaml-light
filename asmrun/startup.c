@@ -53,6 +53,7 @@ static void init_atoms(void)
 
 /* Configuration parameters and flags */
 
+//pad: set to 1 to help debug? or use export CAMLRUNPARAM=v ?
 static unsigned long verbose_init = 0;
 static unsigned long percent_free_init = Percent_free_def;
 static unsigned long max_percent_free_init = Max_percent_free_def;

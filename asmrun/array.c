@@ -9,6 +9,9 @@
 /*                                                                     */
 /***********************************************************************/
 
+//PAD: delete? is not part of more recent asmrun/
+// like in 66ae9423a784fbc4d35b794906a4dee705afccf2
+
 /* $Id: array.c,v 1.10 1997/09/02 12:53:52 xleroy Exp $ */
 
 /* Operations on arrays */

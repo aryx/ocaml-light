@@ -263,6 +263,10 @@ arch=none
 model=default
 system=unknown
 
+nativecc=''
+nativecccompopts=''
+nativecclinkopts=''
+
 case "$host" in
   #TODO: support system=plan9 at some point?
   i[3456]86-*-linuxaout)        arch=i386; system=linux_aout;;
@@ -271,16 +275,19 @@ case "$host" in
   #TODO: port amd64 so can compile with arch=amd64; system=linux_elf
   # in the mean time we gonna "cross-compile" to i386 via gcc -m32
   x86_64-*-linux*)            arch=i386; system=linux_elf;;
+  #TODO: port arm64 so can compile with arch=arm64; system=linux_elf
+  # in the mean time we gonna "cross-compile" to arm32 via arm-linux-gnueabihf-
+  aarch64-*-linux*)            arch=arm; system=linux_elf;;
 esac
 
 case "$arch,$system,$cc" in
   alpha,digital,gcc*) nativecc=cc;;
-  mips,*,gcc*) nativecc=cc;;
-  *) nativecc="$bytecc";;
+  mips,*,gcc*)        nativecc=cc;;
+  #coupling: asmcomp/arm/proc.ml assemble_file()
+  arm,linux_elf,gcc*) nativecc="arm-linux-gnueabihf-gcc";;
+  *)                  nativecc="$bytecc";;
 esac
 
-nativecccompopts=''
-nativecclinkopts=''
 
 #TODO: could also case on $host here for crosscompiling settings
 case "$arch,$nativecc,$system" in
@@ -290,6 +297,9 @@ case "$arch,$nativecc,$system" in
     i386,gcc*,*)
 	nativecccompopts='-m32 -Wall --std=gnu89'
 	nativecclinkopts='-m32';;
+    arm,*,*)
+	# can add -O0 -fno-inline -ggdb  to help debug segfaults
+	nativecccompopts='-Wall --std=gnu89  -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard'
 esac
 
 #TODO: define as='' at some point too
@@ -306,6 +316,11 @@ case "$arch,$model,$system" in
         aspp='gcc'
 	asflags='--32'
 	asppflags='-m32 -c -DSYS_$(SYSTEM)';;
+    #TODO: support arm64
+    arm,*,*)
+        aspp='arm-linux-gnueabihf-gcc'
+	asflags='-march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard'
+	asppflags='-O0 -fno-inline -ggdb -c -DSYS_$(SYSTEM) -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard';;
 esac
 
 echo "ARCH=$arch" >> Makefile
@@ -598,6 +613,7 @@ fi
 #TODO? detect x86_64 and compile lib with -m32?
 case "$host" in
   i[3456]86-*-linux) bignum_arch=x86;;
+  #TODO: add arm and arm64 code for bignum?
   *) bignum_arch=C
 esac
 

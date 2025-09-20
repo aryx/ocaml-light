@@ -51,7 +51,7 @@ let int_reg_name = [|
 (*s: constant [[Proc.float_reg_name]] *)
 let float_reg_name = [|
 (*e: constant [[Proc.float_reg_name]] *)
-  "f0"; "f1"; "f2"; "f3"; "f4"; "f5"; "f6"; "f7"
+  "d0"; "d1"; "d2"; "d3"; "d4"; "d5"; "d6"; "d7"
 |]
 
 (*s: constant [[Proc.num_register_classes]] *)
@@ -252,7 +252,10 @@ let contains_calls = ref false
 (* Calling the assembler *)
 
 let assemble_file infile outfile =
-  Sys.command ("as -o " ^ outfile ^ " " ^ infile)
+  (* TODO: need use Config.assembler or something!! *)
+  let cmd = ("arm-linux-gnueabihf-as -g -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard -o " ^ outfile ^ " " ^ infile) in
+  Logs.info (fun m -> m "running %s" cmd);
+  Sys.command cmd
 (*e: function [[Proc.assemble_file]] *)
 
 (*e: asmcomp/arm/proc.ml *)
