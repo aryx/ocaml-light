@@ -189,9 +189,6 @@ case "$1,$2,$3" in
   4,8,8) echo "Wow! A 64 bit architecture!"
          
          case "$bytecc,$host" in
-             gcc,alpha-*-osf*)
-		 echo "#define ARCH_SIXTYFOUR" >> m.h
-		 echo "#define ARCH_CODE32" >> m.h;;
 	     gcc,x86_64-*-linux*)
 		 #pad: this allows to compile ocamlrun in 64bit and asmrun
 		 # in 32bit.
@@ -281,7 +278,6 @@ case "$host" in
 esac
 
 case "$arch,$system,$cc" in
-  alpha,digital,gcc*) nativecc=cc;;
   mips,*,gcc*)        nativecc=cc;;
   #coupling: asmcomp/arm/proc.ml assemble_file()
   arm,linux_elf,gcc*) nativecc="arm-linux-gnueabihf-gcc";;
@@ -291,8 +287,6 @@ esac
 
 #TODO: could also case on $host here for crosscompiling settings
 case "$arch,$nativecc,$system" in
-    alpha,cc*,digital)
-	nativecccompopts='-std1';;
     #TODO: support amd64
     i386,gcc*,*)
 	nativecccompopts='-m32 -Wall --std=gnu89'
@@ -308,9 +302,6 @@ aspp='$(AS)'
 asppflags=''
 
 case "$arch,$model,$system" in
-    alpha,*,linux)
-	aspp='gcc'
-	asppflags='-c -DSYS_$(SYSTEM)';;
     #TODO: support amd64
     i386,*,*)
         aspp='gcc'

@@ -95,8 +95,7 @@ void leave_blocking_section(void)
   async_signal_mode = 0;
 }
 
-#if defined(TARGET_alpha) || defined(TARGET_mips) || \
-    (defined(TARGET_power) && defined(_AIX))
+#if defined(TARGET_mips) || (defined(TARGET_power) && defined(_AIX))
 void handle_signal(int sig, int code, struct sigcontext * context)
 #elif defined(TARGET_power) && defined(__linux)
 void handle_signal(int sig, struct pt_regs * context)
@@ -124,11 +123,6 @@ void handle_signal(int sig)
     /* Some ports cache young_limit in a register.
        Use the signal context to modify that register too, but not if
        we are inside C code (i.e. caml_last_return_address != 0). */
-#ifdef TARGET_alpha
-    /* Cached in register $14 */
-    if (caml_last_return_address == 0)
-      context->sc_regs[14] = (long) young_limit;
-#endif
 #ifdef TARGET_mips
       /* Cached in register $23 */
       if (caml_last_return_address == 0)
