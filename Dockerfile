@@ -86,7 +86,7 @@ RUN make ocamlopt.opt
 
 FROM bytecode AS native-x86_64
 
-COPY --from=build-native /usr/local /usr/local
+COPY --from=build-native-x86_64 /usr/local /usr/local
 
 # basic tests
 RUN which ocaml
