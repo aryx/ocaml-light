@@ -1,7 +1,7 @@
 ###############################################################################
 # Overview
 ###############################################################################
-# Build and test ocaml-light (bytecode and x86 native) on Ubuntu.
+# Build and test ocaml-light (bytecode and x86/arm native) on Ubuntu.
 # See https://docs.docker.com/build/building/multi-stage/ for more info on the
 # multi-stage approach.
 
@@ -65,22 +65,17 @@ RUN ./a.out
 # Stage3: build also the native part
 ###############################################################################
 
-FROM build AS build-native
+FROM build AS build-native-x86_64
 
 # multilib is needed for gcc -m32; asmcomp currently supports only x86
 #alt: LATER: use goken instead of gcc!
 RUN apt-get install -y gcc-multilib
-
 WORKDIR /src
-
 # this requires gcc-multilib
 RUN make opt
-
 RUN make installopt
-
 # make test (it requires make install first)
 RUN make test
-
 # good self test
 RUN make ocamlc.opt
 RUN make ocamlopt.opt
@@ -89,7 +84,7 @@ RUN make ocamlopt.opt
 # Stage4: native image
 ###############################################################################
 
-FROM bytecode AS native
+FROM bytecode AS native-x86_64
 
 COPY --from=build-native /usr/local /usr/local
 

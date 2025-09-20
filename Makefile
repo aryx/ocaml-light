@@ -622,7 +622,7 @@ clean::
 build-docker:
 	docker build --tag "padator/ocaml-light:"`uname -m` --target "bytecode" .
 build-docker-opt:
-	docker build --tag "ocaml-light-opt" --target "native" .
+	docker build --tag "ocaml-light-opt" --target "native-"`uname -m` .
 
 # need 'docker login -u padator' first with credentials of
 # https://hub.docker.com/r/padator/ stored in ~/.docker/config.json
