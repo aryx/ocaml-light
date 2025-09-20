@@ -68,17 +68,22 @@ RUN ./a.out
 FROM build AS build-native-x86_64
 
 # multilib is needed for gcc -m32; asmcomp currently supports only x86
-#alt: LATER: use goken instead of gcc!
+#alt: LATER: port amd64 and even later use goken instead of gcc!
 RUN apt-get install -y gcc-multilib
 WORKDIR /src
 # this requires gcc-multilib
 RUN make opt
+
 RUN make installopt
 # make test (it requires make install first)
 RUN make test
 # good self test
 RUN make ocamlc.opt
 RUN make ocamlopt.opt
+
+RUN echo 'let _ = print_string "hello"' > foo.ml
+RUN ocamlopt -cclib -lunix foo.ml
+RUN ./a.out
 
 ###############################################################################
 # Stage4: native image
