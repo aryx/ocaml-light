@@ -1,0 +1,5 @@
+/Dockerfile
+.git
+_build
+
+# partial copy of .gitignore
