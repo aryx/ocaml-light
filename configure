@@ -26,7 +26,9 @@ bindir=/usr/local/bin
 libdir=/usr/local/lib/ocaml
 mandir=/usr/local/man/man1
 manext=1
+
 host_type=unknown
+
 cc=''
 cclibs=''
 x11_include_dir=''
@@ -36,7 +38,7 @@ posix_threads=no
 # TODO? -Wno-unused?
 # need gnu89 otherwise gcc15 complains a lot about function with
 # wrong number of arguments (e.g. in interprete.c)
-# alt: could add the --std only when detect gcc > 15 
+# alt: we could add the --std only when we detect gcc > 15 
 gcc_warnings="-Wall --std=gnu89"
 
 ##############################################################################
@@ -95,7 +97,9 @@ esac
 # Generate the files
 ##############################################################################
 
+# !!!Changing directory!!!
 cd config/auto-aux
+
 rm -f s.h m.h Makefile
 touch s.h m.h Makefile
 
@@ -107,7 +111,7 @@ echo "MANDIR=$mandir" >> Makefile
 echo "MANEXT=$manext" >> Makefile
 
 ##############################################################################
-# Determine the system type
+# Determine the system type (from config/auto-aux/)
 ##############################################################################
 
 if test "$host_type" = "unknown"; then
@@ -616,8 +620,9 @@ fi
 
 # Determine the location of X include files and libraries
 
-#TODO: could remove all of that as otherlibs/graphics/ got later
-# moved out of the ocaml repo
+#alt: we could remove all of that as otherlibs/graphics/ got later
+# moved out of the ocaml repo, but graphics is useful for efuns
+# so let's keep it
 
 x11_include="not found"
 x11_link="not found"
@@ -763,4 +768,3 @@ echo "The \"graph\" library:"
 echo "	options for compiling .... $x11_include"
 echo "	options for linking ...... $x11_link"
 fi
-
