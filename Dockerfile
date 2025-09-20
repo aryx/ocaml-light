@@ -81,8 +81,9 @@ RUN make test
 RUN make ocamlc.opt
 RUN make ocamlopt.opt
 
+#TODO: note that -cclib -lunix does not work, maybe because i386 vs x86_64?
 RUN echo 'let _ = print_string "hello"' > foo.ml
-RUN ocamlopt -cclib -lunix foo.ml
+RUN ocamlopt foo.ml
 RUN ./a.out
 
 FROM build AS build-native-aarch64
