@@ -13,9 +13,6 @@
 
 #include <signal.h>
 #include <stdio.h>
-#if defined(__linux) && defined(TARGET_power)
-#include <asm/sigcontext.h>
-#endif
 #include "alloc.h"
 #include "callback.h"
 #include "memory.h"
@@ -95,10 +92,8 @@ void leave_blocking_section(void)
   async_signal_mode = 0;
 }
 
-#if defined(TARGET_mips) || (defined(TARGET_power) && defined(_AIX))
+#if defined(TARGET_mips)
 void handle_signal(int sig, int code, struct sigcontext * context)
-#elif defined(TARGET_power) && defined(__linux)
-void handle_signal(int sig, struct pt_regs * context)
 #else
 void handle_signal(int sig)
 #endif
@@ -127,17 +122,6 @@ void handle_signal(int sig)
       /* Cached in register $23 */
       if (caml_last_return_address == 0)
         context->sc_regs[23] = (int) young_limit;
-#endif
-#ifdef TARGET_power
-      /* Cached in register 30 */
-#ifdef _AIX
-      if (caml_last_return_address == 0)
-        context->sc_jmpbuf.jmp_context.gpr[30] = (ulong_t) young_limit;
-#endif
-#ifdef __linux
-      if (caml_last_return_address == 0)
-        context->gpr[30] = (unsigned long) young_limit;
-#endif
 #endif
   }
 }
@@ -262,62 +246,10 @@ value install_signal_handler(value signal_number, value action) /* ML */
 
 /* Machine- and OS-dependent handling of bound check trap */
 
-#if defined(TARGET_sparc) && defined(SYS_sunos)
-static void trap_handler(int sig, int code, 
-                         struct sigcontext * context, char * address)
-{
-  if (code == ILL_TRAP_FAULT(5)) {
-    array_bound_error();
-  } else {
-    fprintf(stderr, "Fatal error: illegal instruction, code 0x%x\n", code);
-    exit(100);
-  }
-}
-#endif
-
-#if defined(TARGET_sparc) && defined(SYS_solaris)
-static void trap_handler(int sig, siginfo_t * info, void * context)
-{
-  if (info->si_code == ILL_ILLTRP) {
-    array_bound_error();
-  } else {
-    fprintf(stderr, "Fatal error: illegal instruction, code 0x%x\n",
-            info->si_code);
-    exit(100);
-  }
-}
-#endif
-
-#if defined(TARGET_sparc) && defined(SYS_bsd)
-static void trap_handler(int sig)
-{
-  array_bound_error();
-}
-#endif
-
-#if defined(TARGET_power)
-static void trap_handler(int sig)
-{
-  array_bound_error();
-}
-#endif
 
 /* Initialization of signal stuff */
 
 void init_signals(void)
 {
-#if defined(TARGET_sparc) && (defined(SYS_sunos) || defined(SYS_bsd))
-  signal(SIGILL, trap_handler);
-#endif
-#if defined(TARGET_sparc) && defined(SYS_solaris)
-  struct sigaction act;
-  act.sa_sigaction = trap_handler;
-  sigemptyset(&act.sa_mask);
-  act.sa_flags = SA_SIGINFO;
-  sigaction(SIGILL, &act, NULL);
-#endif
-#if defined(TARGET_power)
-  signal(SIGTRAP, trap_handler);
-#endif
 }
 
