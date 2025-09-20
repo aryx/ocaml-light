@@ -85,14 +85,42 @@ RUN echo 'let _ = print_string "hello"' > foo.ml
 RUN ocamlopt -cclib -lunix foo.ml
 RUN ./a.out
 
+FROM build AS build-native-aarch64
+
+# use arm32 backend for now and the armhf gcc/binutils cross compiler
+RUN dpkg --add-architecture armhf
+RUN apt-get update
+RUN apt-get install -y gcc-arm-linux-gnueabihf libc6:armhf
+WORKDIR /src
+RUN make opt
+
+RUN make installopt
+#TODO
+#RUN make test
+#TODO: caml_array_bound_error undefined ref
+#RUN make ocamlc.opt
+#TODO RUN make ocamlopt.opt
+RUN echo 'let _ = print_string "hello"' > foo.ml
+RUN ocamlopt -cclib -lunix foo.ml
+#TODO: segfault
+#RUN ./a.out
+
 ###############################################################################
 # Stage4: native image
 ###############################################################################
 
 FROM bytecode AS native-x86_64
-
 COPY --from=build-native-x86_64 /usr/local /usr/local
+# basic tests
+RUN which ocaml
+RUN ocamlc -v
+RUN echo '1+1;;' | ocaml
+# more basic tests
+RUN which ocamlopt
+RUN ocamlopt -v
 
+FROM bytecode AS native-aarch64
+COPY --from=build-native-aarch64 /usr/local /usr/local
 # basic tests
 RUN which ocaml
 RUN ocamlc -v
