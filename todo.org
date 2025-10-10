@@ -1,5 +1,35 @@
 -*- org -*-
 
+* Big plan
+
+** big plan
+
+# finish backport arm (fix current segfault a.out), compile efuns on plan9!
+# release code and SEMI LP of ocaml-light, 
+# add/backport cool/recent features (e.g., let*, deriving, typeclasses! or go interfaces in ocaml? :))
+# leverage bench and examples/, add amd64/arm64/riscv
+# and even use goken9cc toolchain instead of gcc -m32 later!
+
+
+** Later
+
+*** LATER retarget plan9 assembly (arm and x86) so can build OCaml binaries
+for my plan9 raspberry or for my plan9 qemu
+
+*** LATER backport arm64 backend, so can produce arm64 Linux binaries!!!
+#note that producing arm32 binaries is fine too and might be enough
+# and simpler for now. The slowdown of arm32 on arm64 is probably fine
+#leverage arm porting? hopefully internal APIs didn't change too
+# much (Xavier Leroy usually does not change a lot the APIs)
+
+arm64 code that was added late in 4.xx too different from 1.07?
+
+*** LATER backport amd64 backend too!
+right now it's just asmcomp/i386
+
+*** LATER try use mips backend with 5i?
+
+
 * Last
 
 ** Last0
