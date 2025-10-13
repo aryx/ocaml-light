@@ -72,9 +72,9 @@ asmrun/*.c
 
 # ocamllex/ocamlyacc generated files
 
-/lex/lexer.ml
-/lex/parser.ml
-/lex/parser.mli
+/lex/Lexer.ml
+/lex/Parser.ml
+/lex/Parser.mli
 /lex/ocamllex
 
 /parsing/lexer.ml

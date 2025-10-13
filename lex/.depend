@@ -1,15 +1,20 @@
-compact.cmi: lexgen.cmi 
-lexer.cmi: parser.cmi 
-output.cmi: compact.cmi lexgen.cmi 
-compact.cmo: lexgen.cmi compact.cmi 
-compact.cmx: lexgen.cmx compact.cmi 
-lexer.cmo: parser.cmi lexer.cmi 
-lexer.cmx: parser.cmx lexer.cmi 
-lexgen.cmo: ast.cmo lexgen.cmi 
-lexgen.cmx: ast.cmx lexgen.cmi 
-main.cmo: compact.cmi lexer.cmi lexgen.cmi output.cmi parser.cmi 
-main.cmx: compact.cmx lexer.cmx lexgen.cmx output.cmx parser.cmx 
-output.cmo: compact.cmi lexgen.cmi output.cmi 
-output.cmx: compact.cmx lexgen.cmx output.cmi 
-parser.cmo: ast.cmo parser.cmi 
-parser.cmx: ast.cmx parser.cmi 
+Compact.cmi: Lexgen.cmi 
+Lexgen.cmi: Ast.cmo 
+Output.cmi: Ast.cmo Compact.cmi Lexgen.cmi 
+Parser.cmi: Ast.cmo 
+CLI.cmo: Ast.cmo Compact.cmi Lexer.cmo Lexgen.cmi Output.cmi Parser.cmi \
+    CLI.cmi 
+CLI.cmx: Ast.cmx Compact.cmx Lexer.cmx Lexgen.cmx Output.cmx Parser.cmx \
+    CLI.cmi 
+Compact.cmo: Lexgen.cmi Compact.cmi 
+Compact.cmx: Lexgen.cmx Compact.cmi 
+Lexer.cmo: Ast.cmo Parser.cmi 
+Lexer.cmx: Ast.cmx Parser.cmx 
+Lexgen.cmo: Ast.cmo Lexgen.cmi 
+Lexgen.cmx: Ast.cmx Lexgen.cmi 
+Main.cmo: CLI.cmi 
+Main.cmx: CLI.cmx 
+Output.cmo: Ast.cmo Compact.cmi Lexgen.cmi Output.cmi 
+Output.cmx: Ast.cmx Compact.cmx Lexgen.cmx Output.cmi 
+Parser.cmo: Ast.cmo Parser.cmi 
+Parser.cmx: Ast.cmx Parser.cmi 

@@ -7,9 +7,9 @@ YACCFLAGS=
 CAMLYACC=../boot/ocamlyacc
 CAMLLEX=../boot/ocamlrun ../boot/ocamllex
 DEPFLAGS=
-CAMLDEP=../boot/ocamlrun ../tools/misc/ocamldep
+CAMLDEP=../boot/ocamlrun ../tools/dependencies/ocamldep
 
-OBJS=ast.cmo parser.cmo lexer.cmo lexgen.cmo compact.cmo output.cmo main.cmo
+OBJS=Ast.cmo Parser.cmo Lexer.cmo Lexgen.cmo Compact.cmo Output.cmo CLI.cmo Main.cmo
 
 #pad: if want to compile with a more recent ocaml and use a recent ocamldebug
 #CAMLLEX=ocamllex
@@ -26,24 +26,24 @@ clean::
 	rm -f ocamllex
 	rm -f *.cmo *.cmi
 
-parser.ml parser.mli: parser.mly
-	$(CAMLYACC) $(YACCFLAGS) parser.mly
-	perl -p -i -e 's#/\*\(\*[sex]: .* \*\)\*/##' parser.ml
+Parser.ml Parser.mli: Parser.mly
+	$(CAMLYACC) $(YACCFLAGS) Parser.mly
+	perl -p -i -e 's#/\*\(\*[sex]: .* \*\)\*/##' Parser.ml
 #pad: this  perl thing is just because ocamlyacc does not handle well
 # syncweb special comment at the very end
 
 clean::
-	rm -f parser.ml parser.mli
+	rm -f Parser.ml Parser.mli
 
-beforedepend:: parser.ml parser.mli
+beforedepend:: Parser.ml Parser.mli
 
-lexer.ml: lexer.mll
-	$(CAMLLEX) lexer.mll
+Lexer.ml: Lexer.mll
+	$(CAMLLEX) Lexer.mll
 
 clean::
-	rm -f lexer.ml
+	rm -f Lexer.ml
 
-beforedepend:: lexer.ml
+beforedepend:: Lexer.ml
 
 .SUFFIXES:
 .SUFFIXES: .ml .cmo .mli .cmi
