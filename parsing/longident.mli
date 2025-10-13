@@ -19,4 +19,7 @@ type t =
   | Lident of string
   | Ldot of t * string
 (*e: type [[Longident.t]] *)
+
+val last: t -> string
+
 (*e: parsing/longident.mli *)

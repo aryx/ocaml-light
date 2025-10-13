@@ -19,4 +19,9 @@ type t =
   | Lident of string
   | Ldot of t * string
 (*e: type [[Longident.t]] *)
+
+let last = function
+    Lident s -> s
+  | Ldot(lid, s) -> s
+
 (*e: parsing/longident.ml *)

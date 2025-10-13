@@ -3,6 +3,7 @@
 * TODO
 
 ** compilers
+- finish native arm port
 - port more arch x86_64(amd64)/arm64/riscv/mips
   
 ** test infra
@@ -10,12 +11,15 @@
 ** dev infra
 - restore working semgrep.yml
 
-* 0.3 (Q4 2025) ( ?? )
+* 0.3 (Q4 2025) ( ?arm native? )
+
+** language
+- Shorthand notation for records { lbl; } in expressions and patterns (3.12.0)
 
 ** tools
-- backport support for lexer rules with parameters (3.07)
+- ocamllex: backport support for lexer rules with parameters (3.07)
 
-* 0.2 (Q3 2025) (working efuns and xix, arm progress)
+* 0.2 (Q3 2025) (efuns and xix build with ocaml-light, arm progress)
 
 ** stdlib
 - backport String.{starts_with,ends_with} (but without labels) (4.13.0)
@@ -118,7 +122,7 @@
   I just kept i386, mips, and later backported the ARM port from ocaml 2.01!
 
 ** tools
-- backport named regexps in ocamllex (let name = regexp ...)
+- ocamllex: backport support for named regexps (let name = regexp ...)
   
 ** stdlib
 # see also pad.txt changes section

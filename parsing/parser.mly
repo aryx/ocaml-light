@@ -129,6 +129,12 @@ let rec mkrangepat c1 c2 =
                        mkrangepat (Char.chr(Char.code c1 + 1)) c2))
 /*(*e: function [[Parser.mkrangepat]] *)*/
 
+(* for the { lbl } shorthand notation *)
+let exp_of_label lbl =
+  mkexp (Pexp_ident(Lident(Longident.last lbl)))
+let pat_of_label lbl =
+  mkpat (Ppat_var(Longident.last lbl))
+
 let syntax_error () =
   raise Syntaxerr.Escape_error
 
@@ -583,6 +589,9 @@ lbl_expr_list:
       { [$1,$3] }
   | lbl_expr_list SEMI label_longident EQUAL expr %prec prec_list
       { ($3, $5) :: $1 }
+  /*(* { lbl } sugar for { lbl = lbl } (3.12.0) *)*/
+  |                    label_longident { [$1, exp_of_label $1] }
+  | lbl_expr_list SEMI label_longident { ($3, exp_of_label $3) :: $1 }
 ;
 /*(*x: expression rules *)*/
 fun_def:
@@ -691,6 +700,9 @@ simple_pattern:
 lbl_pattern_list:
     label_longident EQUAL pattern               { [($1, $3)] }
   | lbl_pattern_list SEMI label_longident EQUAL pattern { ($3, $5) :: $1 }
+  /*(* { lbl } shorthand notation (3.12.0) *)*/
+  | label_longident { [($1, pat_of_label $1)] }
+  | lbl_pattern_list SEMI label_longident { ($3, pat_of_label $3) :: $1 }
 ;
 /*(*e: pattern rules *)*/
 
