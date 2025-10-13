@@ -32,15 +32,15 @@ let reset_string_buffer () =
   string_index := 0
 (*x: Lexer helper functions and globals *)
 let get_stored_string () =
-  String.sub !string_buff 0 !string_index
+  Bytes.sub_string !string_buff 0 !string_index
 (*x: Lexer helper functions and globals *)
 let store_string_char c =
-  if !string_index >= String.length !string_buff then begin
-    let new_buff = Bytes.create (String.length !string_buff * 2) in
-    String.blit !string_buff 0 new_buff 0 (String.length !string_buff);
+  if !string_index >= Bytes.length !string_buff then begin
+    let new_buff = Bytes.create (Bytes.length !string_buff * 2) in
+    Bytes.blit !string_buff 0 new_buff 0 (Bytes.length !string_buff);
     string_buff := new_buff
   end;
-  !string_buff.[!string_index] <- c;
+  Bytes.set !string_buff !string_index c;
   incr string_index
 (*x: Lexer helper functions and globals *)
 let char_for_backslash = function
