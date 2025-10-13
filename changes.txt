@@ -10,6 +10,11 @@
 ** dev infra
 - restore working semgrep.yml
 
+* 0.3 (Q4 2025) ( ?? )
+
+** tools
+- backport support for lexer rules with parameters (3.07)
+
 * 0.2 (Q3 2025) (working efuns and xix, arm progress)
 
 ** stdlib

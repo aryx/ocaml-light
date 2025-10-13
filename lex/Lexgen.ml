@@ -18,7 +18,6 @@ open Ast
 module Set = Set_
 module Map = Map_
 *)
-
 (*s: type [[Lexgen.action_id]] *)
 type action_id = int
 (*e: type [[Lexgen.action_id]] *)
@@ -42,6 +41,7 @@ type regexp =
 (*s: type [[Lexgen.lexer_entry]] *)
 type lexer_entry =
   { lex_name: string;
+    lex_args: string list;
     lex_regexp: regexp;
     lex_actions: (action_id * Ast.action) list;
   }
@@ -72,6 +72,7 @@ and automata_move =
 type automata_entry =
   { auto_name: string;
     auto_initial_state: int;
+    auto_args: string list;
     auto_actions: (action_id * Ast.action) list;
   }
 (*e: type [[Lexgen.automata_entry]] *)
@@ -128,13 +129,14 @@ let encode_lexdef def =
   chars_count := 0;
 (* CONFIG   actions_count := 0; *)
   let entries =
-    def.entrypoints |> List.map (fun (entry_name, casedef) ->
+    def.entrypoints |> List.map (fun { name = entry_name; args = args; clauses = casedef } ->
         actions := [];
         (* CONFIG !! for simpler output can't do that *)
         actions_count := 0;
         let re = encode_casedef casedef in
         { lex_name = entry_name;
           lex_regexp = re;
+          lex_args = args;
           lex_actions = List.rev !actions }
      )
   in
@@ -309,6 +311,7 @@ let encode_lexentries charsets lexentries =
   let automata_entries =
     lexentries |> List.map (fun entry ->
         { auto_name    = entry.lex_name;
+          auto_args = entry.lex_args;
           auto_actions = entry.lex_actions;
           (* get_state() will populate todo and state_map globals *)
           auto_initial_state = get_state (firstpos entry.lex_regexp);
