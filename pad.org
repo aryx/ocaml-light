@@ -123,85 +123,156 @@ Then I backported a few things from a more recent ocaml distribution:
    PR#5662 : typo in md5.c when clearing sensitive data in context
  - the items listed below
 
+* Backport list
+# see also changes.txt as I may have missed some entries below
+# see also list of "important commits in ocaml history" at the end of this file
+
+** backport features (not just a library function) from more recent OCaml
+
+ocamllex support for parsers with parameters
+commit:11392c1894b4be951325ffb50cd308c1271c6cad
+
+Objective Caml 3.12.0:
+----------------------
+Language features:
+- Shorthand notation for records: in expressions and patterns,
+  { lbl } stands for { lbl = lbl } and { M.lbl } for { M.lbl = lbl }
+commit: b01621e848dd058cb655de2d613d4126d195374a
+
+
+Objective Caml 3.11.0:
+----------------------
+Standard library:
+- Printexc library: new functions "print_backtrace" and "get_backtrace"
+  to obtain a stack backtrace of the most recently raised exception.
+  New function "record_backtrace" to turn the exception backtrace mechanism
+  on or off from within a program.
+  !PARTIAL!
+
+Objective Caml 3.01:
+--------------------
+Bytecode compiler and bytecode interpreter:
+- Print stack backtrace when a program aborts due to an uncaught exception
+  (requires compilation with -g and running with ocamlrun -b or
+   OCAMLRUNPARAM="b=1").
+
+Objective Caml 2.00:
+--------------------
+Language:
+  - Record copying with update "{r with lbl1 = expr1; ...}".
+    !PARTIAL! opted for a new constructor instead of patching Pexp_record
+
+ocamllex:
+  - Added "let <id> = <regexp>" to name regular expressions
+    (inspired by Christian Lindig's patch).
+
+
 ** backport library functions from more recent OCaml
 
-    Objective Caml 3.11.0:
-    ----------------------
-    
-    Standard library:
-    - Printexc library: new functions "print_backtrace" and "get_backtrace"
-      to obtain a stack backtrace of the most recently raised exception.
-      New function "record_backtrace" to turn the exception backtrace mechanism
-      on or off from within a program.
-      !PARTIAL!
+Objective Caml 3.01:
+--------------------
+Standard library:
+- Module Hashtbl: added Hashtbl.replace.
+ !PARTIAL! the DS does not have the size field, so I commented out some code
 
-    Objective Caml 3.01:
-    --------------------
-    Standard library:
-    - Module Hashtbl: added Hashtbl.replace.
-     !PARTIAL! the DS does not have the size field, so I commented out some code
 
-    Bytecode compiler and bytecode interpreter:
-    - Print stack backtrace when a program aborts due to an uncaught exception
-      (requires compilation with -g and running with ocamlrun -b or
-       OCAMLRUNPARAM="b=1").
-    
-    Objective Caml 3.00:
-    --------------------
-    
-    Standard library:
-    - Module List: added List.sort, List.stable_sort; fixed bug in List.rev_map2.
-      !PARTIAL! didn't fix the List.rev_map2 thing
-    
-    Objective Caml 2.02:
-    --------------------
-    
-    * Standard library:
-      - Added the "ignore" primitive function, which just throws away its
-        argument and returns "()".  It allows to write
-        "ignore(f x); y" if "f x" doesn't have type unit and you don't
-        want the warning caused by "f x; y".
-        !PARTIAL! wrote a regular function instead of a primitive
-      - Added the "Buffer" module (extensible string buffers).
-      - Module List: added find, filter, partition.
-    
-    * The str library:
-      - Added split_delim, full_split as variants of split that control
-        more precisely what happens to delimiters.
-    
-    Objective Caml 2.01:
-    --------------------
-    
-    * Standard library:
-      - Module Pervasives: added float_of_int (synonymous for float),
-        int_of_float (truncate), 
-        !PARTIAL! int_of_char (Char.code), char_of_int (Char.chr),  bool_of_string.)
+Objective Caml 3.00:
+--------------------
 
-    * C interface:
-      - New macros CAMLparam... and CAMLlocal... to simplify the handling
-        of local roots in C code.
-      - Simplified procedure for allocating and filling Caml blocks from C.
-    
-    Objective Caml 2.00:
-    --------------------
-    
-    * Language:
-      - Record copying with update "{r with lbl1 = expr1; ...}".
-        !PARTIAL! opted for a new constructor instead of patching Pexp_record
+Standard library:
+- Module List: added List.sort, List.stable_sort; fixed bug in List.rev_map2.
+  !PARTIAL! didn't fix the List.rev_map2 thing
 
-    * The Unix library:
-      - Use float instead of int to represent Unix times (number of seconds
-        from the epoch).  This fixes a year 2005 problem on 32-bit platforms.
-        Functions affected: stat, lstat, fstat, time, gmtime, localtime,
-        mktime, utimes.
-      - Added putenv.
+Objective Caml 2.02:
+--------------------
 
-    * ocamllex:
-      - Added "let <id> = <regexp>" to name regular expressions
-        (inspired by Christian Lindig's patch).
+Standard library:
+  - Added the "ignore" primitive function, which just throws away its
+    argument and returns "()".  It allows to write
+    "ignore(f x); y" if "f x" doesn't have type unit and you don't
+    want the warning caused by "f x; y".
+    !PARTIAL! wrote a regular function instead of a primitive
+  - Added the "Buffer" module (extensible string buffers).
+  - Module List: added find, filter, partition.
 
-    * The str library: added Str.quote, Str.regexp_string,
-      Str.regexp_string_case_fold.
+The str library:
+  - Added split_delim, full_split as variants of split that control
+    more precisely what happens to delimiters.
+
+Objective Caml 2.01:
+--------------------
+
+Standard library:
+  - Module Pervasives: added float_of_int (synonymous for float),
+    int_of_float (truncate), 
+    !PARTIAL! int_of_char (Char.code), char_of_int (Char.chr),  bool_of_string.)
+
+C interface:
+  - New macros CAMLparam... and CAMLlocal... to simplify the handling
+    of local roots in C code.
+  - Simplified procedure for allocating and filling Caml blocks from C.
+
+Objective Caml 2.00:
+--------------------
+
+The Unix library:
+  - Use float instead of int to represent Unix times (number of seconds
+    from the epoch).  This fixes a year 2005 problem on 32-bit platforms.
+    Functions affected: stat, lstat, fstat, time, gmtime, localtime,
+    mktime, utimes.
+  - Added putenv.
+
+The str library: added Str.quote, Str.regexp_string,
+  Str.regexp_string_case_fold.
+
+** NOT BACKPORTED ON PURPOSE
+
+ - an object and class system
+   far simpler typechecker; not even used in the ocaml codebase
+
+ - functors
+   too often abused when a record would work.
+   Better to have polymorphic Set_/Map_
+   not even used in the ocaml codebase
+ - first-class modules
+   too often abused when a record would work.
+ - include
+   see recent OCaml code; unreadable .mli; forced to use odoc
+
+ - labels
+   I'm always confused with default parameter '?' syntax and options
+
+ - open variants, and other features that complexify again the typechecker
+   too often abused when regular variants would work
+
+ - stream extension
+   use ocamllex
+
+ - { foo = x; _ } open/close record pattern
+   it is convenient but prevent the exhaustive pattern checker to trigger
+   when you add a new field so better not backport this feature.
+
+ - GADTs
+   seems useful only for a few use-cases
+
+ - camlp4
+   attributes are better
+
+ - archs: alpha, hppa, m68k, power, and sparc
+
+ - os: windows, macOS
+   not needed anymore with both OSes being more unix-friendly
+
+ - switch to autoconf
+   thanks but not thanks
+
+*** list
+
+Objective Caml 3.12.0 (2 Aug 2010):
+-----------------------------------
+
+- Record patterns of the form { lbl = pat; _ } to mark that not all
+  labels are listed, purposefully.  (See new warning below.)
 
 
 * Compile
