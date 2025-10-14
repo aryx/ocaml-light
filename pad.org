@@ -228,11 +228,12 @@ The str library: added Str.quote, Str.regexp_string,
 ** NOT BACKPORTED ON PURPOSE
 
  - an object and class system
-   far simpler typechecker; not even used in the ocaml codebase
+   far simpler typechecker
+   not even used in the ocaml codebase
 
  - functors
    too often abused when a record would work.
-   Better to have polymorphic Set_/Map_
+   less intrusive to use polymorphic Set_/Map_
    not even used in the ocaml codebase
  - first-class modules
    too often abused when a record would work.
@@ -250,7 +251,10 @@ The str library: added Str.quote, Str.regexp_string,
 
  - { foo = x; _ } open/close record pattern
    it is convenient but prevent the exhaustive pattern checker to trigger
-   when you add a new field so better not backport this feature.
+    when you add a new field so better not backport this feature.
+ - Variables in "or" patterns [t] | [_; t] | ...    B opd | BL opd | Bxxx (opd, _)
+   convenient but better rewrite the type usually and factorize?
+   Useful though for  'Cast (t,e) | GccConstructor (t, e) -> ...'
 
  - GADTs
    seems useful only for a few use-cases
@@ -264,7 +268,7 @@ The str library: added Str.quote, Str.regexp_string,
    not needed anymore with both OSes being more unix-friendly
 
  - switch to autoconf
-   thanks but not thanks
+   thanks but no thanks
 
 *** list
 
@@ -273,6 +277,13 @@ Objective Caml 3.12.0 (2 Aug 2010):
 
 - Record patterns of the form { lbl = pat; _ } to mark that not all
   labels are listed, purposefully.  (See new warning below.)
+  commit 9c6c8fb47e2257313ce9185d728eaa755c3519b8
+
+Objective Caml 3.01
+-----------------------------------
+New language features:
+- Variables are allowed in "or" patterns, e.g.
+     match l with [t] | [_;t] -> ... t ...
 
 
 * Compile
