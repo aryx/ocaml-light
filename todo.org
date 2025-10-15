@@ -36,9 +36,6 @@ right now it's just asmcomp/i386
 
 *** read camlboot and other papers on remarkable
 
-*** implement { x; y } pattern matching and construction shortcut
-nice feature. Difficult to implement? simpler to backport?
-
 *** make sync
 
 *** make sync_c
@@ -389,6 +386,23 @@ this was added recently; good test whether the code change that much
 backport which commit?
 
 a la Go?
+
+*** less: backport -nostdlib
+update: I now use regular ocaml for the -nostdlib in xix, not
+ ocaml-light, so less need for the feature in ocaml-light itself
+
+but -nostdlib actually control the load_path? not whether stdlib.cma
+is loaded or not? 
+-nopervasives control stdlib.cma?
+
+-nopervasives is needed to compile stdlib.ml itself, otherwise
+ infinite recursion; to break the recursion we need -nopervasives
+
+-nopervasives control the implicit open Stdlib which then requires
+ an existing stdlib.cmi
+
+-nostdlib control the load path or where to find the list.cmi,
+ array.cmi and of course also stdlib.cmi
 
 ** remove stuff in OCaml to simplify
 
