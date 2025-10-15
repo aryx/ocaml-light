@@ -631,6 +631,8 @@ build-docker-opt:
 #  docker manifest create padator/ocaml-light:latest --amend padator/ocaml-light:x86_64 --amend padator/ocaml-light:aarch64
 #  docker manifest push padator/ocaml-light:latest
 #  See https://hub.docker.com/r/padator/ocaml-light/tags
+#TODO: this does not work on thinkstation which has an older docker arch linux
+# package without buildx so just run the first line on thinkstation
 push-docker:
 	docker push "padator/ocaml-light:"`uname -m`
 	docker buildx imagetools create --tag padator/ocaml-light:latest padator/ocaml-light:x86_64 padator/ocaml-light:aarch64
