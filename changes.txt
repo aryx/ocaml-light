@@ -19,6 +19,9 @@
 ** tools
 - ocamllex: backport support for lexer rules with parameters (3.07)
 
+** stdlib
+- backport Format.formatter_of_buffer (2.01)
+
 * 0.2 (Q3 2025) (efuns and xix build with ocaml-light, arm progress)
 
 ** stdlib
@@ -126,7 +129,7 @@
   
 ** stdlib
 # see also pad.txt changes section
-- backport buffer.ml (from 3.12.0)
+- backport buffer.ml (from 3.12.0, but added originally in 2.01)
 - backport basic backtrace in printexc.ml (from 3.10.2 and 4.01)
 
 ** build infra

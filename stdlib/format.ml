@@ -601,6 +601,10 @@ let std_formatter =
 let err_formatter =
     make_formatter (output stderr) (fun () -> flush stderr);;
 
+(* Make a formatter writing to a given [Buffer.t] value. *)
+let formatter_of_buffer b =
+  make_formatter (Buffer.add_substring b) ignore
+
 let open_hbox = pp_open_hbox std_formatter
 and open_vbox = pp_open_vbox std_formatter
 and open_hvbox = pp_open_hvbox std_formatter
