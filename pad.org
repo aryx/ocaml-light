@@ -156,6 +156,9 @@ Bytecode compiler and bytecode interpreter:
   (requires compilation with -g and running with ocamlrun -b or
    OCAMLRUNPARAM="b=1").
 
+Objective Caml 3.00:
+--------------------
+
 Objective Caml 2.00:
 --------------------
 Language:
@@ -242,6 +245,7 @@ The str library: added Str.quote, Str.regexp_string,
 
  - labels
    I'm always confused with default parameter '?' syntax and options
+   records are enough
 
  - open variants, and other features that complexify again the typechecker
    too often abused when regular variants would work
@@ -263,6 +267,7 @@ The str library: added Str.quote, Str.regexp_string,
    attributes are better
 
  - archs: alpha, hppa, m68k, power, and sparc
+   deprecated archs; nobody uses that anymore
 
  - os: windows, macOS
    not needed anymore with both OSes being more unix-friendly
@@ -270,7 +275,7 @@ The str library: added Str.quote, Str.regexp_string,
  - switch to autoconf
    thanks but no thanks
 
-*** list
+*** list of NOT backported features
 
 Objective Caml 3.12.0 (2 Aug 2010):
 -----------------------------------
@@ -1770,7 +1775,7 @@ TODO: __FILE__ and __LOC__ in OCaml itsef ?
      3be947947e3249a9b362fc790d377e43c4108a62 camlParam, CamlLocal, CamlReturn (needed by otherlibs/str that does not rely on regex-0.12) alloc_small (Oct 1998)
 
 
-     66ae9423a784fbc4d35b794906a4dee705afccf2: portage ARM add asmcomp/arm/ (Oct 1998)
+SEMI     66ae9423a784fbc4d35b794906a4dee705afccf2: portage ARM add asmcomp/arm/ (Oct 1998)
      fca1be1fddcd0d7a80a16f2282b6595e484556ae: portage arm (Oct 1998)
      57c704d7390c4d92dfce5666c76f263ed414a687: start portage arm (Oct 1998)
 
@@ -1785,7 +1790,7 @@ TODO: __FILE__ and __LOC__ in OCaml itsef ?
 
      8f3833c4d0ef656c826359f4137c1eb3d46ea0ef: portage riscv (Apr 2020)
 
-     55da58ca6c9144331c7fa56a5d0083cb97b50925: switch to exn for Thread.Exit (Jan 2022), useful for efuns?
+SEMI     55da58ca6c9144331c7fa56a5d0083cb97b50925: switch to exn for Thread.Exit (Jan 2022), useful for efuns?
 
 
      cc0f32b05439bb7018e8ad62a54d6371b01aab9f: switch license to Q license (Nov 1999) for bytecomp/ asmcomp/ and LGPL!! for asmrun/ byterun/ otherlibs/ stdlib/

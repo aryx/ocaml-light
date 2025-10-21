@@ -5,6 +5,9 @@ test: test.byt test.opt
 	./test.byt
 	./test.opt
 
+test_byte: test.byt
+	./test.byt
+
 TESTFILES=test.cmo \
   test_nats.cmo test_big_ints.cmo test_ratios.cmo test_nums.cmo end_test.cmo
 

@@ -600,7 +600,7 @@ include .depend
 # Test infra
 ##############################################################################
 
-TESTDIRS=tests examples testasmcomp test
+TESTDIRS=tests examples testasmcomp test otherlibs/num/test
 
 .PHONY: test
 test:
