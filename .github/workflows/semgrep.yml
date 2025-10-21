@@ -2,8 +2,8 @@ jobs:
   job:
     runs-on: ubuntu-22.04
     container:
-      # living on the edge!
-      image: semgrep/semgrep:develop
+      # alt: semgrep/semgrep:develop to live on the edge! but seems dead.
+      image: semgrep/semgrep
     #TODO: at some point
     #env:
     #  SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
