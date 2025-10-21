@@ -658,6 +658,10 @@ nix-test:
 visual:
 	codemap -screen_size 3 -efuns_client efuns_client -emacs_client /dev/null .
 
+# see https://github.com/semgrep/semgrep
+check:
+	osemgrep --experimental --config semgrep.jsonnet --strict --error
+
 # Note that the goal here is not to build an actual ocamlc executable; the
 # goal is just to compile code and generate a _build/ so that tools like
 # merlin can work correctly and provide code navigation. It is also useful

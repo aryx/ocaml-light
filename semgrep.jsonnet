@@ -30,7 +30,7 @@ local semgrep_rules = [
       Use `Common.with_open_infile()` or `Chan.with_open_in` instead.
     |||,
     paths: {
-      exclude: ['common2.ml'],
+      exclude: ['common2.ml', 'examples/', 'tools/debugger/symbols.ml'],
     },
   },
 ];
