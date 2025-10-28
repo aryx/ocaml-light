@@ -367,7 +367,21 @@ let rec type_exp env sexp =
         try
           Env.lookup_label lid env
         with Not_found ->
-          raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+          let targ = arg.exp_type in
+          (* Printtyp.type_expr targ; *)
+          (match lid, targ with
+          | Longident.Lident s, Tconstr (Path.Pdot (Path.Pident id, _t, _pos), _args) ->
+              let lid' = Longident.Ldot (Longident.Lident (Ident.name id), s) in
+              Logs.debug (fun m -> m "trying type-directed label lookup %s.%s"
+                      (Ident.name id) s);
+              (try 
+                Env.lookup_label lid' env
+               with Not_found -> 
+                raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+               )
+          | _ ->
+             raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+          )
       in
       let (ty_arg, ty_res) = instance_label label in
       unify_exp env arg ty_res;
