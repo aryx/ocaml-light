@@ -5,7 +5,6 @@
 ** runtime
 - backport "custom" block, useful for Bignum and Int32/Int64 (3.00)
 
-
 ** stdlib
 - backport Int32.ml and Int64.ml (depends on custom block) (3.00)
 
@@ -15,10 +14,15 @@
   
 ** test infra
 
+
+
 * 0.3 (Q4 2025) ( ?arm native? )
 
 ** language
 - backport shorthand notation for records { lbl; } in expr and pats (3.12.0)
+
+** typechecker
+- partial backport of type-directed field access disambiguation (4.01.0)
 
 ** tools
 - ocamllex: backport support for lexer rules with parameters (3.07)
