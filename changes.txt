@@ -2,6 +2,13 @@
 
 * TODO
 
+** runtime
+- backport "custom" block, useful for Bignum and Int32/Int64 (3.00)
+
+
+** stdlib
+- backport Int32.ml and Int64.ml (depends on custom block) (3.00)
+
 ** compilers
 - finish native arm port
 - port more arch x86_64(amd64)/arm64(aarch64)/riscv(and riscv64)/mips
@@ -18,7 +25,6 @@
 
 ** stdlib
 - backport Format.formatter_of_buffer (2.01)
-- backport Int32.ml and Int64.ml (3.00)
 
 ** dev infra
 - restore working semgrep.yml
