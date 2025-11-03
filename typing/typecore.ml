@@ -367,6 +367,7 @@ let rec type_exp env sexp =
         try
           Env.lookup_label lid env
         with Not_found ->
+          (* backport(partial): type-directed field access disambiguation *)
           let targ = arg.exp_type in
           (* Printtyp.type_expr targ; *)
           (match lid, targ with
@@ -395,7 +396,22 @@ let rec type_exp env sexp =
         try
           Env.lookup_label lid env
         with Not_found ->
+          (* TODO: factorize with Pexp_field *)
+          (* backport(partial): type-directed field access disambiguation *)
+          let trecord = record.exp_type in
+          (match lid, trecord with
+          | Longident.Lident s, Tconstr (Path.Pdot (Path.Pident id, _t, _pos), _args) ->
+              let lid' = Longident.Ldot (Longident.Lident (Ident.name id), s) in
+              Logs.debug (fun m -> m "trying type-directed label lookup %s.%s"
+                      (Ident.name id) s);
+              (try 
+                Env.lookup_label lid' env
+               with Not_found -> 
+                raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+               )
+          | _ ->
           raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+          )
       in
       if label.lbl_mut = Immutable 
       then raise(Error(sexp.pexp_loc, Label_not_mutable lid));
