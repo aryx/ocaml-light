@@ -29,6 +29,7 @@
 
 ** stdlib
 - backport Format.formatter_of_buffer (2.01)
+- backport List.iter (4.00.0)
 
 ** dev infra
 - restore working semgrep.yml

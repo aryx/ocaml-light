@@ -268,3 +268,9 @@ let rec filter_map f = function
       match f x with
       | None -> filter_map f l
       | Some v -> v :: filter_map f l
+
+let rec iteri i f = function
+    [] -> ()
+  | a::l -> f i a; iteri (i + 1) f l
+
+let iteri f l = iteri 0 f l

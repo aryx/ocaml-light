@@ -180,3 +180,10 @@ val filter_map : ('a -> 'b option) -> 'a list -> 'b list
     the [Some] elements.
     @since 4.08
  *)
+
+val iteri : (int -> 'a -> unit) -> 'a list -> unit
+(** Same as {!iter}, but the function is applied to the index of
+   the element as first argument (counting from 0), and the element
+   itself as second argument.
+   @since 4.00.0
+ *)
