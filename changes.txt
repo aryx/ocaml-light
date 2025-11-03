@@ -19,7 +19,10 @@
 * 0.3 (Q4 2025) ( ?arm native? )
 
 ** language
-- backport shorthand notation for records { lbl; } in expr and pats (3.12.0)
+- backport (partial) shorthand notation for records { lbl; } in exprs and
+  patterns (3.12.0)
+- backport (partial) M.{ x = ..., y = ... } local open (3.12.0?) which is
+  simply unsugared in { M.x = ...., M.y = ... }
 
 ** typechecker
 - partial backport of type-directed field access disambiguation (4.01.0)

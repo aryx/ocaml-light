@@ -275,6 +275,9 @@ The str library: added Str.quote, Str.regexp_string,
  - switch to autoconf
    thanks but no thanks
 
+ - -I +xxx (e.g., +threads, +str), not worth it as work only for ocaml
+   stdlibs which are different from opam/findlib libs
+
 *** list of NOT backported features
 
 Objective Caml 3.12.0 (2 Aug 2010):

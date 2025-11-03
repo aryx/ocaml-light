@@ -531,6 +531,21 @@ simple_expr:
   /*(*x: rule [[simple_expr]] cases *)*/
   | LBRACE lbl_expr_list opt_semi RBRACE
       { mkexp(Pexp_record(List.rev $2)) }
+  /*(* backport(partial): M.{ ... } local open *)*/
+  | mod_longident DOT LBRACE lbl_expr_list opt_semi RBRACE
+      {  let qu = $1 in
+         let flds = List.rev $4 in
+         (* simply unsugar M.{ fld = ...} to { M.fld = ... } *)
+         let flds' =
+           flds |> List.map (fun (li, exp) ->
+             match qu, li with
+             | Lident m, Lident fld ->
+               (Ldot (qu, fld), exp)
+             | _ -> (* TODO? warn? *)
+               (li, exp)
+           ) in
+         mkexp(Pexp_record(flds'))
+      }
   /*(*x: rule [[simple_expr]] cases *)*/
   | simple_expr DOT label_longident
       { mkexp(Pexp_field($1, $3)) }
