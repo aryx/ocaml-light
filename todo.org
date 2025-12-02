@@ -1,15 +1,12 @@
--*- org -*-
-
 * Big plan
 
-** big plan
+** Overview
 
 # finish backport arm (fix current segfault a.out), compile efuns on plan9!
 # release code and SEMI LP of ocaml-light, 
 # add/backport cool/recent features (e.g., let*, deriving, typeclasses! or go interfaces in ocaml? :))
 # leverage bench and examples/, add amd64/arm64/riscv
 # and even use goken9cc toolchain instead of gcc -m32 later!
-
 
 ** Later
 
@@ -31,6 +28,146 @@ right now it's just asmcomp/i386
 
 
 * Last
+
+** Last1
+
+*** WEIRD: type-directed field access didn't work in rare case
+in Codegen5.ml for node.n_loc when added the same
+module T = Types  alias in Codegen.ml (which is open'ed 
+in Codegen5.ml) then error on n_loc (even if node is typed
+with (node : 'a T.node) few lines before.
+
+weird that an open in a separate file has an impact on another module.
+Note that no Codegen.mli so if had .mli probably would not happen.
+Still would be good to figure out why the code didn't work, why
+not able to resolve the type of node in the presence of those
+multiple module aliases and open.
+
+*** RELAX Hashtbl.find_opt
+
+*** handle |Failure s | Sys_error s -> <stuff>
+allow matched equal var in Or pattern
+
+and fix back the code I originally rewrote in xix, see
+(* ocaml-light: ... *) comments
+
+*** RELAX backport ocamlc -where
+but not -I +xxx, not worth it
+
+*** backport "remember" C libs in .cma
+ocaml 3.00 changes:
+- Libraries (.cma and .cmxa files) now "remember" C libraries given
+  at library construction time, and add them back at link time.
+  Allows linking with e.g. just unix.cma instead of
+  unix.cma -custom -cclib -lunix
+
+*** fix ocaml-light -threads and reference to undefined global Stack
+found when using ocamlc -threads in xix/mkfiles/mkconfig.light
+which is needed for access to Event.channel type
+
+*** -----------------------------------------------
+
+*** resume port to plan9 now that I can run plan9!!!!
+see special branch in ocaml-light-old
+
+and I can especially run rio-ocaml!!! and test the build
+of rio-ocaml and draw-ocaml!!
+
+and also efuns in plan9!
+
+*** --------------------------------------
+
+*** BIG: backport Int32.ml, Int64.ml (requires custom blocks)
+#useful for ogit port to ocaml-light and also for o5l ELF linker
+
+**** Int32.ml/... modules
+https://github.com/ocaml/ocaml/commit/15f811734e33051581406135d05ecf9769a1f031#diff-d6d565022f96e25bf90fb73a6efcad17c2035dd8614132698b607b76d12f44fe
+
+
+**** add Int32.t and Int64.t first step
+34a71202962072f30f27882498cb7e745b5dafd7
+
+**** need first?(BIG) introduction of Custom blocs 
+9e206909f48d5d2579b6ec17764d3273df23ff08 (10 Feb 2000)
+
+**** need first finalise.c?
+0a2021e98672e198283f6aa2e0df16aeac4d7d71 (7 Jan 2000)
+117525ed94a7cb45fbf464284eb133655be0e0a3 (11 Jan 2000)
+
+**** need first SIZEOF_INT == ...
+
+
+**** previous changes to str ??
+
+**** previous changes to systhreads?
+
+**** extend IO.ml with ocaml-light support for Int32.ml Int64.ml
+or get rid of IO.ml
+
+*** more type-directed disambiguation
+
+at least handle when one of the field is qualified, apply
+same qualifier to the other?
+
+  let conf : Preprocessor.conf = { Preprocessor.
+    defs = !macro_defs;
+    (* this order? *)
+    paths = system_paths @ List.rev !include_paths;
+    dir_source_file = Fpath.v (Filename.dirname !infile);
+  }
+or better directly
+ let conf = Preprocessor.{ defs = ... }
+
+*** make promote and start to use the { lbl } shorthand notation
+feature in the code of ocaml-light itself!
+
+*** ocaml-light: backport arm ocamlopt
+
+**** try compile bytecode with armhf gcc too? segfault because
+of ARCH_SIXTYFOUR and ARCH_32 issue again?
+
+**** apply diff on roots.c and other changes in 
+66ae9423a784fbc4d35b794906a4dee705afccf2
+compared to current state in asmrun/ especially
+
+**** gdb hello.out produced by arm ocamlopt
+caml_main
+
+**** notes
+can generate EABI arm32 that can run on my astra ??
+
+commit 5732a03e6599b47fe3f581f65ccd37395d6421c8
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Tue Mar 31 09:45:55 2009 +0000
+    Updated ARM port to new ABI (EABI), with software floating-point.
+
+
+
+commit 66ae9423a784fbc4d35b794906a4dee705afccf2 (HEAD)
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Thu Oct 15 16:10:53 1998 +0000
+    Portage ARM
+
+commit fca1be1fddcd0d7a80a16f2282b6595e484556ae
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Wed Oct 14 17:08:57 1998 +0000
+    Suite du portage ARM
+
+commit 281583d13d79a55536faf07a50c9777abb5b9188
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Sat Oct 10 14:56:53 1998 +0000
+    Portage ARM
+
+commit 57c704d7390c4d92dfce5666c76f263ed414a687
+Author: Xavier Leroy <xavier.leroy@inria.fr>
+Date:   Fri Oct 9 14:43:30 1998 +0000
+    Portage ARM -- premier jet
+
+**** later: Fix Proc.ml to use Config.assembler or something instead of
+hardcoded use of "as"
+update: actually it's in arm/proc.ml so it's fine
+
+
 
 ** Last0
 
@@ -330,7 +467,7 @@ same with 1.07? 49 actually (maybe in OO code)
 
 ** Dev Infra
 
-*** less: resume semgrep.yml, need more recent ubuntu and can remove cron too
+*** still? resume semgrep.yml, need more recent ubuntu and can remove cron too
 
 ** Devops
 
@@ -351,9 +488,6 @@ try on syncweb? faster?
 * Later
 
 ** ocaml-light and xix
-
-*** LATER: diff lex/ ~/xix/lex/
-xix/lex is supposed to be the same than lex
 
 *** LATER: try my xix/windows/ rio port to plan9 using ocaml-light compiled
 
