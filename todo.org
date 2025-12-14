@@ -10,6 +10,12 @@
 
 ** Later
 
+*** try 'comptime' a la zig but in ocaml? better than metaocaml?
+need ocaml interpreter in the compiler? need reify AST to the interpreter?
+  special builtins for compile-time reflection?
+can implement deriving with it? using the same syntax?!!
+can implement let* with it?
+
 *** LATER retarget plan9 assembly (arm and x86) so can build OCaml binaries
 for my plan9 raspberry or for my plan9 qemu
 
