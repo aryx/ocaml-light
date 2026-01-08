@@ -236,6 +236,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %right prec_unary_minus                 /* - unary */
 %left  prec_appl                        /* function application */
 %right prec_constr_appl                 /* constructor application */
+%left  SHARP                            /* method call */
 %left  DOT                              /* record access, array access */
 %right PREFIXOP                         /* ! */
 /*(*e: Parser precedences and associativities *)*/
@@ -509,6 +510,18 @@ expr:
   | LAZY simple_expr %prec prec_appl
       { mklazy $2 }
   /*(*e: rule expr cases *)*/
+  /* OO */
+  /* pad: partial support, just enough to parse xix code */
+  | simple_expr SHARP label
+      { mkexp (Pexp_construct (Lident "()", None)) }
+  /* note that originally the grammar rule was just
+   *     'simple_expr: | simple_expr SHARP label'
+   * and the method call was parsed by the regular call rule but for ocaml-light
+   * we need to discard the whole method call with also the args,
+   * hence this additional rule.
+   */
+  | simple_expr SHARP label simple_expr_list
+      { mkexp (Pexp_construct (Lident "()", None)) }
   /*(*s: rule expr error cases *)*/
   | TRY seq_expr WITH error %prec prec_try
       { syntax_error() }
@@ -577,6 +590,8 @@ simple_expr:
       { mkexp(Pexp_apply(mkexp(Pexp_ident(array_function "String" "get")),
                          [$1; $4])) }
   /*(*e: rule [[simple_expr]] cases *)*/
+  /* OO */
+  /* pad: partial support, just enough to parse xix code */
   | OBJECT class_structure END
       { mkexp (Pexp_construct (Lident "()", None)) }
   | OBJECT class_structure error

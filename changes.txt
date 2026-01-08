@@ -1,5 +1,13 @@
 # -*- org -*-
 
+* 0.4 (Q1 2026)
+
+** language
+- partial support for method call (x#method args) but just enough so
+  that we can parse the code in xix (we actually discard the expression)
+
+* ------------------------------------------------------------------------
+
 * 0.3 (Q4 2025) (type-directed field access disambiguation)
 
 ** language
@@ -96,6 +104,8 @@
 - backport ability to store source in Foo.ml or foo.ml
 - backport ocamlc -version
   
+* ------------------------------------------------------------------------
+
 * Beta (2018) (plan9 support)
 
 ** os
