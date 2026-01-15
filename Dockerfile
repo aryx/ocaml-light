@@ -56,8 +56,8 @@ WORKDIR /tmp
 # basic tests
 RUN which ocaml
 RUN ocamlc -v
-RUN echo '1+1;;' | ocaml
-RUN echo 'let _ = print_string "hello"' > foo.ml
+RUN echo '1+2;;' | ocaml
+RUN echo 'let _ = print_string "hello bytecode"' > foo.ml
 RUN ocamlc -cclib -lunix -custom foo.ml
 RUN ./a.out
 
@@ -82,7 +82,7 @@ RUN make ocamlc.opt
 RUN make ocamlopt.opt
 
 #TODO: note that -cclib -lunix does not work, maybe because i386 vs x86_64?
-RUN echo 'let _ = print_string "hello"' > foo.ml
+RUN echo 'let _ = print_string "hello native x86"' > foo.ml
 RUN ocamlopt foo.ml
 RUN ./a.out
 
@@ -101,7 +101,7 @@ RUN make installopt
 #TODO: caml_array_bound_error undefined ref
 #RUN make ocamlc.opt
 #TODO RUN make ocamlopt.opt
-RUN echo 'let _ = print_string "hello"' > foo.ml
+RUN echo 'let _ = print_string "hello native arm"' > foo.ml
 RUN ocamlopt -cclib -lunix foo.ml
 #TODO: segfault
 #RUN ./a.out
