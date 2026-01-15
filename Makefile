@@ -672,3 +672,5 @@ build-dune:
 	rm -f stdlib/stdlib.*
 	#rm -f lex/lexer.ml lex/parser.ml lex/parser.mli
 	dune build
+clean-dune:
+	dune clean
