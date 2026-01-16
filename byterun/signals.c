@@ -18,6 +18,12 @@
 #include <signal.h>
 #else
 #define signal posix_signal
+
+void posix_signal(int x, void (*)()) {
+    print("TODO: posix_signal(%d)\n", x);
+    //TODO:
+}
+
 #endif
 
 #include "alloc.h"

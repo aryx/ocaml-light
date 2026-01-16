@@ -48,7 +48,7 @@ OFILES1= misc.$O stacks.$O fix_code.$O startup.$O main.$O \
   hash.$O meta.$O parsing.$O gc_ctrl.$O terminfo.$O md5.$O obj.$O \
   lexing.$O callback.$O debugger.$O weak.$O compact.$O \
   backtrace.$O sys.$O signals.$O io.$O \
-  instrtrace.$O 9.$O \
+  instrtrace.$O \
   interp.$O
 
 #pbs without ape: sys.$O signals.$O io.$O

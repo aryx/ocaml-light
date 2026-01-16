@@ -10,8 +10,8 @@
 //*************************************************************************
 #ifdef OS_PLAN9
 
-// this new type required to modify filename.ml and lexing.ml to pattern
-// match with | "Unix" | "Plan9" -> ...
+// this new type required to modify stdlib/filename.ml and stdlib/lexing.ml
+// to pattern match with | "Unix" | "Plan9" -> ...
 #define OCAML_OS_TYPE "Plan9"
 
 // undo what is in m.h
@@ -21,9 +21,13 @@
 
 #define NULL 0
 
+// we rely on plan9 libc, not unix libc
 #include <u.h>
 #include <libc.h>
 
+// Adapt Unix libc functions to Plan9 libc, the easy one via macros
+// For the more complex one like open() and stat(), see sys.c
+// unix_open and unix_stat in OS_PLAN9 ifdef
 #define bcopy(src,dst,len) memmove((dst), (src), (len))
 #define sprintf sprint
 #define fprintf fprint
@@ -92,24 +96,15 @@ enum {
     SIGALRM = 14,
     SIGTERM = 15,
 };
+//TODO, again see chatGPT to get first draft for those constants
+// and functions
 //void signal(int, void (*)());
 #define SIG_DFL ((void (*)())0)
 #define SIG_ERR ((void (*)())-1)
 #define SIG_IGN ((void (*)())1)
 
-int errno;
-
-// see 9.c
-int unix_open(char*, int, int);
-int unix_stat(char*, struct unix_stat *);
-
-int unlink(char*);
-int rename(char*, char*);
-int getcwd(char*, int);
-int system(char*);
-
-int sscanf(const char *, const char *, ...);
-
+// for io.c, and defined in sys.c OS_PLAN9 ifdef
+extern int errno;
 
 #undef HAS_TERMCAP
 #undef HAS_SOCKETS
