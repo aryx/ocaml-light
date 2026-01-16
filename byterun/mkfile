@@ -1,44 +1,65 @@
-# uncomment the following if you want to cross compile for ARM
-#objtype=arm
-</$objtype/mkfile
+TOP=../principia
+<$TOP/mkconfig
+<$TOP/mkfiles/$objtype/mkfile
 
-# If you want to cross compile ocamlrun, you need to add this 
-# to byterun/config.h after the #include ../config/s.h:
-#   #include "plan9.h"
-# If you want to cross compile ocamlc, that is to produce an ocamlc
+##############################################################################
+# Prelude
+##############################################################################
+# Plan9 compilation of ocaml-light!
+
+# If you want to cross compile 'ocamlrun' for Plan 9, you need first to
+#   cp ../config/plan9.h ../config/s.h and adjust ../config/m.h
+# (e.g., undef ARCH_SIXTYFOUR) to reflect the plan9 target (386 or arm).
+# then you need to still generate the primitive and prims.c
+# using make primitive; make prims.c from the regular ocaml build
+#
+# If you want to cross compile 'ocamlc', that is to produce an 'ocamlc'
 # that will work under plan9, you also need to modify utils/config.ml and put:
 #   let bytecomp_c_compiler = "pcc "
 #   let c_libraries = ""
 #   let ext_obj = ".8"
 # Then run mk and mk install
 #
-# For the other libraries you currently need to go in each
-# otherlibs/str otherlibs/unix and otherlibs/threads and run
-# mk; mk install from there.
+# For the other libraries you currently need to go in each of:
+# - otherlibs/str
+# - otherlibs/unix
+# - otherlibs/threads
+#
+# and run from there:
+#
+#   $ mk
+#   $ mk install
+#
 # You also need to comment the call using sigvtalarm in otherlibs/threads/.
 
 #related:
-#http://mirtchovski.com/p9/ocaml/ is a port of ocaml 3.10 to plan9
-# but it uses APE so it not a big win. At least he ported the Makefile to mk.
+# - DEAD: http://mirtchovski.com/p9/ocaml/ was a port of ocaml 3.10 to plan9
+#   but it used APE so it was not a big win. At least he ported the
+#   Makefile to mk.
 
+##############################################################################
+# Vars
+##############################################################################
 
-OFILES1=interp.$O misc.$O stacks.$O fix_code.$O startup.$O main.$O \
+OFILES1= misc.$O stacks.$O fix_code.$O startup.$O main.$O \
   freelist.$O major_gc.$O minor_gc.$O memory.$O alloc.$O roots.$O \
   fail.$O printexc.$O \
   compare.$O ints.$O floats.$O str.$O array.$O extern.$O intern.$O \
   hash.$O meta.$O parsing.$O gc_ctrl.$O terminfo.$O md5.$O obj.$O \
   lexing.$O callback.$O debugger.$O weak.$O compact.$O \
   backtrace.$O sys.$O signals.$O io.$O \
-  instrtrace.$O 9.$O
+  instrtrace.$O 9.$O \
+  interp.$O
 
 #pbs without ape: sys.$O signals.$O io.$O
-
-BIN=/$objtype/bin
-
 # prims.c comes from primitive which is auto-generated (use Make)
 OFILES=$OFILES1 prims.$O
 
-</sys/src/cmd/mkone
+## BIN=/$objtype/bin
+
+default:V: $O.out libcamlrun.a
+
+<$TOP/mkfiles/mkone
 
 #old: I was adding -p in CFLAGS to use the ANSI preprocessor, because the
 # builtin cpp in 8c does not support complex conditions in #ifdef such as
@@ -53,8 +74,8 @@ OFILES=$OFILES1 prims.$O
 # set objtype to arm)
 
 # If you want to use APE, uncomment the following
-CC=pcc
-LD=pcc -f
+##CC=pcc
+##LD=pcc -f
 # I removed -T because prims.c (a generated file) has wrong signatures 
 # (but it's ok).
 # I added here some -D_xxx instead of config.h because some files 
@@ -64,24 +85,29 @@ CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE
 
 # If you do not want to use APE, uncomment the following
 #LD=5l -f
-#CFLAGS=-FV -I/home/pad/plan9/sys/include/arm -I/home/pad/plan9/sys/include
-
-default:V: $O.out libcamlrun.a
+CFLAGS=-FV -I$TOP/include/arch/$objtype -I$TOP/include/ALL
 
 lib:V: libcamlrun.a
 
 libcamlrun.a: $OFILES1
 	rm -f $target
-	ar vu $target $OFILES1              
+	iar vu $target $OFILES1              
 
-ROOT=/home/pad/plan9/ROOT
+clean:V:
+	rm -f *.[58] [58].out y.tab.? lex.yy.c y.debug y.output  $CLEANFILES
+	rm -f libcamlrun.a
+
+##############################################################################
+# Install targets
+##############################################################################
+
+ROOT=$TOP/ROOT
 
 # do not use ../boot/...; use the latest compiled stuff
 # don't forget to modify byterun/config.h 
 install:V: $O.out libcamlrun.a
-	cp -f $O.out $ROOT/$objtype/bin/ocamlrun
+    cp -f $O.out $ROOT/$objtype/bin/ocamlrun
     cp libcamlrun.a $ROOT/$objtype/lib/ocaml/
-    mk install2
 
 # install the portable libraries
 # don't forget to modify otherlibs/threads/thread.ml and the sigvtalarm
@@ -98,7 +124,3 @@ install3:V:
     cp ../ocamlc $ROOT/usr/local/bin/
     cp ../ocaml $ROOT/usr/local/bin/
     cp ../lex/ocamllex $ROOT/usr/local/bin/
-
-clean:V:
-	rm -f *.[58] [58].out y.tab.? lex.yy.c y.debug y.output  $CLEANFILES
-	rm -f libcamlrun.a

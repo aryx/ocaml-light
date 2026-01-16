@@ -1,10 +1,17 @@
 # -*- org -*-
 
-* 0.4 (Q1 2026)
+* 0.4 (Q1 2026) (plan9 support v1)
 
 ** language
 - partial support for method call (x#method args) but just enough so
-  that we can parse the code in xix (we actually discard the expression)
+  that we can parse the recent new code in xix for dynamic capabilities
+  (we actually discard the expression)
+
+** os
+- fix compiling byterun/ for plan9 with goken and latest principia repo
+  so I can run ocaml (light) bytecode programs under my fork of plan9,
+  including the 'ocaml' interpreter itself!
+- added Dockerfile.plan9 for reproducible build.
 
 * ------------------------------------------------------------------------
 
@@ -106,7 +113,7 @@
   
 * ------------------------------------------------------------------------
 
-* Beta (2018) (plan9 support)
+* Beta (2018) (plan9 support v0)
 
 ** os
 - compile byterun/ for plan9 so I can run ocaml (light) bytecode programs

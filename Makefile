@@ -619,6 +619,7 @@ clean::
 # update: we also use the deploy part now to check xix/efuns
 # can compile correctly with ocaml-light in CI
 #pad: see also .github/workflows/docker.yml for the check in CI!
+#note: add --progress=plain to get the legacy docker output
 build-docker:
 	docker build --tag "padator/ocaml-light:"`uname -m` --target "bytecode" .
 build-docker-opt:
