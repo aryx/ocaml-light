@@ -4,10 +4,13 @@
 
 //TODO: emulate via errstr?
 int errno = -1;
-char * strerror(int n)      { return "strerror: 9 ERROR"; }
+char * strerror(int n)      {
+    print("TODO: strerror\n");
+    return "strerror: 9 ERROR";
+}
 
 int unix_open(char* path, int _flags, int perm) {
-    // flags
+    // TODO: flags
     return open (path, perm);
 }
 
@@ -57,15 +60,30 @@ int unix_stat(char* path, struct unix_stat* st) {
 }
 
 void posix_signal(int x, void (*)()) {
-    print("TODO: posix_signal(%d)", x);
+    print("TODO: posix_signal(%d)\n", x);
     //TODO:
 }
 
 
-int unlink(char*)           { return -1;}
-int rename(char*, char*)    { return -1; }
-int getcwd(char*, int)      { return 0; }
-int system(char*)           { return -1; }
-int sscanf(const char *, const char *, ...) { return -1; }
+int unlink(char*)           { 
+    print("TODO: unlink\n");
+    return -1;
+}
+int rename(char*, char*)    { 
+    print("TODO: rename\n");
+    return -1;
+}
+int getcwd(char*, int)      { 
+    print("TODO: getcwd\n");
+    return 0;
+}
+int system(char*)           { 
+    print("TODO: system\n");
+    return -1;
+}
+int sscanf(const char *, const char *, ...) {
+    print("TODO: sscanf\n");
+    return -1;
+}
 
 #endif
