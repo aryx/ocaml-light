@@ -625,6 +625,9 @@ build-docker:
 build-docker-opt:
 	docker build --tag "ocaml-light-opt" --target "native-"`uname -m` .
 
+build-docker-plan9:
+	docker build --tag "ocaml-light-plan9" -f Dockerfile.plan9 .
+
 # need 'docker login -u padator' first with credentials of
 # https://hub.docker.com/r/padator/ stored in ~/.docker/config.json
 # old: I did this once before, but didn't work when updating digests

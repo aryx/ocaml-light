@@ -1,0 +1,26 @@
+# Cross-compile 'ocamlrun' for plan9 using principia-softwarica libc
+
+FROM padator/goken
+
+RUN apt-get install -y git
+RUN git clone --depth=1 https://github.com/aryx/principia-softwarica /principia-softwarica
+WORKDIR /principia-softwarica
+# for 386 only for now
+RUN cp mkconfig.pc mkconfig
+RUN mk && mk install
+
+RUN apt-get install -y make sed
+
+WORKDIR /src
+COPY . .
+
+#TODO:
+#RUN ./configure -plan9
+RUN ./configure
+RUN cd byterun; make primitives; make prims.c
+# overwrite for plan9
+RUN cp config/plan9.h config/s.h
+RUN cd byterun; mk
+
+#TODO: compile ocaml itself, to get ocaml/ocamlc binary and
+# try ocamlrun then on qemu via test_qemu.rc
