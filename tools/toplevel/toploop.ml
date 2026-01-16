@@ -278,7 +278,9 @@ let loop() =
   let lb = Lexing.from_function refill_lexbuf in
   Location.input_name := "";
   Location.input_lexbuf := Some lb;
+(*TODO: requires signals! so commented for now for plan9
   Sys.catch_break true;
+*)
   if Sys.file_exists ".ocamlinit" then use_silently ".ocamlinit" |> ignore;
   while true do
     try
