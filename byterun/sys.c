@@ -14,6 +14,9 @@
 
 /* Basic system calls */
 
+#include "config.h"
+
+#ifndef OS_PLAN9
 #include <errno.h>
 // O_NONBLOCK
 #include <fcntl.h>
@@ -22,16 +25,25 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
-
-#include "config.h"
 #include <unistd.h>
-
 #ifdef HAS_TIMES
 #include <sys/times.h>
 #endif
+#else
+// Plan9
+
+// in 9.c
+#define open unix_open
+#define stat unix_stat
+
+#define CLOCKS_PER_SEC 1
+int clock(void) {
+    return -1;
+}
+#endif
+
 #include "alloc.h"
 #include "debugger.h"
 #include "fail.h"

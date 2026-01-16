@@ -17,6 +17,7 @@
 #ifndef OS_PLAN9
 #include <signal.h>
 #else
+#define signal posix_signal
 #endif
 
 #include "alloc.h"
