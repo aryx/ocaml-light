@@ -31,11 +31,13 @@
    bytecode interpreter (THREADED_CODE defined in config/sm-Mac.h).
 */
 
-#if defined(__GNUC__) && __GNUC__ >= 2 && !defined(DEBUG)
+//TODO: commented because 8c/5c do not handle #if directives
+//#if defined(__GNUC__) && __GNUC__ >= 2 && !defined(DEBUG)
 /*s: constant [[THREADED_CODE]] */
-#define THREADED_CODE
+//#define THREADED_CODE
 /*e: constant [[THREADED_CODE]] */
-#endif
+//#endif
+
 
 /* Signed char type */
 

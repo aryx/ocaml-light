@@ -47,39 +47,40 @@ sp is a local copy of the global variable extern_sp. */
 
 /* Instruction decoding */
 
-#ifdef THREADED_CODE
+//TODO: commented because 8c/5c do not handle #if directives
+//#ifdef THREADED_CODE
 /*s: macro [[Instruct]] for [[THREADED_CODE]] */
-#  define Instruct(name) lbl_##name
+//#  define Instruct(name) lbl_##name
 /*e: macro [[Instruct]] for [[THREADED_CODE]] */
-#  if defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
+//#  if defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
 /*s: constant [[Jumptbl_base]] */
-#    define Jumptbl_base ((char *) &&lbl_ACC0)
+//#    define Jumptbl_base ((char *) &&lbl_ACC0)
 /*e: constant [[Jumptbl_base]] */
-#  else
+//#  else
 /*s: constant [[Jumptbl_base]]([[(byterun/interp.c)]]) */
-#    define Jumptbl_base ((char *) 0)
+//#    define Jumptbl_base ((char *) 0)
 /*e: constant [[Jumptbl_base]]([[(byterun/interp.c)]]) */
 /*s: constant [[jumptbl_base]] */
-#    define jumptbl_base ((char *) 0)
+//#    define jumptbl_base ((char *) 0)
 /*e: constant [[jumptbl_base]] */
-#  endif
-#  ifdef DEBUG
+//#  endif
+//#  ifdef DEBUG
 /*s: macro [[Next]] for [[THREADED_CODE]] ifdef [[DEBUG]] */
-#    define Next goto next_instr
+//#    define Next goto next_instr
 /*e: macro [[Next]] for [[THREADED_CODE]] ifdef [[DEBUG]] */
-#  else
+//#  else
 /*s: macro [[Next]] for [[THREADED_CODE]] */
-#    define Next goto *(void *)(jumptbl_base + *pc++)
+//#    define Next goto *(void *)(jumptbl_base + *pc++)
 /*e: macro [[Next]] for [[THREADED_CODE]] */
-#  endif
-#else
+//#  endif
+//#else
 /*s: macro [[Instruct]] */
-#  define Instruct(name) case name
+#define Instruct(name) case name
 /*e: macro [[Instruct]] */
 /*s: macro [[Next]] */
-#  define Next break
+#define Next break
 /*e: macro [[Next]] */
-#endif
+//#endif
 
 /*s: constant [[Setup_for_gc]]([[(byterun/interp.c)]]) */
 /* GC interface */
@@ -129,13 +130,14 @@ sp is a local copy of the global variable extern_sp. */
    For GCC, I have hand-assigned hardware registers for several architectures.
 */
 
-#if defined(__GNUC__) && !defined(DEBUG)
-#ifdef __i386__
-#define PC_REG asm("%esi")
-#define SP_REG asm("%edi")
-#define ACCU_REG asm("%ebx")
-#endif
-#endif
+//TODO: commented because 8c/5c do not handle #if directives
+//#if defined(__GNUC__) && !defined(DEBUG)
+//#ifdef __i386__
+//#define PC_REG asm("%esi")
+//#define SP_REG asm("%edi")
+//#define ACCU_REG asm("%ebx")
+//#endif
+//#endif
 
 /* The interpreter itself */
 
@@ -155,13 +157,14 @@ value interprete(code_t prog, asize_t prog_size)
   register value accu;
   #endif
   /*s: [[interpreter()]] ifdef [[THREADED_CODE]], [[jumptbl_base]] register declaration */
-  #if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
-  #ifdef JUMPTBL_BASE_REG
-    register char * jumptbl_base JUMPTBL_BASE_REG;
-  #else
-    register char * jumptbl_base;
-  #endif
-  #endif
+  //TODO: commented because 8c/5c do not handle #if directives
+  //#if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
+  //#ifdef JUMPTBL_BASE_REG
+  //  register char * jumptbl_base JUMPTBL_BASE_REG;
+  //#else
+  //  register char * jumptbl_base;
+  //#endif
+  //#endif
   /*e: [[interpreter()]] ifdef [[THREADED_CODE]], [[jumptbl_base]] register declaration */
   value env;
   long extra_args;
@@ -200,9 +203,10 @@ value interprete(code_t prog, asize_t prog_size)
     return Val_unit;
   }
   /*s: [[interpreter()]] ifdef [[THREADED_CODE]], [[jumptbl_base]] setting */
-  #if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
-    jumptbl_base = Jumptbl_base;
-  #endif
+  //TODO: commented because 8c/5c do not handle #if directives
+  //#if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
+  //  jumptbl_base = Jumptbl_base;
+  //#endif
   /*e: [[interpreter()]] ifdef [[THREADED_CODE]], [[jumptbl_base]] setting */
   /*e: [[interpreter()]] ifdef [[THREADED_CODE]] initialisations */
   /*s: [[interpreter()]] [[initial_xxx]] initialisations */

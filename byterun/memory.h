@@ -168,11 +168,12 @@ extern struct caml__roots_block *local_roots;  /* defined in roots.c */
   CAMLparam0 (); \
   CAMLxparam4 (x, y, z, t, u)
 
-#if defined (__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 7))
-  #define CAMLunused __attribute__ ((unused))
-#else
+//TODO: commented because 8c/5c do not handle #if directives
+//#if defined (__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 7))
+//  #define CAMLunused __attribute__ ((unused))
+//#else
   #define CAMLunused
-#endif
+//#endif
 
 #define CAMLxparam1(x) \
   struct caml__roots_block caml__roots_##x; \
