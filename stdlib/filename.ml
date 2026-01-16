@@ -12,7 +12,7 @@
 
 let current_dir_name =
   match Sys.os_type with
-  | "Unix" -> "."
+  | "Unix" | "Plan9" -> "."
   | "Win32" -> "."
   | "MacOS" -> ":"
   | _ -> assert false
@@ -37,7 +37,7 @@ let mac_concat dirname filename =
 
 let concat =
   match Sys.os_type with
-  | "Unix" -> unix_concat
+  | "Unix" | "Plan9" -> unix_concat
   | "Win32" -> wnt_concat
   | "MacOS" -> mac_concat
   | _ -> assert false
@@ -80,7 +80,7 @@ let mac_is_implicit n = not (contains_colon n);;
 
 let (is_relative, is_implicit) =
   match Sys.os_type with
-  | "Unix" -> (unix_is_relative, unix_is_implicit)
+  | "Unix" | "Plan9" -> (unix_is_relative, unix_is_implicit)
   | "Win32" -> (wnt_is_relative, wnt_is_implicit)
   | "MacOS" -> (mac_is_relative, mac_is_implicit)
   | _ -> assert false
@@ -100,7 +100,7 @@ let mac_check_suffix = unix_check_suffix
 
 let check_suffix =
   match Sys.os_type with
-  | "Unix" -> unix_check_suffix
+  | "Unix" | "Plan9" -> unix_check_suffix
   | "Win32" -> wnt_check_suffix
   | "MacOS" -> mac_check_suffix
   | _ -> assert false
@@ -166,21 +166,21 @@ let mac_dirname name =
 
 let basename =
   match Sys.os_type with
-  | "Unix" -> unix_basename
+  | "Unix" | "Plan9" -> unix_basename
   | "Win32" -> wnt_basename
   | "MacOS" -> mac_basename
   | _ -> assert false
 
 let dirname =
   match Sys.os_type with
-  | "Unix" -> unix_dirname
+  | "Unix" | "Plan9" -> unix_dirname
   | "Win32" -> wnt_dirname
   | "MacOS" -> mac_dirname
   | _ -> assert false
 
 let temporary_directory =
   match Sys.os_type with
-  | "Unix" -> (try Sys.getenv "TMPDIR" with Not_found -> "/tmp")
+  | "Unix" | "Plan9" -> (try Sys.getenv "TMPDIR" with Not_found -> "/tmp")
   | "Win32" -> (try Sys.getenv "TEMP" with Not_found -> "C:\\temp")
   | "MacOS" -> (try Sys.getenv "TempFolder" with Not_found -> ":")
   | _ -> assert false

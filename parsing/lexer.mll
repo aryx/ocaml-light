@@ -133,7 +133,7 @@ let get_stored_string () =
 (*s: Lexer escape sequences related functions *)
 let char_for_backslash =
   match Sys.os_type with
-  | "Unix" ->
+  | "Unix" | "Plan9" ->
       begin function
       | 'n' -> '\010'
       | 'r' -> '\013'
