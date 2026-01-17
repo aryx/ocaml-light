@@ -93,8 +93,21 @@ int unix_stat(char* path, struct unix_stat* st) {
     return 0;
 }
 
+int unix_getcwd(char* buf, int size) {
+    if(buf == nil || size == 0){
+        werrstr("invalid buffer");
+        return 0;
+    }
+
+    if(getwd(buf, size) == nil)
+        return 0;
+
+    return 1;
+}
+
 #define open unix_open
 #define stat unix_stat
+#define getcwd unix_getcwd
 
 int unlink(char*)           { 
     print("TODO: unlink\n");
@@ -103,10 +116,6 @@ int unlink(char*)           {
 int rename(char*, char*)    { 
     print("TODO: rename\n");
     return -1;
-}
-int getcwd(char*, int)      { 
-    print("TODO: getcwd\n");
-    return 0;
 }
 int system(char*)           { 
     print("TODO: system\n");
