@@ -472,6 +472,8 @@ let build_custom_runtime prim_name exec_name =
 let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
   match Sys.os_type with
   | _ ->
+      Logs.info (fun m -> m "append bytecode %s to %s (and cleanup)"
+                 bytecode_name !Clflags.exec_name);
       let oc = open_out_gen [Open_wronly; Open_append] 0 !Clflags.exec_name in
       let ic = open_in bytecode_name in
       copy_file ic oc;

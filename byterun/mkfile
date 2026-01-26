@@ -17,7 +17,7 @@ TOP=../principia
 #
 # If you want to cross compile 'ocamlc', that is to produce an 'ocamlc'
 # that will work under plan9, you also need to modify utils/config.ml and put:
-#   let bytecomp_c_compiler = "pcc "
+#   let bytecomp_c_compiler = "pcc " (* or even "pcc -v " *)
 #   let c_libraries = ""
 #   let ext_obj = ".8"
 # Then run mk and mk install
@@ -120,9 +120,9 @@ install:V: $O.out libcamlrun.a
 # install the portable libraries
 # don't forget to modify otherlibs/threads/thread.ml and the sigvtalarm
 install2:V:
-    cp ../stdlib/*.cm* $ROOT/usr/local/lib/ocaml
-    cp ../otherlibs/unix/*.cm* $ROOT/usr/local/lib/ocaml
-    cp ../otherlibs/threads/*.cm* $ROOT/usr/local/lib/ocaml/threads
+    cp ../stdlib/*.cm* $ROOT/$objtype/lib/ocaml
+    cp ../otherlibs/unix/*.cm* $ROOT/$objtype/lib/ocaml
+    cp ../otherlibs/threads/*.cm* $ROOT/$objtype/lib/ocaml/threads
 
 # for the otherlibs you need to go in each directory
 
