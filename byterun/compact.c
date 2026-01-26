@@ -13,6 +13,7 @@
 /*e: copyright header C damien */
 
 #include "config.h"
+
 #ifndef OS_PLAN9
 #include <string.h>
 #else

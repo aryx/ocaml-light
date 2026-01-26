@@ -16,6 +16,7 @@
 
 #ifdef DEBUG
 
+//TODO? no ifndef OS_PLAN9 here? because of libstdio in plan9?
 #include <stdio.h>
 
 #include "instruct.h"

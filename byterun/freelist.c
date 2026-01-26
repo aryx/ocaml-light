@@ -13,6 +13,7 @@
 /*e: copyright header C damien */
 
 #include "config.h"
+
 #include "freelist.h"
 #include "gc.h"
 #include "gc_ctrl.h"
