@@ -115,6 +115,7 @@ ROOT=$TOP/ROOT
 install:V: $O.out libcamlrun.a
     cp -f $O.out $ROOT/$objtype/bin/ocamlrun
     cp libcamlrun.a $ROOT/$objtype/lib/ocaml/
+    cp main.8 $ROOT/$objtype/lib/ocaml/
 
 # install the portable libraries
 # don't forget to modify otherlibs/threads/thread.ml and the sigvtalarm

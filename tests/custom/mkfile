@@ -6,15 +6,16 @@ TOP=../../principia
 OCAMLC=/usr/local/bin/ocamlrun /usr/local/bin/ocamlc $CAML_INCLUDES
 OCAMLLEX=/usr/local/bin/ocamlrun /usr/local/bin/ocamllex
 
+CAMLLIB=$TOP/ROOT/$objtype/lib/ocaml
+
 default:V: hello.byte
 
 hello.byte: hello.ml
-	$OCAMLC -custom -verbose hello.ml -o hello.byte
+	$OCAMLC -custom -verbose hello.ml -o hello.byte -cclib $CAMLLIB/main.8
 
 
 #LIBS=/usr/local/lib/ocaml/libunix.a
 #LIBS=$TOP/ROOT/$objtype/lib/ocaml/libunix.a 
-#CAMLLIB=$TOP/ROOT/$objtype/lib/ocaml
 #$TOP/$objtype/lib/ocaml/libcamlrun.a
 #LIBCAML=/usr/local/lib/ocaml/libcamlrun.a
 #LIBUNIX=/usr/local/lib/ocaml/libunix.a
@@ -27,7 +28,7 @@ hello.byte: hello.ml
 # and ocamlc requires /lib/ape/libap.a in libcamlrun.a so
 # I had to switch back to pcc.
 
-CC=pcc
+CC=pcc -v
 LD=pcc
 INCLUDES= -I/usr/local/lib/ocaml
 CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -D_PLAN9_SOURCE $INCLUDES
