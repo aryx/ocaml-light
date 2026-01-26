@@ -149,4 +149,18 @@ extern int errno;
 //todo: replace by something plan9 offer? in APE? alarm?
 #undef HAS_SETITIMER
 
+#define HAS_UNISTD
+#define HAS_SOCKETS
+#define HAS_DIRENT
+#define HAS_TRUNCATE
+#define HAS_GETCWD
+#define HAS_GETTIMEOFDAY
+#define HAS_MKTIME
+// actually not really but ape libbsd.a provide one returning an error
+#define HAS_SYMLINK
+#define HAS_REWINDDIR
+#define HAS_SELECT
+#define HAS_UTIMES
+#define HAS_WAITPID
+
 #endif // OS_PLAN9_APE

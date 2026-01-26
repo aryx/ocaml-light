@@ -8,14 +8,12 @@ LIB=libthreads.a
 
 OFILES=scheduler.$O
 
-CFLAGS_EXTRA=-I../../byterun
+INCLUDES=-I../../byterun -I$TOP/APE/include -I$TOP/APE/include/$objtype
 
 <$TOP/mkfiles/mklib
 
 CC=pcc
-LD=pcc
 CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE $INCLUDES
-LDFLAGS=
 
 ROOT=$TOP/ROOT
 

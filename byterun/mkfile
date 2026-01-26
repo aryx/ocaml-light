@@ -62,9 +62,9 @@ default:V: $O.out libcamlrun.a
 
 <$TOP/mkfiles/mkone
 
-# If you do not want to use APE, uncomment the following
-# I removed -T (was -FTV) because prims.c (a generated file) has wrong
-# signatures (but it's ok).
+# If you do not want to use APE, uncomment the following CFLAGS setting
+# (I removed -T (was -FTV) because prims.c (a generated file) has wrong
+# signatures (but it's ok)).
 #CFLAGS=-FV -DOS_PLAN9 -I$TOP/include/arch/$objtype -I$TOP/include/ALL
 #
 #old: I was adding -p in CFLAGS above to use the ANSI preprocessor, because the
@@ -79,7 +79,7 @@ default:V: $O.out libcamlrun.a
 #LD=5l -f
 
 # otherlibs/unix uses a lot of unixisms (normal), with signals, select, etc
-# which are not supported by default by plan9. So I switched to pcc and ape
+# which are not supported by default by plan9. So I switched to pcc and APE
 # (I had to patch pcc in kencc though to call gcc -E instead of /bin/cpp).
 # Note also that the pcc from kencc needs a /bin/8c (or /bin/5c if you
 # set objtype to arm)
@@ -89,7 +89,9 @@ CC=pcc
 #LD=pcc #-f
 # I added here some -D_xxx instead of config.h because some files 
 # don't include config.h, so simpler to do it here once and for all.
-CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE -I$TOP/MISC/APE/include -I$TOP/MISC/APE/include/$objtype
+INCLUDES=-I$TOP/APE/include -I$TOP/APE/include/$objtype
+CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE $INCLUDES
+LDFLAGS=-L$TOP/ROOT/$objtype/lib/ape
 # add this if you want better trace -DDEBUG
 
 lib:V: libcamlrun.a

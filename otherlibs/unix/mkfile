@@ -1,4 +1,8 @@
-</$objtype/mkfile
+# -*- sh -*-
+
+TOP=../../principia
+<$TOP/mkconfig
+<$TOP/mkfiles/$objtype/mkfile
 
 LIB=libunix.a
 
@@ -25,16 +29,14 @@ OFILES=accept.$O access.$O addrofstr.$O alarm.$O bind.$O chdir.$O chmod.$O \
 
 #itimer.$O
 
-INCLUDES=-I../../byterun
+INCLUDES=-I../../byterun -I$TOP/APE/include -I$TOP/APE/include/$objtype
 
-</sys/src/cmd/mklib
+<$TOP/mkfiles/mklib
 
 CC=pcc
-LD=pcc
 CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE $INCLUDES
-LDFLAGS=
 
-ROOT=/home/pad/plan9/ROOT
+ROOT=$TOP/ROOT
 
 install:V: libunix.a
 	cp libunix.a $ROOT/$objtype/lib/ocaml
