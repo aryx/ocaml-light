@@ -13,8 +13,13 @@ default:V: unix.byte
 #	$OCAMLC -verbose hello.ml -o hello.byte
 
 
+LIBS=/usr/local/lib/ocaml/libunix.a
+#LIBS=$TOP/ROOT/$objtype/lib/ocaml/libunix.a 
+#CAMLLIB=$TOP/ROOT/$objtype/lib/ocaml
+#$TOP/$objtype/lib/ocaml/libcamlrun.a
+
 unix.byte: test_unix.ml
-	$OCAMLC -verbose unix.cma -custom /usr/local/lib/ocaml/libunix.a /usr/local/lib/ocaml/libcamlrun.a test_unix.ml -o unix.byte 
+	$OCAMLC -verbose unix.cma -custom  test_unix.ml -o unix.byte $LIBS
 
 
 LIBCAML=/usr/local/lib/ocaml/libcamlrun.a
