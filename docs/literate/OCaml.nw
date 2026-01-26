@@ -75,6 +75,7 @@
 % Packages
 %------------------------------------------------------------------------------
 
+%TODO: input{latex/Packages} instead
 \usepackage{xspace}
 \usepackage{verbatim}
 %note: required by 'syncweb -to_tex' for the \t \l \n in this file
@@ -89,6 +90,7 @@
 \usepackage{graphicx}
 
 \input{latex/Config}
+
 \usepackage{latex/noweb}
  \noweboptions{footnotesizecode,nomargintag}
  %note: allow chunk on different pages, less white space at bottom of pages
@@ -184,6 +186,9 @@ Here are a few questions I hope this book will answer:
 
 \item How records, variants, lists, and more are represented internally
 in memory?
+
+\item How one can call C functions from ML?
+% tricky primitives.c, prims.c, -custom, /*ML*/ special comment, etc.
 
 \end{itemize}
 

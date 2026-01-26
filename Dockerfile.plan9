@@ -9,6 +9,8 @@ WORKDIR /principia-softwarica
 RUN cp mkconfig.pc mkconfig
 RUN mk && mk install
 
+# install sed to override the one in goken that seems not
+# good enough for 'make primitives' below
 RUN apt-get install -y make sed
 
 WORKDIR /src
