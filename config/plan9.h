@@ -1,15 +1,5 @@
 //!! If you modify this file, copy it to s.h before recompiling!!
 
-// if you don't want to use APE, uncomment the following:
-#define OS_PLAN9
-// if you want to use APE, uncomment the following instead:
-//#define OS_PLAN9_APE
-
-//*************************************************************************
-// Regular (no APE) config
-//*************************************************************************
-#ifdef OS_PLAN9
-
 // this new type required to modify stdlib/filename.ml and stdlib/lexing.ml
 // to pattern match with | "Unix" | "Plan9" -> ...
 #define OCAML_OS_TYPE "Plan9"
@@ -18,6 +8,16 @@
 #undef ARCH_SIXTYFOUR
 // disable gcc extensions
 #undef __GNUC__
+
+// if you don't want to use APE, uncomment the following:
+//#define OS_PLAN9
+// if you want to use APE, uncomment the following instead:
+//#define OS_PLAN9_APE
+
+//*************************************************************************
+// Regular (no APE) config
+//*************************************************************************
+#ifdef OS_PLAN9
 
 #define NULL 0
 
@@ -145,8 +145,6 @@ extern int errno;
 //*************************************************************************
 #ifdef OS_PLAN9_APE
 
-#undef __GNUC__
-#undef ARCH_SIXTYFOUR
 #undef HAS_TERMCAP
 //todo: replace by something plan9 offer? in APE? alarm?
 #undef HAS_SETITIMER

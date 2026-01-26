@@ -1,23 +1,27 @@
-</$objtype/mkfile
+# -*- sh -*-
+
+TOP=../../principia
+<$TOP/mkconfig
+<$TOP/mkfiles/$objtype/mkfile
 
 LIB=libthreads.a
 
 OFILES=scheduler.$O
 
-INCLUDES=-I../../byterun
+CFLAGS_EXTRA=-I../../byterun
 
-</sys/src/cmd/mklib
+<$TOP/mkfiles/mklib
 
 CC=pcc
 LD=pcc
 CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE $INCLUDES
 LDFLAGS=
 
-ROOT=/home/pad/plan9/ROOT
+ROOT=$TOP/ROOT
 
-install:V: libthreads.a
-	cp libthreads.a $ROOT/$objtype/lib/ocaml/
+install:V: $LIB
+	cp $LIB $ROOT/$objtype/lib/ocaml/
 
 clean:
 	rm -f *.[58] y.tab.? y.output y.error $CLEANFILES
-	rm libthreads.a
+	rm -f $LIB

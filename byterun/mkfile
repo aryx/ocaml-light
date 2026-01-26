@@ -1,3 +1,5 @@
+# -*- sh -*-
+
 TOP=../principia
 <$TOP/mkconfig
 <$TOP/mkfiles/$objtype/mkfile
@@ -8,7 +10,7 @@ TOP=../principia
 # Plan9 compilation of ocaml-light!
 
 # If you want to cross compile 'ocamlrun' for Plan 9, you need first to
-#   cp ../config/plan9.h ../config/s.h and adjust ../config/m.h
+#   cp ../config/plan9.h ../config/s.h and possibly adjust ../config/m.h
 # (e.g., undef ARCH_SIXTYFOUR) to reflect the plan9 target (386 or arm).
 # then you need to still generate the primitive and prims.c
 # using make primitive; make prims.c from the regular ocaml build
@@ -21,7 +23,6 @@ TOP=../principia
 # Then run mk and mk install
 #
 # For the other libraries you currently need to go in each of:
-# - otherlibs/str
 # - otherlibs/unix
 # - otherlibs/threads
 #
@@ -41,6 +42,7 @@ TOP=../principia
 # Vars
 ##############################################################################
 
+#TODO? should main be out of here too?
 OFILES1= misc.$O stacks.$O fix_code.$O startup.$O main.$O \
   freelist.$O major_gc.$O minor_gc.$O memory.$O alloc.$O roots.$O \
   fail.$O printexc.$O \
@@ -51,7 +53,6 @@ OFILES1= misc.$O stacks.$O fix_code.$O startup.$O main.$O \
   instrtrace.$O \
   interp.$O
 
-#pbs without ape: sys.$O signals.$O io.$O
 # prims.c comes from primitive which is auto-generated (use Make)
 OFILES=$OFILES1 prims.$O
 
@@ -61,31 +62,35 @@ default:V: $O.out libcamlrun.a
 
 <$TOP/mkfiles/mkone
 
-#old: I was adding -p in CFLAGS to use the ANSI preprocessor, because the
+# If you do not want to use APE, uncomment the following
+# I removed -T (was -FTV) because prims.c (a generated file) has wrong
+# signatures (but it's ok).
+#CFLAGS=-FV -DOS_PLAN9 -I$TOP/include/arch/$objtype -I$TOP/include/ALL
+#
+#old: I was adding -p in CFLAGS above to use the ANSI preprocessor, because the
 # builtin cpp in 8c does not support complex conditions in #ifdef such as
 # #if defined(X) && !defined(Y).
 # But it was not enough. The ANSI preprocessor /bin/cpp operates in a
 # traditional mode where macro calls with space before as in alloc (1,2)
-# are not handled, and byterun/ is full of that. Moreover byterun
-# uses a lot of unixisms, signals, select, etc which are not supported
-# by default by plan9. So I switched to pcc and ape (I had to patch
-# pcc in kencc though to call gcc -E instead of /bin/cpp).
-#Note also that the pcc from kencc needs a /bin/8c (or /bin/5c if you
+# are not handled, and byterun/ is full of that. 
+#update: I managed to actually remove some use of #if and now I can compile
+# byterun/ with regular 8c/5c without needing cpp
+#old? what is 5l -f? seems actually not needed anymore
+#LD=5l -f
+
+# otherlibs/unix uses a lot of unixisms (normal), with signals, select, etc
+# which are not supported by default by plan9. So I switched to pcc and ape
+# (I had to patch pcc in kencc though to call gcc -E instead of /bin/cpp).
+# Note also that the pcc from kencc needs a /bin/8c (or /bin/5c if you
 # set objtype to arm)
 
 # If you want to use APE, uncomment the following
-##CC=pcc
-##LD=pcc -f
-# I removed -T because prims.c (a generated file) has wrong signatures 
-# (but it's ok).
+CC=pcc
+#LD=pcc #-f
 # I added here some -D_xxx instead of config.h because some files 
 # don't include config.h, so simpler to do it here once and for all.
-CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE
+CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE -I$TOP/MISC/APE/include -I$TOP/MISC/APE/include/$objtype
 # add this if you want better trace -DDEBUG
-
-# If you do not want to use APE, uncomment the following
-#LD=5l -f
-CFLAGS=-FV -I$TOP/include/arch/$objtype -I$TOP/include/ALL
 
 lib:V: libcamlrun.a
 
@@ -114,7 +119,6 @@ install:V: $O.out libcamlrun.a
 install2:V:
     cp ../stdlib/*.cm* $ROOT/usr/local/lib/ocaml
     cp ../otherlibs/unix/*.cm* $ROOT/usr/local/lib/ocaml
-    cp ../otherlibs/str/*.cm* $ROOT/usr/local/lib/ocaml
     cp ../otherlibs/threads/*.cm* $ROOT/usr/local/lib/ocaml/threads
 
 # for the otherlibs you need to go in each directory
