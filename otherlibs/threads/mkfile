@@ -1,5 +1,4 @@
 # -*- sh -*-
-
 TOP=../../principia
 <$TOP/mkconfig
 <$TOP/mkfiles/$objtype/mkfile
