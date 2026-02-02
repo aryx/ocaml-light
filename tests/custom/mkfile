@@ -1,10 +1,10 @@
 # -*- sh -*-
 TOP=../../principia
-<$TOP/mkconfig
-<$TOP/mkfiles/$objtype/mkfile
+objtype=386
+#alt: <$TOP/mkconfig
 
-# need to have ocamlc compiled with utils/config.ml calling pcc
-# instead of gcc
+# need to have 'ocamlc' below compiled with utils/config.ml calling 'pcc'
+# instead of 'gcc', and need to have 'pcc' in PATH (from goken)
 OCAMLC=/usr/local/bin/ocamlrun /usr/local/bin/ocamlc $CAML_INCLUDES
 
 # need to have libcamlrun.a compiled by plan9 (via pcc, from byterun/ with
@@ -21,8 +21,8 @@ hello.byte: hello.ml
 %.cmo: %.ml
 	$OCAMLC -c -verbose $stem.ml
 
-%.$O: %.c
-	$CC $CFLAGS -c $stem.c      
+#%.$O: %.c
+#	$CC $CFLAGS -c $stem.c      
 
 clean nuke:V:
 	rm -f *.cm* *.byte *.[58]

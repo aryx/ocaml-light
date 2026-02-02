@@ -1,37 +1,24 @@
 # -*- sh -*-
-TOP=../../../principia
-<$TOP/mkconfig
-<$TOP/mkfiles/$objtype/mkfile
-
 # similar to tests/custom/mkfile
 
-# need to have ocamlc compiled with utils/config.ml calling pcc
-# instead of gcc
-OCAMLC=/usr/local/bin/ocamlrun /usr/local/bin/ocamlc $CAML_INCLUDES
+TOP=../../../principia
+objtype=386
+#alt: <$TOP/mkconfig
 
-# need to have libcamlrun.a compiled by plan9 (via pcc, from byterun/ with
-# config/plan9.h copied to config/s.h, see byterun/mkfile)
-# but also libap.a as libcamlrun.a now depends on libap.a
+OCAMLC=/usr/local/bin/ocamlrun /usr/local/bin/ocamlc $CAML_INCLUDES
 CAMLLIB=$TOP/ROOT/$objtype/lib/ocaml
 
 default:V: unix.byte
-
-#LIBS=/usr/local/lib/ocaml/libunix.a
-#LIBS=$TOP/ROOT/$objtype/lib/ocaml/libunix.a 
-#$TOP/$objtype/lib/ocaml/libcamlrun.a
-#LIBCAML=/usr/local/lib/ocaml/libcamlrun.a
-#LIBUNIX=/usr/local/lib/ocaml/libunix.a
 
 unix.byte: test_unix.ml
 	$OCAMLC -verbose unix.cma -custom test_unix.ml -o unix.byte -cclib $CAMLLIB/main.8 -cclib $CAMLLIB/libunix.a
 
 
-
 %.cmo: %.ml
 	$OCAMLC -c -verbose $stem.ml
 
-%.$O: %.c
-	$CC $CFLAGS -c $stem.c      
+#%.$O: %.c
+#	$CC $CFLAGS -c $stem.c      
 
 clean nuke:V:
 	rm -f *.cm* *.byte *.[58]
