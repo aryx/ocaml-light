@@ -2,17 +2,19 @@
 
 FROM padator/goken
 
-RUN apt-get install -y git
+# Install dependencies
+RUN apt-get update # needed otherwise can't find certain packages
+RUN apt-get install -y git # do not add --no-install-recommends
 RUN git clone --depth=1 https://github.com/aryx/principia-softwarica /principia-softwarica
 WORKDIR /principia-softwarica
 # for 386 only for now
 RUN cp mkconfig.pc mkconfig
 RUN mk && mk install
-
 # install sed to override the one in goken that seems not
 # good enough for 'make primitives' below
 RUN apt-get install -y make sed
 
+# Let's go!
 WORKDIR /src
 COPY . .
 

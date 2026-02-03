@@ -82,19 +82,17 @@ ocaml 3.00 changes:
   Allows linking with e.g. just unix.cma instead of
   unix.cma -custom -cclib -lunix
 
+*** does -thread imply the use of ThreadUnix? backport the feature
+does not look like, it was probably a feature added later, 
+so we should backport it! 
+
+or maybe the functionality of ThreadUnix has been merged in Unix
+itself?
+
+
 *** fix ocaml-light -threads and reference to undefined global Stack
 found when using ocamlc -threads in xix/mkfiles/mkconfig.light
 which is needed for access to Event.channel type
-
-*** -----------------------------------------------
-
-*** resume port to plan9 now that I can run plan9!!!!
-see special branch in ocaml-light-old
-
-and I can especially run rio-ocaml!!! and test the build
-of rio-ocaml and draw-ocaml!!
-
-and also efuns in plan9!
 
 *** --------------------------------------
 
@@ -189,7 +187,6 @@ hardcoded use of "as"
 update: actually it's in arm/proc.ml so it's fine
 
 
-
 ** Last0
 
 *** read camlboot and other papers on remarkable
@@ -267,8 +264,7 @@ now that has good test infra, can start to do fearless refactoring/changes
  
 *** -------------------------------------------------------------
 
-*** LATER: make it work on plan9
-and then finish draw port so can then port ocaml-elm-playground to also
+*** LATER finish draw port so can then port ocaml-elm-playground to also
 work on plan9 and run ocaml games on plan9! like rolling moon on plan9 :)
 
 *** LATER: integrate zamcov in ocaml-light and its bytecode interpreter?
@@ -285,6 +281,15 @@ camlboot interp? same approach?
 
 
 ** Internals
+
+*** use capabilities in ocaml-light code itself? useful? most
+should be pure anyway no? prevent some bootstrapping?
+
+makes the code clearer? to know where we save to files, where we
+call programs, etc.?
+good way to better understand the code? to do some simple small
+refactoring (adding caps parameters)
+
 
 *** refactoring
 
@@ -508,10 +513,6 @@ try on syncweb? faster?
 
 * Later
 
-** ocaml-light and xix
-
-*** LATER: try my xix/windows/ rio port to plan9 using ocaml-light compiled
-
 ** Ports
 
 *** finish portage arm
@@ -529,8 +530,6 @@ new ARM backend, backtrace, float, many stuff
 
 *** LATER: add amd64 generation? and arm64?
 this was added recently; good test whether the code change that much
-
-*** LATER: try compile again byterun/ for plan9! with kencc
 
 *** LATER backport riscv support! so can run on plan9-riscv
 
