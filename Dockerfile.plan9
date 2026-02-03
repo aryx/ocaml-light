@@ -16,7 +16,7 @@ RUN mk && mk install
 RUN apt-get install -y make sed
 
 # Let's go!
-WORKDIR /work
+WORKDIR /src
 COPY . .
 
 #TODO:
