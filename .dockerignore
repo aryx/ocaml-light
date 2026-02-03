@@ -2,4 +2,7 @@
 .git
 _build
 
-# partial copy of .gitignore
+# .dockerignore are not like .gitignore, need **/ to apply to all dirs
+**/*.o
+**/*.a
+**/*.8
