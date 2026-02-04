@@ -1,5 +1,5 @@
 # Cross-compile 'ocamlrun' for plan9 using goken and principia-softwarica APE
-# libs.
+# libs, and cross-compile as well otherlibs/{unix,threads}/
 
 FROM padator/goken
 
