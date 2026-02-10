@@ -111,6 +111,10 @@
 - backport ability to store source in Foo.ml or foo.ml
 - backport ocamlc -version
   
+* -----------------------------------------------------------
+
+* Big pause to work on semgrep for 2019/2020/2021/2022/2023/2024
+
 * ------------------------------------------------------------------------
 
 * Beta (2018) (plan9 support v0)
@@ -121,7 +125,10 @@
   (might be in ~/github/ocaml-light-for-plan9-branch/)
 
 * Alpha (2015) (fork of OCaml 1.07 without OO without functors)
-# see also pad.txt history section
+# see also pad.org history section
+
+Fork of OCaml 1.07 from https://github.com/ocaml/ocaml
+at commit a234a779913d61830f2f97af10a8d0a2a0d963ce
 
 ** language
 - remove support for classes and objects as it complicates a lot the
@@ -155,6 +162,8 @@
 
 ** os
 - remove support for old macOS and Windows NT, to remove ugly cruft.
+
+* ------------------------------------------------------------------------
 
 * OCaml-light pre-history
 
