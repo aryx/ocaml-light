@@ -50,6 +50,19 @@ right now it's just asmcomp/i386
 
 * Last
 
+** Last2
+
+*** add Float.pi, from 4.08
+and delete it after from Common.Float submodule
+
+*** delete camlprim0.8 once done
+restore some delete in pcc? in ocaml-light? in
+the previously installed /usr/local/bin/ocamlc?
+
+*** fix clock.ml buggy timer thread
+need sigvtalarm implemented?
+
+
 ** Last1
 
 *** WEIRD: type-directed field access didn't work in rare case
