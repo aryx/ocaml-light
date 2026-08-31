@@ -39,7 +39,7 @@ CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE $INCLUDES
 ROOT=$TOP/ROOT
 
 install:V: libunix.a
-	cp libunix.a $ROOT/$objtype/lib/ocaml
+	cp libunix.a $ROOT/arch/$objtype/lib/ocaml
 
 clean:V:
 	rm -f *.[58] y.tab.? y.output y.error $CLEANFILES

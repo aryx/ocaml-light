@@ -88,7 +88,7 @@ CC=pcc
 # don't include config.h, so simpler to do it here once and for all.
 INCLUDES=-I$TOP/APE/include -I$TOP/APE/include/$objtype
 CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE $INCLUDES
-LDFLAGS=-L$TOP/ROOT/$objtype/lib/ape
+LDFLAGS=-L$TOP/ROOT/arch/$objtype/lib/ape
 # add this if you want better trace -DDEBUG
 
 lib:V: libcamlrun.a
@@ -108,17 +108,17 @@ clean:V:
 ROOT=$TOP/ROOT
 
 install:V: $O.out libcamlrun.a
-    cp -f $O.out $ROOT/$objtype/bin/ocamlrun
-    cp libcamlrun.a $ROOT/$objtype/lib/ocaml/
-    cp main.8 $ROOT/$objtype/lib/ocaml/
+    cp -f $O.out $ROOT/arch/$objtype/bin/ocamlrun
+    cp libcamlrun.a $ROOT/arch/$objtype/lib/ocaml/
+    cp main.8 $ROOT/arch/$objtype/lib/ocaml/
 
 # install the portable libraries
 # don't forget to modify otherlibs/threads/thread.ml and the sigvtalarm
 # do not use ../boot/...; use the latest compiled stuff
 install2:V:
-    cp ../stdlib/*.cm* $ROOT/$objtype/lib/ocaml
-    cp ../otherlibs/unix/*.cm* $ROOT/$objtype/lib/ocaml
-    cp ../otherlibs/threads/*.cm* $ROOT/$objtype/lib/ocaml/threads
+    cp ../stdlib/*.cm* $ROOT/arch/$objtype/lib/ocaml
+    cp ../otherlibs/unix/*.cm* $ROOT/arch/$objtype/lib/ocaml
+    cp ../otherlibs/threads/*.cm* $ROOT/arch/$objtype/lib/ocaml/threads
 
 # for the otherlibs/.../libxxxx.a you need to go in each directory
 

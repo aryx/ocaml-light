@@ -17,7 +17,7 @@ CFLAGS=-FV -c -D_POSIX_SOURCE -D_BSD_EXTENSION -DOS_PLAN9_APE $INCLUDES
 ROOT=$TOP/ROOT
 
 install:V: $LIB
-	cp $LIB $ROOT/$objtype/lib/ocaml/
+	cp $LIB $ROOT/arch/$objtype/lib/ocaml/
 
 clean:
 	rm -f *.[58] y.tab.? y.output y.error $CLEANFILES
