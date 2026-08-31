@@ -993,7 +993,7 @@ value interprete(code_t prog, asize_t prog_size)
           debugger(BREAKPOINT);
           Restore_after_debugger;
           Restart_curr_instr;
-    /*e: [[interpreter()]] debugger cases */
+/*e: [[interpreter()]] debugger cases */
 
     #ifndef THREADED_CODE
     default:
