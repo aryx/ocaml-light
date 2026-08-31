@@ -188,12 +188,41 @@ case "$1,$2,$3" in
          echo "#undef ARCH_SIXTYFOUR" >> m.h;;
   4,8,8) echo "Wow! A 64 bit architecture!"
          
-         case "$bytecc,$host" in
-	     gcc,x86_64-*-linux*)
+         case "$bytecc" in
+	     gcc)
 		 #pad: this allows to compile ocamlrun in 64bit and asmrun
 		 # in 32bit.
 		 #alt: use -m32 for bytegcc too and undef ARCH_SIXTYFOUR
-		 # (but got weird problems with ocamlrun compiled with -m32) 
+		 # (but got weird problems with ocamlrun compiled with -m32)
+		 # claude: byterun/*.c and asmrun/*.c share this single m.h
+		 # (asmrun/*.c are literal symlinks to byterun/*.c, see
+		 # asmrun/Makefile), but they can be built by two different
+		 # compilers: byterun is always built by the *native* host
+		 # gcc ($bytecc), while asmrun, when cross-compiling the
+		 # native-code backend to another arch (e.g. arm from this
+		 # aarch64 host), is built by a *different*, target gcc
+		 # (NATIVECC, e.g. arm-linux-gnueabihf-gcc). A single
+		 # "#define ARCH_SIXTYFOUR" or "#undef" can't be right for
+		 # both at once when the two disagree on word size. So
+		 # instead of baking in one answer at configure time, emit
+		 # a #if keyed on compiler-predefined arch macros, which
+		 # each of the two compiles resolves independently and
+		 # correctly for itself when this header is included.
+		 # This used to also be gated on `$host` matching specific
+		 # 64-bit host triples (originally just x86_64-*-linux*),
+		 # so ARCH_SIXTYFOUR was unconditionally #defined (no #if
+		 # guard at all, see the catch-all case below) on any other
+		 # host -- including aarch64-*-linux* hosts such as this
+		 # "thelio astra" machine. That unconditional define then
+		 # also applied to compiling asmrun/*.c for the 32-bit ARM
+		 # target, making every header/size macro in mlvalues.h
+		 # (Wosize_hd, Bosize_hd, etc.) use 64-bit-word assumptions
+		 # on a 32-bit runtime -- corrupting heap block sizes and
+		 # pointers (by exactly one extra bit, 1 << 24, in the case
+		 # that tracked this down) and crashing on the very first
+		 # native heap allocation. Keying this off $bytecc alone
+		 # (any host gcc) avoids having to keep extending a list of
+		 # known 64-bit host triples by hand.
 		 echo "#if defined(__x86_64__) || defined(_M_X64) || \\" >> m.h
 		 echo "     defined(__aarch64__) || \\" >> m.h
 		 echo "     (defined(__riscv) && __riscv_xlen == 64)" >> m.h
@@ -239,18 +268,51 @@ esac
 
 # Determine alignment constraints
 
+# claude: same cross-compilation trap as ARCH_SIXTYFOUR above. `runtest`
+# compiles and *runs* dblalign.c with $cc, i.e. natively on the host
+# (aarch64 here) -- it says nothing about whether the target of a cross
+# native-code build (arm-linux-gnueabihf here) needs doubleword-aligned
+# doubles. aarch64 tolerates a misaligned double fine, so this test used
+# to unconditionally #undef ARCH_ALIGN_DOUBLE, and that #undef then also
+# applied when compiling asmrun/*.c for arm. But ARM's AAPCS float ABI
+# does not: an ARM LDRD (used e.g. by gcc to pass a boxed OCaml float as
+# a double argument to a variadic C function like sprintf, since AAPCS
+# variadic args always go through core registers, never VFP, regardless
+# of -mfloat-abi=hard) silently reads the wrong bits from a
+# word-aligned-but-not-doubleword-aligned address. Concretely: an OCaml
+# float box landed at 0x437f34 (word-aligned, %8 == 4) here, and the
+# very next sprintf("%.12g", that double) printed "2.16910112697e-307"
+# instead of "3.14" -- everything upstream of that call (the box's raw
+# bits, the register values right before the call) was already verified
+# correct. Without ARCH_ALIGN_DOUBLE, mlvalues.h/alloc_shr/etc. don't
+# bother rounding float-block addresses up to 8 bytes. As with
+# ARCH_SIXTYFOUR, resolve this per-compile with a #if on a
+# compiler-predefined macro rather than baking in one host-wide answer:
+# arm-linux-gnueabihf-gcc (used for asmrun/*.c) predefines __arm__, the
+# native host gcc (used for byterun/*.c) does not, so each of the two
+# gets the alignment rule that's actually correct for its own target,
+# with the runtest-determined value kept as the fallback for everything
+# else (including a native, non-cross arm build, where __arm__ would be
+# predefined for byterun too and this forces alignment there as well --
+# which is exactly what's wanted, since it would then actually be
+# asmrun's ABI too).
 sh ./runtest dblalign.c
 case $? in
-  0) echo "Doubles can be word-aligned."
-     echo "#undef ARCH_ALIGN_DOUBLE" >> m.h;;
-  1) echo "Doubles must be doubleword-aligned."
-     echo "#define ARCH_ALIGN_DOUBLE" >> m.h;;
+  0) echo "Doubles can be word-aligned (on this host)."
+     dblalign_host_directive="#undef ARCH_ALIGN_DOUBLE";;
+  1) echo "Doubles must be doubleword-aligned (on this host)."
+     dblalign_host_directive="#define ARCH_ALIGN_DOUBLE";;
   *) echo "Something went wrong during alignment determination for doubles."
      echo "I'm going to assume this architecture has alignment constraints over doubles."
      echo "That's a safe bet: OCaml light will work even if"
      echo "this architecture has actually no alignment constraints."
-     echo "#define ARCH_ALIGN_DOUBLE" >> m.h;;
+     dblalign_host_directive="#define ARCH_ALIGN_DOUBLE";;
 esac
+echo "#if defined(__arm__)" >> m.h
+echo "#define ARCH_ALIGN_DOUBLE" >> m.h
+echo "#else" >> m.h
+echo "$dblalign_host_directive" >> m.h
+echo "#endif" >> m.h
 
 ##############################################################################
 # Configure the native-code compiler
@@ -293,7 +355,16 @@ case "$arch,$nativecc,$system" in
 	nativecclinkopts='-m32';;
     arm,*,*)
 	# can add -O0 -fno-inline -ggdb  to help debug segfaults
-	nativecccompopts='-Wall --std=gnu89  -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard'
+	# claude: -marm forces the C runtime (asmrun/*.c) to compile to
+	# plain 32-bit ARM instructions. Without it, this cross-compiler
+	# defaults to the Thumb-2 instruction encoding, which the
+	# hand-written ARM assembly in asmrun/arm.S and the code generated
+	# by asmcomp/arm/emit.mlp do not expect (e.g. caml_c_call's
+	# "mov pc, r10" to call a C runtime function assumes the callee is
+	# ARM code; the CPU stays in ARM mode across such a plain "mov pc",
+	# so a Thumb callee gets its instructions misread as ARM and the
+	# program crashes almost immediately).
+	nativecccompopts='-Wall --std=gnu89  -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard -marm'
 esac
 
 #TODO: define as='' at some point too

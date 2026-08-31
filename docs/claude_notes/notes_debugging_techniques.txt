@@ -1,0 +1,386 @@
+Debugging the arm native-code backend under qemu-arm
+=====================================================
+
+Session: fixing asmcomp/arm/ + asmrun/arm.S so `make opt` produces working
+arm32 binaries, cross-compiled from an aarch64 host (a "thelio astra"
+machine) via arm-linux-gnueabihf-gcc, run under qemu-arm.
+
+This file is about the *technique*, not the specific bugs (see git log /
+the "claude:" comments left in the source for those). Kept here so the
+approach can be reused next time something on a cross-compiled target
+segfaults/misbehaves in a way that's hard to reason about from reading
+the code alone.
+
+1. Reproduce first, minimally
+------------------------------
+Before touching any code: get a one-line repro and confirm it fails.
+  ./ocamlopt -I stdlib hello.ml -o hello
+  qemu-arm -L /usr/arm-linux-gnueabihf hello
+
+`-L /usr/arm-linux-gnueabihf` points qemu-arm at the armhf sysroot (for
+the dynamic linker and libc) -- without it a dynamically-linked arm
+binary won't find ld-linux-armhf.so.3 on an aarch64 host.
+
+Then *shrink* the repro as the investigation narrows things down:
+`let () = ()` still crashing (same as `print_string "hello"`) was itself
+a huge clue that the bug was in early runtime startup, not in anything
+program-specific. Later, isolating "does print_float alone fail" (yes)
+vs "does raw sprintf with a hardcoded C double fail, called from inside
+the runtime, with no OCaml value involved at all" (also yes) is what
+finally pointed away from "the OCaml calling convention passes floats
+wrong" (a real bug, but not *this* bug) toward "something about the
+process state is wrong for every double, unconditionally" (stack
+alignment).
+
+Don't skip straight to reading the generator code and guessing -- each
+of the four bugs found this session looked, from the symptom alone, like
+it could plausibly be several different things. Only shrinking the
+repro and inspecting actual register/memory state (never guessing at
+what a register "probably" holds) reliably distinguished them.
+
+2. Remote-debugging a cross-compiled binary: qemu-arm + gdb-multiarch
+-----------------------------------------------------------------------
+qemu-arm has a built-in gdbstub. Two terminals (or here: `run_in_background`
++ a second Bash call):
+
+  qemu-arm -g <port> -L /usr/arm-linux-gnueabihf ./the-binary
+
+then, separately:
+
+  gdb-multiarch -q -batch \
+    -ex "set architecture arm" \
+    -ex "target remote localhost:<port>" \
+    -ex "continue" \
+    -ex "bt" \
+    -ex "info registers" \
+    -ex "x/20i \$pc-16" \
+    ./the-binary
+
+Notes specific to this harness/sandbox:
+- `pkill` is blocked by the sandbox (exits 144 even matching nothing) --
+  don't rely on it to clean up a stray qemu-arm process. Just pick a
+  fresh port for the next session, or let it exit on its own; check with
+  `pgrep -fa qemu-arm` if in doubt.
+- Launch qemu-arm with the Bash tool's `run_in_background: true` rather
+  than a shell `&`. A backgrounded qemu started via plain `command &`
+  inside this sandbox left the tool session itself wedged (commands
+  returning exit code 144 with no output at all, including trivial ones
+  like `echo hi`, until a fresh Bash call recovered). `run_in_background`
+  did not have this problem.
+- A `gdb -batch` session's `continue` runs until a signal or exit, then
+  the script's remaining `-ex` commands run once, and gdb detaches/quits
+  at the end of the script -- which then kills the qemu-arm target. So
+  one gdb batch invocation = one crash/one inspection. Put everything
+  you want to inspect from that one stop into a single `-batch` command
+  line; don't split "continue" and "look at more stuff" across two
+  separate gdb invocations against the same qemu session, it won't be
+  there the second time.
+- Two racing qemu-arm processes can end up both listening attempts on
+  the same port; gdb will happily connect to whichever (possibly stale,
+  possibly from a *previous* binary you compiled) one is actually
+  listening. If a crash trace looks suspiciously identical across two
+  supposedly-different test programs, this is worth suspecting -- use a
+  fresh port per session to be sure, and sanity check with `pgrep -fa
+  qemu-arm` before trusting a result.
+- Breakpoints on a function *entry* that never seem to fire, while the
+  program still crashes somewhere inside that function's address range,
+  is itself a strong signal: it means you're not looking at a real call
+  into that function, but at a wild jump (bad return address / bad
+  indirect branch target) that happened to land inside it. Don't take
+  the disassembler's "nearest preceding symbol" name at face value in
+  that situation -- it's telling you *an* address, not that the function
+  was actually invoked. (This was the first real red herring of the
+  session: a SIGSEGV symbolized as `compact_heap`/`invert_pointer_at`
+  that had nothing to do with heap compaction -- verified by checking
+  that `compact_heap`'s own gc_message ("Compacting heap...") was never
+  printed before the crash.)
+- `x/Ni $pc-16` before a crash shows the last few correctly-decoded
+  instructions leading up to the fault, which is usually more useful
+  than just the faulting instruction alone, especially for spotting
+  ARM/Thumb misdecoding (garbage-looking `andeq`/`muleq`/`<UNDEFINED
+  instruction>` disassembly right before a sensible-looking function is
+  a classic sign of decoding Thumb bytes as ARM, or vice versa -- check
+  `cpsr` bit 5 (0x20), the Thumb state bit, to see which mode the CPU
+  was actually in when it faulted, before assuming a mode-mismatch bug).
+
+3. Getting real symbol names and line numbers
+------------------------------------------------
+- `arm-linux-gnueabihf-nm ./binary | grep <name>` to get a symbol's file
+  offset. Add the load base (this PIE loaded at a fixed 0x400000 in
+  every run here, no ASLR under qemu-arm by default) to get the runtime
+  address for a `break *0x<addr>` when `break <name>` isn't reliable
+  (see above) or the symbol is a `.o`-local `t`/`d` symbol gdb won't
+  resolve by name.
+- `arm-linux-gnueabihf-objdump -d --start-address=... --stop-address=...
+  ./binary` to disassemble a specific range directly from the *linked*
+  binary, once nm gives you real runtime addresses -- much less
+  error-prone than trying to disassemble an unlinked `.o` and mentally
+  add offsets.
+- The runtime's C files (asmrun/*.c) are compiled with no `-g` by
+  default, so gdb `print <var>` for globals fails with "unknown type;
+  cast it to its declared type", and there's no source-level stepping.
+  When that's not enough: temporarily add `-g -O0 -fno-inline` (the
+  configure comment in the arm case already flags this: "can add -O0
+  -fno-inline -ggdb to help debug segfaults") and rebuild just
+  `asmrun/`. This turns `bt`/`next`/`print <local-var>` and breakpoints
+  by C source line ("break floats.c:108") into precise, correct tools
+  instead of hand-decoded disassembly -- worth the rebuild time as soon
+  as raw-disassembly reasoning starts requiring more than one or two
+  register-role guesses. Revert the flag afterwards; it's a debugging
+  aid, not something to ship in configure permanently.
+- Remember any change to asmrun/*.c or asmcomp/arm/*.ml* needs a rebuild
+  before it's visible; `make opt` doesn't always recompile
+  `asmrun/floats.o` etc. if make's mtime comparison doesn't notice the
+  edit (seen when a symlinked source's mtime and the .o's mtime landed
+  in the same second). If in doubt, `rm -f asmrun/<file>.o && make -C
+  asmrun` to force it, then relink the specific test binary.
+
+4. Isolating "which layer is actually broken"
+-------------------------------------------------
+When something is wrong deep in a call chain (OCaml code -> C runtime
+function -> libc), don't assume the bug is in the outermost/most
+recently-written layer. Peel one call at a time and check that layer's
+inputs/outputs directly against what they should be:
+  - Read raw memory (`x/Nxw <addr>`) to check whether a value is
+    actually correct in memory, independent of what any particular
+    instruction/macro does with it.
+  - Break right before a call and `info registers` to see exactly what
+    the callee is being handed, independent of what happens inside it.
+  - `finish` from inside a leaf function to see its actual return value.
+  This session had a Double_val(arg) that read back the mathematically
+  correct bit pattern *and* register state at the sprintf call site that
+  was provably correct (r2/r3 held exactly the right IEEE-754 bits) --
+  yet the printed result was still garbage. That combination is what
+  ruled out "wrong value" and "wrong register" theories and pointed
+  toward "something about the call itself is malformed" (stack
+  alignment), rather than continuing to distrust the value/registers.
+
+  Also useful: write the *smallest possible standalone C program*
+  (`arm-linux-gnueabihf-gcc ... && qemu-arm -L ... a.out`) reproducing
+  the same library call with the same flags, outside the OCaml runtime
+  entirely. If it works standalone, the bug is in the runtime's
+  environment/state, not in the toolchain or qemu itself -- that's what
+  ruled out "gcc's AAPCS variadic-double convention is broken" or "qemu
+  mishandles LDRD" as the cause, and pointed at something the runtime's
+  own startup/call-sequence code was doing to the CPU state (here: an
+  un-8-byte-aligned stack pointer at every external call, from a stray
+  odd-word stack allocation in caml_start_program/arm.S).
+
+5. Cross-compilation traps specific to this repo's build
+-------------------------------------------------------------
+Two of the four bugs fixed this session were not in the arm-specific
+code at all, but in `configure`: it runs small test programs (sizes.c,
+dblalign.c) with `$cc`/`$bytecc` to decide `ARCH_SIXTYFOUR` and
+`ARCH_ALIGN_DOUBLE` in the *shared* config/m.h -- but that test always
+runs natively on the *host* (aarch64), while `asmrun/*.c` (symlinked
+from byterun/*.c, see asmrun/Makefile) gets compiled for the *target*
+(arm) by a different compiler (NATIVECC). A host-only empirical test
+cannot answer a question about the cross-compiled target. The existing
+codebase already had the right pattern for exactly this in one place
+(the ARCH_SIXTYFOUR case for an x86_64 host) -- wrap the `#define` in a
+`#if defined(__arm__)`-style preprocessor conditional keyed on the
+*compiler that will actually process this header*, so byterun and
+asmrun each resolve it correctly for themselves when config.h is
+included, rather than baking one host-wide answer into m.h at configure
+time. Worth checking `config/m.h` after any configure change on this
+repo, on this kind of cross-compiling host, to eyeball whether a setting
+looks host-specific rather than compiler-conditional.
+
+When you see a `case "$something,$host" in <one-specific-triple>)` in
+this configure script, ask whether the *right* condition is really "one
+specific host triple" or "whichever compiler is doing the compiling
+right now" -- the latter generalizes across hosts (and future ones)
+without having to keep extending a hardcoded list.
+
+6. Cheat sheet: exact commands, copy-pasteable
+---------------------------------------------------
+Build a tiny test program and see if/how it crashes:
+
+  cat > /tmp/t.ml <<'EOF'
+  let () = Printf.printf "%f\n" (3.14 *. 2.0)
+  EOF
+  ./ocamlopt -I stdlib /tmp/t.ml -o /tmp/t
+  qemu-arm -L /usr/arm-linux-gnueabihf /tmp/t; echo "exit: $?"
+
+Attach gdb to a fresh qemu-arm session (pick a new port each time to
+dodge the stale-process trap from section 2):
+
+  qemu-arm -g 1234 -L /usr/arm-linux-gnueabihf /tmp/t   # run_in_background: true
+  sleep 1
+  gdb-multiarch -q -batch \
+    -ex "set architecture arm" \
+    -ex "target remote localhost:1234" \
+    -ex "continue" \
+    -ex "bt" \
+    -ex "info registers r0 r1 r2 r3 r4 r10 r11 sp lr pc cpsr" \
+    -ex "x/20i \$pc-16" \
+    /tmp/t 2>&1 | tail -60
+
+Break at a specific *runtime* address (nm gives a file offset; this repo's
+PIE binaries load at a fixed base of 0x400000 under qemu-arm, no ASLR --
+runtime address = 0x400000 + nm's offset):
+
+  arm-linux-gnueabihf-nm /tmp/t | grep -w format_float
+  #   00005874 T format_float          <- file offset
+  # break *0x405874 in gdb, not *0x5874
+
+Break at a C source line once the runtime is built with debug info (see
+below) and inspect locals with full type info, not raw registers:
+
+  gdb-multiarch -q -batch \
+    -ex "set architecture arm" \
+    -ex "target remote localhost:1234" \
+    -ex "break floats.c:108" \
+    -ex "continue" \
+    -ex "next" \
+    -ex "print dest" -ex "x/s dest" \
+    /tmp/t 2>&1 | tail -20
+
+Disassemble a specific address range straight from the linked binary
+(more reliable than an unlinked .o + mental offset arithmetic):
+
+  arm-linux-gnueabihf-objdump -d --start-address=0x405874 \
+    --stop-address=0x405c00 /tmp/t | grep -B2 -A2 "vmov\|bl.*sprintf"
+
+Rebuild just the C runtime with debug info to get source-level stepping
+(temporary -- revert after; see configure's arm nativecccompopts case):
+
+  # in configure, arm,*,*) case:
+  #   nativecccompopts='... -marm -O0 -fno-inline -ggdb'
+  ./configure && make clean && make coldstart && make world && make opt
+  # (a full clean rebuild is needed because config/m.h flags like
+  #  ARCH_SIXTYFOUR/ARCH_ALIGN_DOUBLE affect both byterun and asmrun)
+
+Force a single object file to actually recompile when make's mtime
+check is fooled by a symlinked source and a same-second timestamp:
+
+  rm -f asmrun/floats.o && make -C asmrun
+  ./ocamlopt -I stdlib /tmp/t.ml -o /tmp/t   # relink
+
+Reality-check a suspicious library call *outside* the OCaml runtime
+entirely, with the exact same compiler/flags, to rule the toolchain in
+or out:
+
+  cat > /tmp/ctest.c <<'EOF'
+  #include <stdio.h>
+  int main() {
+      double d = 3.14; char buf[64];
+      sprintf(buf, "%.12g", d);
+      printf("result: %s\n", buf);
+      return 0;
+  }
+  EOF
+  arm-linux-gnueabihf-gcc -march=armv7-a -mfpu=vfpv3-d16 \
+    -mfloat-abi=hard -o /tmp/ctest /tmp/ctest.c
+  qemu-arm -L /usr/arm-linux-gnueabihf /tmp/ctest   # -> "result: 3.14", so gcc/qemu/libc are all fine
+
+Check pointer/stack alignment directly (relevant whenever only
+*floating-point* or *variadic* calls misbehave while everything else is
+fine -- AAPCS requires sp to be 8-byte aligned at every external call):
+
+  (gdb) print/x $sp
+  $1 = 0x407ff5fc
+  (gdb) print $sp % 8
+  $2 = 4          <- should be 0; this alone is the bug
+
+7. Worked case study: the sprintf/float stack-alignment bug
+-----------------------------------------------------------------
+End-to-end trace of the last (and hardest) of the four bugs found this
+session, as an example of chaining the above techniques into a single
+diagnosis instead of guessing.
+
+Symptom: `Printf.printf "%f\n" (3.14 *. 2.0)` printed "0.000000" (or, in
+a differently-shaped test, a denormal garbage number like
+"2.169e-307") -- but `int_of_float` on the same value gave the right
+answer, so the double itself was clearly fine somewhere in the pipeline.
+
+Step 1 -- confirm the boxed double is correct in memory. Break at
+`format_float` (byterun/floats.c, the C stub behind `Printf`'s `%f`) and
+dump raw memory at `arg` (the boxed `float` argument, a pointer to a
+2-word heap block: header, then the 8 IEEE-754 bytes):
+
+  (gdb) break format_float
+  (gdb) continue
+  Breakpoint 1, format_float (fmt=..., arg=4423476) at floats.c:76
+  (gdb) x/3xw $r1-4
+  0x437f30:  0x000008fd  0x51eb851f  0x40091eb8
+
+0x40091eb851eb851f is exactly the IEEE-754 bit pattern for 3.14. Not a
+box/GC bug.
+
+Step 2 -- confirm the actual sprintf call site gets the right value.
+Disassembled `format_float`, found `bl Double_val` followed by
+`vmov r2, r3, d0` then `bl sprintf` (ARM's AAPCS passes a variadic
+double argument as a core-register pair, r2:r3, never in a VFP register
+-- true regardless of -mfloat-abi=hard, because the callee's va_arg
+can't know a VFP register was used). Broke right at the `bl sprintf`:
+
+  (gdb) break *0x4059e8
+  (gdb) continue
+  (gdb) info registers r0 r1 r2 r3
+  r2   0x51eb851f
+  r3   0x40091eb8
+
+Also exactly right. So: correct value in memory, correct value in the
+call registers -- yet the printed result was still wrong. That
+combination rules out "wrong value" and "wrong argument passing"
+entirely and says the fault is in the *mechanics of the call itself*.
+
+Step 3 -- rule the toolchain in or out with a standalone reproduction.
+The `/tmp/ctest.c` snippet from section 6, compiled with the identical
+flags and run under the identical qemu-arm, printed "3.14" correctly.
+So gcc's variadic-double codegen and qemu's LDRD/VFP emulation are both
+fine in general -- whatever's wrong is specific to *this* runtime's own
+environment/state at the point of the call, not the toolchain.
+
+Step 4 -- isolate further by removing the OCaml value from the
+equation entirely. Temporarily hardcoded a literal C double directly
+inside `format_float` itself:
+
+  double k = 3.14; char dbg[64];
+  sprintf(dbg, "%.12g", k);
+  fprintf(stderr, "DEBUG: %s\n", dbg);
+
+Rebuilt just asmrun (`rm -f asmrun/floats.o && make -C asmrun`), relinked,
+reran -- and even this hardcoded constant, with no OCaml heap value
+involved at all, printed the same garbage. That's decisive: nothing
+about the *value* being formatted matters, so the bug can't be in
+boxing, GC, or calling-convention register selection at all -- it has
+to be something ambient and constant, true for every call from anywhere
+in this runtime.
+
+Step 5 -- check the one thing AAPCS treats specially for floating-point
+calls that this trace hadn't checked yet: stack alignment.
+
+  (gdb) print/x $sp
+  0x407ff5fc
+  (gdb) print $sp % 8
+  4
+
+Not 8-byte aligned, as AAPCS requires at every external call. This
+explains the *shape* of the earlier evidence precisely: plain arithmetic
+and OCaml-to-OCaml calls never need 8-byte sp alignment, so they were
+unaffected; only calls that end up inside glibc code paths sensitive to
+it (variadic double formatting) broke, and broke identically regardless
+of the actual double value, matching "always wrong, value-independent."
+
+Step 6 -- find the source. Grepped asmcomp/arm/emit.mlp's `frame_size`
+(the function computing how much each OCaml function's `sub sp, sp, #n`
+prologue subtracts) and compared it against the sibling
+asmcomp/mips/emit.mlp, which computes the exact same kind of frame size
+but already ends with `Misc.align size 8` -- arm's version was missing
+that call entirely. Separately, asmrun/arm.S's `caml_start_program` (the
+very first Caml-code entry point, at the root of every call chain) had a
+"callback link" save area sized `sub sp, sp, #4*3` (three words = 12
+bytes, not a multiple of 8) -- tallying every push in that prologue
+(32 + 32 + 12 + 8 = 84 bytes, 84 mod 8 = 4) reproduced the exact 4-byte
+misalignment measured in step 5. Fixed both: `Misc.align` in emit.mlp's
+frame_size, and padded arm.S's callback-link area to 4 words (16 bytes),
+updating its two matching pop sites (`add sp, sp, #4*3` -> `#4*4`) to
+match.
+
+The lesson generalizable beyond this specific bug: when correct-looking
+values keep producing wrong results through a call boundary, stop
+re-checking the values and start checking the *call mechanics*
+(register/stack conventions) that the ABI treats differently for the
+specific kind of call that's failing.

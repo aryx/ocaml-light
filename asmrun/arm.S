@@ -216,7 +216,21 @@ caml_start_program:
 	sub sp, sp, #8
 	vstr.f64 d4, [sp]
     /* Setup a callback link on the stack */
-        sub     sp, sp, #4*3
+    /* claude: this is 3 words of real data (bottom_of_stack,
+     * last_return_address, gc_regs, at offsets 0/4/8 below) padded out to
+     * 4*4=16 bytes instead of 4*3=12. AAPCS requires sp to be 8-byte
+     * aligned at every call out to a C function; every other push in
+     * this function (the 8 callee-save regs above, the four vstr.f64
+     * pushes) is already a multiple of 8, so this odd 3-word (12 byte)
+     * allocation was the one place quietly knocking sp 4 bytes off
+     * doubleword alignment for the rest of a Caml program's execution
+     * (asmcomp/arm/emit.mlp's frame_size has the matching fix, with a
+     * longer explanation of the symptom this caused: sprintf("%.12g",
+     * some_double) silently printing garbage as soon as it's reached
+     * through any call chain rooted here, i.e. always). This must stay
+     * in sync with the two matching "add sp, sp, #4*4" below (was #4*3)
+     * that pop this same callback link. */
+        sub     sp, sp, #4*4
         ldr     r4, .Lcaml_bottom_of_stack
         ldr     r4, [r4, #0]
         str     r4, [sp, #0]
@@ -261,7 +275,7 @@ caml_start_program:
         ldr     r4, .Lcaml_gc_regs
         ldr     r5, [sp, #8]
         str     r5, [r4, #0]
-        add     sp, sp, #4*3
+        add     sp, sp, #4*4    /* claude: was #4*3, see the matching sub above */
     /* Update allocation pointer */
         ldr     r4, .Lyoung_ptr
         str     alloc_ptr, [r4, #0]
@@ -291,7 +305,7 @@ caml_start_program:
         ldr     r4, .Lcaml_gc_regs
         ldr     r5, [sp, #8]
         str     r5, [r4, #0]
-        add     sp, sp, #4*3
+        add     sp, sp, #4*4    /* claude: was #4*3, see the matching sub above */
     /* Save young_ptr */
         ldr     r4, .Lyoung_ptr
         str     alloc_ptr, [r4, #0]
@@ -351,12 +365,27 @@ callback3:
         ldr     r10, .Lcaml_apply3
         b       .Ljump_to_caml
 
-        .global caml_array_bound_error
-array_bound_error:
-    /* Load address of array_bound_error in r10 */
-        ldr     r10, .Larray_bound_error
-    /* Call that function */
-        b       caml_c_call
+    /* claude: no trampoline needed here. array_bound_error is a plain C
+     * function (asmrun/array.c) that just calls fatal_error and never
+     * returns -- it does no allocation, so unlike an "external" call it
+     * doesn't need the caml_c_call protocol (recording
+     * caml_bottom_of_stack, alloc_ptr, etc. for the GC's benefit).
+     * emit.mlp's bounds-check code (Icheckbound) branches to it directly
+     * ("blls array_bound_error" / "blcs array_bound_error"), exactly
+     * like asmcomp/i386/emit.mlp's "call array_bound_error". A previous
+     * version of this file defined a same-named trampoline right here
+     * that loaded array_bound_error's address into r10 and jumped into
+     * caml_c_call -- which, now that this symbol is a real global
+     * (see asmrun/array.c), collides with it at link time
+     * ("multiple definition of `array_bound_error'"). */
+    /* old:
+     *         .global caml_array_bound_error
+     * array_bound_error:
+     *     // Load address of array_bound_error in r10
+     *         ldr     r10, .Larray_bound_error
+     *     // Call that function
+     *         b       caml_c_call
+     */
 
 /* Global references */
 
@@ -371,7 +400,6 @@ array_bound_error:
 .Lcaml_apply2:                  .word caml_apply2
 .Lcaml_apply3:                  .word caml_apply3
 .Lcaml_requested_size:		.word 0
-.Larray_bound_error:            .word array_bound_error
 
 /* GC roots for callback */
 

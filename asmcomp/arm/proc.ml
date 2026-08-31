@@ -169,33 +169,51 @@ let loc_results res =
 (*e: function [[Proc.loc_results]] *)
 
 (*s: function [[Proc.loc_external_arguments]] *)
-(* Calling conventions for C are as for Caml, except that float arguments
-   are passed in pairs of integer registers. *)
-
+(* claude: this used to say "Calling conventions for C are as for Caml,
+ * except that float arguments are passed in pairs of integer registers"
+ * -- true for the old ARM APCS soft-float ABI that OCaml 2.02 targeted,
+ * where a double is just two 32-bit halves handed over in adjacent core
+ * registers. But this build passes -mfloat-abi=hard (see configure and
+ * NATIVECCCOMPOPTS), so both gcc and the C library expect the
+ * hardware-VFP AAPCS convention instead: double arguments go in their
+ * own d0.. VFP registers, tracked completely separately from the core
+ * (int) registers r0... Using the old int-register-pair convention here
+ * made float arithmetic work (self-consistent within OCaml-generated
+ * code, which never left the VFP registers) while any call out to a
+ * real external C function taking a float/double silently received
+ * garbage in its VFP register (e.g. Printf's underlying C float
+ * formatting primitive always printed 0.000000). This is now exactly
+ * the same shape as the internal calling_conventions used just above
+ * for loc_arguments, just with the C ABI's register limits (r0-r3,
+ * d0-d3). *)
 let loc_external_arguments arg =
-  let loc = Array.create (Array.length arg) Reg.dummy in
-  let reg = ref 0 in
-  let ofs = ref 0 in
-  for i = 0 to Array.length arg - 1 do
-    match arg.(i).typ with
-      Int | Addr as ty ->
-        if !reg <= 3 then begin
-          loc.(i) <- phys_reg !reg;
-          incr reg
-        end else begin
-          loc.(i) <- stack_slot (outgoing !ofs) ty;
-          ofs := !ofs + size_int
-        end
-    | Float ->
-        if !reg <= 2 then begin
-          loc.(i) <- phys_reg !reg;
-          reg := !reg + 2
-        end else begin
-          loc.(i) <- stack_slot (outgoing !ofs) Float;
-          ofs := !ofs + size_float
-        end
-  done;
-  (loc, !ofs)
+  calling_conventions 0 3 100 103 outgoing arg
+(* old:
+ * let loc_external_arguments arg =
+ *   let loc = Array.create (Array.length arg) Reg.dummy in
+ *   let reg = ref 0 in
+ *   let ofs = ref 0 in
+ *   for i = 0 to Array.length arg - 1 do
+ *     match arg.(i).typ with
+ *       Int | Addr as ty ->
+ *         if !reg <= 3 then begin
+ *           loc.(i) <- phys_reg !reg;
+ *           incr reg
+ *         end else begin
+ *           loc.(i) <- stack_slot (outgoing !ofs) ty;
+ *           ofs := !ofs + size_int
+ *         end
+ *     | Float ->
+ *         if !reg <= 2 then begin
+ *           loc.(i) <- phys_reg !reg;
+ *           reg := !reg + 2
+ *         end else begin
+ *           loc.(i) <- stack_slot (outgoing !ofs) Float;
+ *           ofs := !ofs + size_float
+ *         end
+ *   done;
+ *   (loc, !ofs)
+ *)
 (*e: function [[Proc.loc_external_arguments]] *)
 
 (*s: function [[Proc.loc_external_results]] *)

@@ -55,9 +55,31 @@ let emit_next_reg r =
 let stack_offset = ref 0
 
 let frame_size () =
-  !stack_offset +
-  4 * num_stack_slots.(0) + 8 * num_stack_slots.(1) +
-  (if !contains_calls then 4 else 0)
+  (* claude: must round up to a multiple of 8 (see asmcomp/mips/emit.mlp's
+   * frame_size, which already does exactly this, "Misc.align size 8").
+   * AAPCS (the EABI calling convention this ARM target actually uses,
+   * unlike the old APCS convention OCaml 2.02 was written for) requires
+   * the stack pointer to be 8-byte aligned at every "public interface"
+   * -- in particular at every call to a C function. This function's "sub
+   * sp, sp, #n" in fundecl below is what actually moves sp by this
+   * amount, so if frame_size can be a plain multiple of 4 that isn't
+   * also a multiple of 8 (very possible: stack_offset/num_stack_slots.(0)
+   * are word (4-byte) counts, and the saved-lr slot below adds another
+   * 4), sp drifts 4 bytes off the required alignment for the rest of
+   * that function's body, including any C calls it makes. This alignment
+   * bug had a very specific symptom: plain arithmetic and OCaml-to-OCaml
+   * calls were all unaffected (nothing here requires 8-byte sp
+   * alignment), but any call out to a C function that itself calls a
+   * *variadic* function taking a double (e.g. Printf ultimately calling
+   * sprintf(buf, "%.12g", d) in the C library) silently printed garbage
+   * (e.g. "2.176e-307" instead of "3.14") -- confirmed to happen even
+   * for a hardcoded C double literal, i.e. nothing to do with the
+   * OCaml-side value itself, only with sp's alignment at the call. *)
+  let size =
+    !stack_offset +
+    4 * num_stack_slots.(0) + 8 * num_stack_slots.(1) +
+    (if !contains_calls then 4 else 0) in
+  Misc.align size 8
 
 let slot_offset loc cl =
   match loc with
@@ -382,7 +404,7 @@ let emit_instr i =
         `	mov{emit_string comp}	{emit_reg i.res.(0)}, #1\n`; 3
     | Lop(Iintop(Icheckbound)) ->
         `	cmp	{emit_reg i.arg.(0)}, {emit_reg i.arg.(1)}\n`;
-        `	blls	caml_array_bound_error\n`; 2
+        `	blls	array_bound_error\n`; 2
     | Lop(Iintop op) ->
         let instr = name_for_int_operation op in
         `	{emit_string instr}	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_reg i.arg.(1)}\n`; 1
@@ -419,7 +441,7 @@ let emit_instr i =
         `	mov{emit_string comp}	{emit_reg i.res.(0)}, #1\n`; 3
     | Lop(Iintop_imm(Icheckbound, n)) ->
         `	cmp	{emit_reg i.arg.(0)}, #{emit_int n}\n`;
-        `	blls	caml_array_bound_error\n`; 2
+        `	blls	array_bound_error\n`; 2
     | Lop(Iintop_imm(op, n)) ->
         let instr = name_for_int_operation op in
         `	{emit_string instr}	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, #{emit_int n}\n`; 1
@@ -431,8 +453,16 @@ let emit_instr i =
         let instr = name_for_float_operation op in
         `       vmov s0, {emit_reg i.arg.(0)}\n`;
         `	{emit_string instr}	{emit_reg i.res.(0)}, s0\n`; 2
-    | Lop(Iintoffloat as _op) ->
-       failwith "TODO: arm Iintoffloat"
+    | Lop(Iintoffloat as op) ->
+        (* claude: mirror image of the Ifloatofint case above: convert the
+         * double in arg.(0) to a signed 32-bit int, landing in scratch
+         * single-precision register s0 (vcvt, with no rounding-mode
+         * suffix, always rounds toward zero, matching int_of_float's
+         * truncation semantics), then bit-move s0 into the integer result
+         * register. *)
+        let instr = name_for_float_operation op in
+        `	{emit_string instr}	s0, {emit_reg i.arg.(0)}\n`;
+        `	vmov	{emit_reg i.res.(0)}, s0\n`; 2
 
     | Lop(Iaddf | Isubf | Imulf | Idivf as op) ->
         let instr = name_for_float_operation op in
@@ -446,7 +476,7 @@ let emit_instr i =
         1
     | Lop(Ispecific(Ishiftcheckbound shift)) ->
         `	cmp	{emit_reg i.arg.(1)}, {emit_reg i.arg.(0)}, lsr #{emit_int shift}\n`;
-        `	blcs	caml_array_bound_error\n`; 2
+        `	blcs	array_bound_error\n`; 2
     | Lop(Ispecific(Irevsubimm n)) ->
 	`	rsb	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, #{emit_int n}\n`; 1
     | Lreloadretaddr ->
