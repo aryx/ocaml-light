@@ -98,13 +98,12 @@ RUN make opt
 RUN make installopt
 #TODO
 #RUN make test
-#TODO: caml_array_bound_error undefined ref
 #RUN make ocamlc.opt
-#TODO RUN make ocamlopt.opt
+#RUN make ocamlopt.opt
 RUN echo 'let _ = print_string "hello native arm"' > foo.ml
-RUN ocamlopt -cclib -lunix foo.ml
-#TODO: segfault
-#RUN ./a.out
+#RUN ocamlopt -cclib -lunix foo.ml
+RUN ocamlopt foo.ml
+RUN ./a.out
 
 ###############################################################################
 # Stage4: native image
