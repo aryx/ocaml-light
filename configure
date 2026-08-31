@@ -367,7 +367,17 @@ case "$arch,$nativecc,$system" in
 	nativecccompopts='-Wall --std=gnu89  -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard -marm'
 esac
 
-#TODO: define as='' at some point too
+# claude: this used to say "TODO: define as='' at some point too" -- no
+# AS= was ever written to Makefile, so plain `make`/`$(AS)` fell back to
+# make's builtin default (the *host*'s own "as", not a cross assembler).
+# That's harmless on a native (non-cross) build where the host's as is
+# also correct for the target, but on this aarch64-host/arm-target cross
+# build it broke testasmcomp/Makefile, which invokes $(AS) $(ASFLAGS)
+# directly on hand-written .s files (unlike the rest of the build, which
+# goes through $(ASPP), a C-compiler wrapper, for .S/.s files that need
+# preprocessing) -- "Error: unknown architecture `armv7-a'" from the
+# host's own as, given arm flags it doesn't understand.
+as=''
 asflags=''
 aspp='$(AS)'
 asppflags=''
@@ -380,6 +390,7 @@ case "$arch,$model,$system" in
 	asppflags='-m32 -c -DSYS_$(SYSTEM)';;
     #TODO: support arm64
     arm,*,*)
+        as='arm-linux-gnueabihf-as'
         aspp='arm-linux-gnueabihf-gcc'
 	asflags='-march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard'
 	asppflags='-O0 -fno-inline -ggdb -c -DSYS_$(SYSTEM) -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard';;
@@ -387,6 +398,7 @@ esac
 
 echo "ARCH=$arch" >> Makefile
 echo "MODEL=$model" >> Makefile
+if test -n "$as"; then echo "AS=$as" >> Makefile; fi
 echo "SYSTEM=$system" >> Makefile
 echo "NATIVECC=$nativecc" >> Makefile
 echo "NATIVECCCOMPOPTS=$nativecccompopts" >> Makefile

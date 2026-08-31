@@ -277,7 +277,13 @@ let emit_instr i =
             {loc = Reg rs; typ = Int|Addr}, {loc = Reg rd; typ = Int|Addr} ->
               `	mov	{emit_reg dst}, {emit_reg src}\n`; 1
           | {loc = Reg rs; typ = Float}, {loc = Reg rd; typ = Float} ->
-              `	mvfd	{emit_reg dst}, {emit_reg src}\n`; 1
+              (* claude: mvfd is an old FPA mnemonic, not supported by
+               * this VFP target -- see the Iconst_float case below for
+               * the same class of leftover-from-2.02 issue. VFP's own
+               * register-to-register double move is vmov.f64 (unlike
+               * the #0.0 immediate case, a plain reg-to-reg move is
+               * directly supported, no literal pool needed). *)
+              `	vmov.f64	{emit_reg dst}, {emit_reg src}\n`; 1
           | {loc = Reg rs; typ = Float}, {loc = Reg rd; typ = Int|Addr} ->
               `	vstr.f64    {emit_reg src}, [sp, #-8]!\n`;
               `	ldmfd   sp!, \{{emit_reg dst}, {emit_next_reg dst}}\n`; 2
@@ -302,13 +308,23 @@ let emit_instr i =
         end else
 	  emit_complex_intconst r n
     | Lop(Iconst_float s) ->
-        if float_of_string s = 0.0 then
-          `	mvfd	{emit_reg i.res.(0)}, #0.0\n`
-        else begin
-          let lbl = label_constant float_constants s 2 in
-	  pending_float := true;
-          `	vldr.f64	{emit_reg i.res.(0)}, {emit_label lbl} @ {emit_string s}\n`
-        end;
+        (* claude: used to special-case 0.0 as "mvfd {res}, #0.0" -- mvfd
+         * is an old FPA (FP accelerator coprocessor) mnemonic from the
+         * OCaml 2.02 arm port this was adapted from, not supported by
+         * this target's VFP unit (assembler error: "selected processor
+         * does not support 'mvfd d7,#0.0' in ARM mode"). VFP's own immediate-move
+         * encoding (VMOV.F64 Dd, #imm) can't directly encode 0.0 either
+         * (its 8-bit float immediate format assumes a normalized
+         * mantissa with an implicit leading 1, so 0 isn't one of the
+         * representable values), and the NEON-style bit-pattern move
+         * that could ("vmov.i64 Dd, #0") isn't available on this
+         * -mfpu=vfpv3-d16 target (no NEON, no Advanced SIMD encodings).
+         * Simplest correct fix: don't special-case 0.0 at all, just
+         * always go through the same literal-pool + vldr.f64 path as
+         * every other float constant below. *)
+        let lbl = label_constant float_constants s 2 in
+        pending_float := true;
+        `	vldr.f64	{emit_reg i.res.(0)}, {emit_label lbl} @ {emit_string s}\n`;
         1
     | Lop(Iconst_symbol s) ->
         let lbl = label_constant symbol_constants s 1 in
@@ -495,35 +511,84 @@ let emit_instr i =
         begin match tst with
           Itruetest ->
             `	cmp	{emit_reg i.arg.(0)}, #0\n`;
-            `	bne	{emit_label lbl}\n`
+            `	bne	{emit_label lbl}\n`;
+            2
         | Ifalsetest ->
             `	cmp	{emit_reg i.arg.(0)}, #0\n`;
-            `	beq	{emit_label lbl}\n`
+            `	beq	{emit_label lbl}\n`;
+            2
         | Iinttest cmp ->
             `	cmp	{emit_reg i.arg.(0)}, {emit_reg i.arg.(1)}\n`;
             let comp = name_for_comparison cmp in
-            `	b{emit_string comp}	{emit_label lbl}\n`
+            `	b{emit_string comp}	{emit_label lbl}\n`;
+            2
         | Iinttest_imm(cmp, n) ->
             `	cmp	{emit_reg i.arg.(0)}, #{emit_int n}\n`;
             let comp = name_for_comparison cmp in
-            `	b{emit_string comp}	{emit_label lbl}\n`
+            `	b{emit_string comp}	{emit_label lbl}\n`;
+            2
         | Ifloattest(cmp, neg) ->
+            (* claude: cmf/cmfe are old FPA mnemonics (see the Iconst_float
+             * and Imove cases above for the same 2.02-vs-this-VFP-target
+             * issue). Their VFP equivalents are vcmp.f64 (quiet: like cmf,
+             * does not raise Invalid Operation for a quiet-NaN operand --
+             * used for eq/ne, where IEEE754 says a NaN comparison is just
+             * "unequal", not an error) and vcmpe.f64 (like cmfe, raises
+             * Invalid Operation for any NaN operand, quiet or signaling --
+             * used for ordered comparisons <,>,<=,>=, where comparing
+             * against a NaN is not well-defined). Unlike the old FPA
+             * compare, which set the ARM condition flags directly, a VFP
+             * compare only sets the FPSCR's own N/Z/C/V flags -- they must
+             * be copied into the CPU's APSR flags with a "vmrs APSR_nzcv,
+             * fpscr" before the subsequent b<cond> can see them; that
+             * extra instruction is why this case is worth calling out
+             * specifically, not just "s/cmf/vcmp/" -- and why this branch,
+             * unlike every other one in this match, returns 3 rather than
+             * 2: this whole match used to be followed by a single shared
+             * "2" for every case (still true for all the others, which
+             * really do emit exactly 2 instructions), but that undercounted
+             * this one by the vmrs. emit_all above uses this return value
+             * to track how many instructions have been emitted since the
+             * float literal pool was last flushed, to keep every vldr.f64
+             * within its +/-1020-byte PC-relative reach; undercounting it
+             * let the *real* emitted code drift further from where the
+             * pool tracker believed it was than the tracker accounted for.
+             * On its own this is a 1-instruction-per-branch drift, easy to
+             * stay well inside emit_all's safety margin (it flushes 32
+             * instructions before the computed limit) -- but a function
+             * with many float-comparison branches in a row (e.g.
+             * test/fft.ml's zr/zi-tracking loop, unrolled 64x by the
+             * ordinary compiler pipeline, not by hand) can accumulate
+             * enough of them between two flush points to actually exceed
+             * that margin, at which point some vldr.f64 elsewhere in the
+             * same stretch of code silently reads whatever
+             * happens to be at the wrong (too-far) offset instead of the
+             * intended constant. This produced real but small-looking
+             * numeric errors (~1e-6 to ~1e-5) that were hard to
+             * distinguish at a glance from ordinary floating-point noise,
+             * and that shifted around under any nearby source-level edit
+             * (which shifts exact instruction counts and so which
+             * iteration if any crosses the margin) -- classic symptoms of
+             * a literal-pool-distance bug, in hindsight. *)
             begin match cmp with
               Ceq | Cne ->
-                `	cmf	{emit_reg i.arg.(0)}, {emit_reg i.arg.(1)}\n`
+                `	vcmp.f64	{emit_reg i.arg.(0)}, {emit_reg i.arg.(1)}\n`
             | _ ->
-                `	cmfe	{emit_reg i.arg.(0)}, {emit_reg i.arg.(1)}\n`
+                `	vcmpe.f64	{emit_reg i.arg.(0)}, {emit_reg i.arg.(1)}\n`
             end;
+            `	vmrs	APSR_nzcv, fpscr\n`;
             let comp = name_for_float_comparison cmp neg in
-            `	b{emit_string comp}	{emit_label lbl}\n`
+            `	b{emit_string comp}	{emit_label lbl}\n`;
+            3
         | Ioddtest ->
             `	tst	{emit_reg i.arg.(0)}, #1\n`;
-            `	bne	{emit_label lbl}\n`
+            `	bne	{emit_label lbl}\n`;
+            2
         | Ieventest ->
             `	tst	{emit_reg i.arg.(0)}, #1\n`;
-            `	beq	{emit_label lbl}\n`
-        end;
-        2
+            `	beq	{emit_label lbl}\n`;
+            2
+        end
   | Lcondbranch3(lbl0, lbl1, lbl2) ->
         `	cmp	{emit_reg i.arg.(0)}, #1\n`;
         begin match lbl0 with

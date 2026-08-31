@@ -40,8 +40,23 @@ let word_addressed = false
     r14                         return address
     r15                         program counter
 
-    f0 - f7                     general purpose (f4 - f7 preserved by C)
+    f0 - f7 (d0 - d7)           general purpose, ALL destroyed by C calls
 *)
+(* claude: the line above used to say "f4 - f7 preserved by C", matching
+ * destroyed_at_c_call below only destroying f0-f3 (=100..103, i.e.
+ * d0-d3). That was true of the old ARM FPA/softfloat register set OCaml
+ * 2.02 was written for, but not of AAPCS-VFP (this target, -mfloat-abi=
+ * hard): AAPCS's callee-saved VFP registers are d8-d15, and this
+ * backend's whole float register file (hard_float_reg, d0-d7) sits
+ * entirely inside the *caller-saved* d0-d7 range -- none of them survive
+ * a call, to a C runtime primitive or otherwise. Treating d4-d7 as
+ * preserved let the register allocator keep a live float value in one
+ * of them across a call to e.g. cos/sin, which is free to (and does)
+ * clobber it -- observed as later float locals silently reading garbage
+ * or an earlier local's now-stale value, worse the more such calls
+ * happened in sequence (e.g. test/fft.ml, which makes many cos/sin
+ * calls with several simultaneous live float locals, printed "inf" and
+ * "0" instead of the expected near-zero numerical error). *)
 
 let int_reg_name = [|
 (*e: constant [[Proc.int_reg_name]] *)
@@ -228,8 +243,11 @@ let loc_exn_bucket = phys_reg 0
 (*s: constant [[Proc.destroyed_at_c_call]] *)
 (* Registers destroyed by operations *)
 
-let destroyed_at_c_call =               (* r4-r9, f4-f7 preserved *)
-  Array.of_list(List.map phys_reg [0;1;2;3;8;9; 100;101;102;103])
+let destroyed_at_c_call =               (* claude: r4-r9,r11 preserved
+   (correct, matches AAPCS's callee-saved r4-r11); ALL of d0-d7 destroyed
+   (was only d0-d3=100..103 -- see the "claude:" comment on the register
+   map above for why that was wrong for this AAPCS-VFP target) *)
+  Array.of_list(List.map phys_reg [0;1;2;3;8;9; 100;101;102;103;104;105;106;107])
 (*e: constant [[Proc.destroyed_at_c_call]] *)
 
 (*s: function [[Proc.destroyed_at_oper]] *)

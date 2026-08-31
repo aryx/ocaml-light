@@ -108,7 +108,18 @@ caml_alloc:
     /* Store pointer to saved integer registers in caml_gc_regs */
         ldr     r10, .Lcaml_gc_regs
         str     sp, [r10, #0]
-    /* Save non-callee-save float registers */
+    /* claude: pad by 4 bytes. AAPCS requires sp to be 8-byte aligned at
+     * the "bl garbage_collection" call below (see the longer explanation
+     * on the float-register save just past this). The 11 words just
+     * pushed above (44 bytes) are not themselves a multiple of 8; this
+     * pad (removed again, symmetrically, once the float registers are
+     * restored below) corrects that without disturbing the caml_gc_regs
+     * pointer just recorded, which must keep pointing at the integer
+     * register block in the exact layout the GC's root-scanning code
+     * expects -- that's why this pad sits here, after caml_gc_regs is
+     * captured, rather than folded into the stmfd above. */
+        sub     sp, sp, #4
+    /* Save float registers */
 	//old: was using stfd f0, ... but actually not supported by
         // arm-linux-gnueabihf-as so we used vstr.f64 and d0 as suggested
         // by chatGPT.
@@ -119,14 +130,35 @@ caml_alloc:
         // stfd    f1, [sp, #-8]!
         // stfd    f2, [sp, #-8]!
         // stfd    f3, [sp, #-8]!
-        sub sp, sp, #8
-        vstr.f64    d0, [sp]
-        sub sp, sp, #8
-        vstr.f64    d1, [sp]
-        sub sp, sp, #8
-        vstr.f64    d2, [sp]
-        sub sp, sp, #8
-        vstr.f64    d3, [sp]
+    /* claude: this used to save only d0-d3 here ("non-callee-save float
+     * registers", per the old comment) and then, worse, restore into
+     * d4-d7 below instead of d0-d3 -- a straight typo, popping the saved
+     * bits into the wrong registers entirely. Both parts trace back to
+     * the same stale assumption as the "f4-f7 preserved by C" comment in
+     * asmcomp/arm/proc.ml (see the "claude:" comment there): under the
+     * real AAPCS-VFP ABI this target uses, ALL of d0-d7 are caller-saved
+     * (volatile), not just d0-d3, so garbage_collection() (a plain C
+     * function, free to clobber any of them) can and does trash whichever
+     * of d0-d7 happen to hold live Caml float values across this call.
+     * asmcomp/arm/proc.ml's destroyed_at_oper for Ialloc claims none of
+     * the 8 float registers are destroyed by an allocation (correct, if
+     * this routine actually preserves them, which is exactly what it
+     * must do here) -- so all 8 need saving, not 4, and the save/restore
+     * pairing must actually match. vpush/vpop {d0-d7} do exactly that in
+     * one instruction each (confirmed to assemble fine with this
+     * target's -march/-mfpu flags), and additionally pad the total
+     * pushed size to a multiple of 8 for free (8 doubles = 64 bytes) --
+     * unlike the previous 4-double version, which combined with the
+     * 11-word (44-byte, not a multiple of 8) integer-register save above
+     * to leave sp misaligned at the "bl garbage_collection" call below:
+     * yet another case of the AAPCS 8-byte stack alignment bug fixed
+     * elsewhere in caml_start_program/emit.mlp's frame_size, except this
+     * one corrupted floating-point results (not just, say, sprintf) in
+     * proportion to how often the program actually triggered the GC --
+     * which is exactly the symptom that led here: test/fft.ml's error
+     * grew with problem size (more allocation => more GC => more chances
+     * to hit this) instead of staying near the expected ~1e-15. */
+        vpush   {d0-d7}
     /* Save current allocation pointer for debugging purposes */
         ldr     r10, .Lyoung_ptr
         str     alloc_ptr, [r10, #0]
@@ -135,17 +167,10 @@ caml_alloc:
         str     trap_ptr, [r10, #0]
     /* Call the garbage collector */
         bl      garbage_collection
-    /* Restore the registers from the stack */        
-        //old: ldfd ... f4, ...
-        // ldfd   f4, [sp], #8
-        // ldfd   f5, [sp], #8
-        // ldfd   f6, [sp], #8
-        // ldfd   f7, [sp], #8
-	vldr.f64 d4, [sp]
-	vldr.f64 d5, [sp, #8]
-	vldr.f64 d6, [sp, #16]
-	vldr.f64 d7, [sp, #24]
-	add sp, sp, #32  // 4 doubles × 8 bytes
+    /* Restore the float registers from the stack */
+        vpop    {d0-d7}
+    /* claude: undo the 4-byte alignment pad from before the float save */
+        add     sp, sp, #4
 
         ldmfd   sp!, {r0,r1,r2,r3,r4,r5,r6,r7,r10,r12}
     /* Reload return address */
