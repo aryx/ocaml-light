@@ -250,7 +250,7 @@ SRC_C=\
 
 SRC_VIEWS_C=${SRC_C:%=$TOP/%}
 
-sync: sync_c sync_yacc
+sync_others:V: sync_c sync_yacc
 
 sync_c:VI:
 	for(i in $SRC_VIEWS_C) {
@@ -258,8 +258,7 @@ sync_c:VI:
      }
 
 sync_yacc:VI:
-        $SYNCWEB -md5sum_in_auxfile -less_marks -lang ocamlyacc  $SRC_ORIG \
-            $OCAMLLIGHT/parsing/parser.mly
+        $SYNCWEB -md5sum_in_auxfile -less_marks -lang ocamlyacc  $SRC_ORIG $TOP/parsing/parser.mly
 
 #steps to get an index:
 # - go in stdlib/, modify mkfile to use recent ocamlc and modify
