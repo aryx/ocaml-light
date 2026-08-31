@@ -18,7 +18,12 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - macos-latest
+          # pinned (not macos-latest): the nixpkgs channel below is pinned to
+          # nixos-24.05, whose Darwin stdenv (cctools-binutils-darwin-wrapper
+          # 16.0.6) aborts compiling even trivial C ("Abort trap: 6") on the
+          # macOS 26 image that macos-latest now points to. Revisit once
+          # nixpkgs ships a Darwin stdenv that supports the newer SDK.
+          - macos-15
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
