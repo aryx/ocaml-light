@@ -562,6 +562,9 @@ let output_c = ref false         (* -output-c *)
 <<copyright header>>
 
 <<type [[Longident.t]]>>
+
+val last: t -> string
+
 @
 
 
@@ -574,6 +577,11 @@ let output_c = ref false         (* -output-c *)
 <<copyright header>>
 
 <<type [[Longident.t]]>>
+
+let last = function
+    Lident s -> s
+  | Ldot(lid, s) -> s
+
 @
 
 
@@ -3539,6 +3547,7 @@ let rec transl_modtype env smty =
       Tmty_signature(transl_signature env ssg)
       
 and transl_signature env sg =
+  Logs.debug (fun m -> m "Typemod.transl_signature");
   match sg with
     [] -> []
   | {psig_desc = Psig_value(name, sdesc)} :: srem ->
@@ -3607,6 +3616,7 @@ let rec type_module env smod =
         mod_loc = smod.pmod_loc }
 
 and type_structure env sstr =
+  Logs.debug (fun m -> m "Typemod.type_structure");
   check_unique_names sstr;
   type_struct env sstr
 
@@ -5645,6 +5655,7 @@ let comp_remainder cont =
 (**** Compilation of a lambda phrase ****)
 
 let compile_implementation modulename expr =
+  Logs.debug (fun m -> m "Bytegen.compile_implementation %s" modulename);
   Stack.clear functions_to_compile;
   label_counter := 0;
   lbl_staticfail := 0;
@@ -5660,6 +5671,7 @@ let compile_implementation modulename expr =
 
 <<function [[Bytegen.compile_phrase]]>>=
 let compile_phrase expr =
+  Logs.debug (fun m -> m "Bytegen.compile_phrase");
   Stack.clear functions_to_compile;
   label_counter := 0;
   lbl_staticfail := 0;
@@ -6159,6 +6171,7 @@ let rec compose_coercions c1 c2 =
 (* Compile an implementation *)
 
 let transl_implementation module_name str cc =
+  Logs.debug (fun m -> m "Translmod.transl_implementation %s" module_name);
   reset_labels ();
   primitive_declarations := [];
   let module_id = Ident.create_persistent module_name in
@@ -6323,6 +6336,7 @@ let transl_toplevel_item = function
 
 <<function [[Translmod.transl_toplevel_definition]]>>=
 let transl_toplevel_definition str =
+  Logs.debug (fun m -> m "Translmod.transl_toplevel_definition");
   reset_labels ();
   transl_label_init (make_sequence transl_toplevel_item str)
 @
@@ -6718,6 +6732,7 @@ let rec emit = function
 (* Emission to a memory block *)
 
 let to_memory init_code fun_code =
+  Logs.debug (fun m -> m "Emitcode.to_memory");
   init();
   emit init_code;
   emit fun_code;
@@ -7628,12 +7643,13 @@ let reset_cache() =
 (* Return the initial environment in which compilation proceeds. *)
 
 let initial_env () =
+  Logs.debug (fun m -> m "Compile.initial_env()");
   try
     if !Clflags.nopervasives
     then Env.initial
     else Env.open_pers_signature "Pervasives" Env.initial
   with Not_found ->
-    fatal_error "cannot open Pervasives.cmi"
+    fatal_error "cannot open pervasives.cmi"
 @
 
 <<signature [[Env.open_pers_signature]]>>=
@@ -7644,6 +7660,7 @@ val open_pers_signature: string -> t -> t
 (* Open a signature from a file *)
 
 let open_pers_signature name env =
+  Logs.debug (fun m -> m "Env.open_pers_sig %s" name);
   let ps = find_pers_struct name in
   open_signature (Pident(Ident.create_persistent name)) ps.ps_sig env
 @
@@ -7835,9 +7852,11 @@ open Clflags
    bytecode interpreter (THREADED_CODE defined in config/sm-Mac.h).
 */
 
-#if defined(__GNUC__) && __GNUC__ >= 2 && !defined(DEBUG)
+//TODO: commented because 8c/5c do not handle #if directives
+//#if defined(__GNUC__) && __GNUC__ >= 2 && !defined(DEBUG)
 <<constant [[THREADED_CODE]]>>
-#endif
+//#endif
+
 
 /* Signed char type */
 
@@ -8447,11 +8466,12 @@ extern struct caml__roots_block *local_roots;  /* defined in roots.c */
   CAMLparam0 (); \
   CAMLxparam4 (x, y, z, t, u)
 
-#if defined (__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 7))
-  #define CAMLunused __attribute__ ((unused))
-#else
+//TODO: commented because 8c/5c do not handle #if directives
+//#if defined (__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 7))
+//  #define CAMLunused __attribute__ ((unused))
+//#else
   #define CAMLunused
-#endif
+//#endif
 
 #define CAMLxparam1(x) \
   struct caml__roots_block caml__roots_##x; \
@@ -9160,6 +9180,7 @@ void fl_add_block (char *bp)
 <<copyright header C damien>>
 
 #include "config.h"
+
 #include "freelist.h"
 #include "gc.h"
 #include "gc_ctrl.h"
@@ -9356,6 +9377,7 @@ int convert_flag_list(value list, int *flags)
 */
 
 #include "config.h"
+
 #ifndef OS_PLAN9
 #include <string.h>
 #else
@@ -9414,15 +9436,15 @@ int convert_flag_list(value list, int *flags)
 
 
 <<constant [[Jumptbl_base]]>>=
-#    define Jumptbl_base ((char *) &&lbl_ACC0)
+//#    define Jumptbl_base ((char *) &&lbl_ACC0)
 @
 
 <<constant [[Jumptbl_base]]([[(byterun/interp.c)]])>>=
-#    define Jumptbl_base ((char *) 0)
+//#    define Jumptbl_base ((char *) 0)
 @
 
 <<constant [[jumptbl_base]]>>=
-#    define jumptbl_base ((char *) 0)
+//#    define jumptbl_base ((char *) 0)
 @
 
 <<constant [[Setup_for_gc]]([[(byterun/interp.c)]])>>=
@@ -9469,23 +9491,24 @@ int convert_flag_list(value list, int *flags)
 
 /* Instruction decoding */
 
-#ifdef THREADED_CODE
+//TODO: commented because 8c/5c do not handle #if directives
+//#ifdef THREADED_CODE
 <<macro [[Instruct]] for [[THREADED_CODE]]>>
-#  if defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
+//#  if defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
 <<constant [[Jumptbl_base]]>>
-#  else
+//#  else
 <<constant [[Jumptbl_base]]([[(byterun/interp.c)]])>>
 <<constant [[jumptbl_base]]>>
-#  endif
-#  ifdef DEBUG
+//#  endif
+//#  ifdef DEBUG
 <<macro [[Next]] for [[THREADED_CODE]] ifdef [[DEBUG]]>>
-#  else
+//#  else
 <<macro [[Next]] for [[THREADED_CODE]]>>
-#  endif
-#else
+//#  endif
+//#else
 <<macro [[Instruct]]>>
 <<macro [[Next]]>>
-#endif
+//#endif
 
 <<constant [[Setup_for_gc]]([[(byterun/interp.c)]])>>
 <<constant [[Restore_after_gc]]([[(byterun/interp.c)]])>>
@@ -9508,13 +9531,14 @@ int convert_flag_list(value list, int *flags)
    For GCC, I have hand-assigned hardware registers for several architectures.
 */
 
-#if defined(__GNUC__) && !defined(DEBUG)
-#ifdef __i386__
-#define PC_REG asm("%esi")
-#define SP_REG asm("%edi")
-#define ACCU_REG asm("%ebx")
-#endif
-#endif
+//TODO: commented because 8c/5c do not handle #if directives
+//#if defined(__GNUC__) && !defined(DEBUG)
+//#ifdef __i386__
+//#define PC_REG asm("%esi")
+//#define SP_REG asm("%edi")
+//#define ACCU_REG asm("%ebx")
+//#endif
+//#endif
 
 /* The interpreter itself */
 
@@ -11368,6 +11392,7 @@ void compact_heap_maybe (void)
 <<copyright header C damien>>
 
 #include "config.h"
+
 #ifndef OS_PLAN9
 #include <string.h>
 #else
@@ -12450,6 +12475,7 @@ void disasm_instr (code_t pc);
 
 #ifdef DEBUG
 
+//TODO? no ifndef OS_PLAN9 here? because of libstdio in plan9?
 #include <stdio.h>
 
 #include "instruct.h"
@@ -13936,6 +13962,7 @@ unsigned char * code_checksum(void)
 /* Structured input, compact format */
 
 #include "config.h"
+
 #ifndef OS_PLAN9
 #include <string.h>
 #endif
@@ -16919,8 +16946,10 @@ void fatal_uncaught_exception(value exn)
   }
   *buf.ptr = 0;              /* Terminate string */
   errprintf("Fatal error: uncaught exception %s\n", buf.data);
+  //TODO: restore backtrace and native code!!  
+#ifndef NATIVE_CODE  
   if (backtrace_active && !debugger_in_use) print_exception_backtrace();
-
+#endif
   exit(2);
 }
 @
@@ -17299,6 +17328,11 @@ value install_signal_handler(value signal_number, value action) /* ML */
 #ifndef OS_PLAN9
 #include <signal.h>
 #else
+#define signal posix_signal
+void posix_signal(int x, void (*)()) {
+    print("TODO: posix_signal(%d)\n", x);
+    //TODO:
+}
 #endif
 
 #include "alloc.h"
@@ -17746,6 +17780,9 @@ char * searchpath(char * name)
 
 /* Basic system calls */
 
+#include "config.h"
+
+#ifndef OS_PLAN9
 #include <errno.h>
 // O_NONBLOCK
 #include <fcntl.h>
@@ -17753,12 +17790,116 @@ char * searchpath(char * name)
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
-#include "config.h"
 #include <unistd.h>
+#ifdef HAS_TIMES
+#include <sys/times.h>
+#endif
+#else
+// **********************************************************************
+// Plan9
+// **********************************************************************
+
+//TODO: emulate via errstr?
+int errno = -1;
+char * strerror(int n)      {
+    print("TODO: strerror\n");
+    return "strerror: 9 ERROR";
+}
+
+int unix_open(char* path, int _flags, int perm) {
+    // TODO: flags
+    return open (path, perm);
+}
+
+// thx chatGPT
+static ulong
+plan9mode_to_unixmode(Dir *d)
+{
+    ulong m = 0;
+
+    /* file type */
+    if(d->mode & DMDIR)
+        m |= S_IFDIR;
+    else
+        m |= S_IFREG;
+//    if(d->mode & DMDEVICE)
+//        m = (m & ~S_IFMT) | S_IFCHR;
+    /* permissions */
+//    if(d->mode & DMREAD){
+//        m |= S_IRUSR | S_IRGRP | S_IROTH;
+//    }
+//    if(d->mode & DMWRITE){
+//        m |= S_IWUSR | S_IWGRP | S_IWOTH;
+//    }
+//    if(d->mode & DMEXEC){
+//        m |= S_IXUSR | S_IXGRP | S_IXOTH;
+//    }
+    return m;
+}
+int unix_stat(char* path, struct unix_stat* st) {
+    Dir *d;
+    d = dirstat(path);
+    if (d == nil) 
+        return -1;
+    // else
+    memset(st, 0, sizeof(*st));
+    st->st_mode  = plan9mode_to_unixmode(d);
+    st->st_size  = d->length;
+    st->st_atime = d->atime;
+    st->st_mtime = d->mtime;
+    st->st_ctime = d->mtime;     /* Plan 9 has no ctime */
+    st->st_ino   = d->qid.path;  /* closest thing to inode */
+    st->st_nlink = 1;            /* Plan 9 has no hard links */
+    st->st_uid   = 0;            /* no numeric UID */
+    st->st_gid   = 0;            /* no numeric GID */
+    free(d);
+    return 0;
+}
+
+int unix_getcwd(char* buf, int size) {
+    if(buf == nil || size == 0){
+        werrstr("invalid buffer");
+        return 0;
+    }
+
+    if(getwd(buf, size) == nil)
+        return 0;
+
+    return 1;
+}
+
+#define open unix_open
+#define stat unix_stat
+#define getcwd unix_getcwd
+
+int unlink(char*)           { 
+    print("TODO: unlink\n");
+    return -1;
+}
+int rename(char*, char*)    { 
+    print("TODO: rename\n");
+    return -1;
+}
+int system(char*)           { 
+    print("TODO: system\n");
+    return -1;
+}
+int sscanf(const char *, const char *, ...) {
+    print("TODO: sscanf\n");
+    return -1;
+}
+
+#define CLOCKS_PER_SEC 1
+int clock(void) {
+    return -1;
+}
+#endif
+// **********************************************************************
+// End Plan9
+// **********************************************************************
 
 #include "alloc.h"
 #include "debugger.h"
@@ -17805,6 +17946,25 @@ extern char * strerror(int);
 <<function [[sys_init]]>>
 
 <<function [[sys_system_command]]>>
+
+value sys_time(value unit)            /* ML */
+{
+#ifdef HAS_TIMES
+#ifndef CLK_TCK
+#ifdef HZ
+#define CLK_TCK HZ
+#else
+#define CLK_TCK 60
+#endif
+#endif
+  struct tms t;
+  times(&t);
+  return copy_double((double)(t.tms_utime + t.tms_stime) / CLK_TCK);
+#else
+  /* clock() is standard ANSI C */
+  return copy_double((double)clock() / CLOCKS_PER_SEC);
+#endif
+}
 
 <<function [[sys_get_config]]>>
 

@@ -990,6 +990,7 @@ enum instructions {
 
   /* misc */
   <<misc opcodes>>
+  ISINT,
   <<debugger opcodes>>
 };
 @
@@ -1291,6 +1292,7 @@ typedef unsigned long color_t; // bit 8-9
 
 <<constant [[No_scan_tag]]>>=
 /* The lowest tag for blocks containing no value. */
+// coupling: asmcomp/cmmgen.ml, stdlib/obj.ml
 #define No_scan_tag 251
 @
 <<constant [[Abstract_tag]]>>=
@@ -1543,6 +1545,7 @@ val initial_env: unit -> Env.t
 
 <<function [[Compile.implementation]]>>=
 let implementation sourcefile =
+  Logs.debug (fun m -> m "Compile.implementation %s" sourcefile);
   init_path();
   let prefixname = Filename.chop_extension sourcefile in
   let modulename = String.capitalize(Filename.basename prefixname) in
@@ -1646,6 +1649,7 @@ val interface: string -> unit
 (* Compile a .mli file *)
 
 let interface sourcefile =
+  Logs.debug (fun m -> m "Compile.interface %s" sourcefile);
   init_path();
   let prefixname = Filename.chop_extension sourcefile in
   let modulename = String.capitalize(Filename.basename prefixname) in
@@ -1869,6 +1873,10 @@ rule token = parse
 %token <string> INFIXOP3
 %token <string> INFIXOP4
 %token <string> SUBTRACTIVE
+
+%token OBJECT METHOD
+%token LBRACKETATAT
+%token COLONGREATER
 
 %token EOF
 
@@ -2144,7 +2152,7 @@ let keyword_table =
 <<Lexer escape sequences related functions>>=
 let char_for_backslash =
   match Sys.os_type with
-  | "Unix" ->
+  | "Unix" | "Plan9" ->
       begin function
       | 'n' -> '\010'
       | 'r' -> '\013'
@@ -2317,6 +2325,8 @@ let get_stored_string () =
 %right AMPERSAND AMPERAMPER             /* && */
 %left  INFIXOP0 EQUAL LESS GREATER      /* = < > etc */
 %right INFIXOP1                         /* @ ^ etc */
+%nonassoc below_LBRACKETAT
+%nonassoc LBRACKETATAT
 %right COLONCOLON                       /* :: */
 %left  INFIXOP2 SUBTRACTIVE             /* + - */
 %left  INFIXOP3 STAR                    /* * / */
@@ -2324,6 +2334,7 @@ let get_stored_string () =
 %right prec_unary_minus                 /* - unary */
 %left  prec_appl                        /* function application */
 %right prec_constr_appl                 /* constructor application */
+%left  SHARP                            /* method call */
 %left  DOT                              /* record access, array access */
 %right PREFIXOP                         /* ! */
 @
@@ -2378,6 +2389,44 @@ let get_stored_string () =
 
 <<misc rules>>
 <<ebnf rules>>
+
+
+/* Attributes */
+/* pad: partial support, just enough to parse xix code */
+opt_with_attributes:
+      { [] }
+  | LBRACKETATAT LIDENT opt_expr RBRACKET opt_with_attributes
+    { ($2, $3) :: $5 }
+;
+opt_expr:
+    expr { () }
+  |      { () }
+;
+
+/* OO */
+/* pad: partial support, just enough to parse xix code */
+meth_list:
+    field SEMI meth_list                        { () }
+  | field opt_semi                              { () }
+  | DOTDOT                                      { () }
+;
+field:
+    label COLON core_type                       { () }
+  | type_longident { () }
+;
+label:
+    LIDENT                                      { () }
+;
+class_structure: /*class_self_pattern*/ class_fields { () }
+;
+class_fields:
+    /* empty */ { () }
+  | class_fields concrete_method { () }
+;
+concrete_method :
+    METHOD /*private_flag*/ label fun_binding { () }
+;
+
 @
 
 
@@ -2404,6 +2453,7 @@ opt_semi:
 
 <<function [[Compile.parse_file]]>>=
 let parse_file inputfile parse_fun ast_magic =
+  Logs.debug (fun m -> m "Compile.parse_file %s" inputfile);
   let ic = open_in inputfile in
   <<[[Compile.parse_file()]] let [[is_ast_file]]>>
   let ast =
@@ -2429,15 +2479,17 @@ val interface : Lexing.lexbuf -> Parsetree.signature
 @
 
 <<function [[Parse.implementation]]>>=
-let implementation = wrap Parser.implementation
+let implementation = wrap Parser.implementation "implementation"
 @
 <<function [[Parse.interface]]>>=
-let interface = wrap Parser.interface
+let interface = wrap Parser.interface "interface"
 @
 
 
 <<function [[Parse.wrap]]>>=
-let wrap parsing_fun lexbuf =
+let wrap parsing_fun func_str = 
+ fun lexbuf ->
+  Logs.debug (fun m -> m "Parse.%s on '%s'" func_str !Location.input_name);
   try
     let ast = parsing_fun Lexer.token lexbuf in
     Parsing.clear_parser();
@@ -2506,19 +2558,19 @@ structure_tail:
 
 <<structure rules>>=
 structure_item:
-    LET rec_flag let_bindings
+    LET rec_flag let_bindings           opt_with_attributes
       { match $3 with
           [{ppat_desc = Ppat_any}, exp] -> mkstr(Pstr_eval exp)
         | _ -> mkstr(Pstr_value($2, List.rev $3)) }
   | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
       { mkstr(Pstr_primitive($2, {pval_type = $4; pval_prim = $6})) }
 
-  | TYPE type_declarations
+  | TYPE type_declarations              opt_with_attributes
       { mkstr(Pstr_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
 
-  | MODULE UIDENT module_binding
+  | MODULE UIDENT module_binding        opt_with_attributes
       { mkstr(Pstr_module($2, $3)) }
   | OPEN mod_longident
       { mkstr(Pstr_open $2) }
@@ -2582,7 +2634,7 @@ signature_item:
   | EXTERNAL val_ident COLON core_type EQUAL primitive_declaration
       { mksig(Psig_value($2, {pval_type = $4; pval_prim = $6})) }
 
-  | TYPE type_declarations
+  | TYPE type_declarations                 opt_with_attributes
       { mksig(Psig_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
       { mksig(Psig_exception($2, $3)) }
@@ -2732,6 +2784,11 @@ simple_core_type:
 
   | LPAREN core_type RPAREN
       { $2 }
+  /* pad: partial support, just enough to parse the code */
+  | LESS meth_list GREATER
+      { mktyp(Ptyp_constr(Lident("unit"), [])) }
+  | LESS GREATER
+      { mktyp(Ptyp_constr(Lident("unit"), [])) }
 ;
 core_type_tuple:
     simple_core_type STAR simple_core_type      { [$3; $1] }
@@ -2902,6 +2959,18 @@ expr:
     simple_expr
       { $1 }
   <<rule expr cases>>
+  /* OO */
+  /* pad: partial support, just enough to parse xix code */
+  | simple_expr SHARP label
+      { mkexp (Pexp_construct (Lident "()", None)) }
+  /* note that originally the grammar rule was just
+   *     'simple_expr: | simple_expr SHARP label'
+   * and the method call was parsed by the regular call rule but for ocaml-light
+   * we need to discard the whole method call with also the args,
+   * hence this additional rule.
+   */
+  | simple_expr SHARP label simple_expr_list
+      { mkexp (Pexp_construct (Lident "()", None)) }
   <<rule expr error cases>>
 ;
 @
@@ -2917,6 +2986,12 @@ simple_expr:
   | BEGIN seq_expr END
       { $2 }
   <<rule [[simple_expr]] cases>>
+  /* OO */
+  /* pad: partial support, just enough to parse xix code */
+  | OBJECT class_structure END
+      { mkexp (Pexp_construct (Lident "()", None)) }
+  | OBJECT class_structure error
+      { unclosed "object" 1 "end" 3 }
   <<rule [[simple_expr]] error cases>>
 ;
 @
@@ -3008,6 +3083,21 @@ expr_semi_list:
 <<rule [[simple_expr]] cases>>=
 | LBRACE lbl_expr_list opt_semi RBRACE
     { mkexp(Pexp_record(List.rev $2)) }
+/*(* backport(partial): M.{ ... } local open *)*/
+| mod_longident DOT LBRACE lbl_expr_list opt_semi RBRACE
+    {  let qu = $1 in
+       let flds = List.rev $4 in
+       (* simply unsugar M.{ fld = ...} to { M.fld = ... } *)
+       let flds' =
+         flds |> List.map (fun (li, exp) ->
+           match qu, li with
+           | Lident m, Lident fld ->
+             (Ldot (qu, fld), exp)
+           | _ -> (* TODO? warn? *)
+             (li, exp)
+         ) in
+       mkexp(Pexp_record(flds'))
+    }
 @
 %$
 
@@ -3017,6 +3107,9 @@ lbl_expr_list:
       { [$1,$3] }
   | lbl_expr_list SEMI label_longident EQUAL expr %prec prec_list
       { ($3, $5) :: $1 }
+  /*(* { lbl } sugar for { lbl = lbl } (3.12.0) *)*/
+  |                    label_longident { [$1, exp_of_label $1] }
+  | lbl_expr_list SEMI label_longident { ($3, exp_of_label $3) :: $1 }
 ;
 @
 %$
@@ -3253,12 +3346,14 @@ let rhs_loc n =
 <<rule [[simple_expr]] cases>>=
 | LPAREN seq_expr type_constraint RPAREN
     { mkexp(Pexp_constraint($2, $3)) }
+/* pad: partial support, just enough to parse the code */
+| LPAREN seq_expr COLONGREATER core_type RPAREN  { ($2) }
 @
 %$
 
 <<expression rules>>=
 type_constraint:
-    COLON core_type                             { ($2) }
+    COLON core_type                             { $2 }
   | COLON error                                 { syntax_error() }
 ;
 @
@@ -3356,6 +3451,9 @@ signed_constant:
 lbl_pattern_list:
     label_longident EQUAL pattern               { [($1, $3)] }
   | lbl_pattern_list SEMI label_longident EQUAL pattern { ($3, $5) :: $1 }
+  /*(* { lbl } shorthand notation (3.12.0) *)*/
+  | label_longident { [($1, pat_of_label $1)] }
+  | lbl_pattern_list SEMI label_longident { ($3, pat_of_label $3) :: $1 }
 ;
 @
 %$
@@ -3490,6 +3588,12 @@ open Parsetree
 <<function [[Parser.array_function]]>>
 
 <<function [[Parser.mkrangepat]]>>
+
+(* for the { lbl } shorthand notation *)
+let exp_of_label lbl =
+  mkexp (Pexp_ident(Lident(Longident.last lbl)))
+let pat_of_label lbl =
+  mkpat (Ppat_var(Longident.last lbl))
 
 let syntax_error () =
   raise Syntaxerr.Escape_error
@@ -4958,6 +5062,8 @@ val read_signature: string -> string -> Types.signature * Digest.t
 (* Read a signature from a file *)
 
 let read_signature modname filename =
+  Logs.debug (fun m -> m "Env.read_signature module %s from %s" 
+                         modname filename);
   let (ps, crc) = read_pers_struct modname filename in 
   (ps.ps_sig, crc)
 @
@@ -4995,6 +5101,8 @@ let save_signature sg modname filename =
 % find_pers_struct -> <>
 <<function [[Env.read_pers_struct]]>>=
 let read_pers_struct modname filename =
+  Logs.debug (fun m -> m "Env.read_pers_struct module %s from %s"
+              modname filename);
   let ic = open_in filename in
   try
     let buffer = Bytes.create (String.length cmi_magic_number) in
@@ -5380,7 +5488,22 @@ then raise(Error(sexp.pexp_loc, Label_missing));
       try
         Env.lookup_label lid env
       with Not_found ->
-        raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+        (* backport(partial): type-directed field access disambiguation *)
+        let targ = arg.exp_type in
+        (* Printtyp.type_expr targ; *)
+        (match lid, targ with
+        | Longident.Lident s, Tconstr (Path.Pdot (Path.Pident id, _t, _pos), _args) ->
+            let lid' = Longident.Ldot (Longident.Lident (Ident.name id), s) in
+            Logs.debug (fun m -> m "trying type-directed label lookup %s.%s"
+                    (Ident.name id) s);
+            (try 
+              Env.lookup_label lid' env
+             with Not_found -> 
+              raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+             )
+        | _ ->
+           raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+        )
     in
     let (ty_arg, ty_res) = instance_label label in
     unify_exp env arg ty_res;
@@ -5396,7 +5519,22 @@ then raise(Error(sexp.pexp_loc, Label_missing));
       try
         Env.lookup_label lid env
       with Not_found ->
+        (* TODO: factorize with Pexp_field *)
+        (* backport(partial): type-directed field access disambiguation *)
+        let trecord = record.exp_type in
+        (match lid, trecord with
+        | Longident.Lident s, Tconstr (Path.Pdot (Path.Pident id, _t, _pos), _args) ->
+            let lid' = Longident.Ldot (Longident.Lident (Ident.name id), s) in
+            Logs.debug (fun m -> m "trying type-directed label lookup %s.%s"
+                    (Ident.name id) s);
+            (try 
+              Env.lookup_label lid' env
+             with Not_found -> 
+              raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+             )
+        | _ ->
         raise(Error(sexp.pexp_loc, Unbound_label lid)) 
+        )
     in
     if label.lbl_mut = Immutable 
     then raise(Error(sexp.pexp_loc, Label_not_mutable lid));
@@ -8809,7 +8947,7 @@ struct exec_trailer {
 
 <<constant [[EXEC_MAGIC]]>>=
 /* Magic number for this release */
-
+//XXX
 #define EXEC_MAGIC "Caml1999X002"
 @
 
@@ -9369,6 +9507,8 @@ let fix_exec_name name =
 let append_bytecode_and_cleanup bytecode_name exec_name prim_name =
   match Sys.os_type with
   | _ ->
+      Logs.info (fun m -> m "append bytecode %s to %s (and cleanup)"
+                 bytecode_name !Clflags.exec_name);
       let oc = open_out_gen [Open_wronly; Open_append] 0 !Clflags.exec_name in
       let ic = open_in bytecode_name in
       copy_file ic oc;
@@ -9874,7 +10014,11 @@ value interprete(code_t prog, asize_t prog_size)
     <<[[interpreter()]] arithmetics cases>>
     <<[[interpreter()]] array cases>>
     <<[[interpreter()]] string cases>>
-    <<[[interpreter()]] debugger cases>>
+       Instruct(ISINT):
+           accu = Val_long(accu & 1);
+           Next;
+
+<<[[interpreter()]] debugger cases>>
 
     #ifndef THREADED_CODE
     default:
@@ -9901,7 +10045,7 @@ value interprete(code_t prog, asize_t prog_size)
 % ifdefs, but for explanation purpose we focus on the simpler
 % non threaded code
 <<constant [[THREADED_CODE]]>>=
-#define THREADED_CODE
+//#define THREADED_CODE
 @
 % if does not have gcc first-class labels, can't have THREADED_CODE
 % see advanced topics chapter
@@ -9910,10 +10054,10 @@ value interprete(code_t prog, asize_t prog_size)
 
 % when no threaded code
 <<macro [[Instruct]]>>=
-#  define Instruct(name) case name
+#define Instruct(name) case name
 @
 <<macro [[Next]]>>=
-#  define Next break
+#define Next break
 @
 
 
@@ -11947,26 +12091,26 @@ unsigned long event_count;
 @
 
 <<[[interpreter()]] debugger cases>>=
-/* Debugging and machine control */
+    /* Debugging and machine control */
 
-    Instruct(STOP):
-      external_raise = initial_external_raise;
-      extern_sp = sp;
-      return accu;
+        Instruct(STOP):
+          external_raise = initial_external_raise;
+          extern_sp = sp;
+          return accu;
 
-    Instruct(EVENT):
-      if (--event_count == 0) {
-        Setup_for_debugger;
-        debugger(EVENT_COUNT);
-        Restore_after_debugger;
-      }
-      Restart_curr_instr;
+        Instruct(EVENT):
+          if (--event_count == 0) {
+            Setup_for_debugger;
+            debugger(EVENT_COUNT);
+            Restore_after_debugger;
+          }
+          Restart_curr_instr;
 
-    Instruct(BREAK):
-      Setup_for_debugger;
-      debugger(BREAKPOINT);
-      Restore_after_debugger;
-      Restart_curr_instr;
+        Instruct(BREAK):
+          Setup_for_debugger;
+          debugger(BREAKPOINT);
+          Restore_after_debugger;
+          Restart_curr_instr;
 @
 
 <<constant [[Setup_for_debugger]]>>=
@@ -13076,8 +13220,8 @@ let maybe_skip_phrase lexbuf =
 
 
 <<function [[Parse.xxx]]>>=
-let toplevel_phrase = wrap Parser.toplevel_phrase
-let use_file = wrap Parser.use_file
+let toplevel_phrase = wrap Parser.toplevel_phrase "toplevel_phrase"
+let use_file = wrap Parser.use_file "use_file"
 @
 
 <<signature [[Translmod.transl_toplevel_definition]]>>=
@@ -13119,21 +13263,22 @@ and directive_argument =
 \subsection{Threaded code}
 
 <<macro [[Instruct]] for [[THREADED_CODE]]>>=
-#  define Instruct(name) lbl_##name
+//#  define Instruct(name) lbl_##name
 @
 
 <<macro [[Next]] for [[THREADED_CODE]]>>=
-#    define Next goto *(void *)(jumptbl_base + *pc++)
+//#    define Next goto *(void *)(jumptbl_base + *pc++)
 @
 
 <<[[interpreter()]] ifdef [[THREADED_CODE]], [[jumptbl_base]] register declaration>>=
-#if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
-#ifdef JUMPTBL_BASE_REG
-  register char * jumptbl_base JUMPTBL_BASE_REG;
-#else
-  register char * jumptbl_base;
-#endif
-#endif
+//TODO: commented because 8c/5c do not handle #if directives
+//#if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
+//#ifdef JUMPTBL_BASE_REG
+//  register char * jumptbl_base JUMPTBL_BASE_REG;
+//#else
+//  register char * jumptbl_base;
+//#endif
+//#endif
 @
 % register too!
 
@@ -13167,9 +13312,10 @@ if (prog == NULL) {           /* Interpreter is initializing */
 @
 
 <<[[interpreter()]] ifdef [[THREADED_CODE]], [[jumptbl_base]] setting>>=
-#if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
-  jumptbl_base = Jumptbl_base;
-#endif
+//TODO: commented because 8c/5c do not handle #if directives
+//#if defined(THREADED_CODE) && defined(ARCH_SIXTYFOUR) && !defined(ARCH_CODE32)
+//  jumptbl_base = Jumptbl_base;
+//#endif
 @
 
 <<[[interpreter()]] ifdef [[THREADED_CODE]], loop start>>=
@@ -14109,7 +14255,7 @@ void stop_here () {}
 @
 
 <<macro [[Next]] for [[THREADED_CODE]] ifdef [[DEBUG]]>>=
-#    define Next goto next_instr
+//#    define Next goto next_instr
 @
 
 
