@@ -1,7 +1,7 @@
 #!/bin/sh
 # Run a native-code ($(CODE_EXE)) test/example binary built for the
 # configured -target-arch, using a qemu-user front-end when that arch
-# cannot run directly on this host (e.g. mips, alpha, m68k).
+# cannot run directly on this host (e.g. mips, alpha, m68k, sparc).
 #
 # This is deliberately explicit rather than relying on qemu-binfmt /
 # binfmt_misc registration: that registration is host/kernel-wide, not
@@ -19,5 +19,10 @@ case "$arch" in
   mips)  exec qemu-mipsel-static "$@" ;;
   alpha) exec qemu-alpha-static "$@" ;;
   m68k)  exec qemu-m68k-static "$@" ;;
+  # claude: sparc64-linux-gnu-gcc -m32 (see configure's -target-arch
+  # sparc case) emits binaries flagged EF_SPARC_32PLUS -- qemu-sparc
+  # (plain v8) refuses to run them ("Invalid ELF image for this
+  # architecture"), only qemu-sparc32plus accepts that flavor.
+  sparc) exec qemu-sparc32plus-static "$@" ;;
   *)     exec "$@" ;;
 esac

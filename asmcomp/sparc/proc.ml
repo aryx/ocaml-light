@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 (* Description of the Sparc processor *)
 
 open Misc
@@ -215,5 +213,6 @@ let contains_calls = ref false
 (* Calling the assembler and the archiver *)
 
 let assemble_file infile outfile =
-  Ccomp.command ("as -o " ^ outfile ^ " " ^ infile)
+  Ccomp.command
+    (Config.asm ^ " " ^ Config.asm_flags ^ " -g -o " ^ outfile ^ " " ^ infile)
 

@@ -1,7 +1,7 @@
 ###############################################################################
 # Overview
 ###############################################################################
-# Build and test ocaml-light (bytecode and x86/arm/mips/alpha/m68k native) on Ubuntu.
+# Build and test ocaml-light (bytecode and x86/arm/mips/alpha/m68k/sparc native) on Ubuntu.
 # See https://docs.docker.com/build/building/multi-stage/ for more info on the
 # multi-stage approach.
 
@@ -233,6 +233,55 @@ RUN ocamlopt foo.ml
 # registration.
 RUN test/run-native ./a.out
 
+# claude: same reasoning as build-native-alpha/build-native-m68k above --
+# ubuntu:22.04 doesn't package gcc-sparc64-linux-gnu either, only 24.04
+# does.
+FROM ubuntu:24.04 AS build-native-sparc
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends binutils gcc libc6-dev make
+RUN apt-get install -y --no-install-recommends libx11-dev
+
+WORKDIR /src
+COPY --from=build /src /src
+COPY --from=build /usr/local /usr/local
+
+# claude: same reasoning as build-native-mips above -- sparc has no
+# CPU-level compat mode on x86_64/aarch64, so every sparc binary here
+# needs qemu-user regardless of the Docker host's own architecture.
+# claude: there is no plain "gcc-sparc-linux-gnu" cross package on
+# Debian/Ubuntu -- only the biarch gcc-sparc64-linux-gnu (see configure's
+# -target-arch sparc comment), whose -m32 mode is what actually gets used
+# here, matching asmcomp/sparc/arch.ml's 32-bit size_int/size_addr.
+# gcc-sparc64-linux-gnu only Recommends libc6-dev-sparc64-cross (the
+# 64-bit target headers) -- it never pulls in
+# libc6-dev-sparc-sparc64-cross (the 32-bit ones, providing
+# gnu/stubs-32.h and friends) nor lib32gcc-13-dev-sparc64-cross (the
+# 32-bit libgcc.a -- without it, linking any -m32 sparc binary fails
+# with "skipping incompatible .../libgcc.a" / "cannot find -lgcc",
+# since the only libgcc.a this cross toolchain ships by default is the
+# 64-bit one), both of which -m32 needs and both of which have to be
+# requested explicitly.
+RUN apt-get install -y gcc-sparc64-linux-gnu libc6-dev-sparc-sparc64-cross lib32gcc-13-dev-sparc64-cross qemu-user-static
+RUN ./configure -target-arch sparc
+RUN make opt
+
+RUN make installopt
+RUN make test
+# good self test
+RUN make ocamlc.opt
+RUN make ocamlopt.opt
+
+RUN echo 'let _ = print_string "hello native sparc"' > foo.ml
+RUN ocamlopt foo.ml
+# claude: configure's -target-arch sparc links with -m32 -static (see the
+# nativecclinkopts comment in configure), so a.out needs no sparc shared
+# libraries on this filesystem -- just the qemu-user-static interpreter
+# installed above. Uses test/run-native for the same reason
+# build-native-mips does: no reliance on qemu-binfmt/binfmt_misc
+# registration.
+RUN test/run-native ./a.out
+
 ###############################################################################
 # Stage4: native image
 ###############################################################################
@@ -295,6 +344,20 @@ RUN ocamlopt -v
 # build-native-m68k above.
 FROM bytecode AS native-m68k
 COPY --from=build-native-m68k /usr/local /usr/local
+# basic tests
+RUN which ocaml
+RUN ocamlc -v
+RUN echo '1+1;;' | ocaml
+# more basic tests
+RUN which ocamlopt
+RUN ocamlopt -v
+
+# claude: same scope note as native-mips/native-alpha/native-m68k above --
+# no sparc64-linux-gnu-gcc/as here, just a smoke test of the installed
+# (bytecode) tools. The real sparc regression test lives in
+# build-native-sparc above.
+FROM bytecode AS native-sparc
+COPY --from=build-native-sparc /usr/local /usr/local
 # basic tests
 RUN which ocaml
 RUN ocamlc -v

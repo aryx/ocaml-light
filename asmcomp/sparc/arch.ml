@@ -9,13 +9,17 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 (* Specific operations for the Sparc processor *)
 
 open Format
 
 type specific_operation = unit          (* None worth mentioning *)
+
+(* claude: required by Selectgen.selector's generic select_floatarith,
+   used by architectures (e.g. i386) whose float unit has commutative-op
+   swapping quirks. sparc's own selection.ml never calls
+   select_floatarith, so this is unused. *)
+type float_operation = unit
 
 (* Addressing modes *)
 

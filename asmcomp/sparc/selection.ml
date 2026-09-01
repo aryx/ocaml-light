@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 (* Instruction selection for the Sparc processor *)
 
 open Misc
@@ -18,6 +16,8 @@ open Cmm
 open Reg
 open Arch
 open Mach
+
+open Selectgen
 
 (* Recognition of addressing modes *)
 
@@ -43,13 +43,13 @@ let rec select_addr = function
   | exp ->
       (Alinear exp, 0)
 
-class selector = object (self)
+let selector () =
+  let super = Selectgen.selector_generic () in
+  { super with
 
-inherit Selectgen.selector_generic as super
+  is_immediate = (fun (n : int) -> (n <= 4095) && (n >= -4096));
 
-method is_immediate n = (n <= 4095) && (n >= -4096)
-
-method select_addressing exp =
+  select_addressing = (fun exp ->
   match select_addr exp with
     (Asymbol s, d) ->
       (Ibased(s, d), Ctuple [])
@@ -57,8 +57,9 @@ method select_addressing exp =
       (Iindexed d, e)
   | (Aadd(e1, e2), d) ->
       (Iindexed2 d, Ctuple[e1; e2])
+  );
 
-method select_operation op args =
+  select_operation = (fun self op args ->
   match (op, args) with
   (* Multiplication, division and modulus are turned into
      calls to C library routines, except if the dividend is a power of 2. *)
@@ -66,25 +67,26 @@ method select_operation op args =
       (Iintop_imm(Ilsl, Misc.log2 n), [arg])
   | (Cmuli, [Cconst_int n; arg]) when n = 1 lsl (Misc.log2 n) ->
       (Iintop_imm(Ilsl, Misc.log2 n), [arg])
-  | (Cmuli, _) -> 
+  | (Cmuli, _) ->
       (Iextcall(".umul", false), args)
   | (Cdivi, [arg; Cconst_int n])
-    when self#is_immediate n & n = 1 lsl (Misc.log2 n) ->
+    when self.is_immediate n & n = 1 lsl (Misc.log2 n) ->
       (Iintop_imm(Idiv, n), [arg])
-  | (Cdivi, _) -> 
+  | (Cdivi, _) ->
       (Iextcall(".div", false), args)
   | (Cmodi, [arg; Cconst_int n])
-    when self#is_immediate n & n = 1 lsl (Misc.log2 n) ->
+    when self.is_immediate n & n = 1 lsl (Misc.log2 n) ->
       (Iintop_imm(Imod, n), [arg])
   | (Cmodi, _) ->
       (Iextcall(".rem", false), args)
   | _ ->
-      super#select_operation op args
+      super.select_operation self op args
+  );
 
-(* Override insert_move_args to deal correctly with floating-point
-   arguments being passed into pairs of integer registers. *)
-method insert_move_args arg loc stacksize =
-  if stacksize <> 0 then self#insert (Iop(Istackoffset stacksize)) [||] [||];
+  (* Override insert_move_args to deal correctly with floating-point
+     arguments being passed into pairs of integer registers. *)
+  insert_move_args = (fun self arg loc stacksize ->
+  if stacksize <> 0 then self.insert self (Iop(Istackoffset stacksize)) [||] [||];
   let locpos = ref 0 in
   for i = 0 to Array.length arg - 1 do
     let src = arg.(i) in
@@ -92,13 +94,15 @@ method insert_move_args arg loc stacksize =
     match (src, dst) with
       ({typ = Float}, {typ = Int}) ->
         let dst2 = loc.(!locpos + 1) in
-        self#insert (Iop Imove) [|src|] [|dst; dst2|];
+        self.insert self (Iop Imove) [|src|] [|dst; dst2|];
         locpos := !locpos + 2
     | (_, _) ->
-        self#insert_move src dst;
+        self.insert_move self src dst;
         incr locpos
   done
+  );
+  }
 
-end
-
-let fundecl f = (new selector)#emit_fundecl f
+let fundecl f =
+  let s = selector () in
+  s.emit_fundecl s f
