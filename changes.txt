@@ -6,10 +6,11 @@
 ** arch
 - restore arm support in ocamlopt, backported from 2.0.2 and
   adapted to qemu-arm and different float ABI
-  using gcc-arm-linux-gnueabihf
+  using gcc-arm-linux-gnueabihf (bit thx to Claude)
 
 ** build infra
 - add a --target-arch i386|arm to configure so easy to cross compile
+- add a configure --help
 
 * 0.4 (Q1 2026) (plan9 support v1)
 
