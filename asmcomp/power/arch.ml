@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 (* Specific operations for the PowerPC processor *)
 
 open Format
@@ -18,6 +16,12 @@ open Format
 type specific_operation =
     Imultaddf                           (* multiply and add *)
   | Imultsubf                           (* multiply and subtract *)
+
+(* claude: required by Selectgen.selector's generic select_floatarith,
+   used by architectures (e.g. i386) whose float unit has commutative-op
+   swapping quirks. power's own selection.ml never calls
+   select_floatarith, so this is unused. *)
+type float_operation = unit
 
 (* Addressing modes *)
 
@@ -79,14 +83,18 @@ let powerpc =
   | "rs6000" -> false
   | _ -> Misc.fatal_error "wrong $(MODEL)"
 
-(* Distinguish between the PowerOpen (AIX, MacOS) TOC-based,
-   relative-addressing model and the SVR4 (Solaris, MkLinux, Rhapsody)
-   absolute-addressing model. *)
-
+(* claude: the original ocaml sources also supported the PowerOpen
+   (AIX, MacOS) TOC-based, relative-addressing model ("aix") and the
+   Rhapsody/Darwin variant of the SVR4 absolute-addressing model
+   ("rhapsody") -- neither was restored here (only "elf", Linux's SVR4
+   ABI, was), so `toc` is always false for ocaml-light's -target-arch
+   power and the various `if toc then ... else ...` branches below and
+   in proc.ml/emit.mlp always take their "false" side. Kept as a
+   distinct `system`-driven value (rather than hardcoding `false`
+   throughout) in case AIX support is restored later, same spirit as
+   asmcomp/sparc/proc.ml's endianness-driven register-name arrays. *)
 let toc =
   match Config.system with
-    "aix" -> true
-  | "elf" -> false
-  | "rhapsody" -> false
+    "elf" -> false
   | _ -> Misc.fatal_error "wrong $(SYSTEM)"
 

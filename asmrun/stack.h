@@ -49,6 +49,19 @@
 #define Callback_link(sp) ((struct caml_context *)(sp + 16))
 #endif
 
+/* claude: upstream ocaml also has an "#ifdef SYS_aix / Trap_frame_size
+   24 / #else / 8 / #endif" here -- dead code for ocaml-light's
+   -target-arch power (elf/Linux only, whose asmcomp/power/emit.mlp
+   trap_frame_size is always 8, since toc is always false there), so
+   hardcoded; see the comment on Arch.toc. */
+#ifdef TARGET_power
+#define Saved_return_address(sp) *((long *)(sp - 4))
+#define Already_scanned(sp, retaddr) (retaddr & 1)
+#define Mark_scanned(sp, retaddr) (*((long *)(sp - 4)) = retaddr | 1)
+#define Mask_already_scanned(retaddr) (retaddr & ~1)
+#define Callback_link(sp) ((struct caml_context *)(sp + 8))
+#endif
+
 /* Structure of Caml callback contexts */
 
 struct caml_context {

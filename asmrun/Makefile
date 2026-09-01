@@ -32,9 +32,6 @@ install:
 	cp libasmrun.a $(LIBDIR)
 	cd $(LIBDIR); $(RANLIB) libasmrun.a
 
-power.o: power-$(SYSTEM).o
-	cp power-$(SYSTEM).o power.o
-
 main.c: ../byterun/main.c
 	ln -s ../byterun/main.c main.c
 misc.c: ../byterun/misc.c

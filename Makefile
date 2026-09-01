@@ -647,6 +647,10 @@ build-docker-m68k:
 build-docker-sparc:
 	docker build --tag "ocaml-light-sparc" --target "native-sparc" .
 #coupling: .github/workflows/docker.yml
+
+build-docker-power:
+	docker build --tag "ocaml-light-power" --target "native-power" .
+#coupling: .github/workflows/docker.yml
 build-docker-plan9:
 	docker build --tag "ocaml-light-plan9" -f Dockerfile.plan9 .
 

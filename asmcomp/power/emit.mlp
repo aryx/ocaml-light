@@ -9,11 +9,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 (* Emission of PowerPC assembly code *)
 
-module StringSet = Set.Make(struct type t = string let compare = compare end)
+(* claude: the original ocaml sources used a dedicated
+   "module StringSet = Set.Make(...)" here for defined_functions --
+   ocaml-light has no functors, so this now uses the ambient
+   polymorphic Set module directly (structural compare on strings is
+   the same as the custom comparator this Set.Make instantiation used
+   anyway), same fix as Reg.Set below. *)
 
 open Misc
 open Cmm
@@ -59,13 +62,14 @@ let slot_offset loc cls =
   | Incoming n -> frame_size() + n
   | Outgoing n -> n
 
+(* claude: the original ocaml sources also had "aix" (PowerOpen/AIX) and
+   "rhapsody" (Darwin) variants of every function below down to
+   pic_externals -- dead code for ocaml-light's -target-arch power
+   (elf/Linux only), so dropped; see the comment on Arch.toc. *)
+
 (* Output a symbol *)
 
-let emit_symbol =
-  match Config.system with
-    "aix" | "elf" -> (fun s -> Emitaux.emit_symbol '.' s)
-  | "rhapsody"    -> (fun s -> emit_char '_'; Emitaux.emit_symbol '$' s)
-  | _ -> assert false
+let emit_symbol s = Emitaux.emit_symbol '.' s
 
 let emit_codesymbol s =
   if toc then emit_char '.';
@@ -73,38 +77,18 @@ let emit_codesymbol s =
 
 (* Output a label *)
 
-let label_prefix =
-  match Config.system with
-    "aix" -> "L.."
-  | "elf" -> ".L"
-  | "rhapsody" -> "L"
-  | _ -> assert false
+let label_prefix = ".L"
 
 let emit_label lbl =
   emit_string label_prefix; emit_int lbl
 
 (* Section switching *)
 
-let data_space =
-  match Config.system with
-    "aix" -> "	.csect  .data[RW]\n"
-  | "elf" -> "	.section \".data\"\n"
-  | "rhapsody" -> "	.data\n"
-  | _ -> assert false
+let data_space = "	.section \".data\"\n"
 
-let code_space =
-  match Config.system with
-    "aix" -> "	.csect  .text[PR]\n"
-  | "elf" -> "	.section \".text\"\n"
-  | "rhapsody" -> "	.text\n"
-  | _ -> assert false
+let code_space = "	.section \".text\"\n"
 
-let rodata_space =
-  match Config.system with
-    "aix" -> "	.csect  .data[RW]\n" (* ?? *)
-  | "elf" -> "	.section \".rodata\"\n"
-  | "rhapsody" -> "	.const\n"
-  | _ -> assert false
+let rodata_space = "	.section \".rodata\"\n"
 
 (* Output a pseudo-register *)
 
@@ -113,20 +97,11 @@ let emit_reg r =
     Reg r -> emit_string (register_name r)
   | _ -> fatal_error "Emit.emit_reg"
 
-let use_full_regnames = 
-  Config.system = "rhapsody"
+let emit_gpr r = emit_int r
 
-let emit_gpr r =
-  if use_full_regnames then emit_char 'r';
-  emit_int r
+let emit_fpr r = emit_int r
 
-let emit_fpr r =
-  if use_full_regnames then emit_char 'f';
-  emit_int r
-
-let emit_ccr r =
-  if use_full_regnames then emit_string "cr";
-  emit_int r
+let emit_ccr r = emit_int r
 
 (* Output a stack reference *)
 
@@ -142,7 +117,17 @@ let low n = n land 0xFFFF
 let high n = n asr 16
 
 let nativelow n = Nativeint.to_int n land 0xFFFF
-let nativehigh n = Nativeint.to_int (Nativeint.shift n (-16))
+(* claude: masked with "land 0xFFFF" too, like nativelow just above --
+   without it, a Cconst_int literal wider than 32 bits (legitimate on
+   this cross-compiling 64-bit host's 63-bit OCaml int, e.g.
+   otherlibs/num/nat.ml's "match length_of_digit with 64 -> ... |
+   1000000000000000000 ... | 32 -> ...": the 64-bit-only branch is dead
+   code at runtime on this 32-bit target, but still has to compile) made
+   nativehigh's result itself wider than 16 bits, which
+   powerpc-linux-gnu-as's "lis" then rejected outright ("operand out of
+   range") instead of silently truncating like a real 32-bit host's own
+   int-truncating lexer would have. *)
+let nativehigh n = (Nativeint.to_int (Nativeint.shift n (-16))) land 0xFFFF
 
 let is_immediate n =
   n <= 32767 && n >= -32768
@@ -154,20 +139,10 @@ let is_native_immediate n =
    (for the absolute addressing mode) *)
 
 let emit_upper emit_fun arg =
-  match Config.system with
-    "elf" ->
-      emit_fun arg; emit_string "@ha"
-  | "rhapsody" ->
-      emit_string "ha16("; emit_fun arg; emit_string ")"
-  | _ -> assert false
+  emit_fun arg; emit_string "@ha"
 
 let emit_lower emit_fun arg =
-  match Config.system with
-    "elf" ->
-      emit_fun arg; emit_string "@l"
-  | "rhapsody" ->
-      emit_string "lo16("; emit_fun arg; emit_string ")"
-  | _ -> assert false
+  emit_fun arg; emit_string "@l"
 
 (* Output a load or store operation *)
 
@@ -221,7 +196,7 @@ let frame_descriptors = ref([] : frame_descr list)
 let record_frame live =
   let lbl = new_label() in
   let live_offset = ref [] in
-  Reg.Set.iter
+  (*Reg.*)Set.iter
     (function
         {typ = Addr; loc = Reg r} ->
           live_offset := (r lsl 1) + 1 :: !live_offset
@@ -284,19 +259,6 @@ let emit_float_constant float lbl =
 
 let float_literals = ref ([] : (string * int) list)
 
-(* Record external C functions to be called in a position-independent way
-   (for Rhapsody) *)
-
-let pic_externals = (Config.system = "rhapsody")
-
-let external_functions = ref StringSet.empty
-
-let emit_external s =
-  `	.non_lazy_symbol_pointer\n`;
-  `L{emit_symbol s}$non_lazy_ptr:\n`;
-  `	.indirect_symbol {emit_symbol s}\n`;
-  `	.long	0\n`
-
 (* Names for conditional branches after comparisons *)
 
 let branch_for_comparison = function
@@ -354,7 +316,7 @@ let function_name = ref ""
 (* Entry point for tail recursive calls *)
 let tailrec_entry_point = ref 0
 (* Names of functions defined in the current file *)
-let defined_functions = ref StringSet.empty
+let defined_functions = ref Set.empty
 (* Label of glue code for calling the GC *)
 let call_gc_label = ref 0
 (* Label of jump table *)
@@ -432,7 +394,7 @@ let rec emit_instr i dslot =
     | Lop(Icall_imm s) ->
         record_frame i.live;
         `	bl	{emit_codesymbol s}\n`;
-        if toc && not (StringSet.mem s !defined_functions) then
+        if toc && not (Set.mem s !defined_functions) then
           `	cror	31, 31, 31\n`      (* nop *)
     | Lop(Itailcall_ind) ->
         let n = frame_size() in
@@ -455,7 +417,7 @@ let rec emit_instr i dslot =
     | Lop(Itailcall_imm s) ->
         if s = !function_name then
           `	b	{emit_label !tailrec_entry_point}\n`
-        else if not toc || StringSet.mem s !defined_functions then begin
+        else if not toc || Set.mem s !defined_functions then begin
           let n = frame_size() in
           if !contains_calls then begin
             `	lwz	{emit_gpr 11}, {emit_int(n - 4)}({emit_gpr 1})\n`;
@@ -496,10 +458,6 @@ let rec emit_instr i dslot =
           if toc then begin
             let lbl = label_symbol s in
             `	lwz	11, {emit_label lbl}(2) # {emit_symbol s}\n`
-          end else if pic_externals then begin
-            external_functions := StringSet.add s !external_functions;
-            `	addis	{emit_gpr 11}, 0, ha16(L{emit_symbol s}$non_lazy_ptr)\n`;
-            `	lwz	{emit_gpr 11}, lo16(L{emit_symbol s}$non_lazy_ptr)({emit_gpr 11})\n`
           end else begin
             `	addis	{emit_gpr 11}, 0, {emit_upper emit_symbol s}\n`;
             `	addi	{emit_gpr 11}, {emit_gpr 11}, {emit_lower emit_symbol s}\n`
@@ -507,13 +465,6 @@ let rec emit_instr i dslot =
           record_frame i.live;
           `	bl	{emit_codesymbol "caml_c_call"}\n`
         end else begin
-          if pic_externals then begin
-            external_functions := StringSet.add s !external_functions;
-            `	addis	{emit_gpr 11}, 0, ha16(L{emit_symbol s}$non_lazy_ptr)\n`;
-            `	lwz	{emit_gpr 11}, lo16(L{emit_symbol s}$non_lazy_ptr)({emit_gpr 11})\n`;
-            `	mtlr	{emit_gpr 11}\n`;
-            `	blrl\n`
-          end else
           `	bl	{emit_codesymbol s}\n`
         end;
         if toc then
@@ -797,22 +748,13 @@ let rec emit_all i =
 
 let fundecl fundecl =
   function_name := fundecl.fun_name;
-  defined_functions := StringSet.add fundecl.fun_name !defined_functions;
+  defined_functions := Set.add fundecl.fun_name !defined_functions;
   tailrec_entry_point := new_label();
   stack_offset := 0;
   call_gc_label := 0;
   float_literals := [];
   `	.globl	{emit_symbol fundecl.fun_name}\n`;
-  begin match Config.system with
-    "aix" ->
-      `	.globl	.{emit_symbol fundecl.fun_name}\n`;
-      `	.csect	{emit_symbol fundecl.fun_name}[DS]\n`;
-      `{emit_symbol fundecl.fun_name}:\n`;
-      `	.long	.{emit_symbol fundecl.fun_name}, TOC[tc0], 0\n`
-  | "elf" ->
-      `	.type	{emit_symbol fundecl.fun_name}, @function\n`
-  | _ -> ()
-  end;
+  `	.type	{emit_symbol fundecl.fun_name}, @function\n`;
   emit_string code_space;
   `	.align	2\n`;
   `{emit_codesymbol fundecl.fun_name}:\n`;
@@ -853,8 +795,7 @@ let fundecl fundecl =
 
 let declare_global_data s =
   `	.globl	{emit_symbol s}\n`;
-  if Config.system = "elf" then
-    `	.type	{emit_symbol s}, @object\n`
+  `	.type	{emit_symbol s}, @object\n`
 
 let emit_item = function
     Cdefine_symbol s ->
@@ -890,8 +831,7 @@ let data l =
 let begin_assembly() =
   Hashtbl.clear symbol_constants;
   Hashtbl.clear float_constants;
-  defined_functions := StringSet.empty;
-  external_functions := StringSet.empty;
+  defined_functions := Set.empty;
   num_jumptbl_entries := 0;
   jumptbl_entries := [];
   lbl_jumptbl := 0;
@@ -928,9 +868,6 @@ let end_assembly() =
     Hashtbl.iter emit_symbol_constant symbol_constants;
     Hashtbl.iter emit_float_constant float_constants
   end;
-  if pic_externals then
-    (* Emit the pointers to external functions *)
-    StringSet.iter emit_external !external_functions;
   (* Emit the end of the segments *)
   emit_string code_space;
   let lbl_end = Compilenv.current_unit_name() ^ "_code_end" in

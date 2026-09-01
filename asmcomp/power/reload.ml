@@ -9,9 +9,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
+open Reloadgen
 
 (* Reloading for the PowerPC *)
 
 let fundecl f =
-  (new Reloadgen.reload_generic)#fundecl f
+  let reloader = Reloadgen.reload_generic () in
+  reloader.fundecl reloader f

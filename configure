@@ -75,7 +75,7 @@ Options are:
                       supported" for a 64-bit host such as x86_64 or
                       aarch64, since neither has a native backend yet).
                       Supported: i386, arm (or arm32), mips, alpha, m68k,
-                      sparc.
+                      sparc, power (or powerpc).
                       Example: -target-arch i386 on an aarch64 host
                       cross-compiles i386 binaries using the installed
                       i686-linux-gnu-gcc/as toolchain. -target-arch mips
@@ -88,6 +88,8 @@ Options are:
                       -target-arch sparc cross-compiles using the
                       installed sparc64-linux-gnu-gcc/as toolchain (in
                       -m32 mode, i.e. 32-bit sparc v8/v9 code).
+                      -target-arch power cross-compiles using the
+                      installed powerpc-linux-gnu-gcc/as toolchain.
   -cc <compiler>      Use <compiler> as the C compiler for the bytecode
                       compiler's "custom runtime" mode
   -lib <libs>         Link the bytecode "custom runtime" mode with <libs>
@@ -317,10 +319,11 @@ esac
 # endian), which says nothing about the target of a cross native-code
 # build. This was never wrong before (every prior -target-arch: i386,
 # arm, mips, alpha, is little-endian, matching every host this has been
-# built on), so it went unnoticed; -target-arch m68k and -target-arch
-# sparc are big-endian (asmcomp/{m68k,sparc}/arch.ml's big_endian = true)
-# and need asmrun/*.c (compiled by m68k-linux-gnu-gcc / sparc64-linux-gnu-gcc,
-# which predefine __m68k__ / __sparc__ respectively) to agree, regardless
+# built on), so it went unnoticed; -target-arch m68k, sparc and power
+# are big-endian (asmcomp/{m68k,sparc,power}/arch.ml's big_endian = true)
+# and need asmrun/*.c (compiled by m68k-linux-gnu-gcc /
+# sparc64-linux-gnu-gcc / powerpc-linux-gnu-gcc, which predefine
+# __m68k__ / __sparc__ / __powerpc__ respectively) to agree, regardless
 # of what the (little-endian) host determined for itself.
 sh ./runtest endian.c
 case $? in
@@ -336,7 +339,7 @@ case $? in
      echo "(option ARCH_BIG_ENDIAN in m.h)."
      host_endian_directive="#undef ARCH_BIG_ENDIAN";;
 esac
-echo "#if defined(__m68k__) || defined(__sparc__)" >> m.h
+echo "#if defined(__m68k__) || defined(__sparc__) || defined(__powerpc__)" >> m.h
 echo "#define ARCH_BIG_ENDIAN" >> m.h
 echo "#else" >> m.h
 echo "$host_endian_directive" >> m.h
@@ -389,10 +392,11 @@ esac
 # load/store a boxed OCaml float as a double) fault on an address that
 # isn't 8-byte aligned, so mipsel-linux-gnu-gcc (asmrun/*.c) needs
 # ARCH_ALIGN_DOUBLE regardless of what the runtest probe found on the
-# (unrelated) host CPU. Same for -target-arch sparc: sparc's ldd/std
-# (used the same way) trap on a word-aligned-but-not-doubleword-aligned
-# address, and size_int (4) < size_float (8) there too, unlike alpha
-# below.
+# (unrelated) host CPU. Same for -target-arch sparc and -target-arch
+# power: their load/store-double instructions (ldd/std on sparc, lfd/
+# stfd on power) trap the same way on a word-aligned-but-not-
+# doubleword-aligned address, and size_int (4) < size_float (8) for
+# both, unlike alpha below.
 #
 # claude: deliberately NOT listing __alpha__ here (an earlier version of
 # this comment did, reasoning "Alpha traps on unaligned float access" by
@@ -409,7 +413,7 @@ esac
 # element, corrupting whatever follows it in the block (observed:
 # reading back an all-zero header/tag on the very next native-compiled
 # program that populated a float array, i.e. test/fft.ml).
-echo "#if defined(__arm__) || defined(__mips__) || defined(__sparc__)" >> m.h
+echo "#if defined(__arm__) || defined(__mips__) || defined(__sparc__) || defined(__powerpc__)" >> m.h
 echo "#define ARCH_ALIGN_DOUBLE" >> m.h
 echo "#else" >> m.h
 echo "$dblalign_host_directive" >> m.h
@@ -461,7 +465,16 @@ case "$target_arch" in
   alpha)     arch=alpha; system=linux_elf;;
   m68k)      arch=m68k;  system=linux_elf;;
   sparc)     arch=sparc; system=linux_elf;;
-  *) echo "Unknown -target-arch '$target_arch' (supported: i386, arm/arm32, mips, alpha, m68k, sparc)" 1>&2
+  # claude: asmcomp/power/arch.ml's `toc`/`powerpc` values are keyed off
+  # $(SYSTEM)/$(MODEL) (see there) -- "elf" (not "linux_elf" like every
+  # other target here) is the exact string that source's `toc` match
+  # expects for the SVR4/Linux absolute-addressing model, and "ppc" is
+  # what its `powerpc` match expects to mean "PowerPC, not old POWER/
+  # RS6000". Both are dead-code-free only for this combination; see the
+  # comment on Arch.toc for what was deliberately not restored (AIX,
+  # Rhapsody).
+  power|powerpc) arch=power; system=elf; model=ppc;;
+  *) echo "Unknown -target-arch '$target_arch' (supported: i386, arm/arm32, mips, alpha, m68k, sparc, power/powerpc)" 1>&2
      exit 2;;
 esac
 
@@ -476,6 +489,10 @@ case "$arch,$system,$cc" in
   # nativecccompopts below) makes it emit 32-bit sparc v8/v8plus code,
   # matching asmcomp/sparc/arch.ml's size_int/size_addr = 4.
   sparc,linux_elf,gcc*) nativecc="sparc64-linux-gnu-gcc";;
+  # claude: unlike sparc/i386, there IS a plain 32-bit-only cross
+  # compiler here (powerpc-linux-gnu-gcc, not the biarch
+  # powerpc64-linux-gnu-gcc) -- no -m32-equivalent flag needed below.
+  power,elf,gcc*)       nativecc="powerpc-linux-gnu-gcc";;
   *)                    nativecc="$bytecc";;
 esac
 
@@ -560,6 +577,13 @@ case "$arch,$nativecc,$system" in
 	# is just for convenience under qemu-sparc32plus.
 	nativecccompopts='-Wall --std=gnu89 -m32'
 	nativecclinkopts='-m32 -static'
+	;;
+    power,*,*)
+	# claude: powerpc-linux-gnu-gcc already defaults to 32-bit big-endian
+	# code matching asmcomp/power/arch.ml, so no special compile flags
+	# are needed here. -static is just for convenience under qemu-ppc.
+	nativecccompopts='-Wall --std=gnu89'
+	nativecclinkopts='-static'
 esac
 
 # claude: same native-vs-cross split as the nativecc override above -- the
@@ -615,6 +639,10 @@ case "$arch,$model,$system" in
         aspp='sparc64-linux-gnu-gcc'
 	asflags='-32'
 	asppflags='-m32 -c -DSYS_$(SYSTEM)';;
+    power,*,*)
+        as='powerpc-linux-gnu-as'
+        aspp='powerpc-linux-gnu-gcc'
+	asppflags='-c -DSYS_$(SYSTEM)';;
 esac
 
 # claude: mirrors the nativecc/nativecccompopts native-vs-cross split

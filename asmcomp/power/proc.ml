@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 (* Description of the Power PC *)
 
 open Misc
@@ -42,23 +40,16 @@ let word_addressed = false
     14 - 31             general purpose, preserved by C
 *)
 
+(* claude: the original ocaml sources also had a Rhapsody/Darwin variant
+   of these arrays ("r3"/"f1"-style names, vs. plain numbers here) --
+   dead code for ocaml-light's -target-arch power (elf/Linux only), so
+   dropped; see the comment on Arch.toc. *)
 let int_reg_name =
-  if Config.system = "rhapsody" then
-    [| "r3"; "r4"; "r5"; "r6"; "r7"; "r8"; "r9"; "r10"; 
-       "r14"; "r15"; "r16"; "r17"; "r18"; "r19"; "r20"; "r21";
-       "r22"; "r23"; "r24"; "r25"; "r26"; "r27"; "r28" |]
-  else
-    [| "3"; "4"; "5"; "6"; "7"; "8"; "9"; "10"; 
+    [| "3"; "4"; "5"; "6"; "7"; "8"; "9"; "10";
        "14"; "15"; "16"; "17"; "18"; "19"; "20"; "21";
        "22"; "23"; "24"; "25"; "26"; "27"; "28" |]
-  
+
 let float_reg_name =
-  if Config.system = "rhapsody" then
-    [| "f1"; "f2"; "f3"; "f4"; "f5"; "f6"; "f7"; "f8";
-       "f9"; "f10"; "f11"; "f12"; "f13"; "f14"; "f15"; "f16";
-       "f17"; "f18"; "f19"; "f20"; "f21"; "f22"; "f23"; "f24";
-       "f25"; "f26"; "f27"; "f28"; "f29"; "f30"; "f31" |]
-  else
     [| "1"; "2"; "3"; "4"; "5"; "6"; "7"; "8";
        "9"; "10"; "11"; "12"; "13"; "14"; "15"; "16";
        "17"; "18"; "19"; "20"; "21"; "22"; "23"; "24";
@@ -144,53 +135,19 @@ let loc_parameters arg =
 let loc_results res =
   let (loc, ofs) = calling_conventions 0 7 100 112 not_supported 0 res in loc
 
-(* C calling conventions under PowerOpen:
-     use GPR 3-10 and FPR 1-13 just like ML calling
-     conventions, but always reserve stack space for all arguments.
-     Also, using a float register automatically reserves two int registers.
-     (If we were to call a non-prototyped C function, each float argument
-      would have to go both in a float reg and in the matching pair
-      of integer regs.)
-
-   C calling conventions under SVR4:
+(* C calling conventions under SVR4:
      use GPR 3-10 and FPR 1-8 just like ML calling conventions.
      Using a float register does not affect the int registers.
      Always reserve 8 bytes at bottom of stack, plus whatever is needed
      to hold the overflow arguments. *)
 
-let poweropen_external_conventions first_int last_int
-                                   first_float last_float arg =
-  let loc = Array.create (Array.length arg) Reg.dummy in
-  let int = ref first_int in
-  let float = ref first_float in
-  let ofs = ref 56 in
-  for i = 0 to Array.length arg - 1 do
-    match arg.(i).typ with
-      Int | Addr as ty ->
-        if !int <= last_int then begin
-          loc.(i) <- phys_reg !int;
-          incr int
-        end else begin
-          loc.(i) <- stack_slot (Outgoing !ofs) ty;
-          ofs := !ofs + size_int
-        end
-    | Float ->
-        if !float <= last_float then begin
-          loc.(i) <- phys_reg !float;
-          incr float
-        end else begin
-          loc.(i) <- stack_slot (Outgoing !ofs) Float;
-          ofs := !ofs + size_float
-        end;
-        int := !int + 2
-  done;
-  (loc, Misc.align !ofs 8) (* Keep stack 8-aligned *)
-
-let loc_external_arguments =
-  match Config.system with
-    "aix" | "rhapsody" -> poweropen_external_conventions 0 7 100 112
-  | "elf" -> calling_conventions 0 7 100 107 outgoing 8
-  | _ -> assert false
+(* claude: the original ocaml sources also had poweropen_external_conventions,
+   a PowerOpen (AIX/Rhapsody) calling convention where a float argument
+   reserves matching int registers too, for non-prototyped C functions --
+   dead code for ocaml-light's -target-arch power (elf/Linux only, whose
+   convention is the plain calling_conventions below), so dropped; see
+   the comment on Arch.toc. *)
+let loc_external_arguments = calling_conventions 0 7 100 107 outgoing 8
 
 let extcall_use_push = false
 
@@ -234,13 +191,12 @@ let contains_calls = ref false
 
 (* Calling the assembler *)
 
+(* claude: the original ocaml sources also had "aix" (as -u -m ppc/pwr)
+   and "rhapsody" (plain as, no -u/-m) variants here -- dead code for
+   ocaml-light's -target-arch power (elf/Linux only), so dropped; see
+   the comment on Arch.toc. Goes through Config.asm/Config.asm_flags
+   (configure's `as -u -m ppc`, see there) like every other backend,
+   instead of a hardcoded command. *)
 let assemble_file infile outfile =
-  match Config.system with
-    "aix" ->
-      let proc = if powerpc then "ppc" else "pwr" in
-      Ccomp.command ("as -u -m " ^ proc ^ " -o " ^ outfile ^ " " ^ infile)
-  | "elf" ->
-      Ccomp.command ("as -u -m ppc -o " ^ outfile ^ " " ^ infile)
-  | "rhapsody" ->
-      Ccomp.command ("as -o " ^ outfile ^ " " ^ infile)
-  | _ -> assert false
+  Ccomp.command
+    (Config.asm ^ " " ^ Config.asm_flags ^ " -o " ^ outfile ^ " " ^ infile)

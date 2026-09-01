@@ -1,7 +1,7 @@
 ###############################################################################
 # Overview
 ###############################################################################
-# Build and test ocaml-light (bytecode and x86/arm/mips/alpha/m68k/sparc native) on Ubuntu.
+# Build and test ocaml-light (bytecode and x86/arm/mips/alpha/m68k/sparc/power native) on Ubuntu.
 # See https://docs.docker.com/build/building/multi-stage/ for more info on the
 # multi-stage approach.
 
@@ -282,6 +282,49 @@ RUN ocamlopt foo.ml
 # registration.
 RUN test/run-native ./a.out
 
+# claude: same reasoning as build-native-alpha/build-native-m68k/
+# build-native-sparc above -- ubuntu:22.04 doesn't package
+# gcc-powerpc-linux-gnu either, only 24.04 does.
+FROM ubuntu:24.04 AS build-native-power
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends binutils gcc libc6-dev make
+RUN apt-get install -y --no-install-recommends libx11-dev
+
+WORKDIR /src
+COPY --from=build /src /src
+COPY --from=build /usr/local /usr/local
+
+# claude: same reasoning as build-native-mips above -- power has no
+# CPU-level compat mode on x86_64/aarch64, so every power binary here
+# needs qemu-user regardless of the Docker host's own architecture.
+# claude: unlike sparc/i386, there's a plain 32-bit-only cross compiler
+# here (gcc-powerpc-linux-gnu, not a biarch one). It only Recommends
+# (not Depends on) libc6-dev-powerpc-cross, same as every other cross
+# compiler here, but this apt-get (no --no-install-recommends, unlike
+# the base image setup at the top of this file) installs it anyway --
+# there's no equivalent of sparc's *separate*, unlisted-anywhere
+# 32-bit/libgcc packages here to work around.
+RUN apt-get install -y gcc-powerpc-linux-gnu qemu-user-static
+RUN ./configure -target-arch power
+RUN make opt
+
+RUN make installopt
+RUN make test
+# good self test
+RUN make ocamlc.opt
+RUN make ocamlopt.opt
+
+RUN echo 'let _ = print_string "hello native power"' > foo.ml
+RUN ocamlopt foo.ml
+# claude: configure's -target-arch power links with -static (see the
+# nativecclinkopts comment in configure), so a.out needs no power shared
+# libraries on this filesystem -- just the qemu-user-static interpreter
+# installed above. Uses test/run-native for the same reason
+# build-native-mips does: no reliance on qemu-binfmt/binfmt_misc
+# registration.
+RUN test/run-native ./a.out
+
 ###############################################################################
 # Stage4: native image
 ###############################################################################
@@ -358,6 +401,20 @@ RUN ocamlopt -v
 # build-native-sparc above.
 FROM bytecode AS native-sparc
 COPY --from=build-native-sparc /usr/local /usr/local
+# basic tests
+RUN which ocaml
+RUN ocamlc -v
+RUN echo '1+1;;' | ocaml
+# more basic tests
+RUN which ocamlopt
+RUN ocamlopt -v
+
+# claude: same scope note as native-mips/native-alpha/native-m68k/
+# native-sparc above -- no powerpc-linux-gnu-gcc/as here, just a smoke
+# test of the installed (bytecode) tools. The real power regression
+# test lives in build-native-power above.
+FROM bytecode AS native-power
+COPY --from=build-native-power /usr/local /usr/local
 # basic tests
 RUN which ocaml
 RUN ocamlc -v
