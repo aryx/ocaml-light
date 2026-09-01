@@ -3727,8 +3727,9 @@ let contains_calls = ref false
 (* Calling the assembler *)
 
 let assemble_file infile outfile =
-  (* TODO: need use Config.assembler or something!! *)
-  let cmd = ("arm-linux-gnueabihf-as -g -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard -o " ^ outfile ^ " " ^ infile) in
+  let cmd =
+    Config.asm ^ " " ^ Config.asm_flags ^ " -g -o " ^ outfile ^ " " ^ infile
+  in
   Logs.info (fun m -> m "running %s" cmd);
   Sys.command cmd
 @

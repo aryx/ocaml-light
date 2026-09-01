@@ -60,6 +60,13 @@ val ext_asm: string
 <<signature [[Config.c_libraries]]>>
 <<signature [[Config.ranlib]]>>
 
+(* claude: assembler (+ flags) for the native-code target, as selected by
+ * configure (possibly a cross assembler, e.g. i686-linux-gnu-as -- see
+ * configure's -target-arch). Used by asmcomp/<arch>/proc.ml's
+ * assemble_file. *)
+val asm: string
+val asm_flags: string
+
 <<signature [[Config.load_path]]>>
 
 <<signature [[Config.exec_magic_number]]>>
