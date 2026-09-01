@@ -1,5 +1,12 @@
 # -*- org -*-
 
+* 0.5 (Q3 2026) (arm)
+# start use Claude code
+
+** arch
+- restore arm support in ocamlopt, backported from 2.0.2 and
+  adapted to qemu-arm and different float ABI
+
 * 0.4 (Q1 2026) (plan9 support v1)
 
 ** language
@@ -54,7 +61,10 @@
 - add graphics.cma in docker image so can compile graphical programs
   like efuns with ocaml-light
 
-* 0.1 (Q2 2025) (Dockerfile/Nix/GHA CI checks, native working, dune, tests infra, Xix)
+** arch
+- progress on restoring arm native backend
+
+* 0.1 (Q2 2025) (Dockerfile/Nix/GHA CI checks, native x86 working, dune, tests infra, Xix)
 # ported enough features so I can compile some of xix via build-mk.sh and mk
 # in bytecode and (static) native modes!
 
@@ -83,7 +93,7 @@
 - backport ability to type string-format in higher order functions like
   Logs.info (fun m -> m "%s" name) (extension to type_expect())
 
-** compilers
+** arch
 - restore asmcomp/ for x86 (using gcc -m32) and testasmcomp/ is building
 
 ** test infra
@@ -104,6 +114,7 @@
 ** internals
 - remove files and support for old arch (alpha, sparc, vax, etc.)
   and OSes (macOS, windows NT, Solaris)
+  update: restored later support for some old arch (alpha, sparc, m68k)
 
 ** misc
 - fix configure to work with recent gcc/clang (add some
@@ -145,9 +156,10 @@ at commit a234a779913d61830f2f97af10a8d0a2a0d963ce
 - backport a few features from recent OCaml to ocaml-light:
     * record 'with' (see diff_with_record)
 
-** compilers  
+** arch
 - removed some native targets: alpha, hppa, m68k, power, and sparc.
   I just kept i386, mips, and later backported the ARM port from ocaml 2.01!
+  update: I later restored alpha, m68k and sparc
 
 ** tools
 - ocamllex: backport support for named regexps (let name = regexp ...)
