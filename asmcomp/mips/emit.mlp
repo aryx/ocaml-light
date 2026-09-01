@@ -45,11 +45,28 @@ let fastcode_flag = ref true
    which just truncates the equivalent "movl $imm" with a warning), so
    truncate to the low 32 bits here to match that -- harmless for
    genuinely dead code, and no worse than i386's silent truncation for
-   code that (incorrectly) isn't. *)
+   code that (incorrectly) isn't.
+
+   This must be built out of Nativeint's own msw/lsb-split operations
+   (shift/sub/logand/compare), never out of a plain `int` literal like
+   0xFFFFFFFF or 0x80000000: `make ocamlopt.opt` compiles *this file*
+   itself down to mips (self-hosting ocamlopt against itself), so any such
+   literal here would hit the exact same "larger than 32 bits" assembler
+   error this function exists to work around. Nativeint's own helpers
+   only ever use small literals (0, 1, 5, min_int/max_int) for exactly
+   this reason -- see utils/nativeint.ml. *)
+let mask32 = Nativeint.sub (Nativeint.shift (Nativeint.from 1) 32) (Nativeint.from 1)
+let sign_bit32 = Nativeint.shift (Nativeint.from 1) 31
+let two_pow_32 = Nativeint.shift (Nativeint.from 1) 32
+
 let emit_nativeint32 n =
-  let i = Nativeint.to_int n in
-  let i32 = ((i land 0xFFFFFFFF) lxor 0x80000000) - 0x80000000 in
-  emit_string (string_of_int i32)
+  let low32 = Nativeint.logand n mask32 in
+  let signed32 =
+    if Nativeint.compare low32 sign_bit32 >= 0
+    then Nativeint.sub low32 two_pow_32
+    else low32
+  in
+  emit_string (Nativeint.to_string signed32)
 
 let emit_label lbl =
   emit_string "$"; emit_int lbl

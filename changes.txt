@@ -1,12 +1,13 @@
 # -*- org -*-
 
-* 0.5 (Q3 2026) (arm)
+* 0.5 (Q3 2026) (arm, mips)
 # start use Claude code
 
 ** arch
 - restore arm support in ocamlopt, backported from 2.0.2 and
   adapted to qemu-arm and different float ABI
   using gcc-arm-linux-gnueabihf (bit thx to Claude)
+- restored mips support in ocamlopt
 
 ** build infra
 - add a --target-arch i386|arm to configure so easy to cross compile

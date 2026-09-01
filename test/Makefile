@@ -9,6 +9,14 @@ CAMLDEP=../boot/ocamlrun ../tools/ocamldep
 CAMLRUN=../byterun/ocamlrun
 CODERUNPARAMS=CAMLRUNPARAM='o=100'
 
+# claude: wraps native (CODE_EXE) binaries with a qemu-user front-end when
+# the configured -target-arch can't run directly on this host (e.g.
+# mips); see run-native for why this isn't done via qemu-binfmt/
+# binfmt_misc instead. Bytecode (BYTE_EXE, run through $(CAMLRUN)) never
+# needs this: ocamlrun always runs natively on the host regardless of
+# -target-arch.
+RUNNER=./run-native
+
 BYTE_EXE ?= fib.byt takc.byt taku.byt sieve.byt quicksort.byt quicksort.fast.byt \
   fft.byt fft.fast.byt soli.byt soli.fast.byt boyer.byt kb.byt \
   nucleic.byt genlex.byt bdd.byt
@@ -135,9 +143,9 @@ codetest:
         for prog in $(CODE_EXE:.out=); do \
           echo $$prog; \
           if test -f Results/$$prog.runtest; then \
-            sh Results/$$prog.runtest test ./$$prog.out; \
+            sh Results/$$prog.runtest test $(RUNNER) ./$$prog.out; \
           else \
-            ./$$prog.out | cmp - Results/$$prog.out; \
+            $(RUNNER) ./$$prog.out | cmp - Results/$$prog.out; \
           fi; \
         done
 
@@ -164,9 +172,9 @@ codebench:
         for prog in $(CODE_EXE:.out=); do \
           echo -n "$$prog		"; \
           if test -f Results/$$prog.runtest; then \
-            $(CODERUNPARAMS) sh Results/$$prog.runtest bench ./$$prog.out; \
+            $(CODERUNPARAMS) sh Results/$$prog.runtest bench $(RUNNER) ./$$prog.out; \
           else \
-            $(CODERUNPARAMS) xtime -repeat 3 -o /dev/null -e /dev/null ./$$prog.out; \
+            $(CODERUNPARAMS) xtime -repeat 3 -o /dev/null -e /dev/null $(RUNNER) ./$$prog.out; \
           fi; \
         done
 

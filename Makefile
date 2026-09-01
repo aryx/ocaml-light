@@ -626,6 +626,12 @@ build-docker:
 	docker build --tag "padator/ocaml-light:"`uname -m` --target "bytecode" .
 build-docker-opt:
 	docker build --tag "ocaml-light-opt" --target "native-"`uname -m` .
+# claude: unlike build-docker-opt above, this is not `uname -m`-dependent:
+# mips is always a cross target (via qemu-user-static), regardless of
+# whether the Docker host is x86_64 or aarch64.
+#coupling: .github/workflows/docker.yml
+build-docker-mips:
+	docker build --tag "ocaml-light-mips" --target "native-mips" .
 #coupling: .github/workflows/docker.yml
 build-docker-plan9:
 	docker build --tag "ocaml-light-plan9" -f Dockerfile.plan9 .

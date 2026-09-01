@@ -1,7 +1,7 @@
 ###############################################################################
 # Overview
 ###############################################################################
-# Build and test ocaml-light (bytecode and x86/arm native) on Ubuntu.
+# Build and test ocaml-light (bytecode and x86/arm/mips native) on Ubuntu.
 # See https://docs.docker.com/build/building/multi-stage/ for more info on the
 # multi-stage approach.
 
@@ -114,6 +114,41 @@ RUN echo 'let _ = print_string "hello native arm"' > foo.ml
 RUN ocamlopt foo.ml
 RUN ./a.out
 
+FROM build AS build-native-mips
+
+# claude: unlike i386 (gcc-multilib on a matching host) and arm (native
+# execution via aarch64's AArch32 compat mode), there is no CPU-level
+# compat mode from x86_64/aarch64 down to mips -- every mips binary here
+# needs qemu-user, regardless of which host architecture builds this
+# image. qemu-user-static is invoked explicitly below rather than relying
+# on the host's binfmt_misc registration, so this stage is self-contained
+# on any Docker host.
+# claude: no --no-install-recommends here (unlike the base image setup
+# above) -- gcc-mipsel-linux-gnu only Recommends (not Depends on)
+# libc6-dev-mipsel-cross, which provides the mipsel target headers
+# (bits/libc-header-start.h etc.) needed to compile asmrun/*.c.
+RUN apt-get install -y gcc-mipsel-linux-gnu qemu-user-static
+WORKDIR /src
+RUN ./configure -target-arch mips
+RUN make opt
+
+RUN make installopt
+RUN make test
+# good self test
+RUN make ocamlc.opt
+RUN make ocamlopt.opt
+
+RUN echo 'let _ = print_string "hello native mips"' > foo.ml
+RUN ocamlopt foo.ml
+# claude: configure's -target-arch mips links with -static (see the
+# nativecclinkopts comment in configure), so a.out needs no mipsel
+# shared libraries on this filesystem -- just the qemu-user-static
+# interpreter installed above. Uses test/run-native (see there) rather
+# than invoking qemu-mipsel-static directly, for the same reason
+# `make test` above does: no reliance on qemu-binfmt/binfmt_misc
+# registration.
+RUN test/run-native ./a.out
+
 ###############################################################################
 # Stage4: native image
 ###############################################################################
@@ -130,6 +165,25 @@ RUN ocamlopt -v
 
 FROM bytecode AS native-aarch64
 COPY --from=build-native-aarch64 /usr/local /usr/local
+# basic tests
+RUN which ocaml
+RUN ocamlc -v
+RUN echo '1+1;;' | ocaml
+# more basic tests
+RUN which ocamlopt
+RUN ocamlopt -v
+
+# claude: like native-x86_64/native-aarch64 above, this final image does
+# not carry the full cross toolchain (mipsel-linux-gnu-gcc/as, only
+# present in build-native-mips) needed to actually compile a new program
+# -- ocamlopt itself is bytecode and runs fine here, but calling it to
+# compile+link would fail on a missing assembler, same as those other
+# two stages would on a missing multilib/cross gcc. The real mips
+# regression test (compile, link, and run under qemu-user-static) lives
+# in build-native-mips above; this stage only smoke-tests the installed
+# tools, matching native-x86_64/native-aarch64's scope.
+FROM bytecode AS native-mips
+COPY --from=build-native-mips /usr/local /usr/local
 # basic tests
 RUN which ocaml
 RUN ocamlc -v

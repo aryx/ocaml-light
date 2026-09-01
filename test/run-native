@@ -1,0 +1,21 @@
+#!/bin/sh
+# Run a native-code ($(CODE_EXE)) test/example binary built for the
+# configured -target-arch, using a qemu-user front-end when that arch
+# cannot run directly on this host (e.g. mips).
+#
+# This is deliberately explicit rather than relying on qemu-binfmt /
+# binfmt_misc registration: that registration is host/kernel-wide, not
+# scoped to a single `docker build`, and has proven fragile to set up
+# reliably across plain Docker and GitHub Actions runners. Invoking the
+# right qemu-<arch> ourselves needs nothing beyond the qemu-user package
+# being installed, works the same in any container, and fails with a
+# clear "command not found" instead of a silent/confusing exec error.
+#
+# Usage: run-native <binary> [args...]
+
+arch=`sed -n 's/^ARCH=//p' "$(dirname "$0")/../config/Makefile" | tail -1`
+
+case "$arch" in
+  mips) exec qemu-mipsel-static "$@" ;;
+  *)    exec "$@" ;;
+esac
