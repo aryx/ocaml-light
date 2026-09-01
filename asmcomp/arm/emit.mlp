@@ -50,6 +50,18 @@ let emit_next_reg r =
     Reg r -> emit_string (register_name(r + 1))
   | _ -> fatal_error "Emit_arm.emit_next_reg"
 
+(* claude: single-precision alias of a double register's low half (dN's s0
+ * is s(2N), per the VFP register file: dN physically overlaps s(2N) [low
+ * 32 bits] and s(2N+1) [high 32 bits]). Used by Ifloatofint/Iintoffloat
+ * below to get a scratch single-precision register to bridge the int <->
+ * double conversion (VFP has no direct int-reg <-> double-reg move) --
+ * see the "claude:" comment there for why this must be the instruction's
+ * own arg/res register rather than a hardcoded s0. *)
+let emit_single_reg r =
+  match r.loc with
+    Reg r -> emit_string ("s" ^ string_of_int (2 * (r - 100)))
+  | _ -> fatal_error "Emit_arm.emit_single_reg"
+
 (* Layout of the stack frame *)
 
 let stack_offset = ref 0
@@ -466,19 +478,38 @@ let emit_instr i =
         `	{emit_string instr}	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}\n`; 1
 
     | Lop(Ifloatofint as op) ->
+        (* claude: this used to bounce through a hardcoded scratch register
+         * s0 -- but s0 is not scratch, it's the low 32 bits of d0, a real
+         * allocatable double register (phys_reg 100, float_reg_name.(0)).
+         * Whenever the register allocator happened to keep some other live
+         * double value in d0 across this instruction, "vmov s0, ..." would
+         * silently stomp its low mantissa bits, corrupting that value by a
+         * small but very real amount -- exactly the intermittent,
+         * register-allocation-dependent numerical corruption that made
+         * test/fft.ml's error grow with problem size (more Ifloatofint
+         * call sites live => more chances of an in-use d0). Fixed by using
+         * the *result* register's own single-precision low half as
+         * scratch instead of a hardcoded one: res.(0) is only live-out of
+         * this instruction (nothing yet depends on its old value), so
+         * writing its low half first, then converting in place, is always
+         * safe no matter what the allocator assigned. *)
         let instr = name_for_float_operation op in
-        `       vmov s0, {emit_reg i.arg.(0)}\n`;
-        `	{emit_string instr}	{emit_reg i.res.(0)}, s0\n`; 2
+        `       vmov {emit_single_reg i.res.(0)}, {emit_reg i.arg.(0)}\n`;
+        `	{emit_string instr}	{emit_reg i.res.(0)}, {emit_single_reg i.res.(0)}\n`; 2
     | Lop(Iintoffloat as op) ->
-        (* claude: mirror image of the Ifloatofint case above: convert the
-         * double in arg.(0) to a signed 32-bit int, landing in scratch
-         * single-precision register s0 (vcvt, with no rounding-mode
-         * suffix, always rounds toward zero, matching int_of_float's
-         * truncation semantics), then bit-move s0 into the integer result
-         * register. *)
+        (* claude: mirror image of the Ifloatofint case above, and fixed for
+         * the same reason: convert the double in arg.(0) to a signed 32-bit
+         * int (vcvt, with no rounding-mode suffix, always rounds toward
+         * zero, matching int_of_float's truncation semantics), landing in
+         * arg.(0)'s own single-precision low half rather than a hardcoded
+         * s0 that could belong to some other live double -- safe here
+         * because the vcvt instruction fully reads all 64 bits of arg.(0)
+         * before it writes back the low 32 bits of the result, so source
+         * and scratch-destination are allowed to overlap. Then bit-move
+         * that low half into the integer result register. *)
         let instr = name_for_float_operation op in
-        `	{emit_string instr}	s0, {emit_reg i.arg.(0)}\n`;
-        `	vmov	{emit_reg i.res.(0)}, s0\n`; 2
+        `	{emit_string instr}	{emit_single_reg i.arg.(0)}, {emit_reg i.arg.(0)}\n`;
+        `	vmov	{emit_reg i.res.(0)}, {emit_single_reg i.arg.(0)}\n`; 2
 
     | Lop(Iaddf | Isubf | Imulf | Idivf as op) ->
         let instr = name_for_float_operation op in

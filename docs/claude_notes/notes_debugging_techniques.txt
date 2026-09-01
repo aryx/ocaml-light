@@ -384,3 +384,177 @@ values keep producing wrong results through a call boundary, stop
 re-checking the values and start checking the *call mechanics*
 (register/stack conventions) that the ABI treats differently for the
 specific kind of call that's failing.
+
+8. Reading the error *magnitude* as a clue, not just its presence
+-------------------------------------------------------------------
+A later, separate session chased `test/fft.ml`: correct up to np=32, then
+wrong from np=64 upward, with the error growing roughly in proportion to
+problem size (~3e-5 at np=64, ~3e-2 at np=65536). GC involvement was
+ruled out early and correctly (`CAMLRUNPARAM=s=8000000`, a minor heap
+far bigger than the whole program's allocation volume, produced byte-
+identical wrong output) -- but that result was then *over-generalized*
+into "this isn't a GC/allocation bug at all", which stalled the
+investigation for a long time. The actual bug (section 9) does live
+right next to an allocation call site; ruling out the GC *collector*
+doesn't rule out something else keyed to the same instructions.
+
+What finally cracked it was stopping to look at the *size* of the wrong
+answers, not just their wrongness. The diffs were things like
+`1.90734863148e-06`, `3.81469726118e-06`, `7.62939451171e-06`,
+`3.05175777342e-05` -- and `1.9073486328125e-06` is exactly `2^-19`.
+These are suspiciously clean powers of two, each roughly double the
+last. Random floating-point corruption (wrong array index, stale
+pointer, garbage from an uninitialized slot) essentially never produces
+numbers that clean. A bit-level corruption of a *specific, fixed set of
+low bits* in an IEEE-754 double does: it always looks like "the answer
+plus or minus some multiple of 2^k" for whatever bit position got
+stomped. That reframing -- "which bits, of which register, at which
+instruction" instead of "which array/pointer/index" -- is what pointed
+at a register-aliasing bug in a single instruction pattern rather than
+a logic error in the algorithm.
+
+Practical takeaway: when a floating-point result is wrong by a small,
+reproducible amount, compute the diff as a power of two (`diff /
+2**round(log2(diff))` should land near 1.0 if it's clean) before
+spending more time on the surrounding algorithm. A clean power-of-two
+diff says "look for a bit-level/register-level corruption of a live
+double", not "look for a logic bug in this loop" -- a completely
+different, much narrower search.
+
+9. Worked case study: the s0/d0 scratch-register aliasing bug
+-------------------------------------------------------------------
+Symptom: `test/fft.ml`'s self-check (an inverse-FFT that should recover
+the exact input ramp 0,1,2,...,np-1 to ~1e-14) diverged starting at
+np=64, worse at larger np, e.g. `px.(4) = 3.00000190734863` instead of
+`3.0`.
+
+Step 1 -- re-verify the *whole* claim, not just the summary of it, before
+building on it. An earlier round of this same investigation (a prior
+session) had concluded "the `fft` function's own computation is
+byte-for-byte identical to bytecode through every stage; the corruption
+only appears in `test`'s final max-tracking loop". Re-running that same
+comparison from scratch with a debug copy of fft.ml (`Printf.printf
+"%.17g"`-dumping the *entire* array at each stage boundary, diffed
+token-by-token against a bytecode run of the identical program) found
+the arrays were untouched (identical dumps) all the way through the
+"bit reverse counter" stage -- but then ALSO found the corruption
+independently reproduces inside `fft` itself's own tail (a divergence
+loop appended right after the bitrev stage, structurally almost
+identical to `test`'s max-tracking loop), even with no `test`-specific
+code involved at all. In other words: the earlier "isolated to `test`'s
+loop" conclusion was itself wrong -- it happened to be looking at a
+loop *shape*, not the actual location, and that shape recurs. Lesson:
+when a prior investigation's conclusion doesn't survive a fresh,
+independent repro, trust the fresh repro, not the earlier writeup
+(including one you wrote yourself).
+
+Step 2 -- read the assembly for the diverging loop directly rather than
+theorizing further from the OCaml source. The loop was:
+
+  for z = 0 to np-1 do
+    let d = abs_float (px.(z+1) -. float z) in ...
+
+`float z` (an int-to-float conversion, Mach op `Ifloatofint`) compiles,
+right next to a `vldr.f64 d0, [...]` that had *just* loaded `px.(z+1)`
+into d0:
+
+  vldr.f64 d0, [r2, #-4]        @ d0 = px.(z+1)
+  mov     r1, r5, asr #1        @ r1 = raw z
+  vmov    s0, r1                @ <-- scratch write to s0
+  vcvt.f64.s32 d7, s0           @ d7 = float(z)
+  vsub.f64 d6, d0, d7           @ d0 used again right after
+
+`asmcomp/arm/emit.mlp`'s codegen for `Ifloatofint` (and its mirror,
+`Iintoffloat`) hardcoded a scratch register: `vmov s0, {arg}` then
+`vcvt.f64.s32 {res}, s0`. The bug: **s0 is not a scratch register**. On
+VFP, `s0`/`s1` are the low/high 32 bits of `d0` -- an ordinary,
+fully-allocatable double register (`phys_reg 100`, the *first* one the
+register allocator hands out). Whenever the allocator happened to keep
+some other live double value in `d0` across an `Ifloatofint`/
+`Iintoffloat` instruction -- exactly what happened here, since `d0` held
+`px.(z+1)` -- `vmov s0, ...` silently overwrote its low 32 bits.
+
+Step 3 -- explain the observed magnitudes with this specific mechanism,
+as a sanity check that this really is the bug and not just *a* bug.
+Overwriting the low word of a double corrupts a chunk of its mantissa
+with the bit pattern of an unrelated small int; the resulting error size
+depends on the exponent of the value being corrupted (a power of two,
+matching section 8) and, critically, on whether/how often the allocator
+happens to place a *different* live double in `d0` at each call site --
+which explains both "not every value is wrong" (only iterations where
+the allocator's choice collided) and "gets worse with problem size"
+(more loop trip counts through the same instruction = more chances of a
+collision), without needing to invoke GC at all.
+
+Step 4 -- fix by using a scratch register that's provably safe instead
+of a hardcoded one. `Ifloatofint`'s destination (`res.(0)`) is only
+*live-out* of the instruction -- nothing depends on its old value -- so
+its own single-precision low half (`s(2*resnum)`) is always free to use
+as scratch: write the int into it, then `vcvt` in place into the full
+double. `Iintoffloat`'s source (`arg.(0)`) is live-in, but VFP's `vcvt`
+instruction reads its full 64-bit source before writing any part of the
+(differently-sized) destination, so source and scratch-destination are
+allowed to overlap for that specific instruction -- using `arg.(0)`'s
+own low half as the s-register target is safe there too. Neither fix
+needs a real "spare register" from the allocator; both just stop
+reaching for a *specific, hardcoded* one that happened to already be
+spoken for elsewhere.
+
+The generalizable lesson: on a register file with overlapping views of
+different widths (VFP single/double, x86 XMM low-lane, etc.), "just use
+register 0 as scratch" is only safe if register 0 is truly outside the
+allocator's view for that value's type -- otherwise it's exactly as live
+as any other register, and reaching for it needs the same liveness
+justification as reaching for any other allocated register would.
+
+10. Cross-checking a fix against how upstream later evolved
+-------------------------------------------------------------------
+After landing the fix above, it's worth checking whether a *later*
+version of the same codebase family independently hit and fixed the
+same class of bug -- an old fork like this one has, in effect, a future
+history sitting right there on disk if other checked-out versions of
+upstream OCaml are available (here: ~/work/OCAML/OLD/ocaml-3.12.1 and
+ocaml-4.02.3). This isn't about copying code wholesale -- internal APIs
+(Mach/Cmm/Proc/Emit shapes, register numbering conventions, even which
+FP unit is targeted) drift too much across a decade of releases to
+port directly -- but the *design decision* at a specific bug site
+often transfers even when the surrounding code doesn't.
+
+In this case, ocaml-3.12.1's arm backend doesn't help (it targets a
+different, non-VFP float ABI entirely -- `Ifloatofint`/`Iintoffloat`
+are `assert false` there, handled via a completely different soft-float
+path). But ocaml-4.02.3's arm backend (a full rewrite of the ARM port,
+`Changes` PR#5433, "New ARM backend") targets the same
+AAPCS-VFP/EABIHF convention this fork does, and its `emit.mlp` has:
+
+  | Lop(Ifloatofint) ->
+      `	fmsr	s14, {emit_reg i.arg.(0)}\n`;
+      `	fsitod	{emit_reg i.res.(0)}, s14\n`; 2
+
+-- using `s14` (the low half of `d7`, not `d0`) as scratch. Its
+`proc.ml` then declares the consequence explicitly:
+
+  | Iop(Iintoffloat | Ifloatofint | Iload(Single, _) | Istore(Single, _, _)) ->
+      [| phys_reg 107 |]            (* d7 (s14-s15) destroyed *)
+
+i.e. upstream's real fix for this exact bug shape is: pick one double
+register to serve as a permanent single-precision scratch, and tell the
+register allocator it is destroyed at every instruction that uses it
+that way (via `destroyed_at_oper`), so liveness analysis keeps anything
+else out of it at those points. That's a different, and in some ways
+more standard, solution than the one used here (reusing the
+instruction's own arg/res register's alias, which needs no
+`destroyed_at_oper` entry at all because the safety argument is
+per-instruction rather than allocator-wide) -- but it's solving the
+exact same problem: *a hardcoded scratch register must either be
+proven private to the instruction, or be declared to the register
+allocator as clobbered*. Finding upstream converging on the same root
+cause, years later and via a different code path, was a strong
+independent confirmation that the diagnosis in section 9 was right, not
+just "a plausible theory that happened to make the test pass."
+
+Worth remembering next time: `PR#6588 "Code generation errors for ARM"
+(Mark Shinwell, Xavier Leroy)` in ocaml-4.02.3's `Changes`, right after
+that backend rewrite, is a plausible pointer to *other* register-
+allocator-vs-hardcoded-register bugs of this same shape, if similar
+symptoms ever show up again in this arm/ port.
