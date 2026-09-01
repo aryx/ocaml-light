@@ -28,6 +28,7 @@ mandir=/usr/local/man/man1
 manext=1
 
 host_type=unknown
+target_arch=''
 
 cc=''
 cclibs=''
@@ -50,6 +51,12 @@ gcc_warnings="-Wall --std=gnu89"
 #          ./configure -cc "gcc -m32" -as "as --32" -aspp "gcc -m32 -c" \
 #                -host i386-linux -partialld "ld -r -melf_i386"
 
+# claude: -target-arch lets the native-code compiler target an arch other
+# than what $host would auto-select below (see "Configure the native-code
+# compiler"), e.g. -target-arch i386 to cross-compile i386 binaries from
+# this aarch64 host using the installed i686-linux-gnu-gcc/as toolchain,
+# instead of the default arm target that aarch64 hosts otherwise get.
+
 while : ; do
   case "$1" in
     "") break;;
@@ -63,6 +70,8 @@ while : ; do
         shift;;
     -host*|--host*)
         host_type=$2; shift;;
+    -target-arch*|--target-arch*)
+        target_arch=$2; shift;;
     -cc*)
         cc="$2"; shift;;
     -lib*)
@@ -339,13 +348,40 @@ case "$host" in
   aarch64-*-linux*)            arch=arm; system=linux_elf;;
 esac
 
+# claude: -target-arch overrides the $host-based default above so this
+# host can cross-compile a native-code target other than the one $host
+# would normally get (e.g. i386 from this aarch64 host, instead of the
+# default arm). Only wires up targets with a known cross toolchain in the
+# case blocks below (nativecc, then nativecccompopts/nativecclinkopts,
+# then as/aspp) -- add a new arch (e.g. mips, via the already-present but
+# unwired asmcomp/mips/ backend) by extending those, plus asmcomp/<arch>/
+# proc.ml's assemble_file if it isn't already routed through
+# Config.asm/Config.asm_flags.
+case "$target_arch" in
+  "") ;;
+  i386)      arch=i386; system=linux_elf;;
+  arm|arm32) arch=arm;   system=linux_elf;;
+  *) echo "Unknown -target-arch '$target_arch' (supported: i386, arm/arm32)" 1>&2
+     exit 2;;
+esac
+
 case "$arch,$system,$cc" in
   mips,*,gcc*)        nativecc=cc;;
-  #coupling: asmcomp/arm/proc.ml assemble_file()
   arm,linux_elf,gcc*) nativecc="arm-linux-gnueabihf-gcc";;
   *)                  nativecc="$bytecc";;
 esac
 
+# claude: the i386 default above ($bytecc, i.e. the host's own gcc) only
+# works when the host can build i386 itself: natively (i[3456]86 host) or
+# via gcc's -m32 multilib support (x86_64 host, see nativecccompopts
+# below). On any other host -- e.g. this aarch64 host cross-compiling to
+# i386 via -target-arch i386 -- $bytecc is an aarch64 compiler with no
+# -m32 mode, so use the installed i686-linux-gnu-gcc cross compiler
+# instead.
+case "$arch,$host" in
+  i386,i[3456]86-*|i386,x86_64-*) ;;  # native or -m32 multilib: keep $bytecc
+  i386,*)                         nativecc="i686-linux-gnu-gcc";;
+esac
 
 #TODO: could also case on $host here for crosscompiling settings
 case "$arch,$nativecc,$system" in
@@ -365,6 +401,15 @@ case "$arch,$nativecc,$system" in
 	# so a Thumb callee gets its instructions misread as ARM and the
 	# program crashes almost immediately).
 	nativecccompopts='-Wall --std=gnu89  -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard -marm'
+esac
+
+# claude: same native-vs-cross split as the nativecc override above -- the
+# i386,gcc*,* case just above assumes -m32 works ($bytecc is either
+# already i386, or an x86_64 gcc with multilib support). The cross
+# compiler selected above for other hosts is already an i386-only
+# compiler, so it needs no -m32/-march flags at all.
+case "$arch,$nativecc" in
+  i386,i686-linux-gnu-gcc) nativecccompopts='-Wall --std=gnu89';;
 esac
 
 # claude: this used to say "TODO: define as='' at some point too" -- no
@@ -394,6 +439,23 @@ case "$arch,$model,$system" in
         aspp='arm-linux-gnueabihf-gcc'
 	asflags='-march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard'
 	asppflags='-O0 -fno-inline -ggdb -c -DSYS_$(SYSTEM) -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard';;
+esac
+
+# claude: mirrors the nativecc/nativecccompopts native-vs-cross split
+# above -- the plain host `as`/`gcc` used by the i386 case just above only
+# work when the host itself is (or can multilib-produce) i386. When
+# cross-compiling i386 from a host that can't (aarch64 here), route both
+# the plain assembler (asmcomp/i386/proc.ml's assemble_file, via
+# Config.asm/Config.asm_flags below) and the preprocessed assembler
+# (asmrun/*.S, via ASPP/ASPPFLAGS) through the installed i686-linux-gnu-*
+# cross toolchain instead, dropping the now-redundant -m32/--32 (those
+# cross tools already target i386 by default).
+case "$arch,$nativecc" in
+  i386,i686-linux-gnu-gcc)
+    as='i686-linux-gnu-as'
+    asflags=''
+    aspp='i686-linux-gnu-gcc'
+    asppflags='-c -DSYS_$(SYSTEM)';;
 esac
 
 echo "ARCH=$arch" >> Makefile

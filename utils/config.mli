@@ -46,6 +46,13 @@ val ranlib: string
         (* Command to randomize a library, or "" if not needed *)
 (*e: signature [[Config.ranlib]] *)
 
+(* claude: assembler (+ flags) for the native-code target, as selected by
+ * configure (possibly a cross assembler, e.g. i686-linux-gnu-as -- see
+ * configure's -target-arch). Used by asmcomp/<arch>/proc.ml's
+ * assemble_file. *)
+val asm: string
+val asm_flags: string
+
 (*s: signature [[Config.load_path]] *)
 val load_path: string list ref
         (* Directories in the search path for .cmi and .cmo files *)

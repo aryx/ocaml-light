@@ -25,6 +25,15 @@ let native_partial_linker = "%%PARTIALLD%%"
 let c_libraries = "%%CCLIBS%%"
 let ranlib = "%%RANLIBCMD%%"
 
+(* claude: assembler (+ flags) selected by configure for the native-code
+ * target (may be a cross assembler, e.g. i686-linux-gnu-as, when
+ * cross-compiling -- see configure's -target-arch). Used by
+ * asmcomp/<arch>/proc.ml's assemble_file instead of a hardcoded command,
+ * so a given arch's assembler doesn't need to be duplicated in both
+ * configure and the OCaml sources. *)
+let asm = "%%AS%%"
+let asm_flags = "%%ASFLAGS%%"
+
 (* XXX *)
 let exec_magic_number = "Caml1999X002"
 and cmi_magic_number = "Caml1999I003"
