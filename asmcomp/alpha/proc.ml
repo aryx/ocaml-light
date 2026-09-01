@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 (* Description of the Alpha processor *)
 
 open Misc
@@ -204,11 +202,11 @@ let contains_calls = ref false
 
 (* Calling the assembler *)
 
+(* claude: ocaml-light has no -pg/gprofile support at all (Clflags.gprofile
+   doesn't exist here), and digital_asm is always false (see Arch), so
+   this simplifies to the same Config.asm/Config.asm_flags convention
+   used by the other ocaml-light backends (arm, i386, mips). *)
 let assemble_file infile outfile =
-  let as_cmd =
-    if digital_asm
-    then if !Clflags.gprofile then "as -O2 -nocpp -pg -o "
-                              else "as -O2 -nocpp -o "
-    else "as -o " in
-  Ccomp.command (as_cmd ^ outfile ^ " " ^ infile)
+  Ccomp.command
+    (Config.asm ^ " " ^ Config.asm_flags ^ " -g -o " ^ outfile ^ " " ^ infile)
 

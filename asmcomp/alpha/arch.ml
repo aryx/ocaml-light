@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 (* Specific operations for the Alpha processor *)
 
 open Format
@@ -26,6 +24,11 @@ type addressing_mode =
 type specific_operation =
     Iadd4 | Iadd8 | Isub4 | Isub8       (* Scaled adds and subs *)
   | Ireloadgp of bool                   (* The ldgp instruction *)
+
+(* claude: required by Selectgen.selector's generic select_floatarith,
+   used by architectures (e.g. i386) whose float unit has commutative-op
+   swapping quirks. Alpha has no such quirk, so this is unused. *)
+type float_operation = unit
 
 (* Sizes, endianness *)
 
@@ -67,9 +70,11 @@ let print_specific_operation printreg op arg =
   | Isub8 -> printreg arg.(0); print_string " * 8 - "; printreg arg.(1)
   | Ireloadgp _ -> print_string "ldgp"
 
-(* Distinguish between the Digital assembler and other assemblers (e.g. gas) *)
-
-let digital_asm =
-  match Config.system with
-    "digital" -> true
-  | _ -> false
+(* claude: ocaml-light only wires up the alpha-linux-gnu- cross toolchain
+   (see configure's -target-arch alpha), i.e. gas, never the Digital/OSF1
+   assembler -- unlike the original code (which detected this from
+   Config.system), this is hardcoded false. Kept as a named constant
+   (rather than deleting the digital_asm-guarded branches below and in
+   proc.ml/scheduling.ml/selection.ml) since those branches document real
+   differences between the two assemblers. *)
+let digital_asm = false

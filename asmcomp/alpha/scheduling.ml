@@ -9,61 +9,64 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 open Arch
 open Mach
+open Schedgen
 
 (* The Digital Unix assembler does scheduling better than us.
    However, the Linux-Alpha assembler does not do scheduling, so we do
    a feeble attempt here. *)
 
-class scheduler = object (self)
+let scheduler () =
+  let super = Schedgen.scheduler_generic () in
+  { super with
 
-inherit Schedgen.scheduler_generic as super
+  (* Latencies (in cycles). Based on the 21064, with some poetic license. *)
 
-(* Latencies (in cycles). Based on the 21064, with some poetic license. *)
+  oper_latency = (function
+      Ireload -> 3
+    | Iload(_, _) -> 3
+    | Iconst_symbol _ -> 3 (* turned into a load *)
+    | Iconst_float _ -> 3 (* ends up in a load *)
+    | Iintop(Imul) -> 23
+    | Iintop_imm(Imul, _) -> 23
+    | Iaddf -> 6
+    | Isubf -> 6
+    | Imulf -> 6
+    | Idivf -> 63
+    | _ -> 2
+      (* Most arithmetic instructions can be executed back-to-back in 1
+         cycle. However, some combinations (arith; load or arith; store)
+         require 2 cycles. Also, by claiming 2 cycles instead of 1, we
+         might favor dual issue. *)
+  );
 
-method oper_latency = function
-    Ireload -> 3
-  | Iload(_, _) -> 3
-  | Iconst_symbol _ -> 3 (* turned into a load *)
-  | Iconst_float _ -> 3 (* ends up in a load *)
-  | Iintop(Imul) -> 23
-  | Iintop_imm(Imul, _) -> 23
-  | Iaddf -> 6
-  | Isubf -> 6
-  | Imulf -> 6
-  | Idivf -> 63
-  | _ -> 2
-    (* Most arithmetic instructions can be executed back-to-back in 1 cycle.
-       However, some combinations (arith; load or arith; store) require 2
-       cycles.  Also, by claiming 2 cycles instead of 1, we might favor
-       dual issue. *)
+  (* Issue cycles. Rough approximations. *)
 
-(* Issue cycles.  Rough approximations. *)
+  oper_issue_cycles = (function
+      Iconst_float _ -> 4                 (* load from $gp, then load *)
+    | Ialloc _ -> 4
+    | Iintop(Icheckbound) -> 2
+    | Iintop_imm(Idiv, _) -> 3
+    | Iintop_imm(Imod, _) -> 5
+    | Iintop_imm(Icheckbound, _) -> 2
+    | Ifloatofint -> 10
+    | Iintoffloat -> 10
+    | _ -> 1
+  );
 
-method oper_issue_cycles = function
-    Iconst_float _ -> 4                 (* load from $gp, then load *)
-  | Ialloc _ -> 4
-  | Iintop(Icheckbound) -> 2
-  | Iintop_imm(Idiv, _) -> 3
-  | Iintop_imm(Imod, _) -> 5
-  | Iintop_imm(Icheckbound, _) -> 2
-  | Ifloatofint -> 10
-  | Iintoffloat -> 10
-  | _ -> 1
+  (* Say that reloadgp is not part of a basic block (prevents moving it
+     past an operation that uses $gp) *)
 
-(* Say that reloadgp is not part of a basic block (prevents moving it
-   past an operation that uses $gp) *)
-
-method oper_in_basic_block = function
-    Ispecific(Ireloadgp _) -> false
-  | op -> super#oper_in_basic_block op
-
-end
+  oper_in_basic_block = (function
+      Ispecific(Ireloadgp _) -> false
+    | op -> super.oper_in_basic_block op
+  );
+  }
 
 let fundecl =
   if digital_asm
   then (fun f -> f)
-  else (new scheduler)#schedule_fundecl
+  else (fun f ->
+    let s = scheduler () in
+    s.schedule_fundecl s f)

@@ -60,3 +60,19 @@ caml_c_call:
 
         .end    caml_c_call
 
+/* claude: asmcomp/alpha/emit.mlp's Icheckbound failure path branches to
+   this trampoline (see asmrun/alpha.S, which defines the same thing for
+   the real runtime) rather than array_bound_error (defined in main.c)
+   directly, because $gp needs reinitializing before the call -- ported
+   verbatim from asmrun/alpha.S since this standalone test harness links
+   against this file instead. */
+
+        .globl  call_array_bound_error
+        .ent    call_array_bound_error
+        .align  3
+call_array_bound_error:
+        br      $27, $200
+$200:   ldgp    $gp, 0($27)
+        jsr     array_bound_error       /* never returns */
+        .end    call_array_bound_error
+

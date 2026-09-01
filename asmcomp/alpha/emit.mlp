@@ -9,11 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
-module LabelSet =
-  Set.Make(struct type t = Linearize.label let compare = compare end)
-
 (* Emission of Alpha assembly code *)
 
 open Misc
@@ -29,18 +24,22 @@ open Emitaux
 
 let insert_load_gp f =
 
-  let labels_needing_gp = ref LabelSet.empty in
+(* claude: ocaml-light avoids functors, so this is the ambient
+   (project-wide, polymorphic) Set module rather than a Set.Make(...)
+   instantiation over Linearize.label -- see the same substitution for
+   Reg.Set below. *)
+  let labels_needing_gp = ref Set.empty in
   let fixpoint_reached = ref false in
 
   let label_needs_gp lbl =
-    LabelSet.mem lbl !labels_needing_gp in
+    Set.mem lbl !labels_needing_gp in
   let opt_label_needs_gp default = function
       None -> default
     | Some lbl -> label_needs_gp lbl in
   let set_label_needs_gp lbl =
     if not (label_needs_gp lbl) then begin
       fixpoint_reached := false;
-      labels_needing_gp := LabelSet.add lbl !labels_needing_gp
+      labels_needing_gp := Set.add lbl !labels_needing_gp
     end in
 
   let tailrec_entry_point = new_label() in
@@ -203,7 +202,7 @@ let liveregs instr extra_msk =
     | {loc = Reg r; typ = Float} ->
         float_mask := !float_mask lor (1 lsl (31 - float_reg_number.(r - 100)))
     | _ -> () in
-  Reg.Set.iter add_register instr.live;
+  (*Reg.*)Set.iter add_register instr.live;
   Array.iter add_register instr.arg;
   emit_printf "	.livereg 0x%08x, 0x%08x\n" !int_mask !float_mask
 
@@ -224,7 +223,7 @@ let frame_descriptors = ref([] : frame_descr list)
 let record_frame_label live =
   let lbl = new_label() in
   let live_offset = ref [] in
-  Reg.Set.iter
+  (*Reg.*)Set.iter
     (function
         {typ = Addr; loc = Reg r} ->
           live_offset := ((int_reg_number.(r) lsl 1) + 1) :: !live_offset
@@ -270,11 +269,11 @@ let emit_call_gc gc =
 
 (* Name of readonly data section *)
 
-let rdata_section =
-  match Config.system with
-    "digital" -> ".rdata"
-  | "linux"   -> ".section .rodata"
-  | _         -> assert false
+(* claude: ocaml-light only wires up the alpha-linux-gnu- cross toolchain
+   (see configure's -target-arch alpha), i.e. gas on Linux, so this is
+   hardcoded rather than matched on Config.system (which is "linux_elf"
+   here, not the original code's "linux"). *)
+let rdata_section = ".section .rodata"
 
 (* Names of various instructions *)
 
@@ -702,7 +701,14 @@ let emit_fundecl (fundecl, needs_gp) =
     `	.fmask	0x0, 0\n`
   end;
   `	.frame	$sp, {emit_int n}, $26\n`;
-  `	.prologue {if needs_gp then 1 else 0}\n`;
+  (* claude: this used to interpolate "{if needs_gp then 1 else 0}" with
+     no emit_int, which cvt_emit.mll splices in as a bare (int-typed, but
+     never printed) statement -- silently emitting ".prologue " with no
+     argument at all instead of ".prologue 0"/".prologue 1", regardless
+     of needs_gp. gas tolerates the missing argument (no error), but the
+     correct argument is what tells the assembler/debug-info consumers
+     whether this function's $gp is valid on entry. *)
+  `	.prologue {emit_int (if needs_gp then 1 else 0)}\n`;
   tailrec_entry_point := new_label();
   `{emit_label !tailrec_entry_point}:\n`;
   emit_all fundecl.fun_body;
