@@ -1,16 +1,17 @@
 # -*- org -*-
 
-* 0.5 (Q3 2026) (arm, mips)
+* 0.5 (Q3 2026) (restored arm/mips/sparc/alpha/powerpc native codegen)
 # start use Claude code
 
 ** arch
 - restore arm support in ocamlopt, backported from 2.0.2 and
   adapted to qemu-arm and different float ABI
   using gcc-arm-linux-gnueabihf (bit thx to Claude)
-- restored mips support in ocamlopt
+- restored also mips, alpha, sparc, and powerpc support in ocamlopt
+  from ocaml 2.0.2 (bit thx to Claude)
 
 ** build infra
-- add a --target-arch i386|arm to configure so easy to cross compile
+- add a --target-arch i386|arm|... to configure so easy to cross compile
 - add a configure --help
 
 * 0.4 (Q1 2026) (plan9 support v1)
