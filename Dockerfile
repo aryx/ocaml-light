@@ -33,7 +33,7 @@ RUN make coldstart
 
 RUN make
 
-# make install
+# make install (classic triptic)
 RUN make install
 
 ###############################################################################
@@ -96,10 +96,10 @@ WORKDIR /src
 RUN make opt
 
 RUN make installopt
-#TODO
-#RUN make test
-#RUN make ocamlc.opt
-#RUN make ocamlopt.opt
+RUN make test
+# good self test
+RUN make ocamlc.opt
+RUN make ocamlopt.opt
 RUN echo 'let _ = print_string "hello native arm"' > foo.ml
 #RUN ocamlopt -cclib -lunix foo.ml
 RUN ocamlopt foo.ml

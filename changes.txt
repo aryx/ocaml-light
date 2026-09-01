@@ -6,6 +6,7 @@
 ** arch
 - restore arm support in ocamlopt, backported from 2.0.2 and
   adapted to qemu-arm and different float ABI
+  using gcc-arm-linux-gnueabihf
 
 * 0.4 (Q1 2026) (plan9 support v1)
 
