@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: selection.ml,v 1.1 1997/07/24 11:49:09 xleroy Exp $ *)
-
 (* Instruction selection for the Mips processor *)
 
 open Misc
@@ -19,24 +17,28 @@ open Reg
 open Arch
 open Mach
 
-class selector () as self =
+open Selectgen
 
-inherit Selectgen.selector_generic() as super
+let selector () =
+  let super = Selectgen.selector_generic () in
+  { super with
 
-method is_immediate (n : int) = true
+  is_immediate = (fun (n : int) -> true);
 
-method select_addressing = function
-    Cconst_symbol s ->
-      (Ibased(s, 0), Ctuple [])
-  | Cop(Cadda, [Cconst_symbol s; Cconst_int n]) ->
-      (Ibased(s, n), Ctuple [])
-  | Cop(Cadda, [arg; Cconst_int n]) ->
-      (Iindexed n, arg)
-  | Cop(Cadda, [arg1; Cop(Caddi, [arg2; Cconst_int n])]) ->
-      (Iindexed n, Cop(Cadda, [arg1; arg2]))
-  | arg ->
-      (Iindexed 0, arg)
+  select_addressing = (function
+      Cconst_symbol s ->
+        (Ibased(s, 0), Ctuple [])
+    | Cop(Cadda, [Cconst_symbol s; Cconst_int n]) ->
+        (Ibased(s, n), Ctuple [])
+    | Cop(Cadda, [arg; Cconst_int n]) ->
+        (Iindexed n, arg)
+    | Cop(Cadda, [arg1; Cop(Caddi, [arg2; Cconst_int n])]) ->
+        (Iindexed n, Cop(Cadda, [arg1; arg2]))
+    | arg ->
+        (Iindexed 0, arg)
+  );
+  }
 
-end
-
-let fundecl f = (new selector ())#emit_fundecl f
+let fundecl f =
+  let s = selector () in
+  s.emit_fundecl s f

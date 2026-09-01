@@ -9,9 +9,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: reload.ml,v 1.1 1997/07/24 11:49:09 xleroy Exp $ *)
+open Reloadgen
 
 (* Reloading for the Mips *)
 
 let fundecl f =
-  (new Reloadgen.reload_generic ())#fundecl f
+  let reloader = Reloadgen.reload_generic () in
+  reloader.fundecl reloader f

@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: arch.ml,v 1.1 1997/07/24 11:49:08 xleroy Exp $ *)
-
 (* Specific operations for the Mips processor *)
 
 open Misc
@@ -26,13 +24,18 @@ type addressing_mode =
 
 type specific_operation = unit          (* none *)
 
+(* claude: required by Selectgen.selector's generic select_floatarith,
+   used by architectures (e.g. i386) whose float unit has commutative-op
+   swapping quirks. Mips has no such quirk, so this is unused. *)
+type float_operation = unit
+
 (* Sizes, endianness *)
 
-let big_endian =
-  match Config.system with
-    "ultrix" -> false
-  | "irix" -> true
-  | _ -> fatal_error "Arch_mips.big_endian"
+(* claude: ocaml-light only wires up the mipsel-linux-gnu- cross toolchain
+   (see configure's -target-arch mips), so unlike the original 1.07 code
+   (which supported both little-endian Ultrix and big-endian IRIX as native
+   hosts via a Config.system match), this is hardcoded little-endian. *)
+let big_endian = false
 
 let size_addr = 4
 let size_int = 4

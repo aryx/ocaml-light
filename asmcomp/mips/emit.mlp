@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: emit.mlp,v 1.3 1997/07/27 09:44:25 xleroy Exp $ *)
-
 (* Emission of Mips assembly code *)
 
 open Misc
@@ -22,20 +20,36 @@ open Mach
 open Linearize
 open Emitaux
 
-(* Determine whether we're emitting PIC code (IRIX -32 model)
-   or absolute code *)
+(* claude: ocaml-light only wires up the mipsel-linux-gnu- cross toolchain
+   (see configure's -target-arch mips) to produce plain statically-linked
+   native executables, not shared libraries, so always emit absolute code
+   rather than the PIC ($gp-relative) code the original IRIX -32 model
+   needed. *)
 
-let pic =
-  match Config.system with
-    "ultrix" -> false
-  | "irix" -> true
-  | _ -> fatal_error "Emit_mips.pic"
+let pic = false
 
 (* Tradeoff between code size and code speed *)
 
 let fastcode_flag = ref true
 
 (* Output a label *)
+
+(* claude: Iconst_int constants come from the host compiler's own `int`
+   representation (utils/nativeint.ml), which on this 64-bit host can hold
+   values that don't fit a 32-bit MIPS register. E.g. otherlibs/num/nat.ml
+   has a "match Sys.word_size with 64 -> ... | 32 -> ..." with a >32-bit
+   literal in the "64" branch; that branch is dead code on this 32-bit
+   target (Sys.word_size is 32 here, so it never runs at target runtime)
+   but is still compiled and assembled. mipsel-linux-gnu-as's "li"
+   pseudo-op hard-errors on an out-of-range immediate (unlike i386's "as",
+   which just truncates the equivalent "movl $imm" with a warning), so
+   truncate to the low 32 bits here to match that -- harmless for
+   genuinely dead code, and no worse than i386's silent truncation for
+   code that (incorrectly) isn't. *)
+let emit_nativeint32 n =
+  let i = Nativeint.to_int n in
+  let i32 = ((i land 0xFFFFFFFF) lxor 0x80000000) - 0x80000000 in
+  emit_string (string_of_int i32)
 
 let emit_label lbl =
   emit_string "$"; emit_int lbl
@@ -135,7 +149,7 @@ let liveregs instr extra_msk =
           float_mask :=
             !float_mask lor (3 lsl (31 - float_reg_number.(r - 100)))
       | _ -> () in
-    Reg.Set.iter add_register instr.live;
+    (*Reg.*)Set.iter add_register instr.live;
     Array.iter add_register instr.arg;
     emit_printf "	.livereg 0x%08x, 0x%08x\n" !int_mask !float_mask
   end
@@ -154,7 +168,7 @@ let frame_descriptors = ref([] : frame_descr list)
 let record_frame live =
   let lbl = new_label() in
   let live_offset = ref [] in
-  Reg.Set.iter
+  (*Reg.*)Set.iter
     (function
         {typ = Addr; loc = Reg r} ->
           live_offset := ((int_reg_number.(r) lsl 1) + 1) :: !live_offset
@@ -288,7 +302,7 @@ let emit_instr i =
         if Nativeint.sign n = 0 then
           `	move	{emit_reg i.res.(0)}, $0\n`
         else
-          `	li	{emit_reg i.res.(0)}, {emit_nativeint n}\n`
+          `	li	{emit_reg i.res.(0)}, {emit_nativeint32 n}\n`
     | Lop(Iconst_float s) ->
         `	li.d	{emit_reg i.res.(0)}, {emit_string s}\n`
     | Lop(Iconst_symbol s) ->
@@ -590,19 +604,12 @@ let data l =
 (* Beginning / end of an assembly file *)
 
 let begin_assembly() =
-  (* There are really two groups of registers:
-      $sp and $30 always point to stack locations
-      $2 - $21 never point to stack locations. *)
-  `	.noalias $2,$sp;  .noalias $2,$30;  .noalias $3,$sp;  .noalias $3,$30\n`;
-  `	.noalias $4,$sp;  .noalias $4,$30;  .noalias $5,$sp;  .noalias $5,$30\n`;
-  `	.noalias $6,$sp;  .noalias $6,$30;  .noalias $7,$sp;  .noalias $7,$30\n`;
-  `	.noalias $8,$sp;  .noalias $8,$30;  .noalias $9,$sp;  .noalias $9,$30\n`;
-  `	.noalias $10,$sp; .noalias $10,$30; .noalias $11,$sp; .noalias $11,$30\n`;
-  `	.noalias $12,$sp; .noalias $12,$30; .noalias $13,$sp; .noalias $13,$30\n`;
-  `	.noalias $14,$sp; .noalias $14,$30; .noalias $15,$sp; .noalias $15,$30\n`;
-  `	.noalias $16,$sp; .noalias $16,$30; .noalias $17,$sp; .noalias $17,$30\n`;
-  `	.noalias $18,$sp; .noalias $18,$30; .noalias $19,$sp; .noalias $19,$30\n`;
-  `	.noalias $20,$sp; .noalias $20,$30; .noalias $21,$sp; .noalias $21,$30\n\n`;
+  (* claude: the original IRIX ".noalias" scheduling hints (telling the
+     SGI assembler's instruction scheduler that $2-$21 never alias
+     $sp/$30) are an SGI-only pseudo-op; GNU as (mipsel-linux-gnu-as)
+     rejects them outright ("unknown pseudo-op"), so they're dropped
+     here rather than translated -- they were an optimization hint only,
+     not something semantically required. *)
   (* The following .file directive is intended to prevent the generation
      of line numbers for the debugger, since they make .o files larger. *)
   `	.file	1 \"{emit_string !Location.input_name}\"\n\n`;

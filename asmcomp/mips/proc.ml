@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: proc.ml,v 1.1 1997/07/24 11:49:08 xleroy Exp $ *)
-
 (* Description of the Mips processor *)
 
 open Misc
@@ -18,10 +16,6 @@ open Cmm
 open Reg
 open Arch
 open Mach
-
-(* Exceptions raised to signal cases not handled here *)
-
-exception Use_default
 
 (* Instruction selection *)
 
@@ -199,12 +193,7 @@ let contains_calls = ref false
 
 (* Calling the assembler *)
 
-let asm_command =
-  match Config.system with
-    "ultrix" -> "as -O2 -nocpp -o "
-  | "irix"   -> "as -32 -O2 -nocpp -o "
-  | _ -> fatal_error "Proc_mips.asm_command"
-
 let assemble_file infile outfile =
-  Ccomp.command (asm_command ^ outfile ^ " " ^ infile)
+  Ccomp.command
+    (Config.asm ^ " " ^ Config.asm_flags ^ " -g -o " ^ outfile ^ " " ^ infile)
 

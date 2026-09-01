@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scheduling.ml,v 1.1 1997/07/24 11:49:09 xleroy Exp $ *)
-
 open Schedgen (* to create a dependency *)
 
 (* No scheduling is needed for the Mips, the assembler
