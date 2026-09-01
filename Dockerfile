@@ -1,7 +1,7 @@
 ###############################################################################
 # Overview
 ###############################################################################
-# Build and test ocaml-light (bytecode and x86/arm/mips/alpha native) on Ubuntu.
+# Build and test ocaml-light (bytecode and x86/arm/mips/alpha/m68k native) on Ubuntu.
 # See https://docs.docker.com/build/building/multi-stage/ for more info on the
 # multi-stage approach.
 
@@ -195,6 +195,44 @@ RUN ocamlopt foo.ml
 # registration.
 RUN test/run-native ./a.out
 
+# claude: same reasoning as build-native-alpha above -- ubuntu:22.04
+# doesn't package gcc-m68k-linux-gnu either, only 24.04 does.
+FROM ubuntu:24.04 AS build-native-m68k
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends binutils gcc libc6-dev make
+RUN apt-get install -y --no-install-recommends libx11-dev
+
+WORKDIR /src
+COPY --from=build /src /src
+COPY --from=build /usr/local /usr/local
+
+# claude: same reasoning as build-native-mips above -- m68k has no
+# CPU-level compat mode on x86_64/aarch64, so every m68k binary here
+# needs qemu-user regardless of the Docker host's own architecture.
+# claude: no --no-install-recommends here either -- gcc-m68k-linux-gnu
+# only Recommends (not Depends on) libc6-dev-m68k-cross, which provides
+# the m68k target headers needed to compile asmrun/*.c.
+RUN apt-get install -y gcc-m68k-linux-gnu qemu-user-static
+RUN ./configure -target-arch m68k
+RUN make opt
+
+RUN make installopt
+RUN make test
+# good self test
+RUN make ocamlc.opt
+RUN make ocamlopt.opt
+
+RUN echo 'let _ = print_string "hello native m68k"' > foo.ml
+RUN ocamlopt foo.ml
+# claude: configure's -target-arch m68k links with -static (see the
+# nativecclinkopts comment in configure), so a.out needs no m68k shared
+# libraries on this filesystem -- just the qemu-user-static interpreter
+# installed above. Uses test/run-native for the same reason
+# build-native-mips does: no reliance on qemu-binfmt/binfmt_misc
+# registration.
+RUN test/run-native ./a.out
+
 ###############################################################################
 # Stage4: native image
 ###############################################################################
@@ -243,6 +281,20 @@ RUN ocamlopt -v
 # alpha regression test lives in build-native-alpha above.
 FROM bytecode AS native-alpha
 COPY --from=build-native-alpha /usr/local /usr/local
+# basic tests
+RUN which ocaml
+RUN ocamlc -v
+RUN echo '1+1;;' | ocaml
+# more basic tests
+RUN which ocamlopt
+RUN ocamlopt -v
+
+# claude: same scope note as native-mips/native-alpha above -- no
+# m68k-linux-gnu-gcc/as here, just a smoke test of the installed
+# (bytecode) tools. The real m68k regression test lives in
+# build-native-m68k above.
+FROM bytecode AS native-m68k
+COPY --from=build-native-m68k /usr/local /usr/local
 # basic tests
 RUN which ocaml
 RUN ocamlc -v

@@ -637,6 +637,11 @@ build-docker-mips:
 #coupling: .github/workflows/docker.yml
 build-docker-alpha:
 	docker build --tag "ocaml-light-alpha" --target "native-alpha" .
+# claude: same as build-docker-mips/build-docker-alpha above -- m68k is
+# also always a cross target (via qemu-user-static).
+#coupling: .github/workflows/docker.yml
+build-docker-m68k:
+	docker build --tag "ocaml-light-m68k" --target "native-m68k" .
 #coupling: .github/workflows/docker.yml
 build-docker-plan9:
 	docker build --tag "ocaml-light-plan9" -f Dockerfile.plan9 .

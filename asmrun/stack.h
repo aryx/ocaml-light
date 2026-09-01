@@ -31,6 +31,11 @@
 #define Callback_link(sp) ((struct caml_context *)(sp + 8))
 #endif
 
+#ifdef TARGET_m68k
+#define Saved_return_address(sp) *((long *)(sp - 4))
+#define Callback_link(sp) ((struct caml_context *)(sp + 8))
+#endif
+
 #ifdef TARGET_alpha
 #define Saved_return_address(sp) *((long *)(sp - 8))
 #define Already_scanned(sp, retaddr) (retaddr & 1L)

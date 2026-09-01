@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 (* Description of the Motorola 680x0 processor *)
 
 open Misc
@@ -32,10 +30,14 @@ open Mach
     FP0 - FP7   12-19   floating-point registers (FP2 - FP7 callee-save)
 *)
 
+(* claude: %-prefixed (GNU as's m68k port, unlike the old Sun/MIT
+   assembler this backend originally targeted, requires the % sigil on
+   register names -- see asmcomp/m68k/emit.mlp for the other, hardcoded
+   register mentions that need the same prefix). *)
 let register_names =
-  [| "a0"; "a1"; "a2"; "a3"; "a4"; "a5"; "a6";
-     "d0"; "d1"; "d2"; "d3"; "d4";
-     "fp0"; "fp1"; "fp2"; "fp3"; "fp4"; "fp5"; "fp6"; "fp7" |]
+  [| "%a0"; "%a1"; "%a2"; "%a3"; "%a4"; "%a5"; "%a6";
+     "%d0"; "%d1"; "%d2"; "%d3"; "%d4";
+     "%fp0"; "%fp1"; "%fp2"; "%fp3"; "%fp4"; "%fp5"; "%fp6"; "%fp7" |]
 
 let num_register_classes = 3
 
@@ -152,5 +154,6 @@ let contains_calls = ref false
 (* Calling the assembler *)
 
 let assemble_file infile outfile =
-  Ccomp.command ("as -o " ^ outfile ^ " " ^ infile)
+  Ccomp.command
+    (Config.asm ^ " " ^ Config.asm_flags ^ " -g -o " ^ outfile ^ " " ^ infile)
 

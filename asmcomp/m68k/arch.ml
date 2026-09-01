@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 (* Specific operations for the Motorola 68020 processor *)
 
 type addressing_mode =
@@ -29,6 +27,12 @@ type specific_operation =
   | Ipush_symbol of string              (* Push a symbol *)
   | Ipush_load of addressing_mode       (* Load a scalar and push *)
   | Ipush_load_float of addressing_mode (* Load a float and push *)
+
+(* claude: required by Selectgen.selector's generic select_floatarith,
+   used by architectures (e.g. i386) whose float unit has commutative-op
+   swapping quirks. m68k's own selection.ml never calls
+   select_floatarith, so this is unused. *)
+type float_operation = unit
 
 (* Sizes, endianness *)
 

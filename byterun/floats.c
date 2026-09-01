@@ -192,6 +192,23 @@ value floor_float(value f)              /* ML */
 }
 /*e: function [[floor_float]] */
 
+#ifdef TARGET_m68k
+/* claude: m68k-linux-gnu's static libm.a (as packaged by Ubuntu/Debian's
+   m68k cross toolchain) is missing a usable "fmod" object -- every other
+   libm function this runtime calls (sin, cos, sqrt, atan, pow, exp, log)
+   links fine, but "fmod" alone fails with "undefined reference to
+   `fmod'" (its w_fmod.o member is empty; oddly, the long-double variant
+   fmodl *is* present and correctly aliased). Rather than carry that
+   toolchain gap into ocaml-light's build (or worse, into every other
+   target's shared floats.c), provide fmod ourselves for this target only,
+   in terms of the working fmodl. */
+#include <math.h>
+double fmod(double x, double y)
+{
+  return (double) fmodl((long double) x, (long double) y);
+}
+#endif
+
 /*s: function [[fmod_float]] */
 value fmod_float(value f1, value f2)              /* ML */
 {

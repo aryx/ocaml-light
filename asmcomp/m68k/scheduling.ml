@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 open Schedgen (* to create a dependency *)
 
 (* No scheduling is needed for the Motorola 68k. *)

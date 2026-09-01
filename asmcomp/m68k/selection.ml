@@ -9,8 +9,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *)
-
 (* Instruction selection for the Motorola 68k *)
 
 open Misc
@@ -18,6 +16,8 @@ open Cmm
 open Reg
 open Arch
 open Mach
+
+open Selectgen
 
 (* Auxiliary for recognizing addressing modes *)
 
@@ -94,16 +94,25 @@ let pseudoregs_for_operation op arg res =
   (* Other instructions are regular *)
   | _ -> raise Use_default
 
+(* claude: needed by the select_shift override below, to reconstruct a
+   Cmm-level shift node for the "shift by 8, then shift by the rest"
+   chain (see there). *)
+let cmm_op_for_shift = function
+    Ilsl -> Clsl
+  | Ilsr -> Clsr
+  | Iasr -> Casr
+  | _ -> fatal_error "Selection_m68k.cmm_op_for_shift"
+
 (* The selector *)
-    
-class selector = object (self)
 
-inherit Selectgen.selector_generic as super
+let selector () =
+  let super = Selectgen.selector_generic () in
+  { super with
 
-method is_immediate (n : int) = true
+  is_immediate = (fun (n : int) -> true);
 
-(* Select addressing modes *)
-method select_addressing exp =
+  (* Select addressing modes *)
+  select_addressing = (fun exp ->
   match select_addr exp with
     (Asymbol s, d) ->
       (Ibased(s, d), Ctuple [])
@@ -115,84 +124,104 @@ method select_addressing exp =
       (Iscaled(scale, d), e)
   | (Ascaledadd(e1, e2, scale), d) ->
       (Iindexed2scaled(scale, d), Ctuple[e1; e2])
+  );
 
-method select_operation op args =
+  select_operation = (fun self op args ->
   match op with
   (* Recognize the LEA instruction *)
     Cadda | Csuba ->
-      begin match self#select_addressing (Cop(op, args)) with
-        (Iindexed d, _) -> super#select_operation op args
+      begin match self.select_addressing (Cop(op, args)) with
+        (Iindexed d, _) -> super.select_operation self op args
       | (addr, arg) -> (Ispecific(Ilea addr), [arg])
       end
+  (* claude: no case for Clsl/Clsr/Casr here -- Selectgen's generic
+     select_operation (reached via the catch-all below) already
+     dispatches direct shift operators through self.select_shift, which
+     is overridden below to apply m68k's 1-8 immediate-shift-count
+     limit. Cmuli DOES need special-casing here, though: the generic
+     select_operation's own "multiply by a power of 2" strength
+     reduction (Cmuli with a Cconst_int n = 2^l) builds Iintop_imm(Ilsl,
+     l) *directly*, bypassing self.select_shift entirely -- so e.g.
+     "n * 1024" produced an out-of-range immediate shift "lsll
+     #10,%d1", which m68k-linux-gnu-as rejects ("operands mismatch"),
+     without ever going through our clamping. Route it through
+     self.select_shift ourselves instead. *)
+  | Cmuli ->
+      begin match args with
+        [arg1; Cconst_int n] when n = 1 lsl (Misc.log2 n) ->
+          self.select_shift Ilsl [arg1; Cconst_int (Misc.log2 n)]
+      | [Cconst_int n; arg1] when n = 1 lsl (Misc.log2 n) ->
+          self.select_shift Ilsl [arg1; Cconst_int (Misc.log2 n)]
+      | _ -> super.select_operation self op args
+      end
+  | _ -> super.select_operation self op args
+  );
+
   (* Recognize immediate shifts only if 1 <= count <= 8 *)
-  | Clsl -> self#select_shift op Ilsl args
-  | Clsr -> self#select_shift op Ilsr args
-  | Casr -> self#select_shift op Iasr args
-  | _ -> super#select_operation op args
-
-(* Selection of immediate shifts -- only if count is between 1 and 8 *)
-
-method select_shift cop iop args =
+  select_shift = (fun iop args ->
   match args with
     [arg1; Cconst_int n] ->
       if n >= 1 && n <= 8 then
         (Iintop_imm(iop, n), [arg1])
       else if n >= 9 && n <= 16 then
-        (Iintop_imm(iop, n - 8), [Cop(cop, [arg1; Cconst_int 8])])
+        (Iintop_imm(iop, n - 8), [Cop(cmm_op_for_shift iop, [arg1; Cconst_int 8])])
       else
         (Iintop iop, args)
   | args -> (Iintop iop, args)
+  );
 
-(* Select store operations *)
-
-method select_store addr exp =
+  (* Select store operations *)
+  select_store = (fun addr exp ->
   match exp with
     Cconst_int n -> (Ispecific(Istore_int(n, addr)), Ctuple [])
   | Cconst_pointer n -> (Ispecific(Istore_int(n, addr)), Ctuple [])
   | Cconst_symbol s -> (Ispecific(Istore_symbol(s, addr)), Ctuple [])
-  | _ -> super#select_store addr exp
+  | _ -> super.select_store addr exp
+  );
 
-(* Deal with register constraints *)
-
-method insert_op op rs rd =
+  (* Deal with register constraints *)
+  insert_op = (fun self op rs rd ->
   try
     let (rsrc, rdst, move_res) = pseudoregs_for_operation op rs rd in
-    self#insert_moves rs rsrc;
-    self#insert (Iop op) rsrc rdst;
+    self.insert_moves self rs rsrc;
+    self.insert self (Iop op) rsrc rdst;
     if move_res then begin
-      self#insert_moves rdst rd;
+      self.insert_moves self rdst rd;
       rd
     end else
       rdst
   with Use_default ->
-    super#insert_op op rs rd
+    super.insert_op self op rs rd
+  );
 
-(* Select push operations for external calls *)
-
-method select_push exp =
+  (* Select push operations for external calls *)
+  select_push = (fun self exp ->
   match exp with
     Cconst_int n -> (Ispecific(Ipush_int n), Ctuple [])
   | Cconst_pointer n -> (Ispecific(Ipush_int n), Ctuple [])
   | Cconst_symbol s -> (Ispecific(Ipush_symbol s), Ctuple [])
   | Cop(Cload ty, [loc]) when ty = typ_float ->
-      let (addr, arg) = self#select_addressing loc in
+      let (addr, arg) = self.select_addressing loc in
       (Ispecific(Ipush_load_float addr), arg)
   | Cop(Cload ty, [loc]) when ty = typ_addr or ty = typ_int ->
-      let (addr, arg) = self#select_addressing loc in
+      let (addr, arg) = self.select_addressing loc in
       (Ispecific(Ipush_load addr), arg)
   | _ -> (Ispecific(Ipush), exp)
+  );
 
-method emit_extcall_args env args =
+  emit_extcall_args = (fun self env args ->
   let rec emit_pushes = function
-    [] -> 0
-  | e :: el ->
-      let ofs = emit_pushes el in
-      let (op, arg) = self#select_push e in
-      let r = self#emit_expr env arg in
-      self#insert (Iop op) r [||];
-      ofs + Selectgen.size_expr env e
+      [] -> 0
+    | e :: el ->
+        let ofs = emit_pushes el in
+        let (op, arg) = self.select_push self e in
+        let r = self.emit_expr self env arg in
+        self.insert self (Iop op) r [||];
+        ofs + Selectgen.size_expr env e
   in ([||], emit_pushes args)
+  );
+  }
 
-end
-
-let fundecl f = (new selector)#emit_fundecl f
+let fundecl f =
+  let s = selector () in
+  s.emit_fundecl s f
