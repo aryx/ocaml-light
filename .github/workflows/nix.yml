@@ -55,8 +55,11 @@ jobs:
       - name: Build XiX using Nix
         run: |
           #coupling: Dockerfile
+          # claude: configure no longer defaults a 64-bit host's
+          # native-code target to a 32-bit cross target, so ask for it
+          # explicitly (ubuntu-latest runners are x86_64).
           nix-shell --run '
-            ./configure
+            ./configure -target-arch i386
             make coldstart
             make world
             make opt

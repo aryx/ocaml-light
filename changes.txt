@@ -8,6 +8,9 @@
   adapted to qemu-arm and different float ABI
   using gcc-arm-linux-gnueabihf
 
+** build infra
+- add a --target-arch i386|arm to configure so easy to cross compile
+
 * 0.4 (Q1 2026) (plan9 support v1)
 
 ** language

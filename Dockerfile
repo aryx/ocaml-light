@@ -71,6 +71,11 @@ FROM build AS build-native-x86_64
 #alt: LATER: port amd64 and even later use goken instead of gcc!
 RUN apt-get install -y gcc-multilib
 WORKDIR /src
+# claude: configure no longer defaults a 64-bit host's native-code target
+# to a 32-bit cross target (so amd64 can later get its own native
+# backend without this silently meaning "cross to i386" instead) -- ask
+# for it explicitly.
+RUN ./configure -target-arch i386
 # this requires gcc-multilib
 RUN make opt
 
@@ -93,6 +98,10 @@ RUN dpkg --add-architecture armhf
 RUN apt-get update
 RUN apt-get install -y gcc-arm-linux-gnueabihf libc6:armhf
 WORKDIR /src
+# claude: same as build-native-x86_64 above -- configure no longer
+# defaults a 64-bit host's native-code target to a 32-bit cross target,
+# so ask for it explicitly.
+RUN ./configure -target-arch arm
 RUN make opt
 
 RUN make installopt
