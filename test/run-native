@@ -32,5 +32,10 @@ case "$arch" in
   # native-amd64 target below work the same regardless of whether its
   # host happens to already be x86_64.
   amd64) exec qemu-x86_64-static "$@" ;;
+  # claude: this dev host happens to already be aarch64 (where this
+  # would run natively via the "*" case below), but the Docker
+  # native-arm64 target must also work on an x86_64 CI runner, so route
+  # it through qemu-user-static unconditionally too, same as amd64 above.
+  arm64) exec qemu-aarch64-static "$@" ;;
   *)     exec "$@" ;;
 esac

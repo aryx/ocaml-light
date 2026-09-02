@@ -62,6 +62,24 @@
 #define Callback_link(sp) ((struct caml_context *)(sp + 16))
 #endif
 
+/* claude: unlike every arch above, AArch64's "bl"/"blr" puts the return
+   address in a register (x30/LR), not on the stack -- but every
+   asmcomp/arm64/emit.mlp function that makes calls reserves a slot for
+   x30 at the *top* of its own frame (frame_size includes it) and saves
+   it there in its prologue (see fundecl's "str x30, [sp, #(n-8)]"), so
+   by the time roots.c's walk does "sp += d->frame_size" to reach the
+   caller's original sp, that saved x30 sits at exactly sp-8, same
+   relative position as every wordsize-based target above. Likewise,
+   asmrun/arm64.S's .Ljump_to_caml sets TRAP_PTR to the exact sp at
+   which "blr ARG" is executed, with the caml_context struct exactly 16
+   bytes above it (the callback link, then the 2-word exception-handler
+   link pushed after it) -- so the same 2*wordsize Callback_link
+   relationship holds too. See asmrun/arm64.S's .Ljump_to_caml. */
+#ifdef TARGET_arm64
+#define Saved_return_address(sp) *((long *)(sp - 8))
+#define Callback_link(sp) ((struct caml_context *)(sp + 16))
+#endif
+
 /* claude: upstream ocaml also has an "#ifdef SYS_aix / Trap_frame_size
    24 / #else / 8 / #endif" here -- dead code for ocaml-light's
    -target-arch power (elf/Linux only, whose asmcomp/power/emit.mlp

@@ -661,6 +661,17 @@ build-docker-amd64:
 	docker build --tag "ocaml-light-amd64" --target "native-amd64" .
 #coupling: .github/workflows/docker.yml
 
+# claude: same as build-docker-mips/alpha/m68k/sparc/power/amd64 above --
+# always a cross target (via qemu-user-static) regardless of the Docker
+# host's own architecture. Unlike build-native-aarch64 (the pre-existing
+# target, which cross-compiles the *arm* 32-bit backend using aarch64's
+# own AArch32 CPU-compat mode -- only works when the Docker host really
+# is aarch64), this is a real 64-bit arm64 native backend and works the
+# same on any host.
+build-docker-arm64:
+	docker build --tag "ocaml-light-arm64" --target "native-arm64" .
+#coupling: .github/workflows/docker.yml
+
 build-docker-plan9:
 	docker build --tag "ocaml-light-plan9" -f Dockerfile.plan9 .
 

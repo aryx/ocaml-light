@@ -16,10 +16,6 @@ let command_line_options = []
 
 (* Specific operations for the ARM processor, 64-bit mode *)
 
-open Format
-
-let command_line_options = []
-
 (* Addressing modes *)
 
 type addressing_mode =
@@ -50,6 +46,12 @@ and arith_operation =
     Ishiftadd
   | Ishiftsub
 
+(* claude: required by Selectgen.selector's generic select_floatarith
+   field (see the same addition for every other arch here) -- arm64's
+   own selection.ml never uses it, this fork has no "float arith with a
+   memory operand" concept for a load/store architecture like ARM64. *)
+type float_operation = unit
+
 (* Sizes, endianness *)
 
 let big_endian = false
@@ -57,12 +59,6 @@ let big_endian = false
 let size_addr = 8
 let size_int = 8
 let size_float = 8
-
-let allow_unaligned_access = false
-
-(* Behavior of division *)
-
-let division_crashes_on_overflow = false
 
 (* Operations on addressing modes *)
 
@@ -77,70 +73,56 @@ let num_args_addressing = function
   | Iindexed n -> 1
   | Ibased(s, n) -> 0
 
-(* Printing operations and addressing modes *)
+(* Printing operations and addressing modes.
+   claude: this fork's Printmach.ml calls Arch.print_addressing/
+   print_specific_operation with a plain "Reg.t -> unit" printer and no
+   Format.formatter (unlike upstream 4.02, which threads a ppf through --
+   see the same adaptation for amd64/i386's arch.ml). *)
 
-let print_addressing printreg addr ppf arg =
+let print_addressing printreg addr arg =
   match addr with
   | Iindexed n ->
-      printreg ppf arg.(0);
-      if n <> 0 then fprintf ppf " + %i" n
+      printreg arg.(0);
+      if n <> 0 then begin print_string " + "; print_int n end
   | Ibased(s, 0) ->
-      fprintf ppf "\"%s\"" s
+      print_string "\""; print_string s; print_string "\""
   | Ibased(s, n) ->
-      fprintf ppf "\"%s\" + %i" s n
+      print_string "\""; print_string s; print_string "\" + "; print_int n
 
-let print_specific_operation printreg op ppf arg =
+let print_specific_operation printreg op arg =
   match op with
   | Ishiftarith(op, shift) ->
-      let op_name = function
-      | Ishiftadd -> "+"
-      | Ishiftsub -> "-" in
-      let shift_mark =
-       if shift >= 0
-       then sprintf "<< %i" shift
-       else sprintf ">> %i" (-shift) in
-      fprintf ppf "%a %s %a %s"
-       printreg arg.(0) (op_name op) printreg arg.(1) shift_mark
+      printreg arg.(0);
+      print_string (match op with Ishiftadd -> " + " | Ishiftsub -> " - ");
+      printreg arg.(1);
+      if shift >= 0
+      then begin print_string " << "; print_int shift end
+      else begin print_string " >> "; print_int (-shift) end
   | Ishiftcheckbound n ->
-      fprintf ppf "check %a >> %i > %a" printreg arg.(0) n printreg arg.(1)
+      print_string "check "; printreg arg.(0);
+      print_string " >> "; print_int n; print_string " > "; printreg arg.(1)
   | Imuladd ->
-      fprintf ppf "(%a * %a) + %a"
-        printreg arg.(0)
-        printreg arg.(1)
-        printreg arg.(2)
+      print_string "("; printreg arg.(0); print_string " * "; printreg arg.(1);
+      print_string ") + "; printreg arg.(2)
   | Imulsub ->
-      fprintf ppf "-(%a * %a) + %a"
-        printreg arg.(0)
-        printreg arg.(1)
-        printreg arg.(2)
+      print_string "-("; printreg arg.(0); print_string " * "; printreg arg.(1);
+      print_string ") + "; printreg arg.(2)
   | Inegmulf ->
-      fprintf ppf "-f (%a *f %a)"
-        printreg arg.(0)
-        printreg arg.(1)
+      print_string "-f ("; printreg arg.(0); print_string " *f ";
+      printreg arg.(1); print_string ")"
   | Imuladdf ->
-      fprintf ppf "%a +f (%a *f %a)"
-        printreg arg.(0)
-        printreg arg.(1)
-        printreg arg.(2)
+      printreg arg.(0); print_string " +f ("; printreg arg.(1);
+      print_string " *f "; printreg arg.(2); print_string ")"
   | Inegmuladdf ->
-      fprintf ppf "(-f %a) -f (%a *f %a)"
-        printreg arg.(0)
-        printreg arg.(1)
-        printreg arg.(2)
+      print_string "(-f "; printreg arg.(0); print_string ") -f (";
+      printreg arg.(1); print_string " *f "; printreg arg.(2); print_string ")"
   | Imulsubf ->
-      fprintf ppf "%a -f (%a *f %a)"
-        printreg arg.(0)
-        printreg arg.(1)
-        printreg arg.(2)
+      printreg arg.(0); print_string " -f ("; printreg arg.(1);
+      print_string " *f "; printreg arg.(2); print_string ")"
   | Inegmulsubf ->
-      fprintf ppf "(-f %a) +f (%a *f %a)"
-        printreg arg.(0)
-        printreg arg.(1)
-        printreg arg.(2)
+      print_string "(-f "; printreg arg.(0); print_string ") +f (";
+      printreg arg.(1); print_string " *f "; printreg arg.(2); print_string ")"
   | Isqrtf ->
-      fprintf ppf "sqrtf %a"
-        printreg arg.(0)
+      print_string "sqrtf "; printreg arg.(0)
   | Ibswap n ->
-      fprintf ppf "bswap%i %a" n
-        printreg arg.(0)
-
+      print_string "bswap"; print_int n; print_string " "; printreg arg.(0)

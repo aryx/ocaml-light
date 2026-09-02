@@ -373,6 +373,52 @@ RUN ocamlopt foo.ml
 # registration.
 RUN test/run-native ./a.out
 
+# claude: same reasoning as build-native-amd64 above -- ubuntu:22.04
+# doesn't package gcc-aarch64-linux-gnu at all either, only 24.04 does,
+# even though arm64 itself (unlike alpha/m68k/sparc/power/amd64) needs no
+# cross toolchain when the Docker host already IS aarch64 (this dev
+# repo's own host). Runs on ubuntu:24.04 unconditionally, same as
+# build-native-amd64, to keep this stage host-independent.
+FROM ubuntu:24.04 AS build-native-arm64
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends binutils gcc libc6-dev make
+RUN apt-get install -y --no-install-recommends libx11-dev
+
+WORKDIR /src
+COPY --from=build /src /src
+COPY --from=build /usr/local /usr/local
+
+# claude: same reasoning as build-native-amd64 above -- builds and runs
+# entirely under qemu-user-static regardless of the Docker host's own
+# architecture, for a real 64-bit arm64 native backend, unlike the
+# pre-existing native-aarch64 stage below (which only works when the
+# Docker host itself is aarch64, via its own AArch32 CPU-compat mode to
+# run the 32-bit arm backend -- see configure's -target-arch arm64
+# comment).
+# claude: no --no-install-recommends here either -- gcc-aarch64-linux-gnu
+# only Recommends (not Depends on) libc6-dev-arm64-cross, which provides
+# the arm64 target headers needed to compile asmrun/*.c.
+RUN apt-get install -y gcc-aarch64-linux-gnu qemu-user-static
+RUN ./configure -target-arch arm64
+RUN make opt
+
+RUN make installopt
+RUN make test
+# good self test
+RUN make ocamlc.opt
+RUN make ocamlopt.opt
+
+RUN echo 'let _ = print_string "hello native arm64"' > foo.ml
+RUN ocamlopt foo.ml
+# claude: configure's -target-arch arm64 links with -static (see the
+# nativecclinkopts comment in configure), so a.out needs no arm64 shared
+# libraries on this filesystem -- just the qemu-user-static interpreter
+# installed above. Uses test/run-native for the same reason
+# build-native-mips does: no reliance on qemu-binfmt/binfmt_misc
+# registration.
+RUN test/run-native ./a.out
+
 ###############################################################################
 # Stage4: native image
 ###############################################################################
@@ -477,6 +523,20 @@ RUN ocamlopt -v
 # regression test lives in build-native-amd64 above.
 FROM bytecode AS native-amd64
 COPY --from=build-native-amd64 /usr/local /usr/local
+# basic tests
+RUN which ocaml
+RUN ocamlc -v
+RUN echo '1+1;;' | ocaml
+# more basic tests
+RUN which ocamlopt
+RUN ocamlopt -v
+
+# claude: same scope note as native-mips/native-alpha/native-m68k/
+# native-sparc/native-power/native-amd64 above -- no aarch64-linux-gnu-
+# gcc/as here, just a smoke test of the installed (bytecode) tools. The
+# real arm64 regression test lives in build-native-arm64 above.
+FROM bytecode AS native-arm64
+COPY --from=build-native-arm64 /usr/local /usr/local
 # basic tests
 RUN which ocaml
 RUN ocamlc -v

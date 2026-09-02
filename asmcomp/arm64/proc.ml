@@ -177,8 +177,8 @@ let destroyed_at_oper = function
       destroyed_at_c_call
   | Iop(Ialloc _) ->
       [| reg_x15 |]
-  | Iop(Iintoffloat | Ifloatofint | Iload(Single, _) | Istore(Single, _)) ->
-      [| reg_d7 |]            (* d7 / s7 destroyed *)
+  | Iop(Iintoffloat | Ifloatofint) ->
+      [| reg_d7 |]            (* d7 destroyed *)
   | _ -> [||]
 
 let destroyed_at_raise = all_phys_regs
@@ -193,8 +193,7 @@ let safe_register_pressure = function
 let max_register_pressure = function
   | Iextcall(_, _) -> [| 10; 8 |]
   | Ialloc _ -> [| 25; 32 |]
-  | Iintoffloat | Ifloatofint
-  | Iload(Single, _) | Istore(Single, _) -> [| 26; 31 |]
+  | Iintoffloat | Ifloatofint -> [| 26; 31 |]
   | _ -> [| 26; 32 |]
 
 (* Layout of the stack *)
@@ -205,8 +204,5 @@ let contains_calls = ref false
 (* Calling the assembler *)
 
 let assemble_file infile outfile =
-  Ccomp.command (Config.asm ^ " -o " ^
-                 Filename.quote outfile ^ " " ^ Filename.quote infile)
-
-
-let init () = ()
+  Ccomp.command (Config.asm ^ " " ^ Config.asm_flags ^
+                 " -o " ^ outfile ^ " " ^ infile)
