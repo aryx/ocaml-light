@@ -28,7 +28,22 @@ mandir=/usr/local/man/man1
 manext=1
 
 host_type=unknown
+
+#new: so easy to use ocamlopt as a cross-compiler for another arch
+#claude: -target-arch lets the native-code compiler target an arch other
+# than $host's own default (see "Configure the native-code compiler"): a
+# 64-bit host (x86_64, aarch64) has no native-code backend of its own yet
+# and gets "not supported" unless -target-arch explicitly asks for a
+# cross target, e.g. -target-arch i386 to cross-compile i386 binaries
+# from this aarch64 host using the installed i686-linux-gnu-gcc/as
+# toolchain.
 target_arch=''
+#still? support -as, -aspp, -partialld so can run for example from
+# a recent OCaml INSTALL.adoc:
+#    * On a Linux x86-64 host, to build a 32-bit version of OCaml:
+#          ./configure -cc "gcc -m32" -as "as --32" -aspp "gcc -m32 -c" \
+#                -host i386-linux -partialld "ld -r -melf_i386"
+#update: now done via configure --target-arch i386
 
 cc=''
 cclibs=''
@@ -46,21 +61,7 @@ gcc_warnings="-Wall --std=gnu89"
 # Parse command-line arguments
 ##############################################################################
 
-#TODO: support -as, -aspp, -partialld so can run for example from INSTALL.adoc:
-#    * On a Linux x86-64 host, to build a 32-bit version of OCaml:
-#          ./configure -cc "gcc -m32" -as "as --32" -aspp "gcc -m32 -c" \
-#                -host i386-linux -partialld "ld -r -melf_i386"
-
-# claude: -target-arch lets the native-code compiler target an arch other
-# than $host's own default (see "Configure the native-code compiler"): a
-# 64-bit host (x86_64, aarch64) has no native-code backend of its own yet
-# and gets "not supported" unless -target-arch explicitly asks for a
-# cross target, e.g. -target-arch i386 to cross-compile i386 binaries
-# from this aarch64 host using the installed i686-linux-gnu-gcc/as
-# toolchain.
-
-# claude: kept in sync by hand with the case branches below -- there is
-# no single source of truth to generate this from in plain sh.
+# claude: kept in sync by hand with the case branches below
 usage () {
   cat <<EOF
 Usage: configure [options]
@@ -71,25 +72,13 @@ Options are:
   -host <host>        Configure for the given host type
                       (default: guessed by config.guess)
   -target-arch <arch> Cross-compile the native-code compiler for <arch>
-                      instead of \$host's own default (which is "not
-                      supported" for a 64-bit host such as x86_64 or
-                      aarch64, since neither has a native backend yet).
-                      Supported: i386, arm (or arm32), mips, alpha, m68k,
-                      sparc, power (or powerpc).
+                      instead of \$host's own default.
+                      Supported: i386, arm, mips, alpha, m68k, sparc, powerpc.
                       Example: -target-arch i386 on an aarch64 host
                       cross-compiles i386 binaries using the installed
-                      i686-linux-gnu-gcc/as toolchain. -target-arch mips
-                      cross-compiles mipsel (little-endian, o32 ABI)
-                      binaries using the installed mipsel-linux-gnu-gcc/as
-                      toolchain. -target-arch alpha cross-compiles using
-                      the installed alpha-linux-gnu-gcc/as toolchain.
-                      -target-arch m68k cross-compiles (68020+/68881)
-                      using the installed m68k-linux-gnu-gcc/as toolchain.
-                      -target-arch sparc cross-compiles using the
-                      installed sparc64-linux-gnu-gcc/as toolchain (in
-                      -m32 mode, i.e. 32-bit sparc v8/v9 code).
-                      -target-arch power cross-compiles using the
-                      installed powerpc-linux-gnu-gcc/as toolchain.
+                      i686-linux-gnu-gcc/as toolchain.
+                      mips is using mipsel little-endian, o32 ABI.
+                      m68k is for 68020+/68881, sparc for 32-bit sparc v8/v9.
   -cc <compiler>      Use <compiler> as the C compiler for the bytecode
                       compiler's "custom runtime" mode
   -lib <libs>         Link the bytecode "custom runtime" mode with <libs>
