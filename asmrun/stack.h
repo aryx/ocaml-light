@@ -49,6 +49,19 @@
 #define Callback_link(sp) ((struct caml_context *)(sp + 16))
 #endif
 
+/* claude: same "call pushes retaddr, frame_size includes it, 2 extra
+   words of exception-link data sit between the caml_context struct and
+   the retaddr" trampoline shape as i386/arm/mips/m68k -- just with
+   8-byte words instead of 4, exactly like alpha above, so the same
+   Saved_return_address(sp) = *(sp - wordsize) / Callback_link(sp) =
+   sp + 2*wordsize relationship applies. See asmrun/amd64.S's .L106
+   (bottom_of_stack/last_retaddr/gc_regs pushed, then the 2-word
+   exception handler link, then the `call` that pushes the retaddr). */
+#ifdef TARGET_amd64
+#define Saved_return_address(sp) *((long *)(sp - 8))
+#define Callback_link(sp) ((struct caml_context *)(sp + 16))
+#endif
+
 /* claude: upstream ocaml also has an "#ifdef SYS_aix / Trap_frame_size
    24 / #else / 8 / #endif" here -- dead code for ocaml-light's
    -target-arch power (elf/Linux only, whose asmcomp/power/emit.mlp

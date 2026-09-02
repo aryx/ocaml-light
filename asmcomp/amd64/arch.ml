@@ -18,8 +18,6 @@ let command_line_options = []
 
 (* Specific operations for the AMD64 processor *)
 
-open Format
-
 type addressing_mode =
     Ibased of string * int              (* symbol + displ *)
   | Iindexed of int                     (* reg + displ *)
@@ -29,7 +27,7 @@ type addressing_mode =
 
 type specific_operation =
     Ilea of addressing_mode             (* "lea" gives scaled adds *)
-  | Istore_int of nativeint * addressing_mode (* Store an integer constant *)
+  | Istore_int of Nativeint.t * addressing_mode (* Store an integer constant *)
   | Istore_symbol of string * addressing_mode (* Store a symbol *)
   | Ioffset_loc of int * addressing_mode (* Add a constant to a location *)
   | Ifloatarithmem of float_operation * addressing_mode
@@ -66,40 +64,46 @@ let num_args_addressing = function
 
 (* Printing operations and addressing modes *)
 
-let print_addressing printreg addr ppf arg =
+let print_addressing printreg addr arg =
   match addr with
-  | Ibased(s, 0) ->
-      fprintf ppf "\"%s\"" s
+    Ibased(s, 0) ->
+      print_string "\""; print_string s; print_string "\""
   | Ibased(s, n) ->
-      fprintf ppf "\"%s\" + %i" s n
+      print_string "\""; print_string s; print_string "\" + "; print_int n
   | Iindexed n ->
-      let idx = if n <> 0 then Printf.sprintf " + %i" n else "" in
-      fprintf ppf "%a%s" printreg arg.(0) idx
+      printreg arg.(0);
+      if n <> 0 then begin print_string " + "; print_int n end
   | Iindexed2 n ->
-      let idx = if n <> 0 then Printf.sprintf " + %i" n else "" in
-      fprintf ppf "%a + %a%s" printreg arg.(0) printreg arg.(1) idx
+      printreg arg.(0); print_string " + "; printreg arg.(1);
+      if n <> 0 then begin print_string " + "; print_int n end
   | Iscaled(scale, n) ->
-      let idx = if n <> 0 then Printf.sprintf " + %i" n else "" in
-      fprintf ppf "%a  * %i%s" printreg arg.(0) scale idx
+      printreg arg.(0); print_string " * "; print_int scale;
+      if n <> 0 then begin print_string " + "; print_int n end
   | Iindexed2scaled(scale, n) ->
-      let idx = if n <> 0 then Printf.sprintf " + %i" n else "" in
-      fprintf ppf "%a + %a * %i%s" printreg arg.(0) printreg arg.(1) scale idx
+      printreg arg.(0); print_string " + "; printreg arg.(1);
+      print_string " * "; print_int scale;
+      if n <> 0 then begin print_string " + "; print_int n end
 
-let print_specific_operation printreg op ppf arg =
+let print_specific_operation printreg op arg =
   match op with
-  | Ilea addr -> print_addressing printreg addr ppf arg
+    Ilea addr -> print_addressing printreg addr arg
   | Istore_int(n, addr) ->
-      fprintf ppf "[%a] := %nd" (print_addressing printreg addr) arg n
+      print_string "["; print_addressing printreg addr arg;
+      print_string "] := "; print_string (Nativeint.to_string n)
   | Istore_symbol(lbl, addr) ->
-      fprintf ppf "[%a] := \"%s\"" (print_addressing printreg addr) arg lbl
+      print_string "["; print_addressing printreg addr arg;
+      print_string "] := \""; print_string lbl; print_string "\""
   | Ioffset_loc(n, addr) ->
-      fprintf ppf "[%a] +:= %i" (print_addressing printreg addr) arg n
+      print_string "["; print_addressing printreg addr arg;
+      print_string "] +:= "; print_int n
   | Ifloatarithmem(op, addr) ->
-      let op_name = function
-      | Ifloatadd -> "+f"
-      | Ifloatsub -> "-f"
-      | Ifloatmul -> "*f"
-      | Ifloatdiv -> "/f" in
-      fprintf ppf "%a %s float64[%a]" printreg arg.(0) (op_name op)
-                   (print_addressing printreg addr)
-                   (Array.sub arg 1 (Array.length arg - 1))
+      printreg arg.(0);
+      begin match op with
+        Ifloatadd -> print_string " +f "
+      | Ifloatsub -> print_string " -f "
+      | Ifloatmul -> print_string " *f "
+      | Ifloatdiv -> print_string " /f "
+      end;
+      print_string "float64[";
+      print_addressing printreg addr (Array.sub arg 1 (Array.length arg - 1));
+      print_string "]"

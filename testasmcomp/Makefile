@@ -3,7 +3,14 @@ include $(TOP)/config/Makefile
 
 CODEGEN=../cmm/codegen
 CC=$(NATIVECC)
-CFLAGS=$(NATIVECCCOMPOPTS) -g -Wno-implicit-function-declaration -Wno-builtin-declaration-mismatch -Wno-parentheses
+# claude: $(NATIVECCLINKOPTS) (e.g. -static for -target-arch amd64) is
+# needed here, not just by the real ocamlopt driver -- x86_64-linux-gnu-gcc
+# defaults to a PIE link, and the .cmm-generated .o files below use
+# absolute (non-PIC) relocations, so linking fib.out/etc without it fails
+# with "relocation R_X86_64_32S ... can not be used when making a PIE
+# object". Every other -target-arch's cross gcc already defaults to a
+# non-PIE link, so this was never needed there.
+CFLAGS=$(NATIVECCCOMPOPTS) -g -Wno-implicit-function-declaration -Wno-builtin-declaration-mismatch -Wno-parentheses $(NATIVECCLINKOPTS)
 
 PROGS=fib.out tak.out quicksort.out quicksort2.out soli.out integr.out \
       arith.out checkbound.out

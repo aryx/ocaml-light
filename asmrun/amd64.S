@@ -110,6 +110,27 @@ FUNCTION(caml_call_gc)
     /* Return to caller */
         ret
 
+/* claude: each slow path below must save %r15/%r14 into the young_ptr/
+   caml_exception_pointer globals itself, exactly like caml_call_gc's own
+   header does, before falling into the shared .L105 -- unlike e.g.
+   asmrun/alpha.S, where caml_alloc1/2/3/caml_alloc branch straight into
+   caml_call_gc's entry point (so its header always runs), amd64's
+   .L105 is a continuation AFTER that header, reached directly here
+   without ever running it. Without this, garbage_collection() (see
+   asmrun/signals.c) decides whether to run minor_collection() at all by
+   comparing the *global* young_ptr against young_start -- a stale
+   (pre-this-allocation-burst) young_ptr can wrongly read as "plenty of
+   room left", so the collection that .L105's caller is blocked on gets
+   silently skipped, .L105's post-GC "movq young_ptr(%rip), %r15" then
+   reloads that same stale value instead of the reset young_end, and the
+   retried allocation proceeds against a %r15 that was never actually
+   validated -- corrupting whatever memory it walks into. (Reproduced as
+   a heap-corruption segfault, sometimes deep inside an unrelated later
+   allocation or C call, once total allocation first crosses the minor
+   heap size; see the amd64 port's commit message.) caml_exception_pointer
+   is saved for the same reason garbage_collection() itself needs it:
+   a pending signal handled here (execute_signal -> callback) unwinds
+   through it if the callback raises. */
 FUNCTION(caml_alloc1)
         subq    $16, %r15
         cmpq    young_limit(%rip), %r15
@@ -120,6 +141,8 @@ FUNCTION(caml_alloc1)
         movq    %rax, caml_last_return_address(%rip)
         leaq    8(%rsp), %rax
         movq    %rax, caml_bottom_of_stack(%rip)
+	movq	%r15, young_ptr(%rip)
+	movq	%r14, caml_exception_pointer(%rip)
 	subq	$8, %rsp
         call    .L105
 	addq	$8, %rsp
@@ -135,6 +158,8 @@ FUNCTION(caml_alloc2)
         movq    %rax, caml_last_return_address(%rip)
         leaq    8(%rsp), %rax
         movq    %rax, caml_bottom_of_stack(%rip)
+	movq	%r15, young_ptr(%rip)
+	movq	%r14, caml_exception_pointer(%rip)
 	subq	$8, %rsp
         call    .L105
 	addq	$8, %rsp
@@ -150,6 +175,8 @@ FUNCTION(caml_alloc3)
         movq    %rax, caml_last_return_address(%rip)
         leaq    8(%rsp), %rax
         movq    %rax, caml_bottom_of_stack(%rip)
+	movq	%r15, young_ptr(%rip)
+	movq	%r14, caml_exception_pointer(%rip)
 	subq	$8, %rsp
         call    .L105
 	addq	$8, %rsp
@@ -166,6 +193,8 @@ FUNCTION(caml_alloc)
         movq    %rax, caml_last_return_address(%rip)
         leaq    16(%rsp), %rax
         movq    %rax, caml_bottom_of_stack(%rip)
+	movq	%r15, young_ptr(%rip)
+	movq	%r14, caml_exception_pointer(%rip)
         call    .L105
         popq    %rax                      /* recover desired size */
         jmp     caml_alloc
@@ -242,10 +271,25 @@ FUNCTION(caml_start_program)
     /* Return to caller. */
         ret
 .L108:
-    /* Exception handler*/
-    /* Mark the bucket as an exception result and return it */
-        orq     $2, %rax
-        jmp     .L109
+    /* Exception handler. Unlike upstream OCaml's callback_exn (which
+       tags the bucket and returns it, leaving the C caller to check the
+       tag itself), ocaml-light's callback()/callback2()/callback3() are
+       plain "value f(...)" C functions with no such tagging convention
+       (see byterun/callback.h / asmrun/callback.c) -- so, like every
+       other target here (e.g. asmrun/alpha.S's $109, asmrun/m68k.S's
+       L108), unwind the callback link and re-raise through mlraise so
+       the exception propagates to the next enclosing trap frame (or
+       terminates the program), instead of returning here at all.
+       raise_caml_exception already popped caml_exception_pointer back
+       to the enclosing handler before jumping here, so only young_ptr
+       (from the still-live %r15) needs updating below. */
+        popq    caml_bottom_of_stack(%rip)
+        popq    caml_last_return_address(%rip)
+        popq    caml_gc_regs(%rip)
+        addq    $8, %rsp
+        movq    %r15, young_ptr(%rip)
+        movq    %rax, %rdi
+        call    mlraise         /* never returns */
 
 /* Raise an exception from C */
 
@@ -257,7 +301,7 @@ FUNCTION(raise_caml_exception)
 
 /* Callback from C to Caml */
 
-FUNCTION(callback_exn)
+FUNCTION(callback)
     /* Save callee-save registers */
         pushq   %rbx
         pushq   %rbp
@@ -272,7 +316,7 @@ FUNCTION(callback_exn)
         movq    0(%rbx), %r12   /* code pointer */
         jmp     .L106
 
-FUNCTION(callback2_exn)
+FUNCTION(callback2)
     /* Save callee-save registers */
         pushq   %rbx
         pushq   %rbp
@@ -288,7 +332,7 @@ FUNCTION(callback2_exn)
         leaq    caml_apply2(%rip), %r12  /* code pointer */
         jmp     .L106
 
-FUNCTION(callback3_exn)
+FUNCTION(callback3)
     /* Save callee-save registers */
         pushq   %rbx
         pushq   %rbp
@@ -305,17 +349,11 @@ FUNCTION(callback3_exn)
         leaq    caml_apply3(%rip), %r12  /* code pointer */
         jmp     .L106
 
-FUNCTION(caml_array_bound_error)
-    /* Make the exception handler and alloc ptr available to the C code */
-	movq	%r15, young_ptr(%rip)
-	movq	%r14, caml_exception_pointer(%rip)
-	jmp	array_bound_error	
-
         .data
-        .globl  system__frametable
-        .type   system__frametable,@object
+        .globl  system_frametable
+        .type   system_frametable,@object
         .align  8
-system__frametable:
+system_frametable:
         .quad   1           /* one descriptor */
         .quad   .L107       /* return address into callback */
         .value  -1          /* negative frame size => use callback link */

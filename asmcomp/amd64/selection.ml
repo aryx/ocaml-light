@@ -21,6 +21,8 @@ open Cmm
 open Reg
 open Mach
 
+open Selectgen
+
 (* Auxiliary for recognizing addressing modes *)
 
 type addressing_expr =
@@ -72,7 +74,18 @@ let rec select_addr exp =
       end
   | arg ->
       (Alinear arg, 0)
-    
+
+(* Says whether a constant is a suitable immediate operand *)
+
+let is_immediate n = n <= 0x7FFFFFFF && n >= -0x80000000
+
+(* Same, for a Nativeint.t constant (used by select_store below, which
+   has no access to the "self" that would let it reach the is_immediate
+   field of the selector record) *)
+
+let is_immediate_natint n =
+  Nativeint.cmp n 0x7FFFFFFF <= 0 && Nativeint.cmp n (-0x80000000) >= 0
+
 (* Special constraints on operand and result registers *)
 
 exception Use_default
@@ -87,10 +100,10 @@ let pseudoregs_for_operation op arg res =
     Iintop(Iadd|Isub|Imul|Iand|Ior|Ixor) | Iaddf|Isubf|Imulf|Idivf ->
       ([|res.(0); arg.(1)|], res)
   (* One-address unary operations: arg.(0) and res.(0) must be the same *)
-  | Iintop_imm((Iadd|Isub|Imul|Idiv|Iand|Ior|Ixor|Ilsl|Ilsr|Iasr), _) 
+  | Iintop_imm((Iadd|Isub|Imul|Iand|Ior|Ixor|Ilsl|Ilsr|Iasr), _)
   | Iabsf | Inegf ->
       (res, res)
-  | Ispecific(Ifloatarithmem(_,_)) -> 
+  | Ispecific(Ifloatarithmem(_,_)) ->
       let arg' = Array.copy arg in
       arg'.(0) <- res.(0);
       (arg', res)
@@ -104,126 +117,139 @@ let pseudoregs_for_operation op arg res =
       ([| rax; rcx |], [| rax |])
   | Iintop(Imod) ->
       ([| rax; rcx |], [| rdx |])
-  (* For mod with immediate operand, arg must not be in rax.
-     Keep it simple, force it in rdx. *)
-  | Iintop_imm(Imod, _) ->
+  (* For div/mod with immediate (power-of-2) operand, the emitted
+     sequence (see emit.mlp) uses %rax itself as a scratch register to
+     hold the original value across the sign test -- arg/res must not
+     be in rax, or that scratch clobbers the very value it needs to
+     read back. Keep it simple, force it in rdx (matching Iintop(Imod)
+     above; any non-rax register would do). *)
+  | Iintop_imm((Idiv|Imod), _) ->
       ([| rdx |], [| rdx |])
   (* Other instructions are regular *)
   | _ -> raise Use_default
 
-(* The selector class *)
+(* The selector *)
 
-class selector = object (self)
+let selector () =
+  let super = Selectgen.selector_generic () in
+  { super with
 
-inherit Selectgen.selector_generic as super
+  is_immediate = is_immediate;
 
-method is_immediate n = n <= 0x7FFFFFFF && n >= -0x80000000
+  select_addressing = (fun exp ->
+   match select_addr exp with
+     (Asymbol s, d) ->
+       (Ibased(s, d), Ctuple [])
+   | (Alinear e, d) ->
+       (Iindexed d, e)
+   | (Aadd(e1, e2), d) ->
+       (Iindexed2 d, Ctuple[e1; e2])
+   | (Ascale(e, scale), d) ->
+       (Iscaled(scale, d), e)
+   | (Ascaledadd(e1, e2, scale), d) ->
+       (Iindexed2scaled(scale, d), Ctuple[e1; e2])
+  );
 
-method is_immediate_natint n = n <= 0x7FFFFFFFn && n >= -0x80000000n
+  select_store = (fun addr exp ->
+   match exp with
+     Cconst_int n when is_immediate n ->
+       (Ispecific(Istore_int(Nativeint.from n, addr)), Ctuple [])
+   | Cconst_natint n when is_immediate_natint n ->
+       (Ispecific(Istore_int(n, addr)), Ctuple [])
+   | Cconst_pointer n when is_immediate n ->
+       (Ispecific(Istore_int(Nativeint.from n, addr)), Ctuple [])
+   | Cconst_symbol s ->
+       (Ispecific(Istore_symbol(s, addr)), Ctuple [])
+   | _ ->
+       super.select_store addr exp
+  );
 
-method select_addressing exp =
-  match select_addr exp with
-    (Asymbol s, d) ->
-      (Ibased(s, d), Ctuple [])
-  | (Alinear e, d) ->
-      (Iindexed d, e)
-  | (Aadd(e1, e2), d) ->
-      (Iindexed2 d, Ctuple[e1; e2])
-  | (Ascale(e, scale), d) ->
-      (Iscaled(scale, d), e)
-  | (Ascaledadd(e1, e2, scale), d) ->
-      (Iindexed2scaled(scale, d), Ctuple[e1; e2])
+  select_operation = (fun self op args ->
+   match op with
+   (* Recognize the LEA instruction *)
+     Caddi | Cadda | Csubi | Csuba ->
+       begin match self.select_addressing (Cop(op, args)) with
+         (Iindexed d, _) -> super.select_operation self op args
+       | (Iindexed2 0, _) -> super.select_operation self op args
+       | (addr, arg) -> (Ispecific(Ilea addr), [arg])
+       end
+   (* Recognize (x / cst) and (x % cst) only if cst is a power of 2. *)
+   | Cdivi ->
+       begin match args with
+         [arg1; Cconst_int n] when is_immediate n
+                                && n = 1 lsl (Misc.log2 n) ->
+           (Iintop_imm(Idiv, n), [arg1])
+       | _ -> (Iintop Idiv, args)
+       end
+   | Cmodi ->
+       begin match args with
+         [arg1; Cconst_int n] when is_immediate n
+                                && n = 1 lsl (Misc.log2 n) ->
+           (Iintop_imm(Imod, n), [arg1])
+       | _ -> (Iintop Imod, args)
+       end
+   (* Recognize float arithmetic with memory. *)
+   | Caddf ->
+       self.select_floatarith self Iaddf Iaddf Ifloatadd Ifloatadd args
+   | Csubf ->
+       self.select_floatarith self Isubf Isubf Ifloatsub Ifloatsub args
+   | Cmulf ->
+       self.select_floatarith self Imulf Imulf Ifloatmul Ifloatmul args
+   | Cdivf ->
+       self.select_floatarith self Idivf Idivf Ifloatdiv Ifloatdiv args
+   (* Recognize store instructions *)
+   | Cstore ->
+       begin match args with
+         [loc; Cop(Caddi, [Cop(Cload _, [loc']); Cconst_int n])]
+         when loc = loc' ->
+           let (addr, arg) = self.select_addressing loc in
+           (Ispecific(Ioffset_loc(n, addr)), [arg])
+       | _ ->
+           super.select_operation self op args
+       end
+   | _ -> super.select_operation self op args
+  );
 
-method select_store addr exp =
-  match exp with
-    Cconst_int n when self#is_immediate n ->
-      (Ispecific(Istore_int(Nativeint.of_int n, addr)), Ctuple [])
-  | Cconst_natint n when self#is_immediate_natint n ->
-      (Ispecific(Istore_int(n, addr)), Ctuple [])
-  | Cconst_pointer n when self#is_immediate n ->
-      (Ispecific(Istore_int(Nativeint.of_int n, addr)), Ctuple [])
-  | Cconst_natpointer n when self#is_immediate_natint n ->
-      (Ispecific(Istore_int(n, addr)), Ctuple [])
-  | Cconst_symbol s ->
-      (Ispecific(Istore_symbol(s, addr)), Ctuple [])
-  | _ ->
-      super#select_store addr exp
+  (* Recognize float arithmetic with mem. The generic selector record's
+     select_floatarith field carries both a "regular" and a "reversed"
+     Mach.operation/Arch.float_operation, needed by i386's x87-based
+     Ifloatsubrev/Ifloatdivrev -- AMD64/SSE2 has no such reversed
+     instruction, so both slots are always passed the same value here,
+     and "commutative" (whether the memory-operand-on-the-left rewrite
+     below is even valid) is derived from mem_op itself instead of a
+     separate boolean parameter. *)
+  select_floatarith = (fun self regular_op _regular_op mem_op _mem_op args ->
+   let commutative =
+     match mem_op with Ifloatadd | Ifloatmul -> true | _ -> false in
+   match args with
+     [arg1; Cop(Cload _, [loc2])] ->
+       let (addr, arg2) = self.select_addressing loc2 in
+       (Ispecific(Ifloatarithmem(mem_op, addr)),
+                  [arg1; arg2])
+   | [Cop(Cload _, [loc1]); arg2] when commutative ->
+       let (addr, arg1) = self.select_addressing loc1 in
+       (Ispecific(Ifloatarithmem(mem_op, addr)),
+                  [arg2; arg1])
+   | [arg1; arg2] ->
+       (regular_op, [arg1; arg2])
+   | _ ->
+       assert false
+  );
 
-method select_operation op args =
-  match op with
-  (* Recognize the LEA instruction *)
-    Caddi | Cadda | Csubi | Csuba ->
-      begin match self#select_addressing (Cop(op, args)) with
-        (Iindexed d, _) -> super#select_operation op args
-      | (Iindexed2 0, _) -> super#select_operation op args
-      | (addr, arg) -> (Ispecific(Ilea addr), [arg])
-      end
-  (* Recognize (x / cst) and (x % cst) only if cst is a power of 2. *)
-  | Cdivi ->
-      begin match args with
-        [arg1; Cconst_int n] when self#is_immediate n
-                               && n = 1 lsl (Misc.log2 n) ->
-          (Iintop_imm(Idiv, n), [arg1])
-      | _ -> (Iintop Idiv, args)
-      end
-  | Cmodi ->
-      begin match args with
-        [arg1; Cconst_int n] when self#is_immediate n
-                               && n = 1 lsl (Misc.log2 n) ->
-          (Iintop_imm(Imod, n), [arg1])
-      | _ -> (Iintop Imod, args)
-      end
-  (* Recognize float arithmetic with memory. *)
-  | Caddf ->
-      self#select_floatarith true Iaddf Ifloatadd args
-  | Csubf ->
-      self#select_floatarith false Isubf Ifloatsub args
-  | Cmulf ->
-      self#select_floatarith true Imulf Ifloatmul args
-  | Cdivf ->
-      self#select_floatarith false Idivf Ifloatdiv args
-  (* Recognize store instructions *)
-  | Cstore Word ->
-      begin match args with
-        [loc; Cop(Caddi, [Cop(Cload _, [loc']); Cconst_int n])]
-        when loc = loc' ->
-          let (addr, arg) = self#select_addressing loc in
-          (Ispecific(Ioffset_loc(n, addr)), [arg])
-      | _ ->
-          super#select_operation op args
-      end
-  | _ -> super#select_operation op args
+  (* Deal with register constraints *)
 
-(* Recognize float arithmetic with mem *)
+  insert_op = (fun self op rs rd ->
+   try
+     let (rsrc, rdst) = pseudoregs_for_operation op rs rd in
+     self.insert_moves self rs rsrc;
+     self.insert self (Iop op) rsrc rdst;
+     self.insert_moves self rdst rd;
+     rd
+   with Use_default ->
+     super.insert_op self op rs rd
+  );
+  }
 
-method select_floatarith commutative regular_op mem_op args =
-  match args with
-    [arg1; Cop(Cload (Double|Double_u), [loc2])] ->
-      let (addr, arg2) = self#select_addressing loc2 in
-      (Ispecific(Ifloatarithmem(mem_op, addr)),
-                 [arg1; arg2])
-  | [Cop(Cload (Double|Double_u), [loc1]); arg2] when commutative ->
-      let (addr, arg1) = self#select_addressing loc1 in
-      (Ispecific(Ifloatarithmem(mem_op, addr)),
-                 [arg2; arg1])
-  | [arg1; arg2] ->
-      (regular_op, [arg1; arg2])
-  | _ ->
-      assert false
-
-(* Deal with register constraints *)
-
-method insert_op op rs rd =
-  try
-    let (rsrc, rdst) = pseudoregs_for_operation op rs rd in
-    self#insert_moves rs rsrc;
-    self#insert (Iop op) rsrc rdst;
-    self#insert_moves rdst rd;
-    rd
-  with Use_default ->
-    super#insert_op op rs rd
-
-end
-
-let fundecl f = (new selector)#emit_fundecl f
-
+let fundecl f =
+  let s = selector () in
+  s.emit_fundecl s f

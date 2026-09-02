@@ -92,7 +92,6 @@ let phys_reg n =
 let rax = phys_reg 0
 let rcx = phys_reg 5
 let rdx = phys_reg 4
-let rxmm15 = phys_reg 115
 
 let stack_slot slot ty =
   Reg.at_location ty (Stack slot)
@@ -166,7 +165,6 @@ let destroyed_at_oper = function
     Iop(Icall_ind | Icall_imm _ | Iextcall(_, true)) -> all_phys_regs
   | Iop(Iextcall(_, false)) -> destroyed_at_c_call
   | Iop(Iintop(Idiv | Imod)) -> [| rax; rdx |]
-  | Iop(Istore(Single, _)) -> [| rxmm15 |]
   | Iop(Ialloc _ | Iintop(Icomp _) | Iintop_imm((Idiv|Imod|Icomp _), _))
         -> [| rax |]
   | _ -> [||]
@@ -184,7 +182,6 @@ let max_register_pressure = function
   | Iintop(Idiv | Imod) -> [| 11; 16 |]
   | Ialloc _ | Iintop(Icomp _) | Iintop_imm((Idiv|Imod|Icomp _), _)
         -> [| 12; 16 |]
-  | Istore(Single, _) -> [| 13; 15 |]
   | _ -> [| 13; 16 |]
 
 (* Layout of the stack frame *)
@@ -195,5 +192,6 @@ let contains_calls = ref false
 (* Calling the assembler *)
 
 let assemble_file infile outfile =
-  Ccomp.command ("as -o " ^ outfile ^ " " ^ infile)
+  Ccomp.command
+    (Config.asm ^ " " ^ Config.asm_flags ^ " -o " ^ outfile ^ " " ^ infile)
 

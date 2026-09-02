@@ -12,7 +12,7 @@
 
 (* $Id$ *)
 
-(* Emission of Intel 386 assembly code *)
+(* Emission of AMD64 assembly code *)
 
 open Misc
 open Cmm
@@ -47,7 +47,8 @@ let slot_offset loc cl =
       else !stack_offset + (num_stack_slots.(0) + n) * 8
   | Outgoing n -> n
 
-(* Symbols *)
+(* Symbols: AMD64/ELF (unlike i386, which also has to support the "bsd"
+   underscore-prefixed convention) never needs a symbol prefix. *)
 
 let emit_symbol s =
   Emitaux.emit_symbol '$' s
@@ -61,11 +62,7 @@ let emit_label lbl =
 
 let emit_align n =
   `	.align	{emit_int n}\n`
-  
-let emit_Llabel fallthrough lbl =
-  if not fallthrough && !fastcode_flag then emit_align 4;
-  emit_label lbl
-  
+
 (* Output a pseudo-register *)
 
 let emit_reg = function
@@ -77,17 +74,14 @@ let emit_reg = function
   | { loc = Unknown } ->
       assert false
 
-(* Output a reference to the lower 8, 16 or 32 bits of a register *)
+(* Output a reference to the lower 8 or 16 bits of a register *)
 
 let reg_low_8_name =
-  [| "%al"; "%bl"; "%dil"; "%sil"; "%dl"; "%cl"; "%r8b"; "%r9b"; 
+  [| "%al"; "%bl"; "%dil"; "%sil"; "%dl"; "%cl"; "%r8b"; "%r9b";
      "%r10b"; "%r11b"; "%bpl"; "%r12b"; "%r13b" |]
 let reg_low_16_name =
-  [| "%ax"; "%bx"; "%di"; "%si"; "%dx"; "%cx"; "%r8w"; "%r9w"; 
+  [| "%ax"; "%bx"; "%di"; "%si"; "%dx"; "%cx"; "%r8w"; "%r9w";
      "%r10w"; "%r11w"; "%bp"; "%r12w"; "%r13w" |]
-let reg_low_32_name =
-  [| "%eax"; "%ebx"; "%edi"; "%esi"; "%edx"; "%ecx"; "%r8d"; "%r9d"; 
-     "%r10d"; "%r11d"; "%ebp"; "%r12d"; "%r13d" |]
 
 let emit_subreg tbl r =
   match r.loc with
@@ -101,7 +95,6 @@ let emit_subreg tbl r =
 
 let emit_reg8 r = emit_subreg reg_low_8_name r
 let emit_reg16 r = emit_subreg reg_low_16_name r
-let emit_reg32 r = emit_subreg reg_low_32_name r
 
 (* Output an addressing mode *)
 
@@ -139,7 +132,7 @@ let frame_descriptors = ref([] : frame_descr list)
 let record_frame_label live =
   let lbl = new_label() in
   let live_offset = ref [] in
-  Reg.Set.iter
+  (*Reg.*)Set.iter
     (function
         {typ = Addr; loc = Reg r} ->
           live_offset := ((r lsl 1) + 1) :: !live_offset
@@ -213,7 +206,7 @@ let name_for_cond_branch = function
   | Iunsigned Ceq -> "e"   | Iunsigned Cne -> "ne"
   | Iunsigned Cle -> "be"  | Iunsigned Cgt -> "a"
   | Iunsigned Clt -> "b"  | Iunsigned Cge -> "ae"
-    
+
 (* Output an = 0 or <> 0 test. *)
 
 let output_test_zero arg =
@@ -278,7 +271,7 @@ let range_check_trap = ref 0
 
 let float_constants = ref ([] : (int * string) list)
 
-let emit_instr fallthrough i =
+let emit_instr i =
     match i.desc with
       Lend -> ()
     | Lop(Imove | Ispill | Ireload) ->
@@ -290,11 +283,12 @@ let emit_instr fallthrough i =
               `	movq	{emit_reg src}, {emit_reg dst}\n`
         end
     | Lop(Iconst_int n) ->
-        if n = 0n then begin
+        if Nativeint.sign n = 0 then begin
           match i.res.(0).loc with
             Reg n -> `	xorq	{emit_reg i.res.(0)}, {emit_reg i.res.(0)}\n`
           | _     -> `	movq	$0, {emit_reg i.res.(0)}\n`
-        end else if n <= 0x7FFFFFFFn && n >= -0x80000000n then
+        end else if Nativeint.cmp n 0x7FFFFFFF <= 0
+                 && Nativeint.cmp n (-0x80000000) >= 0 then
           `	movq	${emit_nativeint n}, {emit_reg i.res.(0)}\n`
         else
           `	movabsq	${emit_nativeint n}, {emit_reg i.res.(0)}\n`
@@ -342,7 +336,10 @@ let emit_instr fallthrough i =
         let dest = i.res.(0) in
         begin match chunk with
           | Word ->
-              `	movq	{emit_addressing addr i.arg 0}, {emit_reg dest}\n`
+              if dest.typ = Float then
+                `	movlpd	{emit_addressing addr i.arg 0}, {emit_reg dest}\n`
+              else
+                `	movq	{emit_addressing addr i.arg 0}, {emit_reg dest}\n`
           | Byte_unsigned ->
               `	movzbq	{emit_addressing addr i.arg 0}, {emit_reg dest}\n`
           | Byte_signed ->
@@ -351,30 +348,18 @@ let emit_instr fallthrough i =
               `	movzwq	{emit_addressing addr i.arg 0}, {emit_reg dest}\n`
           | Sixteen_signed ->
               `	movswq	{emit_addressing addr i.arg 0}, {emit_reg dest}\n`
-          | Thirtytwo_unsigned ->
-              `	movl	{emit_addressing addr i.arg 0}, {emit_reg32 dest}\n`
-          | Thirtytwo_signed ->
-              `	movslq	{emit_addressing addr i.arg 0}, {emit_reg dest}\n`
-          | Single ->
-            `	cvtss2sd {emit_addressing addr i.arg 0}, {emit_reg dest}\n`
-          | Double | Double_u ->
-            `	movlpd	{emit_addressing addr i.arg 0}, {emit_reg dest}\n`
         end
     | Lop(Istore(chunk, addr)) ->
         begin match chunk with
           | Word ->
-            `	movq	{emit_reg i.arg.(0)}, {emit_addressing addr i.arg 1}\n`
+            if i.arg.(0).typ = Float then
+              `	movlpd	{emit_reg i.arg.(0)}, {emit_addressing addr i.arg 1}\n`
+            else
+              `	movq	{emit_reg i.arg.(0)}, {emit_addressing addr i.arg 1}\n`
           | Byte_unsigned | Byte_signed ->
             `	movb	{emit_reg8 i.arg.(0)}, {emit_addressing addr i.arg 1}\n`
           | Sixteen_unsigned | Sixteen_signed ->
             `	movw	{emit_reg16 i.arg.(0)}, {emit_addressing addr i.arg 1}\n`
-          | Thirtytwo_signed | Thirtytwo_unsigned ->
-            `	movl	{emit_reg32 i.arg.(0)}, {emit_addressing addr i.arg 1}\n`
-          | Single ->
-            `	cvtsd2ss {emit_reg i.arg.(0)}, %xmm15\n`;
-            `	movss	%xmm15, {emit_addressing addr i.arg 1}\n`
-          | Double | Double_u ->
-            `	movlpd	{emit_reg i.arg.(0)}, {emit_addressing addr i.arg 1}\n`
         end
     | Lop(Ialloc n) ->
         if !fastcode_flag then begin
@@ -436,19 +421,29 @@ let emit_instr fallthrough i =
         (* Note: i.arg.(0) = i.res.(0) = rdx  (cf. selection.ml) *)
         let l = Misc.log2 n in
         `	movq	{emit_reg i.arg.(0)}, %rax\n`;
-        `	addq	{emit_int(n-1)}, {emit_reg i.arg.(0)}\n`;
+        `	addq	${emit_int(n-1)}, {emit_reg i.arg.(0)}\n`;
         `	testq	%rax, %rax\n`;
         `	cmovns	%rax, {emit_reg i.arg.(0)}\n`;
         `	sarq	${emit_int l}, {emit_reg i.res.(0)}\n`
     | Lop(Iintop_imm(Imod, n)) ->
-        (* Note: i.arg.(0) = i.res.(0) = rdx  (cf. selection.ml) *)
+        (* Note: i.arg.(0) = i.res.(0) = rdx  (cf. selection.ml).
+           claude: compute the truncating quotient q using the exact same
+           branch-free trick as Iintop_imm(Idiv) just above (add (n-1)
+           when negative, via cmovns, then arithmetic-shift), then
+           mod = x - q*n via shlq/subq. The previous version here
+           (leaq (n-1)(%rax); andq $(n-1)) computed the *floored*
+           remainder unconditionally, which only matches OCaml's
+           truncating (%) for x >= 0 -- e.g. (-2) mod 2 came out -3
+           instead of 0, and (-1) mod 16 came out -15 instead of -1. *)
         let l = Misc.log2 n in
         `	movq	{emit_reg i.arg.(0)}, %rax\n`;
+        `	addq	${emit_int(n-1)}, {emit_reg i.arg.(0)}\n`;
         `	testq	%rax, %rax\n`;
-        `	leaq	{emit_int(n-1)}(%rax), %rax\n`;
-        `	cmovns	{emit_reg i.arg.(0)}, %rax\n`;
-        `	andq	${emit_int (n-1)}, %rax\n`;
-        `	subq	%rax, {emit_reg i.res.(0)}\n`
+        `	cmovns	%rax, {emit_reg i.arg.(0)}\n`;
+        `	sarq	${emit_int l}, {emit_reg i.res.(0)}\n`;
+        `	shlq	${emit_int l}, {emit_reg i.res.(0)}\n`;
+        `	subq	{emit_reg i.res.(0)}, %rax\n`;
+        `	movq	%rax, {emit_reg i.res.(0)}\n`
     | Lop(Iintop_imm(op, n)) ->
         (* We have i.arg.(0) = i.res.(0) *)
         `	{emit_string(instr_for_intop op)}	${emit_int n}, {emit_reg i.res.(0)}\n`
@@ -478,7 +473,8 @@ let emit_instr fallthrough i =
         output_epilogue();
         `	ret\n`
     | Llabel lbl ->
-        `{emit_Llabel fallthrough lbl}:\n`
+        if !fastcode_flag then emit_align 4;
+        `{emit_label lbl}:\n`
     | Lbranch lbl ->
         `	jmp	{emit_label lbl}\n`
     | Lcondbranch(tst, lbl) ->
@@ -493,7 +489,7 @@ let emit_instr fallthrough i =
             `	cmpq	{emit_reg i.arg.(1)}, {emit_reg i.arg.(0)}\n`;
             let b = name_for_cond_branch cmp in
             `	j{emit_string b}	{emit_label lbl}\n`
-        | Iinttest_imm((Isigned Ceq | Isigned Cne | 
+        | Iinttest_imm((Isigned Ceq | Isigned Cne |
                         Iunsigned Ceq | Iunsigned Cne) as cmp, 0) ->
             output_test_zero i.arg.(0);
             let b = name_for_cond_branch cmp in
@@ -550,41 +546,17 @@ let emit_instr fallthrough i =
         `	popq	%r14\n`;
         `	ret\n`
 
-let rec emit_all fallthrough i =
+let rec emit_all i =
   match i.desc with
   |  Lend -> ()
   | _ ->
-      emit_instr fallthrough i;
-      emit_all (Linearize.has_fallthrough i.desc) i.next
+      emit_instr i;
+      emit_all i.next
 
 (* Emission of the floating-point constants *)
 
 let emit_float_constant (lbl, cst) =
   `{emit_label lbl}:	.double	{emit_string cst}\n`
-
-(* Emission of the profiling prelude -- FIXME *)
-
-let emit_profile () =
-  match Config.system with
-    "linux_elf" ->
-      `	pushl	%eax\n`;
-      `	movl	%esp, %ebp\n`;
-      `	pushl	%ecx\n`;
-      `	pushl	%edx\n`;
-      `	call	{emit_symbol "mcount"}\n`;
-      `	popl	%edx\n`;
-      `	popl	%ecx\n`;
-      `	popl	%eax\n`
-  | "bsd_elf" ->
-      `	pushl	%eax\n`;
-      `	movl	%esp, %ebp\n`;
-      `	pushl	%ecx\n`;
-      `	pushl	%edx\n`;
-      `	call	.mcount\n`;
-      `	popl	%edx\n`;
-      `	popl	%ecx\n`;
-      `	popl	%eax\n`
-  | _ -> () (*unsupported yet*)
 
 (* Emission of a function declaration *)
 
@@ -600,16 +572,15 @@ let fundecl fundecl =
   emit_align 16;
   `	.globl	{emit_symbol fundecl.fun_name}\n`;
   `{emit_symbol fundecl.fun_name}:\n`;
-  if !Clflags.gprofile then emit_profile();
   if frame_required() then begin
     let n = frame_size() - 8 in
     `	subq	${emit_int n}, %rsp\n`
   end;
   `{emit_label !tailrec_entry_point}:\n`;
-  emit_all true fundecl.fun_body;
+  emit_all fundecl.fun_body;
   List.iter emit_call_gc !call_gc_sites;
   if !range_check_trap > 0 then
-    `{emit_label !range_check_trap}:	call	{emit_symbol "caml_array_bound_error"}\n`;
+    `{emit_label !range_check_trap}:	call	{emit_symbol "array_bound_error"}\n`;
     (* Never returns, but useful to have retaddr on stack for debugging *)
   if !float_constants <> [] then begin
     `	.section	.rodata.cst8,\"aM\",@progbits,8\n`;
@@ -619,9 +590,8 @@ let fundecl fundecl =
 (* Emission of data *)
 
 let emit_item = function
-    Cglobal_symbol s ->
+    Cdefine_symbol s ->
       `	.globl	{emit_symbol s}\n`;
-  | Cdefine_symbol s ->
       `{emit_symbol s}:\n`
   | Cdefine_label lbl ->
       `{emit_label (100000 + lbl)}:\n`
@@ -629,13 +599,9 @@ let emit_item = function
       `	.byte	{emit_int n}\n`
   | Cint16 n ->
       `	.word	{emit_int n}\n`
-  | Cint32 n ->
-      `	.long	{emit_nativeint n}\n`
   | Cint n ->
       `	.quad	{emit_nativeint n}\n`
-  | Csingle f ->
-      `	.float	{emit_string f}\n`
-  | Cdouble f ->
+  | Cfloat f ->
       `	.double	{emit_string f}\n`
   | Csymbol_address s ->
       `	.quad	{emit_symbol s}\n`
@@ -655,26 +621,26 @@ let data l =
 (* Beginning / end of an assembly file *)
 
 let begin_assembly() =
-  let lbl_begin = Compilenv.current_unit_name() ^ "__data_begin" in
+  let lbl_begin = Compilenv.current_unit_name() ^ "_data_begin" in
   `	.data\n`;
   `	.globl	{emit_symbol lbl_begin}\n`;
   `{emit_symbol lbl_begin}:\n`;
-  let lbl_begin = Compilenv.current_unit_name() ^ "__code_begin" in
+  let lbl_begin = Compilenv.current_unit_name() ^ "_code_begin" in
   `	.text\n`;
   `	.globl	{emit_symbol lbl_begin}\n`;
   `{emit_symbol lbl_begin}:\n`
 
 let end_assembly() =
-  let lbl_end = Compilenv.current_unit_name() ^ "__code_end" in
+  let lbl_end = Compilenv.current_unit_name() ^ "_code_end" in
   `	.text\n`;
   `	.globl	{emit_symbol lbl_end}\n`;
   `{emit_symbol lbl_end}:\n`;
   `	.data\n`;
-  let lbl_end = Compilenv.current_unit_name() ^ "__data_end" in
+  let lbl_end = Compilenv.current_unit_name() ^ "_data_end" in
   `	.globl	{emit_symbol lbl_end}\n`;
   `{emit_symbol lbl_end}:\n`;
   `	.long	0\n`;
-  let lbl = Compilenv.current_unit_name() ^ "__frametable" in
+  let lbl = Compilenv.current_unit_name() ^ "_frametable" in
   `	.globl	{emit_symbol lbl}\n`;
   `{emit_symbol lbl}:\n`;
   `	.quad	{emit_int (List.length !frame_descriptors)}\n`;

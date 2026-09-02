@@ -17,9 +17,11 @@ open Arch
 open Reg
 open Mach
 
+open Reloadgen
+
 (* Reloading for the AMD64 *)
 
-(* Summary of instruction set constraints: 
+(* Summary of instruction set constraints:
    "S" means either stack or register, "R" means register only.
    Operation                    Res     Arg1    Arg2
      Imove                      R       S
@@ -57,57 +59,59 @@ let stackp r =
     Stack _ -> true
   | _ -> false
 
-class reload = object (self)
+let reload () =
+  let super = Reloadgen.reload_generic () in
+  { super with
 
-inherit Reloadgen.reload_generic as super
+  reload_operation = (fun self op arg res ->
+   match op with
+     Iintop(Iadd|Isub|Iand|Ior|Ixor|Icomp _|Icheckbound) ->
+       (* One of the two arguments can reside in the stack, but not both *)
+       if stackp arg.(0) && stackp arg.(1)
+       then ([|arg.(0); self.makereg arg.(1)|], res)
+       else (arg, res)
+   | Iintop_imm(Iadd, _) when arg.(0).loc <> res.(0).loc ->
+       (* This add will be turned into a lea; args and results must be
+          in registers *)
+       super.reload_operation self op arg res
+   | Iconst_int _ | Iconst_symbol _
+   | Iintop(Idiv | Imod | Ilsl | Ilsr | Iasr)
+   | Iintop_imm(_, _) ->
+       (* The argument(s) and results can be either in register or on stack *)
+       (* Note: Idiv, Imod: arg(0) and res(0) already forced in regs
+                Ilsl, Ilsr, Iasr: arg(1) already forced in regs *)
+       (arg, res)
+   | Iintop(Imul) | Iaddf | Isubf | Imulf | Idivf ->
+       (* First argument (= result) must be in register, second arg
+          can reside in the stack *)
+       if stackp arg.(0)
+       then (let r = self.makereg arg.(0) in ([|r; arg.(1)|], [|r|]))
+       else (arg, res)
+   | Ifloatofint | Iintoffloat ->
+       (* Result must be in register, but argument can be on stack *)
+       (arg, (if stackp res.(0) then [| self.makereg res.(0) |] else res))
+   | _ -> (* Other operations: all args and results in registers *)
+       super.reload_operation self op arg res
+  );
 
-method reload_operation op arg res =
-  match op with
-    Iintop(Iadd|Isub|Iand|Ior|Ixor|Icomp _|Icheckbound) ->
-      (* One of the two arguments can reside in the stack, but not both *)
-      if stackp arg.(0) && stackp arg.(1)
-      then ([|arg.(0); self#makereg arg.(1)|], res)
-      else (arg, res)
-  | Iintop_imm(Iadd, _) when arg.(0).loc <> res.(0).loc ->
-      (* This add will be turned into a lea; args and results must be
-         in registers *)
-      super#reload_operation op arg res
-  | Iconst_int _ | Iconst_symbol _
-  | Iintop(Idiv | Imod | Ilsl | Ilsr | Iasr)
-  | Iintop_imm(_, _) ->
-      (* The argument(s) and results can be either in register or on stack *)
-      (* Note: Idiv, Imod: arg(0) and res(0) already forced in regs
-               Ilsl, Ilsr, Iasr: arg(1) already forced in regs *)
-      (arg, res)
-  | Iintop(Imul) | Iaddf | Isubf | Imulf | Idivf ->
-      (* First argument (= result) must be in register, second arg
-         can reside in the stack *)
-      if stackp arg.(0)
-      then (let r = self#makereg arg.(0) in ([|r; arg.(1)|], [|r|]))
-      else (arg, res)
-  | Ifloatofint | Iintoffloat ->
-      (* Result must be in register, but argument can be on stack *)
-      (arg, (if stackp res.(0) then [| self#makereg res.(0) |] else res))
-  | _ -> (* Other operations: all args and results in registers *)
-      super#reload_operation op arg res
-
-method reload_test tst arg =
-  match tst with
-    Iinttest cmp ->
-      (* One of the two arguments can reside on stack *)
-      if stackp arg.(0) && stackp arg.(1)
-      then [| self#makereg arg.(0); arg.(1) |]
-      else arg
-  | Ifloattest(_, _) ->
-      (* Second argument can be on stack, first must be in register *)
-      if stackp arg.(0)
-      then [| self#makereg arg.(0); arg.(1) |]
-      else arg
-  | _ ->
-      (* The argument(s) can be either in register or on stack *)
-      arg
-
-end
+  reload_test = (fun self tst arg ->
+   match tst with
+     Iinttest cmp ->
+       (* One of the two arguments can reside on stack *)
+       if stackp arg.(0) && stackp arg.(1)
+       then [| self.makereg arg.(0); arg.(1) |]
+       else arg
+   | Ifloattest(_, _) ->
+       (* Second argument can be on stack, first must be in register *)
+       if stackp arg.(0)
+       then [| self.makereg arg.(0); arg.(1) |]
+       else arg
+   | _ ->
+       (* The argument(s) can be either in register or on stack *)
+       arg
+  );
+  }
 
 let fundecl f =
-  (new reload)#fundecl f
+  let r = reload () in
+  r.fundecl r f

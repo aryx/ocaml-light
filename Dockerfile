@@ -1,7 +1,7 @@
 ###############################################################################
 # Overview
 ###############################################################################
-# Build and test ocaml-light (bytecode and x86/arm/mips/alpha/m68k/sparc/power native) on Ubuntu.
+# Build and test ocaml-light (bytecode and x86/arm/mips/alpha/m68k/sparc/power/amd64 native) on Ubuntu.
 # See https://docs.docker.com/build/building/multi-stage/ for more info on the
 # multi-stage approach.
 
@@ -325,6 +325,54 @@ RUN ocamlopt foo.ml
 # registration.
 RUN test/run-native ./a.out
 
+# claude: same reasoning as build-native-alpha/build-native-m68k/
+# build-native-sparc above -- ubuntu:22.04 doesn't package
+# gcc-x86-64-linux-gnu at all (that cross package only showed up in
+# Ubuntu's archives around 24.04, like the others), even though amd64
+# itself (unlike alpha/m68k/sparc/power) needs no cross toolchain when the
+# Docker host already IS x86_64. Runs on ubuntu:24.04 unconditionally
+# (rather than only when non-x86_64) to keep this stage host-independent,
+# same as build-native-mips/alpha/m68k/sparc/power.
+FROM ubuntu:24.04 AS build-native-amd64
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends binutils gcc libc6-dev make
+RUN apt-get install -y --no-install-recommends libx11-dev
+
+WORKDIR /src
+COPY --from=build /src /src
+COPY --from=build /usr/local /usr/local
+
+# claude: same reasoning as build-native-mips above -- unlike the
+# native-x86_64 stage further below (which relies on the Docker host
+# itself already being x86_64, via gcc-multilib's -m32 for a 32-bit
+# i386 target), this stage builds and runs entirely under
+# qemu-user-static regardless of the Docker host's own architecture, for
+# a real 64-bit amd64 native backend (see configure's -target-arch amd64
+# comment for why a 64-bit host doesn't get this by default).
+# claude: no --no-install-recommends here either -- gcc-x86-64-linux-gnu
+# only Recommends (not Depends on) libc6-dev-amd64-cross, which provides
+# the amd64 target headers needed to compile asmrun/*.c.
+RUN apt-get install -y gcc-x86-64-linux-gnu qemu-user-static
+RUN ./configure -target-arch amd64
+RUN make opt
+
+RUN make installopt
+RUN make test
+# good self test
+RUN make ocamlc.opt
+RUN make ocamlopt.opt
+
+RUN echo 'let _ = print_string "hello native amd64"' > foo.ml
+RUN ocamlopt foo.ml
+# claude: configure's -target-arch amd64 links with -static (see the
+# nativecclinkopts comment in configure), so a.out needs no amd64 shared
+# libraries on this filesystem -- just the qemu-user-static interpreter
+# installed above. Uses test/run-native for the same reason
+# build-native-mips does: no reliance on qemu-binfmt/binfmt_misc
+# registration.
+RUN test/run-native ./a.out
+
 ###############################################################################
 # Stage4: native image
 ###############################################################################
@@ -415,6 +463,20 @@ RUN ocamlopt -v
 # test lives in build-native-power above.
 FROM bytecode AS native-power
 COPY --from=build-native-power /usr/local /usr/local
+# basic tests
+RUN which ocaml
+RUN ocamlc -v
+RUN echo '1+1;;' | ocaml
+# more basic tests
+RUN which ocamlopt
+RUN ocamlopt -v
+
+# claude: same scope note as native-mips/native-alpha/native-m68k/
+# native-sparc/native-power above -- no x86_64-linux-gnu-gcc/as here,
+# just a smoke test of the installed (bytecode) tools. The real amd64
+# regression test lives in build-native-amd64 above.
+FROM bytecode AS native-amd64
+COPY --from=build-native-amd64 /usr/local /usr/local
 # basic tests
 RUN which ocaml
 RUN ocamlc -v

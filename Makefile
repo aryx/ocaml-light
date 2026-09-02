@@ -651,6 +651,16 @@ build-docker-sparc:
 build-docker-power:
 	docker build --tag "ocaml-light-power" --target "native-power" .
 #coupling: .github/workflows/docker.yml
+
+# claude: same as build-docker-mips/alpha/m68k/sparc/power above -- always
+# a cross target (via qemu-user-static) regardless of the Docker host's
+# own architecture, so this works the same whether the host is x86_64 or
+# aarch64 (unlike build-docker-opt above, which is native-only and thus
+# `uname -m`-dependent).
+build-docker-amd64:
+	docker build --tag "ocaml-light-amd64" --target "native-amd64" .
+#coupling: .github/workflows/docker.yml
+
 build-docker-plan9:
 	docker build --tag "ocaml-light-plan9" -f Dockerfile.plan9 .
 

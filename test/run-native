@@ -25,5 +25,12 @@ case "$arch" in
   # architecture"), only qemu-sparc32plus accepts that flavor.
   sparc) exec qemu-sparc32plus-static "$@" ;;
   power) exec qemu-ppc-static "$@" ;;
+  # claude: unlike i386 (host -m32 multilib) and arm (aarch64's AArch32
+  # CPU-level compat mode), there is no such shortcut for amd64 on this
+  # aarch64 dev host, so route it through qemu-user-static too, same as
+  # mips/alpha/m68k/sparc/power above -- this also makes the Docker
+  # native-amd64 target below work the same regardless of whether its
+  # host happens to already be x86_64.
+  amd64) exec qemu-x86_64-static "$@" ;;
   *)     exec "$@" ;;
 esac
