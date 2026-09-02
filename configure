@@ -651,6 +651,49 @@ case "$arch,$nativecc" in
     asppflags='-c -DSYS_$(SYSTEM)';;
 esac
 
+# claude: -target-arch above picks a cross toolchain purely by naming
+# convention (nativecc/as/aspp) and never checks any of it is actually
+# installed -- without this, configure "succeeds" and the missing
+# cross-compiler only surfaces much later, deep into `make world`/`make
+# opt`, as a bare "command not found" from make with no mention of
+# -target-arch at all. Check right here instead, now that the toolchain
+# names are fully decided (including the i386-on-non-x86-host override
+# just above), so configure itself reports the missing binary and which
+# -target-arch it was for. Skipped for a native (no -target-arch) build:
+# nativecc there is just $bytecc, already validated by the "Do we have
+# gcc?" check above.
+if test -n "$target_arch"; then
+  missing=''
+  for prog in "$nativecc" "$as" "$aspp"; do
+    case "$prog" in
+      ''|'$(AS)') ;; # unset, or the Makefile-variable placeholder default
+      *)
+        case " $missing " in
+          *" $prog "*) ;; # already reported (e.g. arm's nativecc == aspp)
+          *) if sh ./searchpath "$prog"; then :; else missing="$missing $prog"; fi;;
+        esac;;
+    esac
+  done
+  if test -n "$missing"; then
+    echo "Missing cross-compilation tool(s) for -target-arch $target_arch:$missing" 1>&2
+    # claude: derive the Debian/Ubuntu package names from $nativecc's own
+    # prefix (e.g. "arm-linux-gnueabihf-gcc" -> "arm-linux-gnueabihf")
+    # rather than guessing from $target_arch -- the two differ for arm
+    # ("arm" vs "arm-linux-gnueabihf") and sparc/i386 (see the nativecc
+    # comments above: sparc uses the biarch sparc64-linux-gnu-, i386 uses
+    # i686-linux-gnu- on a non-x86 host), so a target_arch-based guess
+    # would suggest a package that doesn't exist.
+    case "$nativecc" in
+      *-gcc)
+        prefix=${nativecc%-gcc}
+        echo "Install the matching cross-compiler/binutils package (e.g. gcc-$prefix and binutils-$prefix on Debian/Ubuntu) and re-run configure." 1>&2;;
+      *)
+        echo "Install the matching cross-compiler/binutils toolchain for -target-arch $target_arch and re-run configure." 1>&2;;
+    esac
+    exit 2
+  fi
+fi
+
 echo "ARCH=$arch" >> Makefile
 echo "MODEL=$model" >> Makefile
 if test -n "$as"; then echo "AS=$as" >> Makefile; fi
