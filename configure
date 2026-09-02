@@ -1237,7 +1237,16 @@ echo "	standard library.......... $libdir"
 echo "	manual pages.............. $mandir (with extension .$manext)"
 
 echo "Configuration for the bytecode compiler:"
-echo "	C compiler used........... $bytecc"
+# claude: $bytecc is often just "gcc" or "cc" even when it's actually
+# clang underneath (e.g. macOS/Xcode, where /usr/bin/gcc is a symlink to
+# clang) -- spell that out here so "C compiler used... gcc" doesn't read
+# as "a real gcc was found", especially once the native-code compiler
+# below also prints "gcc -target ..." for the same reason.
+if test "$is_clang" = yes; then
+  echo "	C compiler used........... $bytecc (clang)"
+else
+  echo "	C compiler used........... $bytecc"
+fi
 echo "	options for compiling..... $bytecccompopts"
 echo "	options for linking....... $bytecclinkopts $cclibs"
 
@@ -1253,7 +1262,11 @@ else
   if test "$system" = "unknown"; then : ; else
   echo "	OS variant................ $system"
   fi
-  echo "	C compiler used........... $nativecc"
+  if test "$use_clang_target" = yes; then
+    echo "	C compiler used........... $nativecc (clang)"
+  else
+    echo "	C compiler used........... $nativecc"
+  fi
   echo "	options for compiling..... $nativecccompopts"
   echo "	options for linking....... $nativecclinkopts $cclibs"
   # pad: \$(AS) because there is no configure -as ... yet nor a
