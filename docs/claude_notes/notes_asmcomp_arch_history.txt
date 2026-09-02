@@ -1,0 +1,180 @@
+History of asmcomp/ architecture backends in upstream OCaml
+=============================================================
+
+Git archaeology done against the upstream ocaml/ocaml trunk repo (the
+dev-compiler/ocaml checkout, not this tree) on 2026-09-01, to figure out
+what to backport/forward-port here. Full history from 1995-05-04 to
+present, 34233 commits, 208 release tags. All SHA1s below are full 40-hex
+and resolve in the upstream ocaml/ocaml repo.
+
+Big picture
+-----------
+Three layout eras in upstream asmcomp/:
+  1. 1995-1997: flat per-arch files directly in asmcomp/ (asmcomp/arch_i386.ml,
+     asmcomp/emit_sparc.mlp, etc).
+  2. 1997-07-24 onward: per-arch subdirectories (asmcomp/<arch>/arch.ml,
+     asmcomp/<arch>/emit.mlp, ...) -- reorg commit
+     119c8eeb67adf1929cb5c4e4bedd073df5a2a8f1 "Nouvelle architecture pour
+     les fichiers dependant du processeur", first released in 1.06
+     (1997-11-17). ocaml-light forked at 1.07 (1997-12-11), one release
+     after this reorg, so ocaml-light already has this subdirectory layout
+     -- historical archs diff cleanly against upstream using the SHA1s
+     below.
+  3. Today's trunk: only amd64, arm64, power, riscv, s390x remain.
+
+Verified (git ls-tree) current trunk HEAD asmcomp/ dirs: amd64, arm64,
+power, riscv, s390x. All five actively touched as of 2026-09.
+
+Original 1995-96 wave (all in before tag 1.00, 1996-05-09)
+------------------------------------------------------------
+
+i386
+  Introduced: 3ceaa85c72b2094bb090a1819b65a2792cf2d3c1  1995-06-15
+    "Premiere version." -- first in 1.00. The original, only, ocamlopt
+    target until amd64 (2003).
+  Removed: eb04c8bce70090163b656a69ff29e51cffd32425  2023-01-22
+    "Remove arm, i386 native-code backends" (#11904).
+    Last in 5.0.0, first absent in 5.1.0 (2023-09-13).
+    Still shipped on the 4.14.x LTS branch through 4.14.4 (2026-06-15) --
+    never removed there.
+
+sparc
+  Introduced: same commit as i386, 1995-06-15, first in 1.00.
+  Removed: 3efe66e043bb2315517e9059066dc5d36aa78cac  2017-04-10
+    "Remove SPARC backend". Last in 4.05.0, first absent 4.06.0
+    (2017-11-03). 20 years more mature than what we have.
+
+alpha (DEC Alpha)
+  Introduced: same commit as i386, 1995-06-15, first in 1.00.
+  Removed: 3e422142958ae6b902c56900a3ea4a52da97f762  2011-12-17
+    "Removed the obsolete native-code generators for Alpha, HPPA, IA64
+    and MIPS. So long and thanks for all the fish." (Xavier Leroy)
+    Last in 3.12.1, first absent 4.00.0 (2012-07-26).
+
+mips
+  Introduced: 06dd9ab2de3d573485da01c4e844d0453ef28c47  1995-07-12,
+    first in 1.00.
+  Removed: same purge commit as alpha, 3e422142958a..., 2011-12-17.
+    Last in 3.12.1, first absent 4.00.0.
+
+hppa (HP-PA, not in our tree but noting since it was in the same wave)
+  Introduced: 09fc490852c39ce1ba967bd3d1f7d599c20a0987  1995-11-26
+    "Portage HP-PA", first in 1.00.
+  Removed: same purge commit as alpha, 2011-12-17.
+
+power (PowerPC)
+  Introduced: 9c85a548881f411eac212d97b17822fa0157e5ab  1996-01-06
+    "Portage PowerPC", first in 1.00.
+  Still present in upstream trunk today -- see maturation section below.
+  IMPORTANT CAVEAT: our ocaml-light power/ is the pre-2004 32-bit/AIX-era
+  code. Upstream trunk's current power/ is ppc64le/ELFv2-only (32-bit and
+  big-endian ppc64 support were removed 2022-11-07, see below) -- it is
+  NOT directly compatible with what we have, don't expect a clean diff.
+
+Later additions / other removed archs
+----------------------------------------
+
+m68k (shortest-lived of all)
+  Introduced: 9a374eb4d60a489df981de8e9e68ddf100e597bf  1996-10-24
+    "Portage 680x0", first in 1.03.
+  Removed: bd87e3921e53d3b91589b74159e87a52c4ae5e64  2000-02-04
+    "Deprecated the M68k port". Last in 2.04, first absent 3.00
+    (2000-04-25).
+
+arm (32-bit)
+  Introduced: 57c704d7390c4d92dfce5666c76f263ed414a687  1998-10-09
+    "Portage ARM -- premier jet", first in 2.01 (1998-12-09).
+    NOTE: this is a year AFTER 1.07 (Dec 1997), which is when
+    ocaml-light forked. So our asmcomp/arm/ is NOT stock upstream-1.07
+    code -- it must have been backported separately at some point, or
+    our tree is a slightly later/mixed vintage than "pure 1.07". Worth
+    diffing our arm/ against 57c704d7390c4d92dfce5666c76f263ed414a687
+    to see what vintage it actually matches, before assuming it lines up
+    with the rest of the 1.07 tree.
+  Maturation: EABI / software floating-point rewrite
+    5732a03e65...  2009-03-31 "Updated ARM port to new ABI (EABI), with
+    software floating-point" -> 3.12.0
+    VFPv2 / ARMv6 hard-float support
+    dc0776f551...  2012-10-24 "PR#5798: add VFPv2 and ARMv6 hard-float
+    support" -> 4.01.0
+  Removed: same commit as i386, eb04c8bce70090..., 2023-01-22.
+    Last in 5.0.0, first absent 5.1.0. Also still on the 4.14.x LTS
+    branch.
+
+ia64 (Itanium, not in our tree)
+  Introduced: 018e774091e41afd0402dd63b8ce47dd97be2480  2000-06-29
+    "Premier jet du portage IA64", first in 3.01.
+  Removed: same purge commit as alpha, 2011-12-17. Last 3.12.1, first
+    absent 4.00.0.
+
+amd64 (x86-64) -- NOT in our tree, best forward-port candidate
+  Introduced: bc333918980b97a2c81031ec33e72a417f854376  2003-06-30
+    "Portage AMD64", first in 3.07 (2003-09-29).
+  Still present, now the primary/default upstream target.
+  Maturation:
+    PIC-by-default ~3.10.0 (2007)
+    proc_nt.ml (Windows) merged into main proc.ml:
+      e10723e701f219df799548e8b07025585eafbecf  2011-12-16 -> 4.00.0
+    Win64 ABI work, ~4.10-5.1 era.
+  Why this is the best forward-port target: predates flambda and the
+  multicore runtime entirely, so its diff against a 1.07-shaped tree
+  should be far more tractable than arm64/riscv/s390x, which assume a
+  much newer upstream runtime.
+
+arm64 (AArch64) -- NOT in our tree, second-best forward-port candidate
+  Introduced: 055d5c0379e42b4f561cb1fc5159659d8e9a7b6f  2013-07-18,
+    merged from a long-lived branch, marked "experimental" at merge time.
+    First shipped 4.02.0 (2014-08-29).
+  Still present, now a primary target.
+
+s390x (IBM Z) -- NOT in our tree
+  Introduced: 58db11e0514daaaf25b5543c3ad48587ec6e1b40  2015-10-28
+    "IBM zSystem port of OCaml", first in 4.03.0.
+  Still present.
+
+riscv -- NOT in our tree
+  Introduced: 8f3833c4d0ef656c826359f4137c1eb3d46ea0ef  2020-04-24
+    "Add RISC-V native-code backend" (#9441), first in 4.11.0
+    (2020-08-18).
+  RV64 only -- no riscv32 directory or RV32 code ever existed anywhere
+  in upstream history (grepped for it, no hits). If we ever want 32-bit
+  RISC-V, there is no upstream reference to crib from.
+  Still present.
+
+power maturation detail (the one old arch upstream kept evolving
+instead of dropping)
+--------------------------------------------------------------------
+  AIX port dropped:
+    63b506d2cda0959f9811f0831580d8623c2511bc  2004-06-19
+    "Suppression portage ocamlopt pour Power/AIX" -> 3.08.0
+  PowerPC 64-bit added:
+    d9be4fee6af0646b153cf0cc562b632f67ceca58  2006-05-31
+    "Portage PowerPC 64 bits" -> 3.10.0
+  Major rewrite: dropped Mac OS X, added ppc64 big-endian (ELFv1) +
+  ppc64 little-endian (ELFv2):
+    8815d7e1a25ed1b40a1f9853793d0f0d7edfe68a  2015-07-20 -> 4.03.0
+  PPC 32-bit and ppc64 big-endian REMOVED, ppc64le/ELFv2-only from here:
+    58e7e097bacab59c86ee562e0f5ef02807e59ae6  2022-11-07 -> 5.2.0
+  ABIv2 BE support re-added:
+    13355e6f3a...  2023-10-15 (#12656) -> 5.2.0
+
+Not an architecture
+--------------------
+asmcomp/debug/ (b65096678b51f2f6a4ac5142be9cb9a8623b047d, 2017-09-15,
+"Register availability analysis", #856) is shared DWARF/register-
+availability infra, unrelated to any CPU target. Ignore for porting.
+
+Recommendations for ocaml-light
+---------------------------------
+Forward-port (nothing here today):
+  1. amd64 @ bc333918980b97a2c81031ec33e72a417f854376 (2003, OCaml 3.07)
+     -- best candidate, smallest conceptual gap from a 1.07-era tree.
+  2. arm64 @ 055d5c0379e42b4f561cb1fc5159659d8e9a7b6f (2013, 4.02.0)
+     -- next best if 64-bit ARM is wanted.
+
+Backport (richer versions of archs we already have, pulled from just
+before upstream removal):
+  sparc  @ 3efe66e043bb2315517e9059066dc5d36aa78cac^  (tag 4.05.0)
+  alpha/hppa/mips @ 3e422142958ae6b902c56900a3ea4a52da97f762^  (tag 3.12.1)
+  arm/i386 @ eb04c8bce70090163b656a69ff29e51cffd32425^  (tag 5.0.0), or
+    just check out the 4.14.x branch tip where they're still present.
