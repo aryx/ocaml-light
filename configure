@@ -36,7 +36,10 @@ host_type=unknown
 # and gets "not supported" unless -target-arch explicitly asks for a
 # cross target, e.g. -target-arch i386 to cross-compile i386 binaries
 # from this aarch64 host using the installed i686-linux-gnu-gcc/as
-# toolchain.
+# toolchain -- or, when the host C compiler is clang (e.g. macOS/Xcode,
+# which ships no *-linux-gnu-gcc packages at all), via clang's own
+# `-target` multi-arch codegen instead, for whichever archs this clang's
+# LLVM has a backend for (see use_clang_target below).
 target_arch=''
 #still? support -as, -aspp, -partialld so can run for example from
 # a recent OCaml INSTALL.adoc:
@@ -467,6 +470,92 @@ case "$target_arch" in
      exit 2;;
 esac
 
+# claude: detect whether the host C compiler is actually clang rather
+# than gcc -- macOS/Xcode ships no `gcc` at all (`/usr/bin/gcc` there is
+# just a symlink to clang) and none of the <triple>-linux-gnu-gcc cross
+# packages the case below looks for either, but clang's own multi-target
+# codegen (`-target <triple>`) can stand in for a subset of them (see
+# use_clang_target below).
+is_clang=no
+case "`$bytecc --version 2>/dev/null`" in
+  *clang*) is_clang=yes;;
+esac
+
+# claude: clang -target only substitutes for archs LLVM actually ships a
+# code generator for. Alpha has no LLVM backend at all, and m68k's is
+# recent/experimental and not part of Apple's clang -- both fall through
+# to the plain gcc-cross-toolchain path below regardless of is_clang,
+# exactly as if clang had never been detected (and if that path's
+# alpha-linux-gnu-gcc/m68k-linux-gnu-gcc isn't installed either, the
+# toolchain-presence check further below reports that plainly).
+use_clang_target=no
+if test "$is_clang" = yes; then
+  case "$arch" in
+    i386|arm|mips|sparc|power) use_clang_target=yes;;
+  esac
+fi
+
+if test "$use_clang_target" = yes; then
+  # claude: unlike the gcc path below, one clang binary covers every arch
+  # here -- no separate <triple>-linux-gnu-gcc/as package to locate, just
+  # -target <triple> on clang itself (already validated ANSI-compliant
+  # above as $bytecc). This does NOT make cross-linking a real Linux
+  # binary work out of the box, though: without a target sysroot (Linux
+  # headers + libc), clang falls back to the *host*'s own headers/libs,
+  # which are wrong for a linux_elf target. Supply one via -cc, e.g.
+  # -cc "clang --sysroot=/path/to/linux-sysroot" -- nativecc/aspp/as
+  # below are all built from $bytecc, so they inherit whatever extra
+  # flags it carries.
+  case "$arch" in
+    i386)
+      clang_triple=i686-linux-gnu
+      gcc_fallback_prefix=i686-linux-gnu
+      nativecccompopts='-Wall --std=gnu89'
+      nativecclinkopts=''
+      asflags=''
+      asppflags='-c -DSYS_$(SYSTEM)';;
+    arm)
+      clang_triple=arm-linux-gnueabihf
+      gcc_fallback_prefix=arm-linux-gnueabihf
+      nativecccompopts='-Wall --std=gnu89 -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard -marm'
+      nativecclinkopts=''
+      asflags='-march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard'
+      asppflags='-O0 -fno-inline -ggdb -c -DSYS_$(SYSTEM) -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard';;
+    mips)
+      clang_triple=mipsel-linux-gnu
+      gcc_fallback_prefix=mipsel-linux-gnu
+      nativecccompopts='-Wall --std=gnu89 -mno-abicalls -fno-pic'
+      nativecclinkopts='-mno-abicalls -fno-pic -static'
+      asflags=''
+      asppflags='-mno-abicalls -fno-pic -c -DSYS_$(SYSTEM)';;
+    sparc)
+      # claude: clang has a genuine 32-bit sparc target of its own
+      # (unlike gcc's Debian packaging, which only ships the biarch
+      # sparc64-linux-gnu-gcc -- see the gcc-path nativecc comment
+      # below), so no -m32-style flag is needed here to get 32-bit code.
+      clang_triple=sparc-linux-gnu
+      gcc_fallback_prefix=sparc64-linux-gnu
+      nativecccompopts='-Wall --std=gnu89'
+      nativecclinkopts='-static'
+      asflags=''
+      asppflags='-c -DSYS_$(SYSTEM)';;
+    power)
+      clang_triple=powerpc-linux-gnu
+      gcc_fallback_prefix=powerpc-linux-gnu
+      nativecccompopts='-Wall --std=gnu89'
+      nativecclinkopts='-static'
+      asflags=''
+      asppflags='-c -DSYS_$(SYSTEM)';;
+  esac
+  nativecc="$bytecc -target $clang_triple"
+  aspp="$bytecc -target $clang_triple"
+  # claude: no separate cross `as` binary with clang -- route the
+  # hand-written .s files that asmcomp/*/proc.ml's assemble_file feeds
+  # straight to $(AS) $(ASFLAGS) (see the as='' comment further below)
+  # through clang's own integrated assembler instead, via -x assembler.
+  as="$bytecc -target $clang_triple -c -x assembler"
+else
+
 case "$arch,$system,$cc" in
   arm,linux_elf,gcc*)   nativecc="arm-linux-gnueabihf-gcc";;
   mips,linux_elf,gcc*)  nativecc="mipsel-linux-gnu-gcc";;
@@ -651,6 +740,8 @@ case "$arch,$nativecc" in
     asppflags='-c -DSYS_$(SYSTEM)';;
 esac
 
+fi
+
 # claude: -target-arch above picks a cross toolchain purely by naming
 # convention (nativecc/as/aspp) and never checks any of it is actually
 # installed -- without this, configure "succeeds" and the missing
@@ -662,15 +753,50 @@ esac
 # -target-arch it was for. Skipped for a native (no -target-arch) build:
 # nativecc there is just $bytecc, already validated by the "Do we have
 # gcc?" check above.
-if test -n "$target_arch"; then
+if test -n "$target_arch" && test "$use_clang_target" = yes; then
+  # claude: nativecc/aspp/as here are all "$bytecc -target $clang_triple
+  # ..." -- $bytecc's own existence was already checked by the "Do we
+  # have gcc?"/ANSI-compliance probes above, so a PATH search would only
+  # ever confirm clang itself is there, not that *this* clang build's
+  # LLVM was compiled in with a backend for $clang_triple (Apple's clang
+  # in particular can omit backends it ships no <triple>-* frontend
+  # for). Probe that directly with a trivial compile instead.
+  echo 'int main(void) { return 0; }' > clangtargettest.c
+  if $nativecc -c clangtargettest.c -o clangtargettest.o 2> clangtargettest.err
+  then :
+  else
+    echo "clang cannot target $clang_triple (via: $nativecc):" 1>&2
+    cat clangtargettest.err 1>&2
+    # claude: there's no independent -nativecc override in this script --
+    # nativecc is always derived from $bytecc/$cc, and $bytecc also builds
+    # the *host* bytecode runtime, so pointing it straight at e.g.
+    # arm-linux-gnueabihf-gcc to work around clang's missing $arch backend
+    # would break that host build instead (its "exec ./tst" ANSI-compliance
+    # probe near the top of this script can't run a cross-compiled binary).
+    # A different, non-Apple clang/LLVM build with the $arch backend
+    # enabled, or configuring on a host where the classic
+    # ${gcc_fallback_prefix}-gcc/binutils cross-toolchain packages are
+    # available (e.g. gcc-$gcc_fallback_prefix and binutils-$gcc_fallback_prefix on
+    # Debian/Ubuntu), are the two ways around this.
+    echo "This clang's LLVM has no code generator for $arch (see comment above for how to work around it)." 1>&2
+    rm -f clangtargettest.c clangtargettest.o clangtargettest.err
+    exit 2
+  fi
+  rm -f clangtargettest.c clangtargettest.o clangtargettest.err
+elif test -n "$target_arch"; then
   missing=''
   for prog in "$nativecc" "$as" "$aspp"; do
     case "$prog" in
       ''|'$(AS)') ;; # unset, or the Makefile-variable placeholder default
       *)
+        # claude: $prog may be multi-word (e.g. nativecc defaulting to a
+        # user-supplied "-cc 'gcc -m32'"), so search PATH for its first
+        # word only -- the actual program name -- not the literal string
+        # with its trailing flags, which would never match a filename.
+        set -- $prog; bin=$1
         case " $missing " in
-          *" $prog "*) ;; # already reported (e.g. arm's nativecc == aspp)
-          *) if sh ./searchpath "$prog"; then :; else missing="$missing $prog"; fi;;
+          *" $bin "*) ;; # already reported (e.g. arm's nativecc == aspp)
+          *) if sh ./searchpath "$bin"; then :; else missing="$missing $bin"; fi;;
         esac;;
     esac
   done
