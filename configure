@@ -31,12 +31,13 @@ host_type=unknown
 
 #new: so easy to use ocamlopt as a cross-compiler for another arch
 #claude: -target-arch lets the native-code compiler target an arch other
-# than $host's own default (see "Configure the native-code compiler"): a
-# 64-bit host (x86_64, aarch64) has no native-code backend of its own yet
-# and gets "not supported" unless -target-arch explicitly asks for a
-# cross target, e.g. -target-arch i386 to cross-compile i386 binaries
-# from this aarch64 host using the installed i686-linux-gnu-gcc/as
-# toolchain.
+# than $host's own default (see "Configure the native-code compiler"): an
+# aarch64-*-linux*/aarch64-*-darwin* host gets its own arm64 native-code
+# backend auto-detected (see the $host case below), but an x86_64 host has
+# no native-code backend of its own yet and gets "not supported" unless
+# -target-arch explicitly asks for a cross target, e.g. -target-arch i386
+# to cross-compile i386 binaries from an aarch64 host using the installed
+# i686-linux-gnu-gcc/as toolchain.
 target_arch=''
 #still? support -as, -aspp, -partialld so can run for example from
 # a recent OCaml INSTALL.adoc:
@@ -427,7 +428,6 @@ case "$host" in
   i[3456]86-*-linux)            arch=i386; system=linux_elf;;
   i[3456]86-*-*bsd*)            arch=i386; system=bsd;;
   #TODO: port amd64 so can compile with arch=amd64; system=linux_elf
-  #TODO: port arm64 so can compile with arch=arm64; system=linux_elf
   # claude: native Apple Silicon host -- unlike every -target-arch cross
   # case below (which always names a specific Linux cross toolchain),
   # this fires directly off $host with no -target-arch needed, since the
@@ -436,24 +436,34 @@ case "$host" in
   # differences (system=macosx): leading-underscore symbols, no
   # .type/.size, and never -static (macOS has no static libSystem).
   aarch64-*-darwin*)            arch=arm64; system=macosx;;
+  # claude: native aarch64 Linux host -- same no-target-arch-needed
+  # reasoning as aarch64-*-darwin* above, except the
+  # target is ELF (system=linux_elf) using the host's own gcc/as, which on
+  # Debian/Ubuntu is also reachable under the "aarch64-linux-gnu-"
+  # triplet-prefixed name (see the nativecc/as/aspp case blocks below,
+  # which already special-case arm64,linux_elf,gcc* as "either the host's
+  # own compiler under its triplet alias, or a genuine cross compiler from
+  # some other host" -- no separate native-vs-cross override needed here,
+  # unlike i386's $arch,$host override further down).
+  aarch64-*-linux*)             arch=arm64; system=linux_elf;;
 esac
 
-# claude: deliberately no x86_64-*-linux* or aarch64-*-linux* case above
-# defaulting to arch=i386/arch=arm: a 64-bit host has no native-code
-# backend of its own yet, and silently cross-compiling to a 32-bit arch
-# there (as this used to do -- x86_64 via gcc -m32, aarch64 via
-# arm-linux-gnueabihf-) would get in the way once amd64/arm64 get a real
-# native backend (that case would then need to mean "compile natively for
-# amd64/arm64", not "cross-compile to i386/arm32"). So a 64-bit host gets
-# arch=none (native-code compiler "not supported on this platform", same
-# as any other unlisted host) unless -target-arch explicitly asks for a
-# cross target: -target-arch i386 for the i386 target (host's own -m32
-# multilib on an x86_64 host, or the i686-linux-gnu- toolchain otherwise),
-# or -target-arch arm/arm32 for the arm-linux-gnueabihf- toolchain, or
+# claude: deliberately no x86_64-*-linux* case above defaulting to
+# arch=i386: a 64-bit x86_64 host has no native-code backend of its own
+# yet, and silently cross-compiling to a 32-bit arch there (as this used
+# to do, via gcc -m32) would get in the way once amd64 gets a real native
+# backend (that case would then need to mean "compile natively for
+# amd64", not "cross-compile to i386"). So an x86_64 host gets arch=none
+# (native-code compiler "not supported on this platform", same as any
+# other unlisted host) unless -target-arch explicitly asks for a cross
+# target: -target-arch i386 for the i386 target (host's own -m32 multilib
+# on an x86_64 host, or the i686-linux-gnu- toolchain otherwise), or
+# -target-arch arm/arm32 for the arm-linux-gnueabihf- toolchain, or
 # -target-arch mips for the mipsel-linux-gnu- toolchain, or -target-arch
 # alpha for the alpha-linux-gnu- toolchain, or -target-arch m68k for the
-# m68k-linux-gnu- toolchain. Only wires up targets with a known cross
-# toolchain in the case blocks below (nativecc, then
+# m68k-linux-gnu- toolchain, or -target-arch arm64/aarch64 to
+# cross-compile arm64 from some other host. Only wires up targets with a
+# known cross toolchain in the case blocks below (nativecc, then
 # nativecccompopts/nativecclinkopts, then as/aspp).
 case "$target_arch" in
   "") ;;
@@ -652,7 +662,6 @@ case "$arch,$model,$system" in
         aspp='gcc'
 	asflags='--32'
 	asppflags='-m32 -c -DSYS_$(SYSTEM)';;
-    #TODO: support arm64
     arm,*,*)
         as='arm-linux-gnueabihf-as'
         aspp='arm-linux-gnueabihf-gcc'
