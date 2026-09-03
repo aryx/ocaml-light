@@ -45,14 +45,17 @@ case "$arch" in
   # native-amd64 target below work the same regardless of whether its
   # host happens to already be x86_64.
   amd64) exec qemu-x86_64-static "$@" ;;
-  # claude: reached only for arm64,linux_elf (the Docker/-target-arch
-  # cross-compiled case, e.g. from an x86_64 CI runner) -- a native
-  # arm64,macosx build (this dev host, running directly on Apple
-  # Silicon) already returned above via the $system check, before ever
-  # reaching this case. Docker's native-arm64 target must also work on
-  # an x86_64 CI runner, so route linux_elf unconditionally through
-  # qemu-user-static rather than relying on it happening to match the
-  # host's own arch, same as amd64 above.
-  arm64) exec qemu-aarch64-static "$@" ;;
+  # claude: reached for arm64,linux_elf -- either the Docker/-target-arch
+  # cross-compiled case (e.g. from an x86_64 CI runner), which needs
+  # qemu, or a native aarch64-*-linux* dev host, which can just run the
+  # binary directly, same shortcut as the i386/arm host-native cases
+  # above. A native arm64,macosx build (Apple Silicon) already returned
+  # above via the $system check, before ever reaching this case.
+  arm64)
+    case `uname -m` in
+      aarch64|arm64) exec "$@" ;;
+      *)             exec qemu-aarch64-static "$@" ;;
+    esac
+    ;;
   *)     exec "$@" ;;
 esac
