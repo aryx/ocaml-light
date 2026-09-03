@@ -1,15 +1,18 @@
 # -*- org -*-
 
-* 0.5 (Q3 2026) (restored arm/mips/sparc/alpha/powerpc native codegen, forwardport amd64)
+* 0.5 (Q3 2026) (restored native mips/sparc/alpha/powerpc codegen, forwardport arm/amd64/arm64)
 # start use Claude code
 
 ** arch
-- restore arm support in ocamlopt, backported from 2.0.2 and
+- restored mips, alpha, sparc, and powerpc support in ocamlopt
+  from ocaml 1.07 (bit thx to Claude)
+- restore arm support in ocamlopt, backported from 2.02 and
   adapted to qemu-arm and different float ABI
   using gcc-arm-linux-gnueabihf (bit thx to Claude)
-- restored also mips, alpha, sparc, and powerpc support in ocamlopt
-  from ocaml 2.0.2 (bit thx to Claude)
 - backport amd64 from 3.07, adapted to ocaml-light record-based asmcomp/
+  (bit thx to Claude)
+- backport arm64 from 4.02, again adapted then to ocaml-light
+  (bit thx to Claude)
 
 ** build infra
 - new configure --target-arch i386|arm|... so easy to cross compile
