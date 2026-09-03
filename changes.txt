@@ -1,29 +1,26 @@
 # -*- org -*-
 
-* 0.5 (Q3 2026) (restored native mips/sparc/alpha/powerpc codegen, forwardport arm/amd64/arm64)
-# start use Claude code
+* 0.5 (Q3 2026) (restored native mips/sparc/alpha/powerpc codegen, backport arm/amd64/arm64 codegen)
+# started to use Claude code
 
 ** arch
 - restored mips, alpha, sparc, and powerpc support in ocamlopt
-  from ocaml 1.07 (bit thx to Claude)
-- restore arm support in ocamlopt, backported from 2.02 and
+  from ocaml 1.07 (big thx to Claude)
+- restored arm support in ocamlopt, backported from 2.02 and
   adapted to qemu-arm and different float ABI
-  using gcc-arm-linux-gnueabihf (bit thx to Claude)
+  using gcc-arm-linux-gnueabihf (big thx to Claude)
 - backport amd64 from 3.07, adapted to ocaml-light record-based asmcomp/
-  (bit thx to Claude)
+  (big thx to Claude)
 - backport arm64 from 4.02, again adapted then to ocaml-light
-  (bit thx to Claude)
+  (big thx to Claude)
 - native arm64 support for macOS/Mach-O (Apple Silicon), running
   directly on the host's own clang/as/ld64, no -target-arch needed;
   ported the GOT-indirect symbol addressing and GNU-as .macro-based
-  asmrun/arm64.S from upstream real OCaml's own arm64-on-macOS port;
-  also fixed test/run-native, which used to unconditionally route any
-  arm64 binary through qemu-aarch64-static (a Linux-only assumption
-  predating this port -- a native macOS build now just execs directly)
-  (bit thx to Claude)
+  asmrun/arm64.S from upstream real OCaml's own arm64-on-macOS port.
+  (big thx to Claude)
 
 ** build infra
-- new configure --target-arch i386|arm|... so easy to cross compile
+- new configure --target-arch i386|arm|mips|... so easy to cross compile
 - new configure --help
 
 * 0.4 (Q1 2026) (plan9 support v1)
@@ -36,12 +33,12 @@
 ** os
 - fix compiling byterun/ for plan9 with goken and latest principia repo
   so I can run ocaml (light) bytecode programs under my fork of plan9,
-  including the 'ocaml' interpreter itself!
+  including the 'ocaml' interpreter itself! and later even orio from xix!
 - added Dockerfile.plan9 for reproducible build.
 
 * ------------------------------------------------------------------------
 
-* 0.3 (Q4 2025) (type-directed field access disambiguation)
+* 0.3 (Q4 2025) (backport type-directed field access disambiguation)
 
 ** language
 - backport (partial) shorthand notation for records { lbl; } in exprs and
@@ -178,7 +175,8 @@ at commit a234a779913d61830f2f97af10a8d0a2a0d963ce
 ** arch
 - removed some native targets: alpha, hppa, m68k, powerpc, and sparc.
   I just kept i386, mips, and later backported the ARM port from ocaml 2.01!
-  update: I later restored alpha, powerpc, m68k and sparc
+  update: I later restored alpha, powerpc, m68k and sparc and backported
+  even arm64/amd64 from 3.07 and 4.02
 
 ** tools
 - ocamllex: backport support for named regexps (let name = regexp ...)
@@ -189,10 +187,15 @@ at commit a234a779913d61830f2f97af10a8d0a2a0d963ce
 - backport basic backtrace in printexc.ml (from 3.10.2 and 4.01)
 
 ** build infra
-- a working configure that can work on some recent Mac and Linux
+- a working configure that can work on some recent Mac and Linux,
+  updated GNU config/auto-aux/config.guess to more recent version
 
 ** os
 - remove support for old macOS and Windows NT, to remove ugly cruft.
+  update: recent macOS are more UNIX-like and should be supported
+  without needing special code (except for asmcomp Mach-O).
+  Same for windows which should be able to compile ocaml-light using
+  cygwin or mingw.
 
 * ------------------------------------------------------------------------
 
