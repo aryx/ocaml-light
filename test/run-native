@@ -14,6 +14,19 @@
 # Usage: run-native <binary> [args...]
 
 arch=`sed -n 's/^ARCH=//p' "$(dirname "$0")/../config/Makefile" | tail -1`
+system=`sed -n 's/^SYSTEM=//p' "$(dirname "$0")/../config/Makefile" | tail -1`
+
+# claude: a Mach-O binary (system=macosx) can only ever run natively on
+# macOS -- qemu-user's whole reason for existing here is emulating a
+# foreign *Linux ELF* syscall ABI (see the arm64/amd64 comments below),
+# which is simply not applicable to Mach-O regardless of arch. Check
+# this before the $arch case, or a native Apple Silicon build would hit
+# the arm64 case below and get routed through qemu-aarch64-static (a
+# Linux-ELF-only emulator that can't load a Mach-O binary at all, and
+# that isn't even installed on a plain macOS dev machine).
+case "$system" in
+  macosx) exec "$@" ;;
+esac
 
 case "$arch" in
   mips)  exec qemu-mipsel-static "$@" ;;
@@ -32,10 +45,14 @@ case "$arch" in
   # native-amd64 target below work the same regardless of whether its
   # host happens to already be x86_64.
   amd64) exec qemu-x86_64-static "$@" ;;
-  # claude: this dev host happens to already be aarch64 (where this
-  # would run natively via the "*" case below), but the Docker
-  # native-arm64 target must also work on an x86_64 CI runner, so route
-  # it through qemu-user-static unconditionally too, same as amd64 above.
+  # claude: reached only for arm64,linux_elf (the Docker/-target-arch
+  # cross-compiled case, e.g. from an x86_64 CI runner) -- a native
+  # arm64,macosx build (this dev host, running directly on Apple
+  # Silicon) already returned above via the $system check, before ever
+  # reaching this case. Docker's native-arm64 target must also work on
+  # an x86_64 CI runner, so route linux_elf unconditionally through
+  # qemu-user-static rather than relying on it happening to match the
+  # host's own arch, same as amd64 above.
   arm64) exec qemu-aarch64-static "$@" ;;
   *)     exec "$@" ;;
 esac

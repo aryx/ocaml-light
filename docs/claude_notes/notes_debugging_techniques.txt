@@ -558,3 +558,55 @@ Worth remembering next time: `PR#6588 "Code generation errors for ARM"
 that backend rewrite, is a plausible pointer to *other* register-
 allocator-vs-hardcoded-register bugs of this same shape, if similar
 symptoms ever show up again in this arm/ port.
+
+11. `-dstartup`: inspecting the linker's synthetic startup file
+-------------------------------------------------------------------
+`ocamlopt`'s final link step doesn't just concatenate the compiled
+`.cmx` object files -- `Asmlink.make_startup_file` (asmcomp/asmlink.ml)
+first *generates* one more small `.s` file on the fly (via
+`Cmmgen.global_table`/`data_segment_table`/`code_segment_table`/
+`frame_table` plus each linked unit's own predefined-exception blocks),
+assembles it to a temp `.o`, and links that in too -- this is what
+defines `caml_globals`, `caml_frametable`, `caml_data_segments`,
+`caml_code_segments`, and the predefined exceptions (`Out_of_memory`,
+`Failure`, etc.) as one flat table per program. Normally this file is
+a `Filename.temp_file` that gets deleted immediately after assembling,
+so a bug that only shows up in *this* generated file (as opposed to a
+bug in a normal per-module `.cmx`) is otherwise invisible -- there's no
+`.ml` source to point at and no stable path to inspect.
+
+`-dstartup` (an ocamlopt flag, `Clflags.keep_startup_file`, see
+driver/optmain.ml) keeps the generated `.s` (not the `.o`) instead of
+deleting it -- find it afterwards with:
+
+  find "$TMPDIR" -name 'camlstartup*.s' -newer <some-earlier-file>
+
+(there's no fixed name/path -- it's a fresh `Filename.temp_file` every
+run, so `-newer` against a timestamp from just before the run, or just
+sorting by mtime, is the reliable way to find the right one, especially
+after several linking attempts have each left their own copy behind).
+
+Used this to pin down a real bug (2026-09-03, arm64 macOS/Mach-O port):
+`ld` failed with `pointer not aligned in '_startup_data_begin'+0x38C`,
+which named an *offset*, not a source location -- nothing to `grep` for.
+Kept the `.s` file, then wrote a small Python script that walks the
+`.data`-mode lines in order (`.quad` +8, `.ascii "..."` +len, `.space n`
++n, `.byte` +1, ...) accumulating a byte offset, and prints whichever
+line's directive spans the target offset (`0x38C` here) -- turning an
+opaque linker complaint about a byte offset into an exact source line in
+the generated assembly. That line turned out to be a `.quad` in
+`caml_frametable`, and walking backwards from there in the file found
+the actual culprit a few dozen bytes earlier: a stray `.long 0` (4
+bytes) where every neighboring directive was `.quad` (8 bytes) --
+a leftover from a 32-bit-arch convention that silently desynced 8-byte
+alignment for everything emitted after it. ELF/GNU ld doesn't check
+pointer-relocation alignment at all, so this had been latent and
+harmless on every ELF target this fork already supported; Mach-O's `ld`
+does check, and turned it into a hard link error. General lesson: an
+error naming a raw byte offset into a synthetic/generated section (not
+a named symbol you can `grep` for) is exactly the case where writing a
+tiny offset-accounting script beats manually counting directives by eye
+-- and `-dstartup` (or the equivalent "don't delete the generated temp
+file" flag/env var in whatever build tool is involved) is usually the
+first thing to reach for when the bug is plausibly in *generated*, not
+source-level, code.

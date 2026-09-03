@@ -119,6 +119,10 @@ SHARPBANGSCRIPTS=true
 ###   SYSTEM=bsd        FreeBSD, probably works for NetBSD also
 ###   SYSTEM=nextstep   NextStep
 ###
+### If ARCH=arm64: choose between
+###   SYSTEM=linux_elf  Linux with ELF binaries
+###   SYSTEM=macosx     macOS (Darwin), Mach-O binaries (e.g. Apple Silicon)
+###
 ### For other architectures: set SYSTEM=unknown
 ###
 #SYSTEM=sunos

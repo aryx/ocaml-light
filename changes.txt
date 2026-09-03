@@ -13,6 +13,14 @@
   (bit thx to Claude)
 - backport arm64 from 4.02, again adapted then to ocaml-light
   (bit thx to Claude)
+- native arm64 support for macOS/Mach-O (Apple Silicon), running
+  directly on the host's own clang/as/ld64, no -target-arch needed;
+  ported the GOT-indirect symbol addressing and GNU-as .macro-based
+  asmrun/arm64.S from upstream real OCaml's own arm64-on-macOS port;
+  also fixed test/run-native, which used to unconditionally route any
+  arm64 binary through qemu-aarch64-static (a Linux-only assumption
+  predating this port -- a native macOS build now just execs directly)
+  (bit thx to Claude)
 
 ** build infra
 - new configure --target-arch i386|arm|... so easy to cross compile

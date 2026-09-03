@@ -40,10 +40,20 @@ let reg_x15 = phys_reg 15
 let emit_label lbl =
   emit_string ".L"; emit_int lbl
 
-(* Symbols *)
+(* Symbols are prefixed with _ under macOS/Mach-O, matching the leading
+   underscore clang itself adds when compiling byterun/*.c and asmrun/*.c
+   -- our hand-emitted symbol references (and asmrun/arm64.S's) must agree
+   with that on both definition and use sites. See asmcomp/i386/emit.mlp's
+   symbol_prefix for the same pattern (its "_" default branch is this same
+   historical macOS/BSD case, just for a different arch). *)
+
+let symbol_prefix =
+  match Config.system with
+    "macosx" -> "_"
+  | _ -> ""
 
 let emit_symbol s =
-  Emitaux.emit_symbol '$' s
+  emit_string symbol_prefix; Emitaux.emit_symbol '$' s
 
 (* Output a pseudo-register *)
 
@@ -220,6 +230,23 @@ let name_for_int_operation = function
    (correct for any 64-bit pattern, since Nativeint.to_string/
    emit_nativeint are exact) at the cost of a little code density. *)
 
+(* Emit code to load a value out of the literal pool (int_literal/
+   float_literal below, always a label local to this .s file). Unlike
+   emit_load_symbol_addr further down (a genuinely external-to-this-file
+   symbol, GOT-indirect on macosx), these use direct @PAGE/@PAGEOFF
+   addressing on macosx -- no GOT needed, the assembler can resolve the
+   page distance to a same-file label itself, matching upstream OCaml's
+   own emit_load_literal for its real arm64-on-macOS port. *)
+
+let emit_load_literal dst lbl =
+  if Config.system = "macosx" then begin
+    `	adrp	{emit_reg reg_tmp1}, {emit_label lbl}@PAGE\n`;
+    `	ldr	{emit_reg dst}, [{emit_reg reg_tmp1}, {emit_label lbl}@PAGEOFF]\n`
+  end else begin
+    `	adrp	{emit_reg reg_tmp1}, {emit_label lbl}\n`;
+    `	ldr	{emit_reg dst}, [{emit_reg reg_tmp1}, #:lo12:{emit_label lbl}]\n`
+  end
+
 let int_literals = ref ([] : (Nativeint.t * label) list)
 
 let int_literal n =
@@ -237,11 +264,8 @@ let emit_intconst dst n =
     `	movz	{emit_reg dst}, #{emit_int (Nativeint.to_int n)}\n`
   else if Nativeint.cmp n (-0x10000) >= 0 && Nativeint.cmp n (-1) <= 0 then
     `	movn	{emit_reg dst}, #{emit_int (-(Nativeint.to_int n) - 1)}\n`
-  else begin
-    let lbl = int_literal n in
-    `	adrp	{emit_reg reg_tmp1}, {emit_label lbl}\n`;
-    `	ldr	{emit_reg dst}, [{emit_reg reg_tmp1}, #:lo12:{emit_label lbl}]\n`
-  end
+  else
+    emit_load_literal dst (int_literal n)
 
 (* Adjust sp (up or down) by the given byte amount *)
 
@@ -299,11 +323,35 @@ let emit_literals() =
    to go through a GOT indirection for symbols outside the current
    compilation unit under dynamic linking -- this fork never builds PIC
    or dynamically-loadable code (every -target-arch links -static, see
-   configure), so always use the direct adrp+add form. *)
+   configure), so always use the direct adrp+add form.
+
+   This stays correct on macOS too, even though that target always links
+   PIE (no -static there, see configure's arm64,*,macosx case) and every
+   arm64 Mach-O binary must be PIE: adrp+:lo12: is inherently PC-relative,
+   and every symbol we ever address this way (OCaml module symbols, our
+   own runtime C functions) is resolved at *static* link time within this
+   same Mach-O image, never from a dylib -- so no GOT/@GOTPAGE indirection
+   is needed there either.
+
+   claude: correction after empirically testing on real Apple Silicon
+   hardware -- Mach-O's assembler has no :lo12: operator at all ("unknown
+   AArch64 fixup kind"; confirmed direct adrp+add *would* still work
+   correctness-wise via its own @PAGE/@PAGEOFF syntax instead, even across
+   separately-linked object files, since this fork never builds a dylib
+   or loadable plugin). But upstream OCaml's real arm64-on-macOS port
+   (asmcomp/arm64/emit.mlp, ~2014-2016, "iOS Porting Team"/Gerd
+   Stolpmann) always goes through a GOT indirection on macosx regardless
+   -- imitating that proven approach here rather than the untested
+   direct-@PAGE alternative. *)
 
 let emit_load_symbol_addr dst s =
-  `	adrp	{emit_reg dst}, {emit_symbol s}\n`;
-  `	add	{emit_reg dst}, {emit_reg dst}, #:lo12:{emit_symbol s}\n`
+  if Config.system = "macosx" then begin
+    `	adrp	{emit_reg dst}, {emit_symbol s}@GOTPAGE\n`;
+    `	ldr	{emit_reg dst}, [{emit_reg dst}, {emit_symbol s}@GOTPAGEOFF]\n`
+  end else begin
+    `	adrp	{emit_reg dst}, {emit_symbol s}\n`;
+    `	add	{emit_reg dst}, {emit_reg dst}, #:lo12:{emit_symbol s}\n`
+  end
 
 (* Output the assembly code for an instruction *)
 
@@ -332,8 +380,8 @@ let emit_instr i =
           `	fmov	{emit_reg i.res.(0)}, xzr	/* {emit_string f} */\n`
         else begin
           let lbl = float_literal f in
-          `	adrp	{emit_reg reg_tmp1}, {emit_label lbl}\n`;
-          `	ldr	{emit_reg i.res.(0)}, [{emit_reg reg_tmp1}, #:lo12:{emit_label lbl}]	/* {emit_string f} */\n`
+          emit_load_literal i.res.(0) lbl;
+          `	/* {emit_string f} */\n`
         end
     | Lop(Iconst_symbol s) ->
         emit_load_symbol_addr i.res.(0) s
@@ -614,7 +662,11 @@ let fundecl fundecl =
   `	.text\n`;
   `	.align	2\n`;
   `	.globl	{emit_symbol fundecl.fun_name}\n`;
-  `	.type	{emit_symbol fundecl.fun_name}, %function\n`;
+  (* claude: .type is an ELF-only directive, Mach-O's assembler doesn't
+     have it (nor a need for it: Mach-O tells functions from data via the
+     section they're in, __text vs __data, not a per-symbol directive). *)
+  if Config.system <> "macosx" then
+    `	.type	{emit_symbol fundecl.fun_name}, %function\n`;
   `{emit_symbol fundecl.fun_name}:\n`;
   let n = frame_size() in
   if n > 0 then
@@ -626,7 +678,8 @@ let fundecl fundecl =
   List.iter emit_call_gc !call_gc_sites;
   if !range_check_trap > 0 then
     `{emit_label !range_check_trap}:	bl	{emit_symbol "array_bound_error"}\n`;
-  `	.size	{emit_symbol fundecl.fun_name}, .-{emit_symbol fundecl.fun_name}\n`;
+  if Config.system <> "macosx" then
+    `	.size	{emit_symbol fundecl.fun_name}, .-{emit_symbol fundecl.fun_name}\n`;
   emit_literals()
 
 (* Emission of data *)
@@ -671,10 +724,29 @@ let end_assembly () =
   `	.data\n`;
   `	.globl	{emit_symbol lbl_end}\n`;
   `{emit_symbol lbl_end}:\n`;
-  `	.long	0\n`;
+  (* claude: was ".long 0" (4 bytes) -- harmless on ELF (unaligned
+     pointer relocations are tolerated), but it desyncs every .quad
+     (8-byte) pointer that follows in caml_frametable/etc. from 8-byte
+     alignment, which Mach-O's linker hard-errors on ("pointer not
+     aligned in '_startup_data_begin'+0x38C", confirmed by tracing the
+     actual byte offsets in a real generated .s file). size_int is 8 on
+     this 64-bit arch, so ".quad" (not ".long", a 32-bit-arch leftover)
+     is the correct width here regardless of system. *)
+  `	.quad	0\n`;
   let lbl = Compilenv.current_unit_name() ^ "_frametable" in
   `	.globl	{emit_symbol lbl}\n`;
   `{emit_symbol lbl}:\n`;
   `	.quad	{emit_int (List.length !frame_descriptors)}\n`;
   List.iter emit_frame !frame_descriptors;
   frame_descriptors := []
+  (* claude: NOT emitting .subsections_via_symbols here, despite it being
+     the standard Mach-O convention for symbol-granular dead-stripping --
+     confirmed by testing that it actively breaks this file: it tells the
+     linker each .globl'd function may be relocated independently as its
+     own atom, so the assembler then refuses any *conditional* branch
+     (b.eq/b.lo/etc, only a +-1MB/19-bit immediate) to a same-function
+     ".L"-prefixed local label, erroring "conditional branch requires
+     assembler-local label... is external" -- even though the label and
+     its use are always in the same function/atom. Not worth chasing
+     further since we don't need dead-stripping (every OCaml executable
+     here already links in exactly the .o files/modules it needs). *)

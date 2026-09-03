@@ -118,13 +118,24 @@ let selector () =
   is_immediate = is_immediate;
 
   select_addressing = (function
-    | Cop(Cadda, [Cconst_symbol s; Cconst_int n]) ->
+    (* claude: Ibased (direct adrp+:lo12: symbol addressing) is gated off
+       under macosx -- Mach-O's assembler has no :lo12: operator at all
+       (confirmed empirically: "unknown AArch64 fixup kind"), and
+       emit_load_symbol_addr's macosx branch goes through a GOT
+       (adrp+ldr @GOTPAGE/@GOTPAGEOFF, matching upstream OCaml's real
+       arm64-on-macOS port) instead, which yields a *value* in a register
+       rather than a base to fold an offset into the same instruction --
+       so just fall through to the generic Iindexed-on-a-loaded-register
+       path below, exactly like upstream's own
+       use_direct_addressing = ... && not macosx. *)
+    | Cop(Cadda, [Cconst_symbol s; Cconst_int n])
+      when Config.system <> "macosx" ->
         (Ibased(s, n), Ctuple [])
     | Cop(Cadda, [arg; Cconst_int n]) when is_offset n ->
         (Iindexed n, arg)
     | Cop(Cadda, [arg1; Cop(Caddi, [arg2; Cconst_int n])]) when is_offset n ->
         (Iindexed n, Cop(Cadda, [arg1; arg2]))
-    | Cconst_symbol s ->
+    | Cconst_symbol s when Config.system <> "macosx" ->
         (Ibased(s, 0), Ctuple [])
     | arg ->
         (Iindexed 0, arg)

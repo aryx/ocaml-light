@@ -428,6 +428,14 @@ case "$host" in
   i[3456]86-*-*bsd*)            arch=i386; system=bsd;;
   #TODO: port amd64 so can compile with arch=amd64; system=linux_elf
   #TODO: port arm64 so can compile with arch=arm64; system=linux_elf
+  # claude: native Apple Silicon host -- unlike every -target-arch cross
+  # case below (which always names a specific Linux cross toolchain),
+  # this fires directly off $host with no -target-arch needed, since the
+  # host's own clang/as/ld64 toolchain already targets arm64 Mach-O. See
+  # asmcomp/arm64/emit.mlp and asmrun/arm64.S for the ELF vs Mach-O
+  # differences (system=macosx): leading-underscore symbols, no
+  # .type/.size, and never -static (macOS has no static libSystem).
+  aarch64-*-darwin*)            arch=arm64; system=macosx;;
 esac
 
 # claude: deliberately no x86_64-*-linux* or aarch64-*-linux* case above
@@ -594,12 +602,23 @@ case "$arch,$nativecc,$system" in
 	# needed here. -static is just for convenience under qemu-x86_64.
 	nativecccompopts='-Wall --std=gnu89'
 	nativecclinkopts='-static';;
+    arm64,*,macosx)
+	# claude: a native Apple Silicon host, not a cross target (see the
+	# aarch64-*-darwin* case in the earlier $host block) -- macOS has no
+	# static libSystem at all (-static errors out at link time) and
+	# mandates PIE for arm64 executables. Neither costs us anything:
+	# asmcomp/arm64/emit.mlp's adrp+:lo12: addressing is inherently
+	# PC-relative, so it stays correct under PIE with no GOT/@GOTPAGE
+	# indirection needed (every symbol we reference -- OCaml modules,
+	# our own runtime C functions -- is resolved at static-link time
+	# within this same Mach-O image; see emit_load_symbol_addr).
+	nativecccompopts='-Wall --std=gnu89'
+	nativecclinkopts=''
+	;;
     arm64,*,*)
 	# claude: aarch64-linux-gnu-gcc already defaults to 64-bit code
 	# matching asmcomp/arm64/arch.ml, so no special compile flags are
-	# needed here. -static is just for convenience under qemu-aarch64
-	# (and lets this run the same way on an aarch64 host too, where it's
-	# not actually needed for CPU-compat reasons but is still harmless).
+	# needed here. -static is just for convenience under qemu-aarch64.
 	nativecccompopts='-Wall --std=gnu89'
 	nativecclinkopts='-static'
 esac
@@ -663,6 +682,15 @@ case "$arch,$model,$system" in
     amd64,*,*)
         as='x86_64-linux-gnu-as'
         aspp='x86_64-linux-gnu-gcc'
+	asppflags='-c -DSYS_$(SYSTEM)';;
+    # claude: native Apple Silicon host -- must come before the generic
+    # arm64,*,*) below (shell case picks the first match, and that one's
+    # wildcard system would otherwise also match macosx). Leave $as unset
+    # (like the i386 native case above) so $(AS) falls back to make's
+    # default `as`, i.e. the host's own clang-based integrated assembler,
+    # used by Proc.assemble_file for plain (non-preprocessed) .s files.
+    arm64,*,macosx)
+        aspp='gcc'
 	asppflags='-c -DSYS_$(SYSTEM)';;
     arm64,*,*)
         as='aarch64-linux-gnu-as'

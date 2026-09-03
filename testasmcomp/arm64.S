@@ -10,9 +10,20 @@
 /*                                                                     */
 /***********************************************************************/
 
-        .globl  call_gen_code
+/* claude: Mach-O (macOS/Apple Silicon) prefixes identifiers with _,
+   unlike Linux with ELF binaries -- same convention already used by
+   this directory's own i386.S (see there), and by asmcomp/arm64/
+   emit.mlp's symbol_prefix / asmrun/arm64.S's SYM() for the real
+   runtime. -DSYS_$(SYSTEM) is passed by this Makefile's ASPPFLAGS. */
+#ifdef SYS_macosx
+#define G(x) _##x
+#else
+#define G(x) x
+#endif
+
+        .globl  G(call_gen_code)
         .align  2
-call_gen_code:  
+G(call_gen_code):
     /* Set up stack frame and save callee-save registers */
 	stp     x29, x30, [sp, -160]!
 	add     x29, sp, #0
@@ -46,7 +57,7 @@ call_gen_code:
 	ldp     x29, x30, [sp], 160
         ret
 
-        .globl  caml_c_call
+        .globl  G(caml_c_call)
         .align  2
-caml_c_call:
+G(caml_c_call):
         br	x15
