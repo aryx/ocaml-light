@@ -14,10 +14,12 @@ For each upstream commit being ported:
    possible. Keep the original author, date, and commit message. Add a
    trailer noting the exact upstream SHA, e.g.
    `(cherry picked and forward-ported from upstream commit <sha>)`.
-   No `Co-Authored-By` line on this commit. If `docs/literate/*.nw` books
-   weave any of the touched files, regenerate them (`make sync_c` or
-   equivalent in `docs/literate/`) and fold that into *this* commit too --
-   it's just the doc-side mirror of the same content, not a new decision.
+   No `Co-Authored-By` line on this commit. **Do not run/include
+   `docs/literate/*.nw` sync-back (`make sync_c` or similar) in this or
+   any commit** -- the user runs that themselves, separately, on their
+   own schedule, and wants their own commit for it. If those files show
+   up modified on disk mid-session, that's the user's own sync run, not
+   something to fold into whatever commit is in progress.
 2. **Adjustment commit** -- fix whatever is needed to make it build/work in
    ocaml-light's context (missing files, diverged constants, syncweb
    markers, genuine upstream bugs that block the OCaml compiler, etc). This
