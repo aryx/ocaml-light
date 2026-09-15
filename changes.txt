@@ -23,6 +23,16 @@
 - new configure --target-arch i386|arm|mips|... so easy to cross compile
 - new configure --help
 
+** internals
+- backport the Custom blocks mechanism (finalize/compare/hash/
+  serialize/deserialize vtable), replacing the old Final block
+  mechanism (backported from OCaml 3.00) (big thx to Claude)
+
+** stdlib
+- backport Int32 and Int64 (arithmetic, Marshal, string conversion),
+  using the new Custom blocks; Nativeint not included (backported
+  from OCaml 3.00) (big thx to Claude)
+
 * 0.4 (Q1 2026) (plan9 support v1)
 
 ** language
