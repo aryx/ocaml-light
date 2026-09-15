@@ -234,3 +234,85 @@ files is a fast way to catch conflict-resolution mistakes (stray
 interface changed (error like "make inconsistent assumptions over
 interface X") -- that's a leftover build artifact, not a real bug; `rm`
 the stale files in that test directory and rerun.
+
+Adding/removing/changing runtime primitives: the bootstrap dance
+---------------------------------------------------------------------
+
+If a cherry-pick adds, removes, or reorders any `/* ML */`-tagged C
+primitive in `byterun/` (new Int32/Int64 ops are the textbook case),
+**do not just run `make world` or `make coldstart` on the edited
+sources.** Those targets do `cp byterun/ocamlrun boot/ocamlrun` very
+early, before anything else -- and `boot/ocamlc`/`boot/ocamllex` (real,
+git-tracked bytecode binaries, see `boot/ocamlc`) are frozen bytecode
+files whose own primitive calls were baked in as fixed positions when
+they were last built. `byterun/startup.c`'s `check_primitives` and
+`bytecomp/symtable.ml`'s `Symtable.init` are strictly *positional*: every
+compiled bytecode program embeds primitive names it needs, checked
+index-by-index against the *currently running* `ocamlrun`'s table, which
+mirrors the file-scan order in `byterun/Makefile`'s primitive-extraction
+sed script. Insert new primitives into a file that sits earlier in that
+scan order than a file `boot/ocamlc` itself relies on (`io.c`'s
+`caml_open_descriptor`, needed just to open the first file it reads, is
+about as early as it gets) and running `boot/ocamlrun boot/ocamlc ...` at
+all immediately fails with `Mismatch on primitive`. This is *not* a bug
+in the port -- it's a well-known, expected consequence, confirmed by this
+repo's own real history (`e07eb57b "Add new primitive sys_time"`, which
+updated `boot/ocamlc`/`boot/ocamllex` blobs in the same commit; that one
+just didn't visibly hit this failure mode because `sys.c` sits late
+enough in the scan order that nothing it shifted mattered to
+`boot/ocamlc`'s own bootstrap).
+
+**It looks like a chicken-and-egg problem (any bytecode `boot/ocamlc`
+links inherits its own frozen, now-stale primitive positions) but it
+genuinely is not -- trust the documented procedure and run it exactly,
+rather than trying to reason your way around it by restructuring the
+port (e.g. don't go split primitives into a new file just to dodge the
+scan-order shift; that's unnecessary and this session tried and abandoned
+that idea before finding the real fix below):
+
+1. **Before** editing sources: get to a fully clean, working baseline
+   (`git status` clean, `./configure`, `make world`) and confirm it
+   succeeds. `boot/ocamlrun` (never git-tracked -- it's rebuilt fresh
+   every time from `byterun/*.c`) is now paired correctly with the
+   *current* `boot/ocamlc`/`boot/ocamllex`.
+2. Make the source edits (the new/changed primitives).
+3. Run **`make all`** -- NOT `make world`/`make coldstart`. `all` never
+   touches `boot/ocamlrun`, so the still-old, still-matching
+   `boot/ocamlrun`+`boot/ocamlc` pair is used throughout to rebuild
+   everything (including a new main-tree `ocamlc`) self-consistently.
+   This succeeds even though the primitive table changed, precisely
+   because nothing yet runs under the new, shifted table.
+4. Run **`make bootstrap`**. Its internal sequence (`promote-cross` --
+   promotes the new `ocamlc`/`ocamllex`/`ocamlyacc` into `boot/` but
+   deliberately *keeps* the old `boot/ocamlrun`; rebuild; `promote` --
+   *now* finally copies the new `byterun/ocamlrun` into `boot/ocamlrun`;
+   rebuild again; `compare`) is specifically designed to transition
+   through this safely. It ends with `Fixpoint reached, bootstrap
+   succeeded.` -- if it doesn't, stop and ask rather than improvising.
+5. Verify for real from scratch: `make clean; ./configure; make world;
+   make opt; make test; make check`, all from the *now-updated*
+   `boot/ocamlc`/`boot/ocamllex`, to confirm the new boot/ is
+   self-consistent on its own, not just an artifact of leftover state
+   from step 3-4.
+6. Check for a stale **globally-installed** `ocamlrun` too (e.g.
+   `/usr/local/bin/ocamlrun` from a previous `make install`, dated well
+   before the session) -- some built tools (`cmm/codegen`) run via a
+   `#!/usr/local/bin/ocamlrun` shebang that bypasses `boot/`/`byterun/`
+   entirely, and will report the same `Mismatch on primitive` error
+   against *that* stale binary. Refresh it (`cp byterun/ocamlrun
+   /usr/local/bin/ocamlrun`, or `make install`) rather than treating it
+   as a real regression.
+7. Commit the updated `boot/ocamlc`/`boot/ocamllex` binary blobs
+   *alongside* the source changes, same commit (matching `e07eb57b`'s
+   precedent) -- not a separate commit, and not skipped. If step 4
+   produced no diff in `boot/ocamlc`/`boot/ocamllex`, the primitive
+   change didn't actually require a bootstrap (rare, only true for
+   changes that don't touch anything `boot/ocamlc` itself was built
+   against).
+
+If you find yourself doubting this will work and reasoning in circles
+about "whoever performs the link freezes the indices forever" --
+that reasoning feels airtight but is subtly wrong somewhere in the
+details of how the multi-pass `promote-cross`/`promote` sequence
+resolves it; don't spend more time on the theory, just run steps 3-4
+and check the actual result.
