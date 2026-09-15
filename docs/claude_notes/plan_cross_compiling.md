@@ -44,11 +44,11 @@ Observed structure:
 
 Implication:
 
-The current code is not just “single architecture by configuration”; it also
+The current code is not just "single architecture by configuration"; it also
 embeds architecture-dependent types into the compiler pipeline.
 
 What runtime switching must mean
--------------------------------
+--------------------------------
 
 The `-i386` / `-arm` / `-mips` flag should select a backend at runtime, not
 just toggle assembler flags.
@@ -65,7 +65,7 @@ That selection must affect:
 8. runtime archive selection
 
 Design principle
------------------
+----------------
 
 Use a value-level backend descriptor, not a module-level one.
 
@@ -132,7 +132,7 @@ backend-specific data are made abstract or generalized.
 Possible strategies
 -------------------
 
-### Strategy A: Common superset IR
+**Strategy A: Common superset IR**
 
 Define one shared `addressing_mode` and one shared `specific_operation` type
 that covers i386, arm, and mips.
@@ -151,7 +151,7 @@ Cons:
 - may add constructors that only one arch uses
 - the IR gets less precise
 
-### Strategy B: Backend-specific opaque payloads
+**Strategy B: Backend-specific opaque payloads**
 
 Keep the IR generic and store backend-specific details in opaque values or
 encoded variants, with the backend record responsible for interpreting them.
@@ -187,7 +187,7 @@ single trusted cast site.
 Implementation phases
 ---------------------
 
-### Phase 1: Make target selection explicit
+**Phase 1: Make target selection explicit**
 
 Add a runtime target flag parser:
 
@@ -206,9 +206,9 @@ Refactor command selection so the runtime can choose:
 - linker
 - runtime library name
 
-### Phase 2: Stop relying on symlinked backend names
+**Phase 2: Stop relying on symlinked backend names**
 
-Replace the current “single selected backend copied into shared filenames”
+Replace the current "single selected backend copied into shared filenames"
 scheme with an explicit backend registry or target dispatch table.
 
 Likely changes:
@@ -218,7 +218,7 @@ Likely changes:
 - stop depending on a single `asmcomp/proc.ml`
 - make code that needs backend behavior call through the selected backend
 
-### Phase 3: Generalize the IR enough for multiple backends
+**Phase 3: Generalize the IR enough for multiple backends**
 
 Refactor `Mach` and `Arch`-dependent types so that i386, arm, and mips can
 coexist in one binary.
@@ -230,7 +230,7 @@ Likely work:
 - make `Cmm` size queries backend-aware
 - reduce direct `open Arch` / `open Proc` dependencies in shared code
 
-### Phase 4: Split backend code into target-specific implementations
+**Phase 4: Split backend code into target-specific implementations**
 
 Each target needs its own implementation of:
 
@@ -251,7 +251,7 @@ with a runtime-selected `Proc.current`.
 If the codebase cannot support multiple module names cleanly, use explicit
 target-specific records and keep the generic code calling those records.
 
-### Phase 5: Make `asmrun` multi-target
+**Phase 5: Make `asmrun` multi-target**
 
 `asmrun` must stop producing just one `libasmrun.a`.
 
@@ -269,7 +269,7 @@ Recommended naming:
 - `libasmrun-arm.a`
 - `libasmrun-mips.a`
 
-### Phase 6: Teach `asmlink.ml` to use the selected runtime
+**Phase 6: Teach `asmlink.ml` to use the selected runtime**
 
 Linking must choose the runtime archive based on the selected target.
 
@@ -280,7 +280,7 @@ This includes:
 - passing the right linker
 - using the right startup code
 
-### Phase 7: Validate cross-compilation behavior
+**Phase 7: Validate cross-compilation behavior**
 
 Test matrix:
 

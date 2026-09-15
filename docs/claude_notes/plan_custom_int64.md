@@ -1,4 +1,5 @@
-# Plan: backport Custom blocks + Int32/Int64/Nativeint
+Plan: backport Custom blocks + Int32/Int64/Nativeint
+====================================================
 
 Git archaeology done against a fresh clone of the upstream ocaml/ocaml
 trunk repo (blob-less clone into scratchpad, not this tree) on 2026-09-15,
@@ -8,7 +9,8 @@ and "backport Int32.ml and Int64.ml (depends on custom block)" items.
 
 This is a REPORT / plan only -- nothing has been ported yet.
 
-## Why this matters
+Why this matters
+----------------
 
 ocaml-light (forked from 1.07, Dec 1997) still has the pre-2000 "Final
 block" mechanism: `byterun/mlvalues.h` has `Final_tag=255` / `final_fun`,
@@ -20,9 +22,10 @@ implement `Int32.t`/`Int64.t`/`Nativeint.t` (and later Bignum) as boxed
 values with custom GC/comparison/marshaling behavior. We need the same
 replacement before Int32/Int64 can exist.
 
-## The chain, in order
+The chain, in order
+-------------------
 
-### 0. `7175ab048dcaaa39649ebc386ae37750baaf27e1` -- "Generaliser les operations Reverse" (2000-02-10 14:03:09)
+**0. `7175ab048dcaaa39649ebc386ae37750baaf27e1` -- "Generaliser les operations Reverse" (2000-02-10 14:03:09)**
 
 NOT mentioned anywhere in `todo.org`/`pad.org`. Discovered by diffing:
 the custom-blocks commit's `extern.c`/`intern.c` already call the new
@@ -36,7 +39,7 @@ Our current call sites needing the rename: `byterun/fix_code.c` (1),
 `byterun/intern.c` (2). `asmrun/*.c` are symlinks to `byterun/*.c` in
 this tree, so that's the complete list (see the symlinks note below).
 
-### 1. `9e206909f48d5d2579b6ec17764d3273df23ff08` -- "Introduction des blocs de type Custom" (2000-02-10 14:04:59)
+**1. `9e206909f48d5d2579b6ec17764d3273df23ff08` -- "Introduction des blocs de type Custom" (2000-02-10 14:04:59)**
 
 The commit `todo.org` already flagged ("(BIG) introduction of Custom
 blocs"). Adds `byterun/custom.c` + `custom.h` (the `struct
@@ -56,7 +59,7 @@ Verified our current `alloc.c`/`alloc_final` already matches the exact
 pre-commit shape shown in this diff (same `adjust_gc_speed`/
 `check_urgent_gc` calls) -- clean base to apply against.
 
-### 2. `34a71202962072f30f27882498cb7e745b5dafd7` -- "Ajout de Int32.t et Int64.t (premiere etape)" (2000-02-11 12:03:31)
+**2. `34a71202962072f30f27882498cb7e745b5dafd7` -- "Ajout de Int32.t et Int64.t (premiere etape)" (2000-02-11 12:03:31)**
 
 The hash `todo.org` cites for "add Int32.t and Int64.t first step".
 Runtime plumbing only, no arithmetic primitives yet:
@@ -75,7 +78,7 @@ Runtime plumbing only, no arithmetic primitives yet:
   is a small self-contained `if`/`case` block
 - `mlvalues.h`: `Int32_val(v)`/`Int64_val(v)` accessors on `Data_custom_val`
 
-### 3. `1cac40336824df625d468405459febc63effd292` -- "Ajout des modules Int32, Int64 et Nativeint" (2000-02-11 15:09:27)
+**3. `1cac40336824df625d468405459febc63effd292` -- "Ajout des modules Int32, Int64 et Nativeint" (2000-02-11 15:09:27)**
 
 **Missing from `todo.org`** -- this is the commit that actually implements
 the C primitives (`int32_add`/`_sub`/`_of_string`/... in `byterun/ints.c`,
@@ -86,12 +89,12 @@ internal nativeint helper), repointing `asmcomp/cmmgen.ml` and the i386
 backend from `Nativeint.from`/`.shift` to the real stdlib `Nativeint.of_int`/
 `.shift_left` API.
 
-### 4. `34068509c888623640b140b7aaa8299d285c21d9` -- "Revu la configuration des entiers 64 bits" (2000-02-11, same day)
+**4. `34068509c888623640b140b7aaa8299d285c21d9` -- "Revu la configuration des entiers 64 bits" (2000-02-11, same day)**
 
 Small follow-up refining the 64-bit config detection from #2/#3. Not yet
 inspected in detail -- check when implementing, expected small.
 
-### 5. `15f811734e33051581406135d05ecf9769a1f031` -- "Ajout Int32, Int64 et Nativeint" (2000-02-13 16:44:06)
+**5. `15f811734e33051581406135d05ecf9769a1f031` -- "Ajout Int32, Int64 et Nativeint" (2000-02-13 16:44:06)**
 
 Adds the actual `stdlib/int32.{ml,mli}`, `int64.{ml,mli}`,
 `nativeint.{ml,mli}` -- thin wrappers over the `external` primitives from
@@ -102,7 +105,8 @@ Needs adding to `stdlib/Makefile` build order: goes right after
 `marshal.cmo`/`obj.cmo`, before `lexing.cmo` (matches upstream's own
 ordering, see the `stdlib.cma` link line in any post-3.00 build trace).
 
-## Explicitly skip from this time window
+Explicitly skip from this time window
+-------------------------------------
 
 - `65b246b9d15b739409e027127952f63f14cd0c57` "print_flush -> print_newline
   dans le format d'affichage des warnings" -- unrelated, interleaved by
@@ -110,7 +114,8 @@ ordering, see the `stdlib.cma` link line in any post-3.00 build trace).
 - `1e84be9cd56b5466befa3f7b1957f7421b32f417` "label related fixes" --
   not applicable, ocaml-light does not have labels.
 
-## Deferred to a later pass (not part of this plan's scope)
+Deferred to a later pass (not part of this plan's scope)
+--------------------------------------------------------
 
 `b09f44025c213498435690ce22c21c1b156e2def` -- "Ajout des types predefinis
 int32, int64, nativeint. Ajout des primitives correspondantes dans le type
@@ -141,7 +146,8 @@ only if profiling ever shows boxing overhead matters, and note it would
 need porting across every asmcomp backend we support (i386/amd64/arm/
 arm64), not just one.
 
-## No doubled surface area (correction from initial report)
+No doubled surface area (correction from initial report)
+--------------------------------------------------------
 
 An initial pass over this plan claimed `byterun/` and `asmrun/` have
 separate copies of `alloc.c`/`compare.c`/`hash.c`/`extern.c`/`intern.c`/
@@ -153,7 +159,8 @@ asmrun-side file that needs its own edit (adding the
 `init_custom_operations()` call from commit #3, same as
 `byterun/startup.c`).
 
-## Remaining known gotchas going into implementation
+Remaining known gotchas going into implementation
+-------------------------------------------------
 
 - `Final_tag`/`Final_fun` currently appear directly in `alloc.c`,
   `compare.c`, `hash.c`, `major_gc.c`, `extern.c`, `gc_ctrl.c`,
@@ -174,7 +181,8 @@ asmrun-side file that needs its own edit (adding the
   doesn't arise at all -- worth deciding explicitly rather than copying
   upstream blindly).
 
-## Upstream clone location (for the actual porting session)
+Upstream clone location (for the actual porting session)
+--------------------------------------------------------
 
 A blob-less clone of `github.com/ocaml/ocaml` lives in this session's
 scratchpad (ephemeral -- re-clone if starting a fresh session):
