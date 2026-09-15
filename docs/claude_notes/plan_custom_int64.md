@@ -7,16 +7,30 @@ to figure out exactly which commits to cherry-pick/forward-port for
 `todo.org`'s "backport custom block, useful for Bignum and Int32/Int64"
 and "backport Int32.ml and Int64.ml (depends on custom block)" items.
 
-Status as of 2026-09-15: items #0, #1, #2, #3, #4 are landed (see git log
-for the full commit list; each item is 2-4 commits: a faithful
-cherry-pick, sometimes a `[partial]` pulled-forward fix from a later
-upstream commit, and an ocaml-light-adjustment commit). Full
+**Status as of 2026-09-15: DONE. Items #0 through #5 are all landed**
+(see git log for the full commit list; each item is 2-4 commits: a
+faithful cherry-pick, sometimes a `[partial]` pulled-forward fix from
+a later upstream commit, and an ocaml-light-adjustment commit). Full
 build/test verified after each (`make world`/`opt`/`test`/`check`,
 plus the `make bootstrap` dance whenever the C primitive table
-changed -- see `backport_guide.md`). Item #5 remains. See the
-per-item corrections below -- the original archaeology got the item
-#2/#3 boundary wrong, and Nativeint was deliberately dropped from
-item #3's scope (see its own section below).
+changed -- see `backport_guide.md`), plus live functional smoke tests
+(not just build success) at several points. This concludes the plan:
+`todo.org`'s "backport custom block, useful for Bignum and Int32/Int64"
+and "backport Int32.ml and Int64.ml" items are both done. `Int32`/
+`Int64` work end-to-end (arithmetic, `Marshal`, string conversion) via
+`external`s over an abstract `type t`, without the literal-suffix
+syntax (`3l`, `3L`) or native-unboxed-register arithmetic that the
+separately-deferred `b09f44025` would add -- see that section below,
+still out of scope. Nativeint was dropped entirely (see item #3's
+section below) -- pick that up as a fresh, explicitly-scoped follow-up
+if ever wanted, together with `utils/nativeint.ml`'s deletion and the
+asmcomp repoint it requires.
+
+See the per-item corrections below for what changed from the original
+archaeology -- the item #2/#3 boundary was wrong, Nativeint was
+deliberately dropped, and four more genuine upstream bugs were found
+and fixed (three pulled forward as `[partial]` commits, one -- item
+#5's, entangled in the deferred commit -- fixed inline).
 
 This file was a REPORT / plan only when first written; it now also
 tracks what actually happened during the port, since the real diffs
@@ -184,21 +198,44 @@ commit. Confirmed live: `ARCH_INT64_TYPE` in `config/m.h` flipped from
 
 **5. `15f811734e33051581406135d05ecf9769a1f031` -- "Ajout Int32, Int64 et Nativeint" (2000-02-13 16:44:06)**
 
-Adds the actual `stdlib/int32.{ml,mli}`, `int64.{ml,mli}`,
-`nativeint.{ml,mli}` -- thin wrappers over the `external` primitives from
-#3. This is the file `todo.org`'s other link (github commit
-`15f811734...`) pointed at, confirmed correct.
+Landed 2026-09-15, **Nativeint excluded** (same decision as item #3).
+Adds the actual `stdlib/int32.{ml,mli}` and `int64.{ml,mli}` -- thin
+`external` wrappers over the primitives from item #2, `type t`
+abstract (no dependency on any compiler-recognized predefined type).
+Skipped `stdlib/nativeint.{ml,mli}` entirely, matching item #3.
 
-Needs adding to `stdlib/Makefile` build order: goes right after
-`marshal.cmo`/`obj.cmo`, before `lexing.cmo` (matches upstream's own
-ordering, see the `stdlib.cma` link line in any post-3.00 build trace).
+**Correction on Makefile placement**: the original guess above ("right
+after marshal.cmo/obj.cmo, before lexing.cmo") was wrong -- upstream's
+real placement (in item #3's own Makefile hunk, added there 2 days
+before these files existed) appends `int32.cmo int64.cmo
+nativeint.cmo` at the very *end* of `OBJS`. Matched that intent by
+appending `int32.cmo int64.cmo` at the end of our own (much longer,
+independently-evolved) `OBJS` list instead of the exact same neighbor
+token, which doesn't appear adjacent in our list at all.
 
-**Given the item #3 Nativeint-skip decision above: when doing this
-item, only cherry-pick `stdlib/int32.{ml,mli}` and `int64.{ml,mli}`.**
-Skip `stdlib/nativeint.{ml,mli}` (and the Makefile build-order line
-for it) unless the Nativeint half of item #3 gets redone first -- the
-stdlib module would reference `external`s (`nativeint_add`,
-`nativeint_of_int`, etc) that don't exist in `ints.c` yet without it.
+**Two more bugs found** (three, really, but two share one root cause),
+same story as before -- real, upstream, confirmed against the raw
+blob, but this time the actual fix is entangled inside the huge
+*deferred* `b09f44025` commit (predef types + native unboxing), so
+pulling forward a `[partial]` slice of it didn't make sense; fixed
+directly in the adjustment commit instead:
+- `stdlib/int32.ml` and `stdlib/int64.ml`: `let max = add min one`
+  should be `sub min one` (`min - 1` wraps via two's-complement
+  underflow to the correct max positive value; `min + 1` does not).
+  Confirmed live: `Int32.max`/`Int64.max` printed deeply negative
+  numbers before the fix, correct positive ones after.
+- `stdlib/int64.ml`/`.mli`: `external to_int32: Int32.t -> int =
+  "int64_to_int32"` -- backwards and wrong (should be `t -> Int32.t`).
+  Both files agreed on the wrong signature so it type-checked, but was
+  unusable as declared. Confirmed live with an `Int64.of_int32`/
+  `to_int32` round-trip test, broken before the fix, correct after.
+
+Also updated two of this fork's own Makefile variables that don't
+exist in upstream at all (`Makefile`'s `PERVASIVES`,
+`otherlibs/threads/Makefile`'s `LIB_OBJS` -- both explicitly flagged
+by "#pad:"/"#coupling" comments as needing to stay in sync with
+`stdlib/Makefile`'s `OBJS`) and regenerated `stdlib/.depend` via `make
+depend`.
 
 Explicitly skip from this time window
 -------------------------------------
