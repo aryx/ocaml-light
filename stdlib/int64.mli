@@ -97,7 +97,7 @@ external to_int: t -> int = "int64_to_int"
 external of_int32: Int32.t -> t = "int64_of_int32"
       (* Convert the given 32-bit integer (type [Int32.t])
          to a 64-bit integer (type [Int64.t]). *)
-external to_int32: Int32.t -> int = "int64_to_int32"
+external to_int32: t -> Int32.t = "int64_to_int32"
       (* Convert the given 64-bit integer (type [Int64.t]) to a
          32-bit integer (type [Int32.t]). The 64-bit integer
          is taken modulo $2^{32}$, i.e. the top 32 bits are lost

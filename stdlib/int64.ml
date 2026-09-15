@@ -31,7 +31,7 @@ external shift_right_logical: t -> int -> t = "int64_shift_right_unsigned"
 external of_int: int -> t = "int64_of_int"
 external to_int: t -> int = "int64_to_int"
 external of_int32: Int32.t -> t = "int64_of_int32"
-external to_int32: Int32.t -> int = "int64_to_int32"
+external to_int32: t -> Int32.t = "int64_to_int32"
 
 let zero = of_int 0
 let one = of_int 1
@@ -40,7 +40,7 @@ let succ n = add n one
 let pred n = sub n one
 let abs n = if n >= zero then n else neg n
 let min = shift_left one 63
-let max = add min one
+let max = sub min one
 let lognot n = logxor n minus_one
 
 external format : string -> t -> string = "int64_format"

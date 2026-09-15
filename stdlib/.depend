@@ -1,8 +1,10 @@
+format.cmi: buffer.cmi 
+int64.cmi: int32.cmi 
 lexing.cmi: obj.cmi 
 parsing.cmi: lexing.cmi obj.cmi 
 printf.cmi: buffer.cmi 
-arg.cmo: array.cmi list.cmi printf.cmi string.cmi sys.cmi arg.cmi 
-arg.cmx: array.cmx list.cmx printf.cmx string.cmx sys.cmx arg.cmi 
+arg.cmo: array.cmi buffer.cmi list.cmi printf.cmi string.cmi sys.cmi arg.cmi 
+arg.cmx: array.cmx buffer.cmx list.cmx printf.cmx string.cmx sys.cmx arg.cmi 
 array.cmo: list.cmi array.cmi 
 array.cmx: list.cmx array.cmi 
 bool.cmo: bool.cmi 
@@ -23,8 +25,8 @@ filename.cmo: string.cmi sys.cmi filename.cmi
 filename.cmx: string.cmx sys.cmx filename.cmi 
 float.cmo: pervasives.cmi float.cmi 
 float.cmx: pervasives.cmx float.cmi 
-format.cmo: bytes.cmo obj.cmi string.cmi format.cmi 
-format.cmx: bytes.cmx obj.cmx string.cmx format.cmi 
+format.cmo: buffer.cmi bytes.cmo obj.cmi string.cmi format.cmi 
+format.cmx: buffer.cmx bytes.cmx obj.cmx string.cmx format.cmi 
 fun.cmo: fun.cmi 
 fun.cmx: fun.cmi 
 gc.cmo: printf.cmi gc.cmi 
@@ -33,6 +35,10 @@ hashtbl.cmo: array.cmi hashtbl.cmi
 hashtbl.cmx: array.cmx hashtbl.cmi 
 int.cmo: int.cmi 
 int.cmx: int.cmi 
+int32.cmo: int32.cmi 
+int32.cmx: int32.cmi 
+int64.cmo: int32.cmi int64.cmi 
+int64.cmx: int32.cmx int64.cmi 
 lazy.cmo: lazy.cmi 
 lazy.cmx: lazy.cmi 
 lexing.cmo: bytes.cmo obj.cmi string.cmi lexing.cmi 
@@ -67,8 +73,8 @@ set.cmo: list.cmi pervasives.cmi set.cmi
 set.cmx: list.cmx pervasives.cmx set.cmi 
 stack.cmo: list.cmi stack.cmi 
 stack.cmx: list.cmx stack.cmi 
-stdcompat.cmo: pervasives.cmi 
-stdcompat.cmx: pervasives.cmx 
+stdcompat.cmo: pervasives.cmi string.cmi 
+stdcompat.cmx: pervasives.cmx string.cmx 
 stream.cmo: bytes.cmo list.cmi obj.cmi string.cmi stream.cmi 
 stream.cmx: bytes.cmx list.cmx obj.cmx string.cmx stream.cmi 
 string.cmo: char.cmi list.cmi string.cmi 

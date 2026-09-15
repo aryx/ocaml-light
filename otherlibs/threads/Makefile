@@ -24,7 +24,8 @@ LIB_OBJS=pervasives.cmo \
   $(LIB)/printexc.cmo \
   $(LIB)/option.cmo $(LIB)/result.cmo $(LIB)/either.cmo \
   $(LIB)/uchar.cmo $(LIB)/int.cmo $(LIB)/bool.cmo $(LIB)/float.cmo \
-  $(LIB)/stdcompat.cmo $(LIB)/fun.cmo
+  $(LIB)/stdcompat.cmo $(LIB)/fun.cmo \
+  $(LIB)/int32.cmo $(LIB)/int64.cmo
 
 
 all: libthreads.a threads.cma stdlib.cma
