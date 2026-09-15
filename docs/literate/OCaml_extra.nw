@@ -7849,6 +7849,32 @@ open Clflags
 #include "../config/m.h"
 #include "../config/s.h"
 
+/* Types for signed chars, 32-bit integers, 64-bit integers */
+
+typedef signed char schar;
+
+#if SIZEOF_INT == 4
+typedef int int32;
+typedef unsigned int uint32;
+#elif SIZEOF_LONG == 4
+typedef long int32;
+typedef unsigned long uint32;
+#elif SIZEOF_SHORT == 4
+typedef short int32;
+typedef unsigned short uint32;
+#endif
+
+#if defined(ARCH_INT64_TYPE) && defined(ARCH_UINT64_TYPE)
+typedef ARCH_INT64_TYPE int64;
+typedef ARCH_UINT64_TYPE uint64;
+#else
+/* Int64.t will not be supported, and operations over it are not defined,
+   but we must define the types int64 and uint64 as 64-bit placeholders. */
+typedef struct { uint32 a, b; } uint64;
+typedef uint64 int64;
+#endif
+
+
 /* Library dependencies */
 
 <<function [[bcopy]]>>
@@ -7865,9 +7891,6 @@ open Clflags
 //#endif
 
 
-/* Signed char type */
-
-typedef signed char schar;
 
 <<constant [[Page_size]]>>
 
@@ -8165,12 +8188,6 @@ typedef unsigned long mlsize_t;
 
 typedef unsigned long mark_t;
 
-typedef int int32;            /* Not portable, but checked by autoconf. */
-typedef unsigned int uint32;  /* Seems like a reasonable assumption anyway. */
-
-typedef long int64;             /* FIXME */
-typedef unsigned long uint64;   /* FIXME */
-
 <<function [[Is_long]]>>
 <<function [[Is_block]]>>
 
@@ -8294,6 +8311,10 @@ void Store_double_val (value,double);
 <<constant [[Final_tag]]>>
 <<function [[Final_fun]]>>
 
+/* Int32.t and Int64.t are represented as custom blocks. */
+
+#define Int32_val(v) (*((int32 *) Data_custom_val(v)))
+#define Int64_val(v) (*((int64 *) Data_custom_val(v)))
 
 /* 3- Atoms are 0-tuples.  They are statically allocated once and for all. */
 
@@ -9261,12 +9282,9 @@ value alloc_string (mlsize_t);
 value copy_string (char *);
 value copy_string_array (char **);
 value copy_double (double);
+value copy_int32 (int32);       /* defined in [ints.c] */
+value copy_int64 (int64);       /* defined in [ints.c] */
 value alloc_array (value (*funct) (char *), char ** array);
-
-value alloc_custom(struct custom_operations * ops,
-                   unsigned long size, /*size in bytes*/
-                   mlsize_t mem, /*resources consumed*/
-                   mlsize_t max  /*max resources*/);
 
 typedef void (*final_fun)(value);
 value alloc_final (mlsize_t /*size in words*/,
@@ -9330,27 +9348,6 @@ value alloc_final (mlsize_t len, final_fun fun, mlsize_t mem, mlsize_t max)
   return result;
 }
 #endif
-value alloc_custom(struct custom_operations * ops,
-                   unsigned long size,
-                   mlsize_t mem,
-                   mlsize_t max)
-{
-  mlsize_t wosize;
-  value result;
-
-  wosize = 1 + (size + sizeof(value) - 1) / sizeof(value);
-  if (ops->finalize == NULL && wosize <= Max_young_wosize) {
-    result = alloc_small(wosize, Custom_tag);
-    Custom_ops_val(result) = ops;
-  } else {
-    result = alloc_shr(wosize, Custom_tag);
-    Custom_ops_val(result) = ops;
-    adjust_gc_speed(mem, max);
-    result = check_urgent_gc(result);
-  }
-  return result;
-}
-
 value alloc_final (mlsize_t len, final_fun fun, mlsize_t mem, mlsize_t max)
 {
   return alloc_custom(final_custom_operations(fun),
@@ -14510,7 +14507,8 @@ void deserialize_block_8(void * data, long len)
 \subsection*{[[byterun/ints.c]]}
 
 <<function [[int_of_string]]>>=
-value int_of_string(value s)          /* ML */
+#if 0
+value int_of_string(value s)
 {
   long res;
   int sign;
@@ -14555,10 +14553,68 @@ value int_of_string(value s)          /* ML */
     failwith("int_of_string");
   return Val_long(sign < 0 ? -res : res);
 }
+#endif
+static char * parse_sign_and_base(char * p,
+                                  /*out*/ int * base,
+                                  /*out*/ int * sign)
+{
+  *sign = 1;
+  if (*p == '-') {
+    *sign = -1;
+    p++;
+  }
+  *base = 10;
+  if (*p == '0') {
+    switch (p[1]) {
+    case 'x': case 'X':
+      *base = 16; p += 2; break;
+    case 'o': case 'O':
+      *base = 8; p += 2; break;
+    case 'b': case 'B':
+      *base = 2; p += 2; break;
+    }
+  }
+  return p;
+}
+
+static int parse_digit(char * p)
+{
+  int c = *p;
+  if (c >= '0' && c <= '9')
+    return c - '0';
+  else if (c >= 'A' && c <= 'F')
+    return c - 'A' + 10;
+  else if (c >= 'a' && c <= 'f')
+    return c - 'a' + 10;
+  else
+    return -1;
+}
+
+static long parse_long(char * p)
+{
+  unsigned long res;
+  int sign, base, d;
+
+  p = parse_sign_and_base(p, &base, &sign);
+  for (res = 0; /*nothing*/; p++) {
+    d = parse_digit(p);
+    if (d < 0) break;
+    res = base * res + d;
+  }
+  if (*p != 0) failwith("int_of_string");
+  return sign < 0 ? -((long) res) : (long) res;
+}
+
+value int_of_string(value s)          /* ML */
+{
+  return Val_long(parse_long(String_val(s)));
+}
+
 @
 
 <<function [[format_int]]>>=
-value format_int(value fmt, value arg)      /* ML */
+#if 0
+value format_int(value fmt, value arg)
 {
   char format_string[32], format_buffer[32];
   int prec;
@@ -14593,6 +14649,57 @@ value format_int(value fmt, value arg)      /* ML */
   }
   return res;
 }
+#endif
+#define FORMAT_BUFFER_SIZE 32
+
+static char * parse_format(value fmt,
+                           char * suffix,
+                           char format_string[],
+                           char default_format_buffer[])
+{
+  int prec, lastletter;
+  char * p;
+  mlsize_t len, len_suffix;
+
+  /* Copy Caml format fmt to format_string,
+     adding the suffix before the last letter of the format */
+  len = string_length(fmt);
+  len_suffix = strlen(suffix);
+  if (len + len_suffix + 1 >= FORMAT_BUFFER_SIZE)
+    invalid_argument("format_int: format too long");
+  bcopy(String_val(fmt), format_string, len);
+  p = format_string + len - 1;
+  lastletter = *p;
+  bcopy(suffix, p, len_suffix);  p += len_suffix;
+  *p++ = lastletter;
+  *p = 0;
+  /* Determine space needed for result and allocate it dynamically if needed */
+  prec = 32;
+  for (p = String_val(fmt); *p != 0; p++) {
+    if (*p >= '0' && *p <= '9') {
+      prec = atoi(p) + 5;
+      break;
+    }
+  }
+  if (prec < FORMAT_BUFFER_SIZE)
+    return default_format_buffer;
+  else
+    return stat_alloc(prec + 1);
+}
+
+value format_int(value fmt, value arg)      /* ML */
+{
+  char format_string[32], default_format_buffer[32];
+  char * buffer;
+  value res;
+
+  buffer = parse_format(fmt, "l", format_string, default_format_buffer);
+  sprintf(buffer, format_string, Long_val(arg));
+  res = copy_string(buffer);
+  if (buffer != default_format_buffer) stat_free(buffer);
+  return res;
+}
+
 @
 
 
@@ -14610,7 +14717,9 @@ value format_int(value fmt, value arg)      /* ML */
 #endif
 
 #include "alloc.h"
+#include "custom.h"
 #include "fail.h"
+#include "intext.h"
 #include "memory.h"
 #include "misc.h"
 #include "mlvalues.h"
@@ -14619,6 +14728,312 @@ value format_int(value fmt, value arg)      /* ML */
 <<function [[int_of_string]]>>
 
 <<function [[format_int]]>>
+
+/* 32-bit integers */
+
+static int int32_compare(value v1, value v2)
+{
+  int32 i1 = Int32_val(v1);
+  int32 i2 = Int32_val(v2);
+  return i1 == i2 ? 0 : i1 < i2 ? -1 : 1;
+}
+
+static long int32_hash(value v)
+{
+  return Int32_val(v);
+}
+
+static void int32_serialize(value v, unsigned long * wsize_32,
+                            unsigned long * wsize_64)
+{
+  serialize_int_4(Int32_val(v));
+  *wsize_32 = *wsize_64 = 4;
+}
+
+static unsigned long int32_deserialize(void * dst)
+{
+  *((int32 *) dst) = deserialize_sint_4();
+  return 4;
+}
+
+struct custom_operations int32_ops = {
+  "_i",
+  custom_finalize_default,
+  int32_compare,
+  int32_hash,
+  int32_serialize,
+  int32_deserialize
+};
+
+value copy_int32(int32 i)
+{
+  value res = alloc_custom(&int32_ops, 4, 0, 1);
+  Int32_val(res) = i;
+  return res;
+}
+
+value int32_neg(value v)        /* ML */
+{ return copy_int32(- Int32_val(v)); }
+
+value int32_add(value v1, value v2)  /* ML */
+{ return copy_int32(Int32_val(v1) + Int32_val(v2)); }
+
+value int32_sub(value v1, value v2)  /* ML */
+{ return copy_int32(Int32_val(v1) - Int32_val(v2)); }
+
+value int32_mul(value v1, value v2)  /* ML */
+{ return copy_int32(Int32_val(v1) * Int32_val(v2)); }
+
+value int32_div(value v1, value v2)  /* ML */
+{
+  int32 divisor = Int32_val(v2);
+  if (divisor == 0) raise_zero_divide();
+  return copy_int32(Int32_val(v1) / divisor);
+}
+
+value int32_mod(value v1, value v2)  /* ML */
+{
+  int32 divisor = Int32_val(v2);
+  if (divisor == 0) raise_zero_divide();
+  return copy_int32(Int32_val(v1) % divisor);
+}
+
+value int32_and(value v1, value v2)  /* ML */
+{ return copy_int32(Int32_val(v1) & Int32_val(v2)); }
+
+value int32_or(value v1, value v2)  /* ML */
+{ return copy_int32(Int32_val(v1) | Int32_val(v2)); }
+
+value int32_xor(value v1, value v2)  /* ML */
+{ return copy_int32(Int32_val(v1) ^ Int32_val(v2)); }
+
+value int32_shift_left(value v1, value v2)  /* ML */
+{ return copy_int32(Int32_val(v1) << Int_val(v2)); }
+
+value int32_shift_right(value v1, value v2)  /* ML */
+{ return copy_int32(Int32_val(v1) >> Int_val(v2)); }
+
+value int32_shift_right_unsigned(value v1, value v2)  /* ML */
+{ return copy_int32((uint32)Int32_val(v1) >> Int_val(v2)); }
+
+value int32_of_int(value v) /* ML */
+{ return copy_int32(Long_val(v)); }
+
+value int32_to_int(value v) /* ML */
+{ return Val_long(Int32_val(v)); }
+
+value int32_format(value fmt, value arg)      /* ML */
+{
+  char format_string[32], default_format_buffer[32];
+  char * buffer;
+  value res;
+
+  buffer = parse_format(fmt, "l", format_string, default_format_buffer);
+  sprintf(buffer, format_string, (long) Int32_val(arg));
+  res = copy_string(buffer);
+  if (buffer != default_format_buffer) stat_free(buffer);
+  return res;
+}
+
+value int32_of_string(value s)          /* ML */
+{
+  return copy_int32(parse_long(String_val(s)));
+}
+
+/* 64-bit integers */
+
+#ifdef ARCH_INT64_TYPE
+
+static int int64_compare(value v1, value v2)
+{
+  int64 i1 = Int64_val(v1);
+  int64 i2 = Int64_val(v2);
+  return i1 == i2 ? 0 : i1 < i2 ? -1 : 1;
+}
+
+static long int64_hash(value v)
+{
+  return (long) Int64_val(v);
+}
+
+static void int64_serialize(value v, unsigned long * wsize_32,
+                            unsigned long * wsize_64)
+{
+  serialize_int_8(Int64_val(v));
+  *wsize_32 = *wsize_64 = 8;
+}
+
+static unsigned long int64_deserialize(void * dst)
+{
+  *((int64 *) dst) = deserialize_sint_8();
+  return 8;
+}
+
+struct custom_operations int64_ops = {
+  "_j",
+  custom_finalize_default,
+  int64_compare,
+  int64_hash,
+  int64_serialize,
+  int64_deserialize
+};
+
+value copy_int64(int64 i)
+{
+  value res = alloc_custom(&int64_ops, 8, 0, 1);
+  Int64_val(res) = i;
+  return res;
+}
+
+value int64_neg(value v)        /* ML */
+{ return copy_int64(- Int64_val(v)); }
+
+value int64_add(value v1, value v2)  /* ML */
+{ return copy_int64(Int64_val(v1) + Int64_val(v2)); }
+
+value int64_sub(value v1, value v2)  /* ML */
+{ return copy_int64(Int64_val(v1) - Int64_val(v2)); }
+
+value int64_mul(value v1, value v2)  /* ML */
+{ return copy_int64(Int64_val(v1) * Int64_val(v2)); }
+
+value int64_div(value v1, value v2)  /* ML */
+{
+  int64 divisor = Int64_val(v2);
+  if (divisor == 0) raise_zero_divide();
+  return copy_int64(Int64_val(v1) / divisor);
+}
+
+value int64_mod(value v1, value v2)  /* ML */
+{
+  int64 divisor = Int64_val(v2);
+  if (divisor == 0) raise_zero_divide();
+  return copy_int64(Int64_val(v1) % divisor);
+}
+
+value int64_and(value v1, value v2)  /* ML */
+{ return copy_int64(Int64_val(v1) & Int64_val(v2)); }
+
+value int64_or(value v1, value v2)  /* ML */
+{ return copy_int64(Int64_val(v1) | Int64_val(v2)); }
+
+value int64_xor(value v1, value v2)  /* ML */
+{ return copy_int64(Int64_val(v1) ^ Int64_val(v2)); }
+
+value int64_shift_left(value v1, value v2)  /* ML */
+{ return copy_int64(Int64_val(v1) << Int_val(v2)); }
+
+value int64_shift_right(value v1, value v2)  /* ML */
+{ return copy_int64(Int64_val(v1) >> Int_val(v2)); }
+
+value int64_shift_right_unsigned(value v1, value v2)  /* ML */
+{ return copy_int64((uint64)Int64_val(v1) >> Int_val(v2)); }
+
+value int64_of_int(value v) /* ML */
+{ return copy_int64(Long_val(v)); }
+
+value int64_to_int(value v) /* ML */
+{ return Val_long((long) Int64_val(v)); }
+
+value int64_of_int32(value v) /* ML */
+{ return copy_int64(Int32_val(v)); }
+
+value int64_to_int32(value v) /* ML */
+{ return copy_int32((int32) Int64_val(v)); }
+
+value int64_format(value fmt, value arg)      /* ML */
+{
+  char format_string[64], default_format_buffer[64];
+  char * buffer;
+  value res;
+
+  buffer = parse_format(fmt, ARCH_INT64_PRINTF_FORMAT,
+                        format_string, default_format_buffer);
+  sprintf(buffer, format_string, Int64_val(arg));
+  res = copy_string(buffer);
+  if (buffer != default_format_buffer) stat_free(buffer);
+  return res;
+}
+
+value int64_of_string(value s)          /* ML */
+{
+  char * p;
+  uint64 res;
+  int sign, base, d;
+
+  p = parse_sign_and_base(String_val(s), &base, &sign);
+  for (res = 0; /*nothing*/; p++) {
+    d = parse_digit(p);
+    if (d < 0) break;
+    res = base * res + d;
+  }
+  if (*p != 0) failwith("int_of_string");
+  return copy_int64(sign < 0 ? -((int64) res) : (int64) res);
+}
+
+#else
+
+static char int64_error[] =
+  "The type Int64.t is not supported on this platform";
+
+value copy_int64(int64 i)
+{ invalid_arg(int64_error); }
+
+value int64_neg(value v)
+{ invalid_arg(int64_error); }
+
+value int64_add(value v1, value v2)
+{ invalid_arg(int64_error); }
+
+value int64_sub(value v1, value v2)
+{ invalid_arg(int64_error); }
+
+value int64_mul(value v1, value v2)
+{ invalid_arg(int64_error); }
+
+value int64_div(value v1, value v2)
+{ invalid_arg(int64_error); }
+
+value int64_mod(value v1, value v2)
+{ invalid_arg(int64_error); }
+
+value int64_and(value v1, value v2)
+{ invalid_arg(int64_error); }
+
+value int64_or(value v1, value v2)
+{ invalid_arg(int64_error); }
+
+value int64_xor(value v1, value v2)
+{ invalid_arg(int64_error); }
+
+value int64_shift_left(value v1, value v2)
+{ invalid_arg(int64_error); }
+
+value int64_shift_right(value v1, value v2)
+{ invalid_arg(int64_error); }
+
+value int64_shift_right_unsigned(value v1, value v2)
+{ invalid_arg(int64_error); }
+
+value int64_of_int(value v)
+{ invalid_arg(int64_error); }
+
+value int64_to_int(value v)
+{ invalid_arg(int64_error); }
+
+value int64_of_int32(value v)
+{ invalid_arg(int64_error); }
+
+value int64_to_int32(value v)
+{ invalid_arg(int64_error); }
+
+value format_int64(value fmt, value arg)
+{ invalid_arg(int64_error); }
+
+value int64_of_string(value s)
+{ invalid_arg(int64_error); }
+
+#endif
 @
 
 
@@ -18776,6 +19191,7 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
   struct longjmp_buffer raise_buf;
 
   init_ieee_floats();
+  init_custom_operations();
   <<[[caml_startup_code()]] ifdef [[DEBUG]], set [[verbose_init]]>>
 
   parse_camlrunparam();
@@ -18835,6 +19251,7 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
 
 #include "alloc.h"
 #include "backtrace.h"
+#include "custom.h"
 #include "debugger.h"
 #include "exec.h"
 #include "fail.h"
