@@ -15,6 +15,7 @@
 
 int main(int argc, char **argv)
 {
-  printf("%d %d %d\n", sizeof(int), sizeof(long), sizeof(long *));
+  printf("%d %d %d %d\n",
+         sizeof(int), sizeof(long), sizeof(long *), sizeof(short));
   return 0;
 }

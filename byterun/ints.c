@@ -31,7 +31,7 @@
 
 /*s: function [[int_of_string]] */
 #if 0
-value int_of_string(value s)          /* ML */
+value int_of_string(value s)
 {
   long res;
   int sign;
@@ -137,7 +137,7 @@ value int_of_string(value s)          /* ML */
 
 /*s: function [[format_int]] */
 #if 0
-value format_int(value fmt, value arg)      /* ML */
+value format_int(value fmt, value arg)
 {
   char format_string[32], format_buffer[32];
   int prec;

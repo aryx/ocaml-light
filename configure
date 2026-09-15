@@ -303,6 +303,17 @@ case "$1,$2,$3" in
          exit 2;;
 esac
 
+if test $1 != 4 && test $2 != 4 && test $4 != 4; then
+  echo "Sorry, we can't find a 32-bit integer type"
+  echo "(sizeof(short) = $4, sizeof(int) = $1, sizeof(long) = $2)"
+  echo "OCaml light won't run on this architecture."
+  exit 2
+fi
+
+echo "#define SIZEOF_INT $1" >> m.h
+echo "#define SIZEOF_LONG $2" >> m.h
+echo "#define SIZEOF_SHORT $4" >> m.h
+
 if test $1 != 8; then
   sh ./runtest longlong.c
   case $? in
