@@ -79,7 +79,7 @@ let pipe() =
 let open_process_in cmd =
   let ic = Unix.open_process_in cmd in
   Unix.set_nonblock(Unix.descr_of_in_channel ic);
-  oc
+  ic
 
 let open_process_out cmd =
   let oc = Unix.open_process_out cmd in
