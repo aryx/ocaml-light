@@ -1,9 +1,10 @@
 ###############################################################################
 # Overview
 ###############################################################################
-# Build and test ocaml-light (bytecode and x86/arm/mips/alpha/m68k/sparc/power/amd64 native) on Ubuntu.
+# Build and test ocaml-light on Ubuntu, bytecode and native with
+# x86/arm/mips/alpha/m68k/sparc/power/amd64 support.
 # See https://docs.docker.com/build/building/multi-stage/ for more info on the
-# multi-stage approach.
+# multi-stage approach used below.
 
 ###############################################################################
 # Stage1: build just the bytecode part
