@@ -25,6 +25,7 @@
 #ifndef OS_PLAN9
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #else
 #endif
 

@@ -17,6 +17,7 @@
 #include "mlvalues.h"
 #include "alloc.h"
 #include "custom.h"
+#include "fail.h"
 #include "intext.h"
 #include "memory.h"
 #include "nat.h"

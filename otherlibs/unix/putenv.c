@@ -20,7 +20,11 @@
 //#include <string.h>
 
 // include <strings.h>
+/* claude: macOS <string.h> (now pulled in by misc.h) may define bcopy as a
+ * fortify macro, which breaks this prototype; same guard as APE's bsd.h */
+#ifndef bcopy
 void bcopy(const void *src, void *dest, size_t n);
+#endif
 
 
 value unix_putenv(value name, value val) /* ML */
