@@ -7,7 +7,20 @@ to figure out exactly which commits to cherry-pick/forward-port for
 `todo.org`'s "backport custom block, useful for Bignum and Int32/Int64"
 and "backport Int32.ml and Int64.ml (depends on custom block)" items.
 
-This is a REPORT / plan only -- nothing has been ported yet.
+Status as of 2026-09-15: items #0, #1, #2, #3 are landed (see git log
+for the full commit list; each item is 2-4 commits: a faithful
+cherry-pick, sometimes a `[partial]` pulled-forward fix from a later
+upstream commit, and an ocaml-light-adjustment commit). Full
+build/test verified after each (`make world`/`opt`/`test`/`check`,
+plus the `make bootstrap` dance whenever the C primitive table
+changed -- see `backport_guide.md`). Items #4 and #5 remain. See the
+per-item corrections below -- the original archaeology got the item
+#2/#3 boundary wrong, and Nativeint was deliberately dropped from
+item #3's scope (see its own section below).
+
+This file was a REPORT / plan only when first written; it now also
+tracks what actually happened during the port, since the real diffs
+turned out to differ from the initial archaeology in a few places.
 
 Why this matters
 ----------------
@@ -62,7 +75,19 @@ pre-commit shape shown in this diff (same `adjust_gc_speed`/
 **2. `34a71202962072f30f27882498cb7e745b5dafd7` -- "Ajout de Int32.t et Int64.t (premiere etape)" (2000-02-11 12:03:31)**
 
 The hash `todo.org` cites for "add Int32.t and Int64.t first step".
-Runtime plumbing only, no arithmetic primitives yet:
+
+**Correction (found once actually porting this, 2026-09-15): this
+commit is NOT "plumbing only" as first assessed below -- its real
+diff to `byterun/ints.c` is ~445 lines and already includes the full
+`int32_*`/`int64_*` arithmetic primitives (`int32_add`, `copy_int32`,
+`format_int32`, `int32_of_string`, etc, and the `int64` equivalents
+under the `SIZEOF_LONG == 8 || SIZEOF_LONG_LONG == 8` guard, with an
+`invalid_arg` fallback stub set for platforms without it). Only the
+custom_operations *registration* (`init_custom_operations`, wiring
+into `startup.c`) and a few renames were left for item #3 below --
+much less than originally described here.** The rest of this
+subsection is the original (now superseded) archaeology, kept for
+context:
 
 - moves `alloc_custom` into `custom.c` properly
 - `byterun/config.h`: real `int32`/`uint32`/`int64`/`uint64` typedefs
@@ -80,14 +105,57 @@ Runtime plumbing only, no arithmetic primitives yet:
 
 **3. `1cac40336824df625d468405459febc63effd292` -- "Ajout des modules Int32, Int64 et Nativeint" (2000-02-11 15:09:27)**
 
-**Missing from `todo.org`** -- this is the commit that actually implements
-the C primitives (`int32_add`/`_sub`/`_of_string`/... in `byterun/ints.c`,
-~150 new lines), registers them via `init_custom_operations()` (called
-from both `byterun/startup.c` and `asmrun/startup.c`), and -- important
-gotcha below -- **deletes `utils/nativeint.ml`/`.mli`** (the compiler's
-internal nativeint helper), repointing `asmcomp/cmmgen.ml` and the i386
+**Missing from `todo.org`.** Landed 2026-09-15, **Nativeint excluded**
+(see decision below). Its real diff is smaller than originally
+guessed here (~150 lines to `ints.c`, not the primitives themselves --
+those were already in item #2, see the correction above): mainly
+`init_custom_operations()` (registers `int32_ops`/`int64_ops`, called
+from both `byterun/startup.c` and `asmrun/startup.c`), renaming
+`format_int32`/`format_int64` -> `int32_format`/`int64_format` (which,
+as a happy accident, fixes a long-dangling reference in
+`stdlib/printf.ml` from an unrelated earlier "frontport a more recent
+printf.ml" commit), giving `int64_ops` its own `"_j"` identifier
+(was sharing `"_i"` with `int32_ops`), and a `Nativeint.t` custom-block
+implementation in `ints.c` plus -- important gotcha, see below --
+**deleting `utils/nativeint.ml`/`.mli`** (the compiler's internal
+nativeint helper), repointing `asmcomp/cmmgen.ml` and the i386
 backend from `Nativeint.from`/`.shift` to the real stdlib `Nativeint.of_int`/
 `.shift_left` API.
+
+**Nativeint decision (2026-09-15): excluded from this cherry-pick.**
+The stdlib `Nativeint` module this commit's asmcomp rename points at
+doesn't exist yet in this fork (that's item #5, two days later
+upstream) -- deleting `utils/nativeint.ml` now would break `make opt`
+until item #5 lands. The original `todo.org` scope (Bignum, ogit, o5l
+ELF linker) only calls for Int32/Int64 anyway, so: applied only the
+Int32/Int64 half of this commit (`init_custom_operations` for
+`int32_ops`/`int64_ops` only, the two renames, the `"_j"` id fix);
+skipped `ints.c`'s `nativeint_ops`/`copy_nativeint`/`nativeint_*`,
+`mlvalues.h`'s `Nativeint_val`, `intern.c`'s `deserialize_error` (only
+used by `nativeint_deserialize`), and every `asmcomp/*.ml` rename +
+the `utils/nativeint.ml`/`.mli` deletion. If Nativeint support is
+wanted later, redo this commit's skipped half together with item #5's
+stdlib/nativeint.ml creation, in one step, so `make opt` never breaks
+in between.
+
+**Two more bugs found while functionally testing Int64 after this
+item** (both real, upstream, present in `ints.c` since item #2,
+pulled forward as their own `[partial]` commits rather than fixed
+in the adjustment commit, since they trace to identifiable later
+upstream fixes):
+- `copy_int64` allocated only 4 bytes for an 8-byte `int64`
+  (`alloc_custom(&int64_ops, 4, 0, 1)`) -- heap corruption on every
+  `Int64.t` allocation. Fixed by Jacques Garrigue's
+  `a61816a69c1ad08ea5e1191d181ada87df55fd80` ("correct size in
+  copy_int64"), 2000-02-17, 6 days later.
+- `int64_serialize` had `*wsize_64 = *wsize_64 = 8;` (should assign
+  `*wsize_32` first) -- left `wsize_32` uninitialized, breaking
+  `Marshal`/`output_value` on any `Int64.t` ("output_value: object too
+  big", reproduced live). Fixed by Xavier Leroy's
+  `22b3c296c1c4773c3117951765ca18438df71816` ("Bugs dans la
+  serialisation des objets custom (PR#238)"), 2000-11-30 -- 9 months
+  later; an unusually large gap for a pulled-forward fix, but the bug
+  and fix are both small and verified against the raw blob.
 
 **4. `34068509c888623640b140b7aaa8299d285c21d9` -- "Revu la configuration des entiers 64 bits" (2000-02-11, same day)**
 
@@ -104,6 +172,13 @@ Adds the actual `stdlib/int32.{ml,mli}`, `int64.{ml,mli}`,
 Needs adding to `stdlib/Makefile` build order: goes right after
 `marshal.cmo`/`obj.cmo`, before `lexing.cmo` (matches upstream's own
 ordering, see the `stdlib.cma` link line in any post-3.00 build trace).
+
+**Given the item #3 Nativeint-skip decision above: when doing this
+item, only cherry-pick `stdlib/int32.{ml,mli}` and `int64.{ml,mli}`.**
+Skip `stdlib/nativeint.{ml,mli}` (and the Makefile build-order line
+for it) unless the Nativeint half of item #3 gets redone first -- the
+stdlib module would reference `external`s (`nativeint_add`,
+`nativeint_of_int`, etc) that don't exist in `ints.c` yet without it.
 
 Explicitly skip from this time window
 -------------------------------------
@@ -170,26 +245,25 @@ Remaining known gotchas going into implementation
   #2's configure patch (small `if`/`case` block probing
   `config/auto-aux/longlong.c`) needs manual porting rather than a
   mechanical `git apply`/cherry-pick.
-- Decide up front whether to include Nativeint (see the gotcha under #3:
-  our `asmcomp/cmmgen.ml` still uses the old internal `Nativeint.from`/
-  `.shift` API from `utils/nativeint.ml`, unrelated to the future stdlib
-  module of the same name -- confirmed untouched since the fork. If we
-  backport Nativeint too, we hit the same name collision Xavier Leroy
-  did and need the same fix: delete `utils/nativeint.ml`, repoint the
-  ~4 call sites in `cmmgen.ml`/`i386/selection.ml`/`selectgen.ml`. If we
-  skip stdlib `Nativeint` and only do `Int32`/`Int64`, this collision
-  doesn't arise at all -- worth deciding explicitly rather than copying
-  upstream blindly).
+- ~~Decide up front whether to include Nativeint~~ -- **decided
+  2026-09-15: no, see item #3's Nativeint decision above.** Skipped
+  the `utils/nativeint.ml` deletion + `cmmgen.ml`/`i386/selection.ml`/
+  `selectgen.ml` repoint entirely; that name collision (our fork's
+  internal compiler helper vs. the future stdlib module of the same
+  name) never arises since we never introduce the stdlib module.
 
-Upstream clone location (for the actual porting session)
---------------------------------------------------------
+Getting upstream commits (updated 2026-09-15, see backport_guide.md)
+---------------------------------------------------------------------
 
-A blob-less clone of `github.com/ocaml/ocaml` lives in this session's
-scratchpad (ephemeral -- re-clone if starting a fresh session):
+The blob-less scratchpad clone mentioned in the original archaeology
+turned out to be a dead end for actually applying anything (a
+promisor remote can't lazily re-serve blobs to another local repo).
+What actually works, used for every commit landed so far: fetch each
+commit directly from `https://github.com/ocaml/ocaml.git` with
+`git fetch --depth=2 <url> <sha>:refs/some-tag`, then tag both the
+tip and its parent (`git tag some-tag-parent $(git rev-parse
+refs/some-tag~1)`) for reuse across the session. See
+`backport_guide.md` for the full per-file patch-application method.
 
-```
-/tmp/claude-*/-home-pad-github-ocaml-light/*/scratchpad/upstream-ocaml
-```
-
-All SHA1s above are full 40-hex and resolve directly in that clone (or
-in `github.com/ocaml/ocaml`).
+All SHA1s above are full 40-hex and resolve directly against
+`github.com/ocaml/ocaml`.
