@@ -7,13 +7,13 @@ to figure out exactly which commits to cherry-pick/forward-port for
 `todo.org`'s "backport custom block, useful for Bignum and Int32/Int64"
 and "backport Int32.ml and Int64.ml (depends on custom block)" items.
 
-Status as of 2026-09-15: items #0, #1, #2, #3 are landed (see git log
+Status as of 2026-09-15: items #0, #1, #2, #3, #4 are landed (see git log
 for the full commit list; each item is 2-4 commits: a faithful
 cherry-pick, sometimes a `[partial]` pulled-forward fix from a later
 upstream commit, and an ocaml-light-adjustment commit). Full
 build/test verified after each (`make world`/`opt`/`test`/`check`,
 plus the `make bootstrap` dance whenever the C primitive table
-changed -- see `backport_guide.md`). Items #4 and #5 remain. See the
+changed -- see `backport_guide.md`). Item #5 remains. See the
 per-item corrections below -- the original archaeology got the item
 #2/#3 boundary wrong, and Nativeint was deliberately dropped from
 item #3's scope (see its own section below).
@@ -159,8 +159,28 @@ upstream fixes):
 
 **4. `34068509c888623640b140b7aaa8299d285c21d9` -- "Revu la configuration des entiers 64 bits" (2000-02-11, same day)**
 
-Small follow-up refining the 64-bit config detection from #2/#3. Not yet
-inspected in detail -- check when implementing, expected small.
+Landed 2026-09-15. Small cleanup, exactly as guessed: centralizes the
+"which C type backs int64" decision into `configure` (new
+`ARCH_INT64_TYPE`/`ARCH_UINT64_TYPE`/`ARCH_INT64_PRINTF_FORMAT` macros,
+replacing the `SIZEOF_LONG == 8 || SIZEOF_LONG_LONG == 8` check
+duplicated across `config.h`/`custom.c`/`ints.c`). `custom.c` needed
+one hand adjustment for the `nativeint_ops` reference (skipped, same
+Nativeint-exclusion as item #3). `config/m-nt.h` (Windows) doesn't
+exist here, `config/m-templ.h` is the same dead doc file skipped
+before -- both skipped.
+
+**Found and pulled forward one more bug**: this commit's own
+`configure` checks `test $1 = 8` (sizeof(int)) instead of `test $2 = 8`
+(sizeof(long)) to decide whether to use plain `long` for
+`ARCH_INT64_TYPE` -- since `sizeof(int)` is essentially never 8, every
+64-bit host (including this one) always fell through to the "probe
+`long long`" branch, getting `long long` instead of the intended
+`long` (harmless functionally, both are 8 bytes, but undercuts the
+whole point of this cleanup commit). Fixed 3 days later by Pierre
+Weis's `2429f44a3bb5532cd89fbfdfff257ebc0f49088d` ("Mauvaise detection
+de Int64.t sur archi 64 bits"), pulled forward as its own `[partial]`
+commit. Confirmed live: `ARCH_INT64_TYPE` in `config/m.h` flipped from
+`long long` to `long` after the fix.
 
 **5. `15f811734e33051581406135d05ecf9769a1f031` -- "Ajout Int32, Int64 et Nativeint" (2000-02-13 16:44:06)**
 
