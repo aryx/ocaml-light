@@ -386,6 +386,7 @@ void caml_startup_code(code_t code, asize_t code_size, char *data, char **argv)
   struct longjmp_buffer raise_buf;
 
   init_ieee_floats();
+  init_custom_operations();
   /*s: [[caml_startup_code()]] ifdef [[DEBUG]], set [[verbose_init]] */
   #ifdef DEBUG
     verbose_init = 1;
