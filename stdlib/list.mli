@@ -26,6 +26,10 @@ val nth : 'a list -> int -> 'a
            Raise [Failure "nth"] if the list is too short. *)
 val rev : 'a list -> 'a list
         (* List reversal. *)
+val rev_append : 'a list -> 'a list -> 'a list
+        (* [List.rev_append l1 l2] reverses [l1] and catenates it to [l2].
+           This is equivalent to [List.rev l1 @ l2], but [rev_append] is
+           tail-recursive and more efficient. *)
 val concat  : 'a list list -> 'a list
 val flatten : 'a list list -> 'a list
         (* Catenate (flatten) a list of lists. *)
