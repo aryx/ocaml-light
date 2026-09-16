@@ -36,6 +36,8 @@
   Sys.getenv_opt (4.05), List.find_map, List.concat_map (4.10.0),
   String.split_on_char (4.04), List.mapi (3.13), List.init (4.06),
   List.rev_map, List.rev_append (exposed), Hashtbl.copy, Hashtbl.length
+- backport Sys.is_directory (3.10.0), new byterun primitive; boot/
+  promoted through the "add a primitive" bootstrap dance
 - fix List.rev_append argument order, which fixes a latent bug where
   List.sort/stable_sort could silently produce wrong output
 
