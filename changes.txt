@@ -220,6 +220,8 @@ at commit a234a779913d61830f2f97af10a8d0a2a0d963ce
 # see also pad.txt changes section
 - backport buffer.ml (from 3.12.0, but added originally in 2.01)
 - backport basic backtrace in printexc.ml (from 3.10.2 and 4.01)
+- droped Open_binary/Open_text and open_out_bin/open_in_bin from
+  pervasives.ml, see below (os)
 
 ** build infra
 - a working configure that can work on some recent Mac and Linux,
@@ -231,6 +233,10 @@ at commit a234a779913d61830f2f97af10a8d0a2a0d963ce
   without needing special code (except for asmcomp Mach-O).
   Same for windows which should be able to compile ocaml-light using
   cygwin or mingw.
+- removed Open_binary and Open_text (and open_out_bin/open_in_bin)
+  from pervasives.ml, another Windows-specific difference (text vs binary
+  file mode) with no meaning on the unix targets I actually care about;
+  open_out/open_in already do the right thing there.
 
 * ------------------------------------------------------------------------
 
