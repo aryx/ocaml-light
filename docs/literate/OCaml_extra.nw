@@ -16998,6 +16998,7 @@ value available_primitives(value unit)
 #ifndef OS_PLAN9
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #else
 #endif
 
@@ -18739,6 +18740,17 @@ extern char * strerror(int);
 <<function [[sys_close]]>>
 
 <<function [[sys_file_exists]]>>
+
+value sys_is_directory(value name)    /* ML */
+{
+  struct stat st;
+  if (stat(String_val(name), &st) == -1) sys_error(name);
+#ifdef S_ISDIR
+  return Val_bool(S_ISDIR(st.st_mode));
+#else
+  return Val_bool(st.st_mode & S_IFDIR);
+#endif
+}
 
 <<function [[sys_remove]]>>
 
