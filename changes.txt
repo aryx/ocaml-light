@@ -32,7 +32,8 @@
 - backport Int32 and Int64 (arithmetic, Marshal, string conversion),
   using the new Custom blocks; Nativeint not included (backported
   from OCaml 3.00) (big thx to Claude)
-- backport Hashtbl.find_opt (4.05) and List.concat_map (4.10.0)
+- backport Hashtbl.find_opt, List.find_opt, List.assoc_opt, List.nth_opt
+  (4.05), and List.find_map, List.concat_map (4.10.0)
 
 * 0.4 (Q1 2026) (plan9 support v1)
 
