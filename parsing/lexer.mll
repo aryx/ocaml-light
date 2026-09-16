@@ -205,6 +205,12 @@ rule token = parse
         token lexbuf
       }
 
+  (* claude: let*/let+/... binding-operator sugar; ocamllex's longest-match
+   * rule makes this win over plain "let" + LIDENT whenever a symbolchar
+   * immediately follows "let" *)
+  | "let" symbolchar +
+      { LETOP (Lexing.lexeme lexbuf) }
+
   (*s: [[Lexer.token()]] identifier or keyword cases *)
   | lowercase identchar *
       { let s = Lexing.lexeme lexbuf in

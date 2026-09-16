@@ -16,6 +16,12 @@
 (* pad: a few functions have been ommited because they were using advanced features
  * like labels not supported by ocaml-light. A few other like map were removed because
  * of some weird typing errors. Maybe some bugs/limitations in OCaml 1.07
+ *
+ * claude: re-exposed bind (map is still omitted, see stdlib/result.ml).
+ * The "weird typing error" was real: writing the Error branch as "Error _ as e -> e"
+ * (aliasing) makes this compiler infer an overly-monomorphic type where the success
+ * type can't change across the call; writing "Error e -> Error e" (reconstructing)
+ * avoids it and gives the expected polymorphic type. See stdlib/result.ml.
  *)
 
 (** Result values.
@@ -47,7 +53,7 @@ val get_error : ('a, 'e) result -> 'e
 (** [get_error r] is [e] if [r] is [Error e] and @raise Invalid_argument
     otherwise. *)
 
-(* val bind : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result *)
+val bind : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result
 (** [bind r f] is [Ok (f v)] if [r] is [Ok v] and [r] if [r] is [Error _]. *)
 
 (* val join : (('a, 'e) result, 'e) result -> ('a, 'e) result *)
@@ -55,6 +61,11 @@ val get_error : ('a, 'e) result -> 'e
 
 (* val map : ('a -> 'b) -> ('a, 'e) result -> ('b, 'e) result *)
 (** [map f r] is [Ok (f v)] if [r] is [Ok v] and [r] if [r] is [Error _]. *)
+
+(* claude: real OCaml only added Result's let* / let+ much later (5.5,
+   as a nested Syntax submodule alongside a new "product" function) --
+   not backported here since we don't target OCaml 5; the one-liner
+   would just be "let ( let* ) r f = bind r f" if wanted *)
 
 (* val map_error : ('e -> 'f) -> ('a, 'e) result -> ('a, 'f) result *)
 (** [map_error f r] is [Error (f e)] if [r] is [Error e] and [r] if

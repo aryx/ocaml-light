@@ -19,6 +19,12 @@
   asmrun/arm64.S from upstream real OCaml's own arm64-on-macOS port.
   (big thx to Claude)
 
+** language
+- backport let*/let+ binding-operator sugar (PR#1947, 4.08), single-binding
+  only (no and*); desugared at parse time into plain function application
+  instead of upstream's Pexp_letop typechecker-level mechanism, since our
+  much simpler parsetree/grammar makes that unnecessary (big thx to Claude)
+
 ** build infra
 - new configure --target-arch i386|arm|mips|... so easy to cross compile
 - new configure --help
@@ -38,6 +44,17 @@
   List.rev_map, List.rev_append (exposed), Hashtbl.copy, Hashtbl.length
 - backport Sys.is_directory (3.10.0), new byterun primitive; boot/
   promoted through the "add a primitive" bootstrap dance
+- re-expose Result.bind (was commented out in result.mli) and fix a real
+  type-inference limitation in it: writing the Error branch as
+  "Error _ as e -> e" (aliasing) made this compiler infer an
+  overly-monomorphic type where the success type can't change across the
+  call; reconstructing "Error e -> Error e" instead fixes it. (Option/
+  Result don't get (let*)/(let+) themselves here: verified against real
+  ocaml/ocaml history that upstream only added those in a 5.5-era commit,
+  in a different shape (a nested Syntax submodule with a new "product"
+  function) -- out of scope since we don't target OCaml 5; write your own
+  one-liner from bind, same as e.g.
+  semgrep-pfff-libs/commons/core/Common.ml already does.)
 - fix List.rev_append argument order, which fixes a latent bug where
   List.sort/stable_sort could silently produce wrong output
 

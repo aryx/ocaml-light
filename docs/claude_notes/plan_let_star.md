@@ -146,26 +146,40 @@ Deliberately out of scope for this MVP
 Nice-to-have, cheap add-on: stdlib operators
 --------------------------------------------------
 
-Real OCaml's `Stdlib`/`Option`/`Result` modules got their own `let*`/
-`let+` definitions as part of the wider rollout (e.g. `Option.(let*) =
-Option.bind`). Since the syntax feature is useless without at least
-one usable `(let*)` in scope, plan to add:
-- `Option.( let* )`, `Option.( let+ )` in `stdlib/option.ml`/`.mli`
-  (`let*` = `bind`, `let+` = `map`)
-- Same for `Result.( let* )`/`Result.( let+ )` in
-  `stdlib/result.ml`/`.mli`
+claude: correction, checked after the fact -- this was wrong. Real
+OCaml's `Option`/`Result` did *not* get binding operators as part of the
+4.08 rollout; verified via a local clone of upstream (`git log -S'let (
+let* )' -- stdlib/option.ml stdlib/result.ml`) that they got them only
+much later, `@since 5.5` (`90d454692` "Add Option.product and
+Option.Syntax", `60b30b936` "Add Result.product and Result.Syntax"), and
+in a different shape: a nested `Syntax` submodule with `let*`/`and*`/
+`let+`/`and+` built around a new `product` function, not a flat
+`Option.(let*)`. Since we don't target OCaml 5 and this postdates 4.14
+anyway, there's no real upstream commit to attribute the addition below
+to in the range we care about -- it's our own addition, same as the
+original (mistaken) reasoning concluded, just for the right reason now.
 
-Each is a one-line `let ( let* ) x f = bind x f` alongside the
-existing `bind`/`map`, cheap and directly useful for testing the
-feature end to end (`let* x = Some 1 in let* y = Some 2 in Some (x+y)`).
+claude: final decision (discussed with pad) -- don't add them. Since
+there's no real upstream commit to port from in the range we target,
+adding `Option.(let*)`/`Result.(let*)` here would just be us inventing
+stdlib API surface, which cuts against the "light"/minimal-footprint
+spirit of this fork. Instead: `stdlib/option.ml`/`.mli` and
+`stdlib/result.ml`/`.mli` each get a short comment next to `bind`/`map`
+noting the one-liner (`let ( let* ) o f = bind o f`) a user would write
+themselves to get `let*` for that type -- exactly the pattern pad
+already uses in `semgrep-pfff-libs/commons/core/Common.ml`
+(`let ( let* ) = Option.bind`). The only real stdlib change is
+re-exposing `Result.bind` (see below) -- `Option.bind`/`map` were
+already public.
 
 Testing plan
 ----------------
 
 No existing upstream testsuite to port (same reason as the rest --
 too divergent). Plan: a small `test/Moretest`-style `.ml` exercising
-`Option.(let*)`/`Result.(let*)` chains, `let+`, a refutable-pattern
-case documented as expected-`Match_failure`-if-mismatched, and a
+`Option`/`Result` chains via a locally-defined `let ( let* ) = bind`
+(since neither ships its own), `let+`, a refutable-pattern case
+documented as expected-`Match_failure`-if-mismatched, and a
 user-defined custom operator (`let (let*) x f = ...` at top level) to
 confirm the definition-site grammar change works standalone.
 
@@ -177,7 +191,9 @@ Implementation order
    at the toplevel.
 2. `expr` grammar addition (use site) -- the `mkinfix`/`Pexp_function`
    rule above.
-3. `stdlib/option.ml`/`.mli`, `stdlib/result.ml`/`.mli` additions.
+3. `stdlib/result.ml`/`.mli`: re-expose `bind` and fix its
+   type-inference bug (see below); no Option/Result changes needed
+   beyond that.
 4. Test file + `make world`/`test`/`check` verification, plus a live
    REPL smoke test (same discipline as the Int32/Int64 work).
 5. `changes.txt` entry once landed.

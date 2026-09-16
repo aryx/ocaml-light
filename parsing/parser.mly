@@ -200,6 +200,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token <string> INFIXOP3
 %token <string> INFIXOP4
 %token <string> SUBTRACTIVE
+%token <string> LETOP
 
 %token OBJECT METHOD
 %token LBRACKETATAT
@@ -439,6 +440,13 @@ expr:
   /*(*x: rule expr cases *)*/
   | LET rec_flag let_bindings IN seq_expr %prec prec_let
       { mkexp(Pexp_let($2, List.rev $3, $5)) }
+  /* claude: let* / let+ / ... binding-operator sugar. Unlike real OCaml (which
+   * adds a Pexp_letop parsetree node and desugars during type-checking),
+   * we desugar here at parse time into plain (let*) e1 (fun p -> e2) --
+   * see docs/claude_notes/plan_let_star.md for why this simplification is
+   * possible in ocaml-light's much simpler AST/grammar. */
+  | LETOP pattern EQUAL seq_expr IN seq_expr %prec prec_let
+      { mkinfix $4 $1 (mkexp(Pexp_function([$2, $6]))) }
   /*(*x: rule expr cases *)*/
   | expr INFIXOP0 expr
       { mkinfix $1 $2 $3 }
@@ -873,6 +881,7 @@ operator:
   | INFIXOP3                                    { $1 }
   | INFIXOP4                                    { $1 }
   | SUBTRACTIVE                                 { $1 }
+  | LETOP                                       { $1 }
   | STAR                                        { "*" }
   | EQUAL                                       { "=" }
   | LESS                                        { "<" }

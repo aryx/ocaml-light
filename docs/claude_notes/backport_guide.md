@@ -71,6 +71,42 @@ and refuses to lazily re-serve missing blobs to another local repo
 ("lazy fetching disabled"). Fetching directly from
 `https://github.com/ocaml/ocaml.git` works fine and is simpler.
 
+**claude: before assuming a feature "isn't upstream" or hand-waving which
+commit added it, actually check** -- don't rely on remembered OCaml
+history for *when* or *whether* something landed, it can be subtly wrong
+(during the let*/let+ backport session, I initially claimed Option/Result
+got their own `(let*)`/`(let+)` as part of the same 4.08 PR that added the
+`let*`/`and*` syntax itself -- false; that syntax PR (#1947) is real and in
+4.08, but Option/Result didn't get binding operators until a much later,
+differently-designed commit, see below).
+
+To actually find the commit that introduced something:
+1. Clone the real thing locally rather than probing tag-by-tag or via the
+   GitHub API: `git clone --filter=blob:none --no-checkout
+   https://github.com/ocaml/ocaml.git <dir>` (a real local repo, so
+   `git log -S`/`git blame`/`git show` all work normally; a blob-less
+   filter keeps this fast without needing every historical file body).
+   **The default branch is `trunk`, not `master`** -- `git checkout
+   master` silently does nothing useful here (no such branch), and a
+   `gh api graphql` query against `expression: "master:<path>"` returns a
+   null object with no error, which reads exactly like "this file/content
+   doesn't exist" and will fool you into a false negative. Use `trunk`
+   (or check `git branch -a` / `defaultBranchRef` first).
+2. `git log -S'<exact source snippet>' --oneline -- <path>` finds the
+   commit that introduced (or removed) an exact string -- much more
+   reliable than guessing a version range and diffing tags, especially
+   for something added later than expected.
+3. Once you have the SHA, `git show <sha> --stat` and `git show -s
+   --format='%an <%ae>%n%ad%n%s' <sha>` give the real author/date/message
+   for the cherry-pick commit trailer.
+4. Check the actual diff's `@since X.Y` annotation (in the `.mli`) to
+   confirm which release it shipped in -- don't infer the version from
+   the commit date or PR number alone.
+5. `gh api graphql` (blame/content-at-ref queries) is a viable fallback
+   when a local clone isn't wanted, but prefer the local-clone route above
+   for anything beyond a single quick existence check -- it's more direct
+   and doesn't have the `master`-vs-`trunk` null-object trap.
+
 Applying per file: patch first, hand-edit only the conflicts
 ---------------------------------------------------------------
 

@@ -20,10 +20,20 @@ let error e = Error e
 let value r default = match r with Ok v -> v | Error _ -> default
 let get_ok = function Ok v -> v | Error _ -> invalid_arg "result is Error _"
 let get_error = function Error e -> e | Ok _ -> invalid_arg "result is Ok _"
-let bind r f = match r with Ok v -> f v | Error _ as e -> e
+(* claude: writing "Error e -> Error e" here (reconstructing the value)
+   rather than "Error _ as e -> e" (aliasing it) matters: with the alias
+   form this compiler's type inference forces the success type to stay
+   the same 'a on both sides of the match instead of generalizing it,
+   defeating the point of bind/map (pad's "weird typing errors" note
+   above was hitting exactly this) *)
+let bind r f = match r with Ok v -> f v | Error e -> Error e
 (* let join = function Ok r -> r | Error _ as e -> e *)
-(* let map f = function Ok v -> Ok (f v) | Error _ as e -> e *)
+(* let map f = function Ok v -> Ok (f v) | Error e -> Error e *)
 (* let map_error f = function Error e -> Error (f e) | Ok _ as v -> v *)
+(* claude: real OCaml only added Result's let* / let+ much later (5.5,
+   as a nested Syntax submodule alongside a new "product" function) --
+   not backported here since we don't target OCaml 5; the one-liner
+   would just be "let ( let* ) r f = bind r f" if wanted *)
 (* let fold ~ok ~error = function Ok v -> ok v | Error e -> error e *)
 let iter f = function Ok v -> f v | Error _ -> ()
 let iter_error f = function Error e -> f e | Ok _ -> ()

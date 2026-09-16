@@ -46,6 +46,10 @@ val join : 'a option option -> 'a option
 val map : ('a -> 'b) -> 'a option -> 'b option
 (** [map f o] is [None] if [o] is [None] and [Some (f v)] is [o] is [Some v]. *)
 
+(* claude: real OCaml only added Option's let* / let+ much later (5.5,
+   as a nested Syntax submodule alongside a new "product" function) --
+   not backported here since we don't target OCaml 5 *)
+
 (* val fold : none:'a -> some:('b -> 'a) -> 'b option -> 'a *)
 (** [fold ~none ~some o] is [none] if [o] is [None] and [some v] if [o] is
     [Some v]. *)
