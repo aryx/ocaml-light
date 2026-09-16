@@ -635,6 +635,20 @@ build-docker:
 build-docker-opt:
 	docker build --tag "ocaml-light-opt" --target "native-"`uname -m` .
 
+# claude: i386 (build-native-x86_64, via gcc-multilib's -m32) and arm
+# 32-bit (build-native-aarch64, via aarch64's AArch32 CPU-compat mode) are
+# each just the 32-bit sibling of the host's own native arch, so for now
+# these are plain aliases for build-docker-opt above rather than their
+# own cross targets: build-docker-i386 only makes sense run on an x86_64
+# host, build-docker-arm only on an aarch64 host. Unlike
+# build-docker-mips/alpha/m68k/sparc/power/amd64/arm64 further down,
+# which are always qemu-user-static cross targets and so work the same
+# on any host. This may change later if build-native-aarch64 switches to
+# defaulting to the real arm64 backend (see configure's aarch64-*-linux*
+# case) instead of cross-compiling arm 32-bit.
+build-docker-i386: build-docker-opt
+build-docker-arm: build-docker-opt
+
 
 
 # claude: unlike build-docker-opt above, this is not `uname -m`-dependent:
