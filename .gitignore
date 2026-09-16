@@ -16,6 +16,9 @@
 # intermediate test object files and binaries
 /test/**/*.s
 /test/**/*.out
+# claude: expected-output fixtures, not generated cruft
+!/test/Results/*.out
+!/test/Moretest/Results/*.out
 /testasmcomp/*.s
 /testasmcomp/*.out
 

@@ -26,6 +26,7 @@ CODE_EXE=$(BYTE_EXE:.byt=.out)
 default:
 	$(MAKE) all
 	$(MAKE) bytetest codetest
+	$(MAKE) moretest
 
 all: $(BYTE_EXE) $(CODE_EXE)
 
@@ -149,8 +150,15 @@ codetest:
           fi; \
         done
 
+# claude: the pre-existing (upstream OCaml 1.07) test/Moretest/*.ml
+# programs, wired into `make test` via this recursive step; see
+# Moretest/Makefile for what's included/excluded and why.
+moretest:
+	cd Moretest; $(MAKE) moretest_test
+
 clean::
 	rm -f Lex/testscanner.ml
+	cd Moretest; $(MAKE) clean
 
 # Benchmark
 

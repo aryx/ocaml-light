@@ -57,8 +57,8 @@ let copy_line infile ofile =
 (* Backward copy, with lots of seeks *)
 
 let copy_seek chunksize infile ofile =
-  let ic = open_in_bin infile in
-  let oc = open_out_bin ofile in
+  let ic = open_in infile in
+  let oc = open_out ofile in
   let size = in_channel_length ic in
   let buffer = String.create chunksize in
   for i = (size - 1) / chunksize downto 0 do

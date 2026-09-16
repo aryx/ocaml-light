@@ -19,7 +19,7 @@ let rec fib n =
   if n < 2 then 1 else fib(n-1) + fib(n-2)
 
 let test_out filename =
-  let oc = open_out_bin filename in
+  let oc = open_out filename in
   output_value oc 1;
   output_value oc (-1);
   output_value oc 258;
@@ -58,7 +58,7 @@ let test n b =
   flush stderr
 
 let test_in filename =
-  let ic = open_in_bin filename in
+  let ic = open_in filename in
   test 1 (input_value ic = 1);
   test 2 (input_value ic = (-1));
   test 3 (input_value ic = 258);

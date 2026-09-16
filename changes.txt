@@ -58,6 +58,16 @@
 - fix List.rev_append argument order, which fixes a latent bug where
   List.sort/stable_sort could silently produce wrong output
 
+** test infra
+- wire test/Moretest/ (added back in 0.1, never actually run by `make
+  test`) into `make test` via Results/*.out comparisons; sets.ml
+  (needs functors), signals.ml (interactive), syserror.ml (libc-
+  dependent error text) skipped, manyargs/tcallback/cmcaml (need C
+  stubs) left as a TODO. Fixed two real bugs found along the way:
+  intext.ml/io.ml's open_*_bin (dropped in 2015, see Alpha (2015)
+  below) and equality.ml's "stdout <> stderr" (always crashed by
+  design; meant "!=") (big thx to Claude)
+
 * 0.4 (Q1 2026) (plan9 support v1)
 
 ** language
