@@ -152,8 +152,8 @@ let replace h key info =
   try
     h.data.(i) <- replace_bucket l
   with Not_found ->
-    h.data.(i) <- Cons(key, info, l);
+    h.data.(i) <- Cons(key, info, l)
 (* TODO
-    h.size <- succ h.size;
+    ;h.size <- succ h.size;
     if h.size > Array.length h.data lsl 1 then resize hash h
 *)
