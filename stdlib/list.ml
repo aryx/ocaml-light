@@ -34,11 +34,12 @@ let rec nth l n =
       if n > 0 then nth l (n-1) else
       invalid_arg "List.nth"
 
-let rec rev_append accu = function
+let rec rev_append l accu =
+  match l with
     [] -> accu
-  | a::l -> rev_append (a :: accu) l
+  | a::l -> rev_append l (a :: accu)
 
-let rev l = rev_append [] l
+let rev l = rev_append l []
 
 let rec flatten = function
     [] -> []
