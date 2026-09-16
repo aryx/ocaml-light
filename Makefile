@@ -6,15 +6,20 @@
 
 include config/Makefile
 
+#pad: remember that boot/ocamlc is checked-in the repo, but boot/ocamlrun
+# is built by make coldstart (C code)
 CAMLC=boot/ocamlrun boot/ocamlc -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -I stdlib
 COMPFLAGS=$(INCLUDES)
 LINKFLAGS=
+
 CAMLYACC=boot/ocamlyacc
 YACCFLAGS=
 CAMLLEX=boot/ocamlrun boot/ocamllex
+
 CAMLDEP=boot/ocamlrun tools/dependencies/ocamldep
 DEPFLAGS=$(INCLUDES)
+
 CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
@@ -84,7 +89,7 @@ TOPLIB=$(UTILS) $(PARSING) $(TYPING) $(COMP) $(BYTECOMP) $(TOPLEVEL)
 TOPOBJS=$(TOPLIB) $(TOPLEVELMAIN)
 OPTOBJS=$(OPTUTILS) $(PARSING) $(TYPING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
 
-#pad: new buffer option result uchar int bool float stdcompat
+#pad: new: buffer option result uchar int bool float stdcompat int32 int64
 PERVASIVES=arg array callback char digest filename format gc hashtbl \
   lexing list map obj parsing pervasives printexc buffer printf queue random \
   set stack string bytes stream sys topdirs toploop weak lazy \
@@ -134,7 +139,9 @@ coldstart:
 ##############################################################################
 
 # Complete bootstrapping cycle
-# pad: see BOOTSTRAP.adoc in recent OCaml for more info
+# pad: see BOOTSTRAP.adoc in recent OCaml for more info. This is subtle!
+# even Claude code got confused when adding new builtins about which command
+# to run (See CLAUDE.md note about it).
 bootstrap:
 # Save the original bootstrap compiler
 	$(MAKE) backup
@@ -619,7 +626,7 @@ clean::
 
 # The goal here is not so much to deploy via Docker ocaml light but more
 # to regression tests in CI (and locally) easily.
-# update: we also use the deploy part now to check xix/efuns
+#update: we also use the deploy part now to check xix/efuns
 # can compile correctly with ocaml-light in CI
 #pad: see also .github/workflows/docker.yml for the check in CI!
 #note: add --progress=plain to get the legacy docker output
@@ -627,31 +634,23 @@ build-docker:
 	docker build --tag "padator/ocaml-light:"`uname -m` --target "bytecode" .
 build-docker-opt:
 	docker build --tag "ocaml-light-opt" --target "native-"`uname -m` .
+
+
+
 # claude: unlike build-docker-opt above, this is not `uname -m`-dependent:
 # mips is always a cross target (via qemu-user-static), regardless of
 # whether the Docker host is x86_64 or aarch64.
 #coupling: .github/workflows/docker.yml
 build-docker-mips:
 	docker build --tag "ocaml-light-mips" --target "native-mips" .
-# claude: same as build-docker-mips above -- alpha is also always a
-# cross target (via qemu-user-static).
-#coupling: .github/workflows/docker.yml
 build-docker-alpha:
 	docker build --tag "ocaml-light-alpha" --target "native-alpha" .
-# claude: same as build-docker-mips/build-docker-alpha above -- m68k is
-# also always a cross target (via qemu-user-static).
-#coupling: .github/workflows/docker.yml
 build-docker-m68k:
 	docker build --tag "ocaml-light-m68k" --target "native-m68k" .
-#coupling: .github/workflows/docker.yml
-
 build-docker-sparc:
 	docker build --tag "ocaml-light-sparc" --target "native-sparc" .
-#coupling: .github/workflows/docker.yml
-
 build-docker-power:
 	docker build --tag "ocaml-light-power" --target "native-power" .
-#coupling: .github/workflows/docker.yml
 
 # claude: same as build-docker-mips/alpha/m68k/sparc/power above -- always
 # a cross target (via qemu-user-static) regardless of the Docker host's
@@ -660,7 +659,6 @@ build-docker-power:
 # `uname -m`-dependent).
 build-docker-amd64:
 	docker build --tag "ocaml-light-amd64" --target "native-amd64" .
-#coupling: .github/workflows/docker.yml
 
 # claude: same as build-docker-mips/alpha/m68k/sparc/power/amd64 above --
 # always a cross target (via qemu-user-static) regardless of the Docker
@@ -671,8 +669,9 @@ build-docker-amd64:
 # same on any host.
 build-docker-arm64:
 	docker build --tag "ocaml-light-arm64" --target "native-arm64" .
-#coupling: .github/workflows/docker.yml
 
+
+# ??
 build-docker-plan9:
 	docker build --tag "ocaml-light-plan9" -f Dockerfile.plan9 .
 
@@ -706,23 +705,25 @@ nix-test:
 ##############################################################################
 # Developer's targets
 ##############################################################################
-# -filter semgrep
+# see https://github.com/aryx/codemap
+#alt: -filter semgrep
 visual:
 	codemap -screen_size 3 -efuns_client efuns_client -emacs_client /dev/null .
 
-# see https://github.com/semgrep/semgrep
+# see https://github.com/semgrep/semgrep (or https://github.com/aryx/semgrep)
 check:
 	osemgrep --experimental --config semgrep.jsonnet --strict --error
 
 # Note that the goal here is not to build an actual ocamlc executable; the
 # goal is just to compile code and generate a _build/ so that tools like
-# merlin can work correctly and provide code navigation. It is also useful
+# merlin/ocamllsp can work correctly and provide code navigation. It is also useful
 # for faster feedback-loop as dune compiles faster than boot/ocamlc
+# (and classic Makefile)
 # TODO: currently need to call make to generate some .ml (e.g., parser.ml, config.ml)
+#alt: rm -f lex/lexer.ml lex/parser.ml lex/parser.mli
 build-dune:
 	make
 	rm -f stdlib/stdlib.*
-	#rm -f lex/lexer.ml lex/parser.ml lex/parser.mli
 	dune build
 clean-dune:
 	dune clean
