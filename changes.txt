@@ -9,6 +9,10 @@
 - restored arm support in ocamlopt, backported from 2.02 and
   adapted to qemu-arm and different float ABI
   using gcc-arm-linux-gnueabihf (big thx to Claude)
+- fix arm's frame descriptors 4 bytes off when the outgoing stack area
+  was not a multiple of 8 (one stack argument): a collection there
+  crashed; the area rounded up to 8, as upstream's (found by ix's
+  kernels for the Pis) (big thx to Claude)
 - backport amd64 from 3.07, adapted to ocaml-light record-based asmcomp/
   (big thx to Claude)
 - backport arm64 from 4.02, again adapted then to ocaml-light
@@ -28,6 +32,8 @@
 ** build infra
 - new configure --target-arch i386|arm|mips|... so easy to cross compile
 - new configure --help
+- new configure -nativecc, -as, -aspp for -target-arch, the cross tools
+  given (clang on macOS) instead of the GNU cross tools' names
 
 ** internals
 - backport the Custom blocks mechanism (finalize/compare/hash/
@@ -55,6 +61,8 @@
   function) -- out of scope since we don't target OCaml 5; write your own
   one-liner from bind, same as e.g.
   semgrep-pfff-libs/commons/core/Common.ml already does.)
+- Bytes.length, get, set, unsafe_get the primitives (they were functions
+  calling String's), and the missing Bytes.unsafe_set
 - fix List.rev_append argument order, which fixes a latent bug where
   List.sort/stable_sort could silently produce wrong output
 
