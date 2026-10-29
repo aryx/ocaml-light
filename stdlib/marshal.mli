@@ -104,6 +104,11 @@ val from_string: string -> int -> 'a
            representation is not read from a channel, but taken from
            the string [buff], starting at position [ofs]. *)
 
+val to_bytes: 'a -> extern_flags list -> string
+val from_bytes: string -> int -> 'a
+        (* claude: [to_string] and [from_string]: bytes are strings here
+           (OCaml 4.06's names, for code that compiles with both). *)
+
 val header_size : int
 val data_size : string -> int -> int
 val total_size : string -> int -> int

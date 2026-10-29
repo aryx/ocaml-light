@@ -47,3 +47,8 @@ let from_string buff ofs =
     then invalid_arg "Marshal.from_string"
     else from_string_unsafe buff ofs
   end  
+
+(* claude: bytes are strings here; OCaml 4.06's names, for code that
+ * compiles with both *)
+let to_bytes = to_string
+let from_bytes = from_string

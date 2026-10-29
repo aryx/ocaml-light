@@ -13,7 +13,7 @@ let test msg funct f1 f2 =
 let copy_file sz infile ofile =
   let ic = open_in infile in
   let oc = open_out ofile in
-  let buffer = String.create sz in
+  let buffer = Bytes.create sz in
   let rec copy () =
     let n = input ic buffer 0 sz in
     if n = 0 then () else begin
@@ -29,7 +29,7 @@ let copy_file sz infile ofile =
 let copy_random sz infile ofile =
   let ic = open_in infile in
   let oc = open_out ofile in
-  let buffer = String.create sz in
+  let buffer = Bytes.create sz in
   let rec copy () =
     let s = 1 + Random.int sz in
     let n = input ic buffer 0 s in
@@ -60,7 +60,7 @@ let copy_seek chunksize infile ofile =
   let ic = open_in infile in
   let oc = open_out ofile in
   let size = in_channel_length ic in
-  let buffer = String.create chunksize in
+  let buffer = Bytes.create chunksize in
   for i = (size - 1) / chunksize downto 0 do
     seek_in ic (i * chunksize);
     seek_out oc (i * chunksize);

@@ -20,33 +20,33 @@ let rec fib n =
 
 let test_out filename =
   let oc = open_out filename in
-  output_value oc 1;
-  output_value oc (-1);
-  output_value oc 258;
-  output_value oc 20000;
-  output_value oc 0x12345678;
-  output_value oc 0x123456789ABCDEF0;
-  output_value oc "foobargeebuz";
-  output_value oc longstring;
-  output_value oc verylongstring;
-  output_value oc 3.141592654;
-  output_value oc ();
-  output_value oc A;
-  output_value oc (B 1);
-  output_value oc (C 2.718);
-  output_value oc (D "hello, world!");
-  output_value oc (E 'l');
-  output_value oc (F(B 1));
-  output_value oc (G(A, G(B 2, G(C 3.14, G(D "glop", E 'e')))));
-  output_value oc (H(1, A));
-  output_value oc (I(B 2, 1e-6));
+  Marshal.to_channel oc (1) [];
+  Marshal.to_channel oc ((-1)) [];
+  Marshal.to_channel oc (258) [];
+  Marshal.to_channel oc (20000) [];
+  Marshal.to_channel oc (0x12345678) [];
+  Marshal.to_channel oc (0x123456789ABCDEF0) [];
+  Marshal.to_channel oc ("foobargeebuz") [];
+  Marshal.to_channel oc (longstring) [];
+  Marshal.to_channel oc (verylongstring) [];
+  Marshal.to_channel oc (3.141592654) [];
+  Marshal.to_channel oc (()) [];
+  Marshal.to_channel oc (A) [];
+  Marshal.to_channel oc ((B 1)) [];
+  Marshal.to_channel oc ((C 2.718)) [];
+  Marshal.to_channel oc ((D "hello, world!")) [];
+  Marshal.to_channel oc ((E 'l')) [];
+  Marshal.to_channel oc ((F(B 1))) [];
+  Marshal.to_channel oc ((G(A, G(B 2, G(C 3.14, G(D "glop", E 'e')))))) [];
+  Marshal.to_channel oc ((H(1, A))) [];
+  Marshal.to_channel oc ((I(B 2, 1e-6))) [];
   let x = D "sharing" in
   let y = G(x, x) in
   let z = G(y, G(x, y)) in
-  output_value oc z;
-  output_value oc [|1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16|];
+  Marshal.to_channel oc (z) [];
+  Marshal.to_channel oc ([|1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16|]) [];
   let rec big n = if n <= 0 then A else H(n, big(n-1)) in
-  output_value oc (big 1000);
+  Marshal.to_channel oc ((big 1000)) [];
   Marshal.to_channel oc y [Marshal.No_sharing];
   Marshal.to_channel oc fib [Marshal.Closures];
   close_out oc
@@ -59,49 +59,49 @@ let test n b =
 
 let test_in filename =
   let ic = open_in filename in
-  test 1 (input_value ic = 1);
-  test 2 (input_value ic = (-1));
-  test 3 (input_value ic = 258);
-  test 4 (input_value ic = 20000);
-  test 5 (input_value ic = 0x12345678);
-  test 6 (input_value ic = 0x123456789ABCDEF0);
-  test 7 (input_value ic = "foobargeebuz");
-  test 8 (input_value ic = longstring);
-  test 9 (input_value ic = verylongstring);
-  test 10 (input_value ic = 3.141592654);
-  test 11 (input_value ic = ());
-  test 12 (match input_value ic with
+  test 1 (Marshal.from_channel ic = 1);
+  test 2 (Marshal.from_channel ic = (-1));
+  test 3 (Marshal.from_channel ic = 258);
+  test 4 (Marshal.from_channel ic = 20000);
+  test 5 (Marshal.from_channel ic = 0x12345678);
+  test 6 (Marshal.from_channel ic = 0x123456789ABCDEF0);
+  test 7 (Marshal.from_channel ic = "foobargeebuz");
+  test 8 (Marshal.from_channel ic = longstring);
+  test 9 (Marshal.from_channel ic = verylongstring);
+  test 10 (Marshal.from_channel ic = 3.141592654);
+  test 11 (Marshal.from_channel ic = ());
+  test 12 (match Marshal.from_channel ic with
     A -> true
   | _ -> false);
-  test 13 (match input_value ic with
+  test 13 (match Marshal.from_channel ic with
     (B 1) -> true
   | _ -> false);
-  test 14 (match input_value ic with
+  test 14 (match Marshal.from_channel ic with
     (C f) -> f = 2.718
   | _ -> false);
-  test 15 (match input_value ic with
+  test 15 (match Marshal.from_channel ic with
     (D "hello, world!") -> true
   | _ -> false);
-  test 16 (match input_value ic with
+  test 16 (match Marshal.from_channel ic with
     (E 'l') -> true
   | _ -> false);
-  test 17 (match input_value ic with
+  test 17 (match Marshal.from_channel ic with
     (F(B 1)) -> true
   | _ -> false);
-  test 18 (match input_value ic with
+  test 18 (match Marshal.from_channel ic with
     (G(A, G(B 2, G(C 3.14, G(D "glop", E 'e'))))) -> true
   | _ -> false);
-  test 19 (match input_value ic with
+  test 19 (match Marshal.from_channel ic with
     (H(1, A)) -> true
   | _ -> false);
-  test 20 (match input_value ic with
+  test 20 (match Marshal.from_channel ic with
     (I(B 2, 1e-6)) -> true
   | _ -> false);
-  test 21 (match input_value ic with
+  test 21 (match Marshal.from_channel ic with
     G((G((D "sharing" as t1), t2) as t3), G(t4, t5)) ->
       t1 == t2 & t3 == t5 & t4 == t1
   | _ -> false);
-  test 22 (input_value ic = [|1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16|]);
+  test 22 (Marshal.from_channel ic = [|1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16|]);
   let rec check_big n t =
     if n <= 0 then
       test 23 (match t with A -> true | _ -> false)
@@ -110,11 +110,11 @@ let test_in filename =
                                        else test 23 false
                  | _ -> test 23 false
   in
-    check_big 1000 (input_value ic);
-  test 24 (match input_value ic with
+    check_big 1000 (Marshal.from_channel ic);
+  test 24 (match Marshal.from_channel ic with
     G((D "sharing" as t1), (D "sharing" as t2)) -> t1 != t2
   | _ -> false);
-  test 25 (let fib = input_value ic in fib 5 = 8 && fib 10 = 89);
+  test 25 (let fib = Marshal.from_channel ic in fib 5 = 8 && fib 10 = 89);
   close_in ic
 
 let test_string () =
@@ -199,76 +199,76 @@ let test_string () =
     check_big 1000 (Marshal.from_string s 0)
 
 let test_buffer () =
-  let s = String.create 512 in
+  let s = Bytes.create 512 in
   Marshal.to_buffer s 0 512 1 [];
-  test 201 (Marshal.from_string s 0 = 1);
+  test 201 (Marshal.from_bytes s 0 = 1);
   Marshal.to_buffer s 0 512 (-1) [];
-  test 202 (Marshal.from_string s 0 = (-1));
+  test 202 (Marshal.from_bytes s 0 = (-1));
   Marshal.to_buffer s 0 512 258 [];
-  test 203 (Marshal.from_string s 0 = 258);
+  test 203 (Marshal.from_bytes s 0 = 258);
   Marshal.to_buffer s 0 512 20000 [];
-  test 204 (Marshal.from_string s 0 = 20000);
+  test 204 (Marshal.from_bytes s 0 = 20000);
   Marshal.to_buffer s 0 512 0x12345678 [];
-  test 205 (Marshal.from_string s 0 = 0x12345678);
+  test 205 (Marshal.from_bytes s 0 = 0x12345678);
   Marshal.to_buffer s 0 512 0x123456789ABCDEF0 [];
-  test 206 (Marshal.from_string s 0 = 0x123456789ABCDEF0);
+  test 206 (Marshal.from_bytes s 0 = 0x123456789ABCDEF0);
   Marshal.to_buffer s 0 512 "foobargeebuz" [];
-  test 207 (Marshal.from_string s 0 = "foobargeebuz");
+  test 207 (Marshal.from_bytes s 0 = "foobargeebuz");
   Marshal.to_buffer s 0 512 longstring [];
-  test 208 (Marshal.from_string s 0 = longstring);
+  test 208 (Marshal.from_bytes s 0 = longstring);
   test 209
     (try Marshal.to_buffer s 0 512 verylongstring []; false
      with Failure "Marshal.to_buffer: buffer overflow" -> true);
   Marshal.to_buffer s 0 512 3.141592654 [];
-  test 210 (Marshal.from_string s 0 = 3.141592654);
+  test 210 (Marshal.from_bytes s 0 = 3.141592654);
   Marshal.to_buffer s 0 512 () [];
-  test 211 (Marshal.from_string s 0 = ());
+  test 211 (Marshal.from_bytes s 0 = ());
   Marshal.to_buffer s 0 512 A [];
-  test 212 (match Marshal.from_string s 0 with
+  test 212 (match Marshal.from_bytes s 0 with
     A -> true
   | _ -> false);
   Marshal.to_buffer s 0 512 (B 1) [];
-  test 213 (match Marshal.from_string s 0 with
+  test 213 (match Marshal.from_bytes s 0 with
     (B 1) -> true
   | _ -> false);
   Marshal.to_buffer s 0 512 (C 2.718) [];
-  test 214 (match Marshal.from_string s 0 with
+  test 214 (match Marshal.from_bytes s 0 with
     (C f) -> f = 2.718
   | _ -> false);
   Marshal.to_buffer s 0 512 (D "hello, world!") [];
-  test 215 (match Marshal.from_string s 0 with
+  test 215 (match Marshal.from_bytes s 0 with
     (D "hello, world!") -> true
   | _ -> false);
   Marshal.to_buffer s 0 512 (E 'l') [];
-  test 216 (match Marshal.from_string s 0 with
+  test 216 (match Marshal.from_bytes s 0 with
     (E 'l') -> true
   | _ -> false);
   Marshal.to_buffer s 0 512 (F(B 1)) [];
-  test 217 (match Marshal.from_string s 0 with
+  test 217 (match Marshal.from_bytes s 0 with
     (F(B 1)) -> true
   | _ -> false);
   Marshal.to_buffer s 0 512 (G(A, G(B 2, G(C 3.14, G(D "glop", E 'e'))))) [];
-  test 218 (match Marshal.from_string s 0 with
+  test 218 (match Marshal.from_bytes s 0 with
     (G(A, G(B 2, G(C 3.14, G(D "glop", E 'e'))))) -> true
   | _ -> false);
   Marshal.to_buffer s 0 512 (H(1, A)) [];
-  test 219 (match Marshal.from_string s 0 with
+  test 219 (match Marshal.from_bytes s 0 with
     (H(1, A)) -> true
   | _ -> false);
   Marshal.to_buffer s 0 512 (I(B 2, 1e-6)) [];
-  test 220 (match Marshal.from_string s 0 with
+  test 220 (match Marshal.from_bytes s 0 with
     (I(B 2, 1e-6)) -> true
   | _ -> false);
   let x = D "sharing" in
   let y = G(x, x) in
   let z = G(y, G(x, y)) in
   Marshal.to_buffer s 0 512 z [];
-  test 221 (match Marshal.from_string s 0 with
+  test 221 (match Marshal.from_bytes s 0 with
     G((G((D "sharing" as t1), t2) as t3), G(t4, t5)) ->
       t1 == t2 & t3 == t5 & t4 == t1
   | _ -> false);
   Marshal.to_buffer s 0 512 [|1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16|] [];
-  test 222 (Marshal.from_string s 0 = [|1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16|]);
+  test 222 (Marshal.from_bytes s 0 = [|1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16|]);
   let rec big n = if n <= 0 then A else H(n, big(n-1)) in
   test 223
     (try Marshal.to_buffer s 0 512 (big 1000) []; false
@@ -276,7 +276,7 @@ let test_buffer () =
 
 let test_size() =
   let s = Marshal.to_string (G(A, G(B 2, G(C 3.14, G(D "glop", E 'e'))))) [] in
-  test 300 (Marshal.header_size + Marshal.data_size s 0 = String.length s)
+  test 300 (Marshal.header_size + Marshal.data_size (Bytes.of_string s) 0 = String.length s)
 
 let main() =
   test_out "intext.data"; test_in "intext.data";
